@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Liberia Business Awards 3.0</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .back-btn { 
+            background: #FF0000; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        h1 { color: #FF0000; }
+        h2 { color: #87CEEB; margin-top: 30px; }
+        .last-updated { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn" onclick="goBackToMainSite()">← Back to Main Site</button>
+        
+        <h1>Privacy Policy - Liberia Business Awards 3.0</h1>
+        <p class="last-updated">Last Updated: <span id="currentDate"></span></p>
+        
+        <h2>1. Introduction</h2>
+        <p>Liberia Business Awards ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or participate in our awards program.</p>
+        
+        <h2>2. Information We Collect</h2>
+        <p>We collect information that you provide directly to us, including:</p>
+        <ul>
+            <li>Business registration information</li>
+            <li>Contact details (name, email, phone, address)</li>
+            <li>Award nomination materials</li>
+            <li>Partnership inquiries</li>
+            <li>Payment information (for partnerships)</li>
+        </ul>
+        
+        <h2>3. How We Use Your Information</h2>
+        <p>We use the information we collect to:</p>
+        <ul>
+            <li>Process award nominations</li>
+            <li>Communicate about the awards program</li>
+            <li>Improve our services</li>
+            <li>Send promotional materials (with consent)</li>
+            <li>Comply with legal obligations</li>
+        </ul>
+        
+        <h2>4. Data Security</h2>
+        <p>We implement appropriate security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction.</p>
+        
+        <h2>5. Contact Us</h2>
+        <p>If you have questions about this Privacy Policy, contact us at:</p>
+        <p>Email: privacy@liberiabusinessawards.com<br>
+           Phone: +231 886 590 302<br>
+           Address: 123 Broad Street, Monrovia, Liberia</p>
+    </div>
+
+    <script>
+        // Set current date
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Back button function
+        function goBackToMainSite() {
+            if (document.referrer && document.referrer.includes('liberiabusinessawards')) {
+                window.history.back();
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>

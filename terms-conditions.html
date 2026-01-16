@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions - Liberia Business Awards 3.0</title>
+    <meta name="description" content="Official Terms and Conditions for Liberia Business Awards 3.0 - Rules, guidelines, and policies for participation, nominations, and partnerships.">
+    <meta name="keywords" content="Liberia Business Awards terms, conditions, rules, guidelines, policies, LBA terms">
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'lba-red': '#FF0000',
+                        'lba-blue': '#87CEEB',
+                        'lba-dark': '#1a202c',
+                    },
+                    fontFamily: {
+                        'montserrat': ['Montserrat', 'sans-serif'],
+                        'poppins': ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9fafb;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+            color: #1a202c;
+        }
+        
+        .section {
+            scroll-margin-top: 100px;
+        }
+        
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+        }
+        
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .print-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Print Styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                font-size: 12pt;
+                line-height: 1.5;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Sticky Header with Back Button -->
+    <header class="sticky-header no-print">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="https://liberiabusinessawards.com" class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-r from-lba-red to-lba-blue rounded-full flex items-center justify-center">
+                            <i class="fas fa-award text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold text-lba-dark">LBA 3.0</span>
+                    </a>
+                    <h1 class="text-lg font-bold text-gray-700">Terms & Conditions</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.print()" class="print-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition flex items-center">
+                        <i class="fas fa-print mr-2"></i> Print
+                    </button>
+                    <button onclick="goBackToMainSite()" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Main Site
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Last Updated Banner -->
+        <div class="bg-blue-50 border-l-4 border-lba-blue p-4 mb-8 rounded-r">
+            <div class="flex items-start">
+                <i class="fas fa-info-circle text-lba-blue text-xl mt-1 mr-3"></i>
+                <div>
+                    <p class="font-medium text-gray-800">Last Updated: <span id="currentDate"></span></p>
+                    <p class="text-gray-600 text-sm mt-1">Please read these terms carefully before participating in Liberia Business Awards 3.0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8 no-print">
+            <h2 class="text-2xl font-bold text-lba-red mb-4">Table of Contents</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <a href="#acceptance" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-check-circle mr-2 text-lba-blue"></i>
+                    <span>1. Acceptance of Terms</span>
+                </a>
+                <a href="#eligibility" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-user-check mr-2 text-lba-blue"></i>
+                    <span>2. Eligibility Criteria</span>
+                </a>
+                <a href="#nominations" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-file-signature mr-2 text-lba-blue"></i>
+                    <span>3. Nomination Process</span>
+                </a>
+                <a href="#judging" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-gavel mr-2 text-lba-blue"></i>
+                    <span>4. Judging Process</span>
+                </a>
+                <a href="#partnerships" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-handshake mr-2 text-lba-blue"></i>
+                    <span>5. Partnership Terms</span>
+                </a>
+                <a href="#intellectual" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-copyright mr-2 text-lba-blue"></i>
+                    <span>6. Intellectual Property</span>
+                </a>
+                <a href="#privacy" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-shield-alt mr-2 text-lba-blue"></i>
+                    <span>7. Privacy & Data Protection</span>
+                </a>
+                <a href="#liability" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-balance-scale mr-2 text-lba-blue"></i>
+                    <span>8. Liability & Disclaimers</span>
+                </a>
+                <a href="#termination" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-ban mr-2 text-lba-blue"></i>
+                    <span>9. Termination Rights</span>
+                </a>
+                <a href="#governing" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-balance-scale-left mr-2 text-lba-blue"></i>
+                    <span>10. Governing Law</span>
+                </a>
+                <a href="#amendments" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-edit mr-2 text-lba-blue"></i>
+                    <span>11. Amendments</span>
+                </a>
+                <a href="#contact" class="flex items-center text-gray-700 hover:text-lba-red">
+                    <i class="fas fa-envelope mr-2 text-lba-blue"></i>
+                    <span>12. Contact Information</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Terms Content -->
+        <div class="bg-white rounded-xl shadow-md p-8">
+            <!-- Introduction -->
+            <div class="mb-10">
+                <h1 class="text-3xl md:text-4xl font-bold text-lba-red mb-4">Terms & Conditions</h1>
+                <p class="text-gray-600 mb-4">Welcome to Liberia Business Awards 3.0 ("LBA 3.0", "we", "us", or "our"). These Terms and Conditions govern your participation in the Liberia Business Awards 3.0, including nominations, partnerships, events, and use of our website.</p>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600"><strong>Important:</strong> By participating in LBA 3.0, you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you should not participate in the awards program.</p>
+                </div>
+            </div>
+
+            <!-- Section 1: Acceptance of Terms -->
+            <section id="acceptance" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">1</span>
+                    Acceptance of Terms
+                </h2>
+                <div class="pl-11">
+                    <p class="text-gray-700 mb-4">By accessing, participating in, or using any services provided by Liberia Business Awards 3.0, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.</p>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h4 class="font-bold text-gray-800 mb-2">Key Points:</h4>
+                        <ul class="list-disc pl-5 text-gray-600 space-y-1">
+                            <li>These terms apply to all participants, nominees, partners, sponsors, and website visitors</li>
+                            <li>Participation constitutes full acceptance of these terms</li>
+                            <li>We reserve the right to modify these terms at any time</li>
+                            <li>Continued participation after modifications constitutes acceptance of changes</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Eligibility Criteria -->
+            <section id="eligibility" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">2</span>
+                    Eligibility Criteria
+                </h2>
+                <div class="pl-11">
+                    <p class="text-gray-700 mb-4">To be eligible for nomination and participation in Liberia Business Awards 3.0, businesses and individuals must meet the following criteria:</p>
+                    
+                    <div class="overflow-x-auto mb-4">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="py-3 px-4 border-b text-left font-bold text-lba-red">Category</th>
+                                    <th class="py-3 px-4 border-b text-left font-bold text-lba-red">Requirements</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-4 border-b font-medium">Businesses</td>
+                                    <td class="py-3 px-4 border-b text-gray-600">
+                                        <ul class="list-disc pl-5 space-y-1">
+                                            <li>Registered and operating in Liberia</li>
+                                            <li>Minimum 1 year of continuous operation</li>
+                                            <li>Valid business registration documents</li>
+                                            <li>Compliance with Liberian business laws</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-4 border-b font-medium">Entrepreneurs</td>
+                                    <td class="py-3 px-4 border-b text-gray-600">
+                                        <ul class="list-disc pl-5 space-y-1">
+                                            <li>Liberian citizenship or legal residency</li>
+                                            <li>Active business ownership/leadership</li>
+                                            <li>Demonstrable business achievements</li>
+                                            <li>No criminal convictions related to business</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-4 border-b font-medium">Startups</td>
+                                    <td class="py-3 px-4 border-b text-gray-600">
+                                        <ul class="list-disc pl-5 space-y-1">
+                                            <li>Business less than 5 years old</li>
+                                            <li>Innovative product/service</li>
+                                            <li>Growth potential demonstrated</li>
+                                            <li>Minimum 3 months of operation</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="bg-red-50 border-l-4 border-lba-red p-4 rounded-r">
+                        <div class="flex">
+                            <i class="fas fa-exclamation-triangle text-lba-red text-xl mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Disqualification Grounds</h4>
+                                <p class="text-gray-600 text-sm mt-1">Businesses may be disqualified for: false information, unethical practices, legal violations, bankruptcy proceedings, or previous award revocation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Nomination Process -->
+            <section id="nominations" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">3</span>
+                    Nomination Process
+                </h2>
+                <div class="pl-11">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">3.1 Submission Guidelines</h3>
+                    <ul class="list-disc pl-5 text-gray-700 mb-4 space-y-2">
+                        <li>All nominations must be submitted through the official LBA website or authorized channels</li>
+                        <li>Nominations open on March 1, yearly and close on May 30 (5:59 PM) Liberia Time</li>
+                        <li>Each business may be nominated in up to 3 categories</li>
+                        <li>Self-nominations are accepted and encouraged</li>
+                        <li>All information provided must be accurate and verifiable</li>
+                    </ul>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">3.2 Required Documentation</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <p class="text-gray-700 mb-2">Nominations must include:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Business registration documents</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Tax clearance certificate</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Business profile/description</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Achievements and impact evidence</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">3.3 Entry Fees</h3>
+                    <p class="text-gray-700 mb-4">There are <strong>no entry fees</strong> for nominations. The Liberia Business Awards is committed to making business recognition accessible to all qualified Liberian businesses regardless of size or financial capacity.</p>
+                </div>
+            </section>
+
+            <!-- Section 4: Judging Process -->
+            <section id="judging" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">4</span>
+                    Judging Process
+                </h2>
+                <div class="pl-11">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">4.1 Judging Panel</h3>
+                    <p class="text-gray-700 mb-4">The judging panel consists of independent industry experts, business leaders, and professionals selected for their expertise and impartiality. Judges are required to:</p>
+                    <ul class="list-disc pl-5 text-gray-700 mb-4 space-y-2">
+                        <li>Sign confidentiality agreements</li>
+                        <li>Declare any conflicts of interest</li>
+                        <li>Evaluate submissions based on established criteria</li>
+                        <li>Maintain impartiality throughout the process</li>
+                    </ul>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">4.2 Evaluation Criteria</h3>
+                    <div class="overflow-x-auto mb-4">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="py-3 px-4 border-b text-left font-bold text-lba-red">Criteria</th>
+                                    <th class="py-3 px-4 border-b text-left font-bold text-lba-red">Weight</th>
+                                    <th class="py-3 px-4 border-b text-left font-bold text-lba-red">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-4 border-b font-medium">Business Impact</td>
+                                    <td class="py-3 px-4 border-b">30%</td>
+                                    <td class="py-3 px-4 border-b text-gray-600">Economic contribution, job creation, community development</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-4 border-b font-medium">Innovation</td>
+                                    <td class="py-3 px-4 border-b">25%</td>
+                                    <td class="py-3 px-4 border-b text-gray-600">Creativity, unique solutions, market differentiation</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-4 border-b font-medium">Growth & Sustainability</td>
+                                    <td class="py-3 px-4 border-b">20%</td>
+                                    <td class="py-3 px-4 border-b text-gray-600">Financial performance, scalability, long-term viability</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-4 border-b font-medium">Leadership & Governance</td>
+                                    <td class="py-3 px-4 border-b">15%</td>
+                                    <td class="py-3 px-4 border-b text-gray-600">Management quality, ethical practices, corporate governance</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-3 px-4 border-b font-medium">Customer/Market Feedback</td>
+                                    <td class="py-3 px-4 border-b">10%</td>
+                                    <td class="py-3 px-4 border-b text-gray-600">Customer satisfaction, market reputation, testimonials</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">4.3 Final Decision</h3>
+                    <p class="text-gray-700 mb-4">The judging panel's decision is final and binding. No correspondence will be entered into regarding the judging process or results. Winners will be announced at the awards ceremony on May 30, 2026.</p>
+                </div>
+            </section>
+
+            <!-- Section 5: Partnership Terms -->
+            <section id="partnerships" class="section mb-10 scroll-mt-20 page-break">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">5</span>
+                    Partnership Terms
+                </h2>
+                <div class="pl-11">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">5.1 Partnership Categories</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="border border-lba-blue rounded-lg p-4">
+                            <h4 class="font-bold text-lba-blue mb-2">Platinum Partner</h4>
+                            <p class="text-sm text-gray-600">$10,000+ investment with maximum visibility and exclusive benefits</p>
+                        </div>
+                        <div class="border border-lba-red rounded-lg p-4">
+                            <h4 class="font-bold text-lba-red mb-2">Gold Partner</h4>
+                            <p class="text-sm text-gray-600">$5,000-$9,999 with prominent branding and speaking opportunities</p>
+                        </div>
+                        <div class="border border-gray-300 rounded-lg p-4">
+                            <h4 class="font-bold text-gray-700 mb-2">Silver Partner</h4>
+                            <p class="text-sm text-gray-600">$2,500-$4,999 with recognition and event participation</p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">5.2 Partner Obligations</h3>
+                    <ul class="list-disc pl-5 text-gray-700 mb-4 space-y-2">
+                        <li>Partners must fulfill financial commitments as agreed</li>
+                        <li>Branding materials must be provided in specified formats</li>
+                        <li>Partners must adhere to LBA brand guidelines</li>
+                        <li>Partnership benefits are non-transferable</li>
+                    </ul>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">5.3 Payment Terms</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-700"><strong>Payment Schedule:</strong> 50% upon agreement signing, 50% 30 days before the awards ceremony.</p>
+                        <p class="text-gray-700 mt-2"><strong>Cancellation Policy:</strong> Cancellations more than 60 days before the event receive 50% refund. Cancellations within 60 days are non-refundable.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Intellectual Property -->
+            <section id="intellectual" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">6</span>
+                    Intellectual Property
+                </h2>
+                <div class="pl-11">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">6.1 Ownership Rights</h3>
+                    <p class="text-gray-700 mb-4">All intellectual property rights related to Liberia Business Awards 3.0, including but not limited to logos, trademarks, content, and materials, are owned by Liberia Business Awards or its licensors.</p>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">6.2 Participant Grant of Rights</h3>
+                    <p class="text-gray-700 mb-4">By participating, you grant LBA a non-exclusive, royalty-free, worldwide license to:</p>
+                    <ul class="list-disc pl-5 text-gray-700 mb-4 space-y-2">
+                        <li>Use your business name, logo, and submitted materials for promotional purposes</li>
+                        <li>Feature your business in LBA publications and media</li>
+                        <li>Share your success stories across LBA platforms</li>
+                        <li>Archive your submission for historical records</li>
+                    </ul>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">6.3 Restrictions</h3>
+                    <div class="bg-red-50 border-l-4 border-lba-red p-4 rounded-r">
+                        <p class="text-gray-700">Participants may not use LBA logos, trademarks, or branding without express written permission. Unauthorized use may result in disqualification and legal action.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 7: Privacy & Data Protection -->
+            <section id="privacy" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">7</span>
+                    Privacy & Data Protection
+                </h2>
+                <div class="pl-11">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">7.1 Data Collection</h3>
+                    <p class="text-gray-700 mb-4">We collect personal and business information necessary for the awards process, including but not limited to:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <h4 class="font-bold text-gray-800 mb-1">Business Data</h4>
+                            <p class="text-sm text-gray-600">Registration details, financial information, business documents</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <h4 class="font-bold text-gray-800 mb-1">Contact Data</h4>
+                            <p class="text-sm text-gray-600">Names, emails, phone numbers, addresses</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <h4 class="font-bold text-gray-800 mb-1">Submission Data</h4>
+                            <p class="text-sm text-gray-600">Nomination forms, supporting documents, achievements</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <h4 class="font-bold text-gray-800 mb-1">Usage Data</h4>
+                            <p class="text-sm text-gray-600">Website analytics, interaction data, communication history</p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">7.2 Data Usage</h3>
+                    <p class="text-gray-700 mb-4">Collected data is used for:</p>
+                    <ul class="list-disc pl-5 text-gray-700 mb-4 space-y-2">
+                        <li>Processing nominations and evaluating submissions</li>
+                        <li>Communicating awards-related information</li>
+                        <li>Improving LBA programs and services</li>
+                        <li>Complying with legal obligations</li>
+                        <li>Marketing and promotional activities (with consent)</li>
+                    </ul>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">7.3 Data Protection</h3>
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r">
+                        <div class="flex">
+                            <i class="fas fa-shield-alt text-green-500 text-xl mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Our Commitment</h4>
+                                <p class="text-gray-600 text-sm mt-1">We implement appropriate security measures to protect your data. We do not sell personal information to third parties. Data is stored securely and retained only as long as necessary.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 8: Liability & Disclaimers -->
+            <section id="liability" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">8</span>
+                    Liability & Disclaimers
+                </h2>
+                <div class="pl-11">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">8.1 Limitation of Liability</h3>
+                    <p class="text-gray-700 mb-4">Liberia Business Awards, its organizers, partners, and affiliates shall not be liable for:</p>
+                    <ul class="list-disc pl-5 text-gray-700 mb-4 space-y-2">
+                        <li>Any indirect, incidental, or consequential damages</li>
+                        <li>Loss of profits, business, or opportunities</li>
+                        <li>Technical issues preventing submission or participation</li>
+                        <li>Errors or omissions in awards materials</li>
+                        <li>Actions of third parties or partners</li>
+                    </ul>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">8.2 Disclaimers</h3>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r mb-4">
+                        <p class="text-gray-700">The awards are provided "as is" without warranties of any kind. LBA does not guarantee business success, funding, or specific outcomes from participation. Award recognition does not constitute endorsement of business practices or financial stability.</p>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">8.3 Indemnification</h3>
+                    <p class="text-gray-700">Participants agree to indemnify and hold harmless Liberia Business Awards from any claims, damages, or losses arising from their participation, including but not limited to false information, intellectual property infringement, or breach of these terms.</p>
+                </div>
+            </section>
+
+            <!-- Section 9: Termination Rights -->
+            <section id="termination" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">9</span>
+                    Termination Rights
+                </h2>
+                <div class="pl-11">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">9.1 LBA's Rights</h3>
+                    <p class="text-gray-700 mb-4">Liberia Business Awards reserves the right to:</p>
+                    <ul class="list-disc pl-5 text-gray-700 mb-4 space-y-2">
+                        <li>Disqualify any participant for breach of these terms</li>
+                        <li>Cancel or modify the awards program at any time</li>
+                        <li>Withdraw awards if winners are later found ineligible</li>
+                        <li>Remove content that violates these terms</li>
+                        <li>Terminate partnerships for non-compliance</li>
+                    </ul>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">9.2 Participant Rights</h3>
+                    <p class="text-gray-700">Participants may withdraw their nomination at any time by written notice to info@liberiabusinessawards.com. Withdrawn nominations are not eligible for refund of any costs incurred.</p>
+                </div>
+            </section>
+
+            <!-- Section 10: Governing Law -->
+            <section id="governing" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">10</span>
+                    Governing Law
+                </h2>
+                <div class="pl-11">
+                    <p class="text-gray-700 mb-4">These Terms and Conditions shall be governed by and construed in accordance with the laws of the Republic of Liberia.</p>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">10.1 Jurisdiction</h3>
+                    <p class="text-gray-700 mb-4">Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts of Monrovia, Liberia.</p>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">10.2 Severability</h3>
+                    <p class="text-gray-700">If any provision of these terms is found to be invalid or unenforceable, the remaining provisions shall remain in full force and effect.</p>
+                </div>
+            </section>
+
+            <!-- Section 11: Amendments -->
+            <section id="amendments" class="section mb-10 scroll-mt-20 page-break">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">11</span>
+                    Amendments
+                </h2>
+                <div class="pl-11">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">11.1 Modification Rights</h3>
+                    <p class="text-gray-700 mb-4">Liberia Business Awards reserves the right to modify these Terms and Conditions at any time. Significant changes will be communicated to participants via email and website announcements.</p>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">11.2 Notification of Changes</h3>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-gray-700"><strong>Notification Method:</strong> Changes will be posted on our website with the "Last Updated" date modified. Continued participation after changes constitutes acceptance of the modified terms.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 12: Contact Information -->
+            <section id="contact" class="section mb-10 scroll-mt-20">
+                <h2 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <span class="bg-lba-blue text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">12</span>
+                    Contact Information
+                </h2>
+                <div class="pl-11">
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Liberia Business Awards 3.0</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-lba-red mb-2">Contact Details</h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-map-marker-alt text-lba-blue mt-1 mr-3"></i>
+                                        <div>
+                                            <p class="font-medium">Address</p>
+                                            <p class="text-gray-600">Monrovia, Liberia</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <i class="fas fa-phone-alt text-lba-blue mt-1 mr-3"></i>
+                                        <div>
+                                            <p class="font-medium">Phone</p>
+                                            <p class="text-gray-600">+231 886 590 302 or +231772876644</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <i class="fas fa-envelope text-lba-blue mt-1 mr-3"></i>
+                                        <div>
+                                            <p class="font-medium">Email</p>
+                                            <p class="text-gray-600"> liberiabusinessawards@gmail.com or legal@liberiabusinessawards.com</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-bold text-lba-red mb-2">Hours of Operation</h4>
+                                <div class="space-y-2">
+                                    <p class="text-gray-600"><strong>Monday - Friday:</strong> 9:00 AM - 5:00 PM</p>
+                                    <p class="text-gray-600"><strong>Saturday:</strong> 10:00 AM - 2:00 PM</p>
+                                    <p class="text-gray-600"><strong>Sunday:</strong> Closed</p>
+                                </div>
+                                
+                                <h4 class="font-bold text-lba-red mt-4 mb-2">For Urgent Matters</h4>
+                                <p class="text-gray-600">Legal inquiries: legal@liberiabusinessawards.com</p>
+                                <p class="text-gray-600 text-sm mt-1">Response within 2 business days</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Acceptance Section -->
+            <div class="mt-12 pt-8 border-t border-gray-200">
+                <div class="bg-lba-red text-white p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-file-contract mr-3"></i>
+                        Acceptance Declaration
+                    </h3>
+                    <p class="mb-4">By participating in Liberia Business Awards 3.0, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions in their entirety.</p>
+                    
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-2xl mr-3"></i>
+                        <div>
+                            <p class="font-bold">Last Updated: <span id="currentDate2"></span></p>
+                            <p class="text-sm opacity-90">These terms are effective immediately upon publication</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-lba-dark text-white py-8 mt-12 no-print">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-lba-red rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-award text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Liberia Business Awards 3.0</h3>
+                            <p class="text-gray-400 text-sm">Recognizing Local Excellence, Celebrating National Impact</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 text-sm">© 2026 Liberia Business Awards. All rights reserved.</p>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="https://liberiabusinessawards.com" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-home text-xl"></i>
+                    </a>
+                    <a href="privacy-policy.html" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-user-shield text-xl"></i>
+                    </a>
+                    <button onclick="goBackToMainSite()" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Main Site
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button onclick="scrollToTop()" class="back-to-top bg-lba-red text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-red-600 transition no-print">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- JavaScript -->
+    <script>
+        // Set current date
+        const currentDate = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        document.getElementById('currentDate').textContent = currentDate;
+        document.getElementById('currentDate2').textContent = currentDate;
+        
+        // Enhanced Back Button Function
+        function goBackToMainSite() {
+            // Try to go back in history first
+            if (document.referrer && document.referrer.includes('liberiabusinessawards')) {
+                window.history.back();
+            } else {
+                // If no history or coming from external link, redirect to main site
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Scroll to top function
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Show/hide back to top button
+        window.addEventListener('scroll', function() {
+            const backToTopBtn = document.querySelector('.back-to-top');
+            if (window.scrollY > 300) {
+                backToTopBtn.style.display = 'flex';
+            } else {
+                backToTopBtn.style.display = 'none';
+            }
+        });
+        
+        // Smooth scrolling for table of contents links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            // Escape key to go back
+            if (e.key === 'Escape') {
+                goBackToMainSite();
+            }
+            
+            // Ctrl+P for print
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+        
+        // Print button enhancement
+        document.querySelector('.print-btn')?.addEventListener('click', function() {
+            // Track print event
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'print_terms', {
+                    'event_category': 'engagement',
+                    'event_label': 'terms_and_conditions'
+                });
+            }
+            
+            // Show print dialog
+            window.print();
+        });
+        
+        // Initialize smooth scrolling offset
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.scrollMarginTop = '100px';
+        });
+        
+        // Mobile menu for table of contents (if needed)
+        function toggleMobileTOC() {
+            const toc = document.querySelector('#mobileTOC');
+            if (toc) {
+                toc.classList.toggle('hidden');
+            }
+        }
+        
+        // Add confirmation for form submissions if any
+        document.addEventListener('DOMContentLoaded', function() {
+            // Any forms on this page would get confirmation
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (!confirm('Are you sure you want to submit this form?')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+        
+        // Analytics tracking for terms page view
+        window.addEventListener('load', function() {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'page_view', {
+                    'page_title': 'Terms & Conditions',
+                    'page_location': window.location.href
+                });
+            }
+        });
+    </script>
+</body>
+</html>

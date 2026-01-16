@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Sustainable Business: What Judges Look For - Liberia Business Awards</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Open Sans', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); color: #333; line-height: 1.7; min-height: 100vh; }
+        .container { max-width: 900px; margin: 40px auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1); }
+        .header-gradient { background: linear-gradient(135deg, #FF0000 0%, #FF0000 100%); padding: 50px 40px; color: white; position: relative; overflow: hidden; }
+        .header-gradient::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.1)" d="M0,0 L100,0 L100,100 Z"></path></svg>'); background-size: cover; }
+        .back-btn { background: white; color: #FF0000; padding: 12px 25px; border: none; border-radius: 50px; font-weight: 600; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2); margin-bottom: 30px; }
+        .back-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px #FF0000 (39, 174, 96, 0.3); }
+        h1 { font-family: 'Montserrat', sans-serif; font-size: 42px; font-weight: 800; margin-bottom: 20px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); }
+        h2 { font-family: 'Montserrat', sans-serif; font-size: 28px; font-weight: 700; color: #FF0000; margin: 40px 0 20px; padding-bottom: 10px; border-bottom: 3px solid #FF0000; }
+        .content { padding: 50px; }
+        .meta-info { display: flex; gap: 20px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+        .meta-item { display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 14px; }
+        .meta-item i { color: #FF0000; }
+        .featured-image { width: 100%; height: 400px; object-fit: cover; border-radius: 15px; margin: 30px 0; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+        .criteria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 40px 0; }
+        .criteria-card { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08); border-top: 5px solid #FF0000; }
+        .criteria-icon { width: 60px; height: 60px; background: #FF0000; border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: white; font-size: 24px; }
+        .example-box { background: #f0fff4; border: 2px solid #FF0000; padding: 25px; border-radius: 12px; margin: 20px 0; }
+        .do-dont-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0; }
+        .do-box { background: #f0fff4; padding: 25px; border-radius: 12px; border: 2px solid #FF0000; }
+        .dont-box { background: #fff5f5; padding: 25px; border-radius: 12px; border: 2px solid #e74c3c; }
+        .cta-section { background: linear-gradient(135deg, #FF0000 0%, #FF0000 100%); padding: 50px; border-radius: 20px; text-align: center; color: white; margin-top: 50px; }
+        .cta-btn { background: white; color: #FF0000; padding: 15px 40px; border: none; border-radius: 50px; font-weight: 700; font-size: 18px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s ease; margin-top: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); }
+        .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); }
+        @media (max-width: 768px) { .container { margin: 20px; } .content { padding: 30px 20px; } h1 { font-size: 32px; } .header-gradient { padding: 40px 20px; } .criteria-grid { grid-template-columns: 1fr; } .do-dont-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-gradient">
+            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i> Back to Blog Archive</button>
+            <h1>Building a Sustainable Business: What Judges Look For</h1>
+            <div class="meta-info">
+                <div class="meta-item"><i class="far fa-calendar"></i><span>January 5, 2026</span></div>
+                <div class="meta-item"><i class="far fa-clock"></i><span>11 min read</span></div>
+                <div class="meta-item"><i class="fas fa-tags"></i><span>Sustainability, Green Business, Environmental Impact</span></div>
+            </div>
+        </div>
+        <div class="content">
+            <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Sustainable Business" class="featured-image">
+            
+            <p style="font-size: 18px; color: #4a5568; margin-bottom: 30px; font-weight: 500;">
+                Sustainability is no longer optional—it's a competitive advantage. The Liberia Business Awards judges place significant emphasis on environmental and social responsibility. Here's what they're looking for in sustainable business practices.
+            </p>
+
+            <h2>Sustainability Criteria for LBA Judges</h2>
+            
+            <div class="criteria-grid">
+                <div class="criteria-card">
+                    <div class="criteria-icon"><i class="fas fa-leaf"></i></div>
+                    <h3>Environmental Stewardship</h3>
+                    <p><strong>Weight: 40%</strong></p>
+                    <p>How your business minimizes environmental impact through resource efficiency, waste reduction, and renewable energy adoption.</p>
+                    <div class="example-box">
+                        <p><strong>Example:</strong> A manufacturing company that reduced water consumption by 60% through recycling systems.</p>
+                    </div>
+                </div>
+
+                <div class="criteria-card">
+                    <div class="criteria-icon"><i class="fas fa-handshake"></i></div>
+                    <h3>Social Impact</h3>
+                    <p><strong>Weight: 35%</strong></p>
+                    <p>Community engagement, fair labor practices, local sourcing, and contribution to social development.</p>
+                    <div class="example-box">
+                        <p><strong>Example:</strong> A company that sources 80% of materials from local suppliers and provides healthcare for employees.</p>
+                    </div>
+                </div>
+
+                <div class="criteria-card">
+                    <div class="criteria-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3>Economic Viability</h3>
+                    <p><strong>Weight: 25%</strong></p>
+                    <p>How sustainability contributes to long-term profitability and business resilience.</p>
+                    <div class="example-box">
+                        <p><strong>Example:</strong> Energy-efficient operations that reduced costs by 30% while increasing market share.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Do's and Don'ts for Sustainability in Your Nomination</h2>
+            
+            <div class="do-dont-grid">
+                <div class="do-box">
+                    <h3 style="color: #27ae60;"><i class="fas fa-check-circle"></i> DO Include</h3>
+                    <ul style="margin-top: 15px; padding-left: 20px;">
+                        <li>Specific metrics and measurements</li>
+                        <li>Third-party certifications (if any)</li>
+                        <li>Employee and community testimonials</li>
+                        <li>Before-and-after comparisons</li>
+                        <li>Long-term sustainability goals</li>
+                    </ul>
+                </div>
+                <div class="dont-box">
+                    <h3 style="color: #e74c3c;"><i class="fas fa-times-circle"></i> DON'T Include</h3>
+                    <ul style="margin-top: 15px; padding-left: 20px;">
+                        <li>Vague environmental claims</li>
+                        <li>Unverified sustainability claims</li>
+                        <li>Greenwashing language</li>
+                        <li>Irrelevant sustainability efforts</li>
+                        <li>Generic statements without evidence</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2>Successful Sustainable Businesses in Liberia</h2>
+            
+            <div style="background: #f8fafc; padding: 30px; border-radius: 15px; margin: 30px 0;">
+                <h3 style="font-family: 'Montserrat', sans-serif; margin-bottom: 20px;">Eco-Pack Liberia</h3>
+                <p><strong>Achievement:</strong> LBA 2024 Sustainable Business Award Winner</p>
+                <p><strong>Innovation:</strong> Developed biodegradable packaging from agricultural waste, reducing plastic use by 5 tons monthly.</p>
+                <p><strong>Impact:</strong> Created 85 jobs while providing farmers with additional income from waste products.</p>
+            </div>
+
+            <div class="cta-section">
+                <h2 style="color: white; border: none; margin-top: 0;">Leading in Sustainability?</h2>
+                <p style="font-size: 18px; margin-bottom: 20px;">Showcase your environmental and social impact in your LBA nomination.</p>
+                <button class="cta-btn" onclick="goBack()"><i class="fas fa-award"></i> Highlight Your Sustainability</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() { window.location.href = 'blog-archive.html'; }
+        function shareOnFacebook() { const url = encodeURIComponent(window.location.href); const title = encodeURIComponent('Building a Sustainable Business: What Judges Look For'); window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${title}`, '_blank'); }
+        function shareOnLinkedIn() { const url = encodeURIComponent(window.location.href); window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank'); }
+    </script>
+</body>
+</html>

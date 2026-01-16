@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet the Judges: Industry Leaders Share Insights - Liberia Business Awards</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #333;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.12);
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
+            padding: 60px 40px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.1)" d="M0,0 L100,0 L100,100 Z"></path></svg>');
+            background-size: cover;
+        }
+        
+        .back-btn {
+            background: white;
+            color: #FF0000;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .content {
+            padding: 60px;
+        }
+        
+        .meta-info {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 15px;
+        }
+        
+        .meta-item i {
+            color: white;
+        }
+        
+        /* Judge Cards */
+        .judges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        .judge-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            border: 1px solid #f1f5f9;
+        }
+        
+        .judge-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        .judge-header {
+            background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
+            padding: 30px;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+        
+        .judge-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            color: #FF0000;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .judge-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 5px solid white;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .judge-avatar i {
+            font-size: 50px;
+            color: #FF0000;
+        }
+        
+        .judge-body {
+            padding: 30px;
+        }
+        
+        .judge-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .judge-role {
+            color: #FF0000;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .judge-details {
+            margin-bottom: 25px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item i {
+            color: #FF0000;
+            margin-top: 3px;
+        }
+        
+        .quote-box {
+            background: linear-gradient(to right, #fff5f5, #eff6ff);
+            border-left: 4px solid #FF0000;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-style: italic;
+            position: relative;
+        }
+        
+        .quote-box::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            font-size: 60px;
+            color: rgba(255, 0, 0, 0.2);
+            font-family: Georgia, serif;
+        }
+        
+        /* Criteria Section */
+        .criteria-section {
+            background: linear-gradient(to right, #f8fafc, #f1f5f9);
+            padding: 40px;
+            border-radius: 20px;
+            margin: 60px 0;
+        }
+        
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .criteria-item {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .criteria-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .criteria-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        
+        .criteria-icon i {
+            font-size: 30px;
+            color: white;
+        }
+        
+        /* Tips Section */
+        .tips-section {
+            margin: 60px 0;
+        }
+        
+        .tip-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #87CEEB;
+        }
+        
+        .judge-quote {
+            display: flex;
+            gap: 20px;
+            margin: 30px 0;
+            align-items: flex-start;
+        }
+        
+        .quote-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .quote-avatar i {
+            font-size: 30px;
+            color: white;
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 40px 0;
+            margin: 60px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #FF0000, #87CEEB);
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item {
+            width: 45%;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .timeline-item:nth-child(odd) {
+            margin-right: 55%;
+        }
+        
+        .timeline-item:nth-child(even) {
+            margin-left: 55%;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 4px solid #FF0000;
+            border-radius: 50%;
+            top: 30px;
+        }
+        
+        .timeline-item:nth-child(odd)::before {
+            right: -12px;
+        }
+        
+        .timeline-item:nth-child(even)::before {
+            left: -12px;
+            border-color: #87CEEB;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            margin-top: 60px;
+        }
+        
+        .cta-btn {
+            background: white;
+            color: #FF0000;
+            padding: 16px 45px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 18px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .container {
+                margin: 20px;
+                border-radius: 20px;
+            }
+            
+            .content {
+                padding: 30px;
+            }
+            
+            .header-gradient {
+                padding: 40px 20px;
+            }
+            
+            h1 {
+                font-size: 36px;
+            }
+            
+            .judges-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline::before {
+                left: 30px;
+            }
+            
+            .timeline-item {
+                width: calc(100% - 80px);
+                margin: 20px 0 20px 80px !important;
+            }
+            
+            .timeline-item::before {
+                left: -56px !important;
+                right: auto !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 32px;
+            }
+            
+            .meta-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .criteria-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .judge-quote {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header-gradient">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> Back to Main Site
+            </button>
+            
+            <h1>Meet the Judges: Industry Leaders Share Insights</h1>
+            
+            <div class="meta-info">
+                <div class="meta-item">
+                    <i class="far fa-calendar"></i>
+                    <span>Published: February 28, 2026</span>
+                </div>
+                <div class="meta-item">
+                    <i class="far fa-clock"></i>
+                    <span>8 min read</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-tags"></i>
+                    <span>Judging Panel, Awards Process, Expert Insights</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-users"></i>
+                    <span>5 Esteemed Judges</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <p class="lead" style="font-size: 20px; color: #4a5568; margin-bottom: 40px; font-weight: 500;">
+                Get to know the distinguished panel of experts who will evaluate nominations for Liberia Business Awards 3.0. These industry leaders bring decades of experience and unique perspectives to ensure the most deserving businesses receive recognition.
+            </p>
+
+            <!-- Judges Grid -->
+            <h2 style="font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; color: #1a202c; margin: 40px 0; text-align: center; position: relative; padding-bottom: 15px;">
+                <span style="position: relative; z-index: 1; padding: 0 20px; background: white;">Our Esteemed Panel of Judges</span>
+                <span style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 4px; background: linear-gradient(to right, #FF0000, #87CEEB);"></span>
+            </h2>
+
+            <div class="judges-grid">
+                <!-- Judge 1 -->
+                <div class="judge-card">
+                    <div class="judge-header">
+                        <div class="judge-badge">Chair of Judges</div>
+                        <div class="judge-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h3 class="judge-name">Dr. Maria Johnson</h3>
+                        <div class="judge-role">Former Minister of Commerce</div>
+                    </div>
+                    <div class="judge-body">
+                        <div class="judge-details">
+                            <div class="detail-item">
+                                <i class="fas fa-briefcase"></i>
+                                <div>
+                                    <strong>Background:</strong><br>
+                                    25+ years in business development and economic policy
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-star"></i>
+                                <div>
+                                    <strong>Focus Areas:</strong><br>
+                                    Strategic growth, market expansion, corporate governance
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-graduation-cap"></i>
+                                <div>
+                                    <strong>Qualifications:</strong><br>
+                                    PhD in Economics, Harvard Business School Executive Education
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quote-box">
+                            "I look for businesses that demonstrate not just current success, but sustainable growth potential and meaningful community impact. The best nominations show how success creates positive ripple effects."
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Judge 2 -->
+                <div class="judge-card">
+                    <div class="judge-header">
+                        <div class="judge-badge">Innovation Expert</div>
+                        <div class="judge-avatar">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h3 class="judge-name">James T. Roberts</h3>
+                        <div class="judge-role">Tech Entrepreneur & Mentor</div>
+                    </div>
+                    <div class="judge-body">
+                        <div class="judge-details">
+                            <div class="detail-item">
+                                <i class="fas fa-briefcase"></i>
+                                <div>
+                                    <strong>Background:</strong><br>
+                                    Founder of 3 successful tech startups, Startup Liberia mentor
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-star"></i>
+                                <div>
+                                    <strong>Focus Areas:</strong><br>
+                                    Innovation, digital transformation, scalability
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-graduation-cap"></i>
+                                <div>
+                                    <strong>Qualifications:</strong><br>
+                                    MIT Innovation Fellow, 15+ patents in digital solutions
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quote-box">
+                            "Innovation isn't just about technology—it's about solving real Liberian problems in creative ways that create sustainable value. Show me how you're thinking differently."
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Judge 3 -->
+                <div class="judge-card">
+                    <div class="judge-header">
+                        <div class="judge-badge">SME Specialist</div>
+                        <div class="judge-avatar">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="judge-name">Sarah Mensah</h3>
+                        <div class="judge-role">Women in Business Liberia Founder</div>
+                    </div>
+                    <div class="judge-body">
+                        <div class="judge-details">
+                            <div class="detail-item">
+                                <i class="fas fa-briefcase"></i>
+                                <div>
+                                    <strong>Background:</strong><br>
+                                    Built her business from $500 to $5M annual revenue
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-star"></i>
+                                <div>
+                                    <strong>Focus Areas:</strong><br>
+                                    SME development, women entrepreneurship, financial management
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-graduation-cap"></i>
+                                <div>
+                                    <strong>Qualifications:</strong><br>
+                                    MBA in Entrepreneurship, UN Women Business Mentor
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quote-box">
+                            "Small businesses are the backbone of Liberia's economy. I'm looking for those with strong foundations, clear vision, and the resilience to grow. Show me your journey, not just your destination."
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Judges -->
+                <!-- Judge 4 -->
+                <div class="judge-card">
+                    <div class="judge-header">
+                        <div class="judge-badge">Sustainability Expert</div>
+                        <div class="judge-avatar">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3 class="judge-name">Dr. Samuel Cole</h3>
+                        <div class="judge-role">Environmental Economist</div>
+                    </div>
+                    <div class="judge-body">
+                        <div class="judge-details">
+                            <div class="detail-item">
+                                <i class="fas fa-briefcase"></i>
+                                <div>
+                                    <strong>Background:</strong><br>
+                                    UN Sustainable Development Consultant for West Africa
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-star"></i>
+                                <div>
+                                    <strong>Focus Areas:</strong><br>
+                                    Sustainability, environmental impact, green innovation
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quote-box">
+                            "True business success includes environmental stewardship. I evaluate how businesses balance profit with planet, creating solutions that benefit both Liberia's economy and environment."
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Judge 5 -->
+                <div class="judge-card">
+                    <div class="judge-header">
+                        <div class="judge-badge">Finance Specialist</div>
+                        <div class="judge-avatar">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h3 class="judge-name">Patricia Barclay</h3>
+                        <div class="judge-role">Chief Investment Officer</div>
+                    </div>
+                    <div class="judge-body">
+                        <div class="judge-details">
+                            <div class="detail-item">
+                                <i class="fas fa-briefcase"></i>
+                                <div>
+                                    <strong>Background:</strong><br>
+                                    18 years in investment banking and financial analysis
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-star"></i>
+                                <div>
+                                    <strong>Focus Areas:</strong><br>
+                                    Financial performance, investment readiness, risk management
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quote-box">
+                            "Numbers tell a story. I look beyond revenue to understand the financial health, scalability, and investment potential of businesses. Strong financial foundations support sustainable growth."
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Criteria Section -->
+            <div class="criteria-section">
+                <h2 style="font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; color: #1a202c; margin-bottom: 30px; text-align: center;">
+                    Judging Criteria & Evaluation Framework
+                </h2>
+                <p style="text-align: center; color: #4a5568; max-width: 800px; margin: 0 auto 40px;">
+                    Our judges evaluate nominations based on a comprehensive framework designed to identify truly exceptional businesses that contribute to Liberia's economic development.
+                </p>
+
+                <div class="criteria-grid">
+                    <div class="criteria-item">
+                        <div class="criteria-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4 style="font-family: 'Montserrat', sans-serif; font-size: 18px; margin-bottom: 10px;">Business Performance</h4>
+                        <p style="font-size: 14px; color: #64748b;">Financial stability, growth metrics, and revenue sustainability</p>
+                        <div style="font-size: 12px; color: #FF0000; margin-top: 10px; font-weight: 600;">Weight: 25%</div>
+                    </div>
+
+                    <div class="criteria-item">
+                        <div class="criteria-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h4 style="font-family: 'Montserrat', sans-serif; font-size: 18px; margin-bottom: 10px;">Innovation</h4>
+                        <p style="font-size: 14px; color: #64748b;">Unique approaches, creative solutions, and market differentiation</p>
+                        <div style="font-size: 12px; color: #FF0000; margin-top: 10px; font-weight: 600;">Weight: 20%</div>
+                    </div>
+
+                    <div class="criteria-item">
+                        <div class="criteria-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <h4 style="font-family: 'Montserrat', sans-serif; font-size: 18px; margin-bottom: 10px;">Community Impact</h4>
+                        <p style="font-size: 14px; color: #64748b;">Job creation, skills development, and local economic contribution</p>
+                        <div style="font-size: 12px; color: #FF0000; margin-top: 10px; font-weight: 600;">Weight: 25%</div>
+                    </div>
+
+                    <div class="criteria-item">
+                        <div class="criteria-icon">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h4 style="font-family: 'Montserrat', sans-serif; font-size: 18px; margin-bottom: 10px;">Sustainability</h4>
+                        <p style="font-size: 14px; color: #64748b;">Environmental responsibility and long-term viability</p>
+                        <div style="font-size: 12px; color: #FF0000; margin-top: 10px; font-weight: 600;">Weight: 15%</div>
+                    </div>
+
+                    <div class="criteria-item">
+                        <div class="criteria-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4 style="font-family: 'Montserrat', sans-serif; font-size: 18px; margin-bottom: 10px;">Leadership & Team</h4>
+                        <p style="font-size: 14px; color: #64748b;">Quality of management, team development, and culture</p>
+                        <div style="font-size: 12px; color: #FF0000; margin-top: 10px; font-weight: 600;">Weight: 15%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips from Judges -->
+            <div class="tips-section">
+                <h2 style="font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; color: #1a202c; margin: 60px 0 40px; text-align: center;">
+                    Expert Tips for a Winning Nomination
+                </h2>
+
+                <div class="tip-card">
+                    <h3 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin-bottom: 15px; color: #1a202c;">
+                        <i class="fas fa-quote-left" style="color: #FF0000; margin-right: 10px;"></i>
+                        Be Specific About Your Achievements
+                    </h3>
+                    <div class="judge-quote">
+                        <div class="quote-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 18px; font-style: italic; color: #4a5568; margin-bottom: 10px;">
+                                "Numbers tell a powerful story. Instead of saying 'we grew,' tell us 'we increased revenue by 150% in 18 months while creating 25 new jobs.' Specificity builds credibility."
+                            </p>
+                            <p style="font-weight: 600; color: #FF0000;">— Dr. Maria Johnson, Chair of Judges</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-card">
+                    <h3 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin-bottom: 15px; color: #1a202c;">
+                        <i class="fas fa-quote-left" style="color: #87CEEB; margin-right: 10px;"></i>
+                        Show, Don't Just Tell
+                    </h3>
+                    <div class="judge-quote">
+                        <div class="quote-avatar">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 18px; font-style: italic; color: #4a5568; margin-bottom: 10px;">
+                                "Don't just tell us what you do—show us why it matters. Include testimonials, case studies, or visual evidence of your impact. A picture of your team in action speaks volumes."
+                            </p>
+                            <p style="font-weight: 600; color: #87CEEB;">— James T. Roberts, Innovation Expert</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-card">
+                    <h3 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin-bottom: 15px; color: #1a202c;">
+                        <i class="fas fa-quote-left" style="color: #FF0000; margin-right: 10px;"></i>
+                        Authenticity is Key
+                    </h3>
+                    <div class="judge-quote">
+                        <div class="quote-avatar">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 18px; font-style: italic; color: #4a5568; margin-bottom: 10px;">
+                                "We want to see the real impact you're making. Share challenges you've overcome, lessons learned, and how you've adapted. Authentic stories resonate more than polished perfection."
+                            </p>
+                            <p style="font-weight: 600; color: #FF0000;">— Sarah Mensah, SME Specialist</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Judging Timeline -->
+            <div class="timeline">
+                <h2 style="font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; color: #1a202c; margin: 60px 0 40px; text-align: center;">
+                    Judging Process Timeline
+                </h2>
+
+                <div class="timeline-item">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">1</div>
+                        <div>
+                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Nomination Period</h4>
+                            <p style="color: #64748b; font-size: 14px;">February 1 - March 15, 2026</p>
+                        </div>
+                    </div>
+                    <p>All nominations must be submitted through the official LBA portal by midnight on March 15.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #87CEEB 0%, #FF0000 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">2</div>
+                        <div>
+                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Initial Screening</h4>
+                            <p style="color: #64748b; font-size: 14px;">March 16 - 20, 2026</p>
+                        </div>
+                    </div>
+                    <p>Technical committee verifies eligibility and completeness of all nominations.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">3</div>
+                        <div>
+                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Judges Evaluation</h4>
+                            <p style="color: #64748b; font-size: 14px;">March 21 - April 10, 2026</p>
+                        </div>
+                    </div>
+                    <p>Panel judges independently review and score nominations based on established criteria.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #87CEEB 0%, #FF0000 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">4</div>
+                        <div>
+                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Deliberation & Selection</h4>
+                            <p style="color: #64748b; font-size: 14px;">April 11 - 20, 2026</p>
+                        </div>
+                    </div>
+                    <p>Judges meet to discuss top nominations and finalize award recipients.</p>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="cta-section">
+                <h2 style="color: white; font-size: 36px; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">
+                    Ready to Impress Our Judges?
+                </h2>
+                <p style="font-size: 18px; margin-bottom: 30px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                    Use these insights from our expert judges to craft a compelling nomination that showcases your business excellence.
+                </p>
+                <button class="cta-btn" onclick="goBack()">
+                    <i class="fas fa-award"></i> Submit Your Nomination Now
+                </button>
+                <p style="margin-top: 20px; font-size: 14px; opacity: 0.9;">
+                    <i class="fas fa-exclamation-circle"></i> Deadline: March 15, 2026 | Early bird submissions get priority review
+                </p>
+            </div>
+
+            <!-- Disclaimer -->
+            <div style="text-align: center; margin-top: 40px; padding-top: 40px; border-top: 1px solid #e2e8f0;">
+                <p style="color: #64748b; font-size: 14px;">
+                    <strong>Note:</strong> All judges have signed confidentiality agreements and will recuse themselves from evaluating any nominations where they have personal or professional conflicts of interest. The judging process is independently audited to ensure fairness and transparency.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            // Always redirect to main site
+            window.location.href = 'index.html'; // Make sure this is your actual main page URL
+        }
+
+        // Add hover effects to judge cards
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate judge cards on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Animate judge cards
+            document.querySelectorAll('.judge-card').forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = `all 0.6s ease ${index * 0.1}s`;
+                observer.observe(card);
+            });
+
+            // Animate criteria items
+            document.querySelectorAll('.criteria-item').forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                item.style.transition = `all 0.6s ease ${index * 0.1}s`;
+                observer.observe(item);
+            });
+
+            // Animate timeline items
+            document.querySelectorAll('.timeline-item').forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(-20px)';
+                item.style.transition = `all 0.6s ease ${index * 0.2}s`;
+                observer.observe(item);
+            });
+        });
+    </script>
+</body>
+</html>
