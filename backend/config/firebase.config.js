@@ -1,31 +1,43 @@
-﻿const admin = require('firebase-admin');
+const admin = require('firebase-admin');
 
 try {
   let serviceAccount;
   
-  // Check for Render.com environment variable
+  // Option 1: Check for Render.com environment variable
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    console.log('📦 Loading Firebase from Render environment variable');
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   } 
-  // Check for local file
-  else if (require('fs').existsSync('../serviceAccountKey.json')) {
-    serviceAccount = require('../serviceAccountKey.json');
+  // Option 2: Check for local file (development)
+  else {
+    console.log('🔧 Loading Firebase from local file');
+    try {
+      serviceAccount = require('../serviceAccountKey.json');
+    } catch (e) {
+      console.log('⚠️  No local Firebase config found');
+    }
   }
   
   if (serviceAccount) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: 'https://' + serviceAccount.project_id + '.firebaseio.com'
+      databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
+      storageBucket: `${serviceAccount.project_id}.appspot.com`
     });
+    
     console.log('✅ Firebase Admin initialized successfully');
   } else {
-    console.log('⚠️  Firebase service account not found');
+    console.log('⚠️  Firebase service account not found - running without Firebase');
   }
+  
 } catch (error) {
-  console.error('❌ Firebase error:', error.message);
+  console.error('❌ Failed to initialize Firebase Admin:', error.message);
 }
 
+// Export Firebase services
 module.exports = {
   admin,
-  auth: admin.auth ? admin.auth() : null
+  auth: admin.auth ? admin.auth() : null,
+  db: admin.firestore ? admin.firestore() : null,
+  storage: admin.storage ? admin.storage() : null
 };
