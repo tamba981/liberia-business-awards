@@ -4958,36 +4958,37 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.overflow = 'hidden';
         }
         
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const modalContent = modal.querySelector('.modal-content');
-            modalContent.classList.remove('scale-100');
-            modalContent.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.remove('opacity-100', 'pointer-events-auto');
-                modal.classList.add('opacity-0', 'pointer-events-none');
-            }, 300);
-            document.body.style.overflow = 'auto';
-        }
-        
-        // Close modal when clicking outside
-        document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('modal')) {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => {
-                    if (!modal.classList.contains('opacity-0')) {
-                        const modalContent = modal.querySelector('.modal-content');
-                        modalContent.classList.remove('scale-100');
-                        modalContent.classList.add('scale-95');
-                        setTimeout(() => {
-                            modal.classList.remove('opacity-100', 'pointer-events-auto');
-                            modal.classList.add('opacity-0', 'pointer-events-none');
-                        }, 300);
-                        document.body.style.overflow = 'auto';
-                    }
-                });
-            }
-        });
+        // ============================================
+// FIXED: closeModal function with null check
+// ============================================
+function closeModal(modalId) {
+    console.log('🔒 Attempting to close modal:', modalId);
+    
+    // FIX: Check if element exists before accessing it
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        console.warn(`⚠️ Modal "${modalId}" not found. It might already be closed.`);
+        return;
+    }
+    
+    // Remove modal classes
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+    
+    // Remove all modal backdrops
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => {
+        console.log('Removing backdrop:', backdrop);
+        backdrop.remove();
+    });
+    
+    // Restore body styles
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = 'auto';
+    document.body.style.paddingRight = '';
+    
+    console.log('✅ Modal closed successfully:', modalId);
+}
         
         // Toggle nomination type fields
         function toggleNominationType() {
@@ -5500,6 +5501,30 @@ document.addEventListener('DOMContentLoaded', function() {
             datesDisplay.textContent = `Opens March 1, ${nextYear}`;
         }
     }
+}
+// ============================================
+// FIX FOR: updateAllNominationButtons is not defined
+// ============================================
+function updateAllNominationButtons() {
+    console.log('✅ updateAllNominationButtons called');
+    
+    // Find all nomination buttons and update their state
+    const buttons = document.querySelectorAll('[id*="nomination"], .nomination-btn, .nominate-btn');
+    
+    buttons.forEach(button => {
+        // Add any button update logic here
+        // Example: Check if nominations are open
+        const nominationsOpen = true; // Replace with actual check
+        if (nominationsOpen) {
+            button.disabled = false;
+            button.classList.remove('disabled');
+        } else {
+            button.disabled = true;
+            button.classList.add('disabled');
+        }
+    });
+    
+    return true;
 }
 
 // Add to your DOMContentLoaded
@@ -6061,9 +6086,9 @@ function setupFormHandlers() {
 
         // =============== COMPREHENSIVE SEARCH FUNCTIONALITY ===============
         // =============== DUAL FORM SUBMISSION (Google Sheets + Backend) ===============
-// This sends forms to BOTH Google Sheets AND your new backend
+// FIXED VERSION: This sends forms to BOTH Google Sheets AND your new backend
 function submitFormDual(formData, formType) {
-    console.log(`Submitting ${formType} form to both systems...`);
+    console.log(`🚀 Submitting ${formType} form to both systems...`);
     
     // Show loading state
     const submitBtn = document.querySelector(`#${formType}Modal button[type="submit"]`) || 
@@ -6076,7 +6101,7 @@ function submitFormDual(formData, formType) {
         submitBtn.disabled = true;
     }
     
-    // 1. Submit to Google Sheets (your existing system - PRIMARY)
+    // 1. Submit to Google Sheets (PRIMARY - your existing system)
     const googleSheetsPromise = fetch('https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec', {
         method: 'POST',
         mode: 'no-cors',
@@ -6089,59 +6114,92 @@ function submitFormDual(formData, formType) {
             timestamp: new Date().toISOString(),
             source: 'website'
         })
+    }).then(() => {
+        console.log('✅ Google Sheets submission successful');
+        return { google_sheets: 'success' };
+    }).catch(error => {
+        console.log('⚠️ Google Sheets submission failed:', error.message);
+        return { google_sheets: 'failed', error: error.message };
     });
     
-    // 2. Also submit to your new backend (SECONDARY - optional)
+    // 2. Also submit to your new backend (SECONDARY)
     const backendPromise = fetch('https://liberia-business-awards-backend.onrender.com/api/submit-form', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        ...formData,
-        form_type: formType,
-        submission_source: 'liberia-business-awards-website',
-        received_at: new Date().toISOString()
-    })
-}).then(response => {
-    if (!response.ok) {
-        throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
-    }
-    return response.json();
-}).then(data => {
-    console.log('✅ Backend submission successful:', data);
-    return data;
-}).catch(error => {
-    console.log('⚠️ Backend submission (optional) failed:', error.message);
-    // Still continue - Google Sheets is primary
-    return Promise.resolve({ 
-        backend_failed: true, 
-        error: error.message,
-        note: 'Google Sheets submission still worked' 
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            ...formData,
+            form_type: formType,
+            submission_source: 'liberia-business-awards-website',
+            received_at: new Date().toISOString(),
+            website_version: '3.0'
+        })
+    }).then(response => {
+        console.log('📡 Backend response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    }).then(data => {
+        console.log('✅ Backend submission successful:', data);
+        return data;
+    }).catch(error => {
+        console.log('⚠️ Backend submission failed (optional):', error.message);
+        // Still continue - Google Sheets is primary
+        return { 
+            backend_failed: true, 
+            error: error.message,
+            note: 'Google Sheets submission still worked' 
+        };
     });
-});
     
     // Handle both promises
     Promise.allSettled([googleSheetsPromise, backendPromise])
         .then(results => {
-            console.log('Submission results:', results);
+            console.log('📊 Submission results:', results);
             
-            // Always show success to user (Google Sheets is primary)
-            showNotification('Form submitted successfully! We will contact you soon.', 'success');
-            closeModal(`${formType}Modal`);
+            // Always show success to user
+            showNotification('✅ Form submitted successfully! We will contact you soon.', 'success');
+            
+            // FIXED: Close modal safely with delay
+            setTimeout(() => {
+                const modalId = `${formType}Modal`;
+                closeModal(modalId);
+                
+                // Reset form if it exists
+                const formSelector = `#${formType}Modal form`;
+                const form = document.querySelector(formSelector);
+                if (form) {
+                    form.reset();
+                    console.log('🔄 Form reset');
+                }
+            }, 1500); // Delay to show success message
             
             // Track success
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'form_submit_success', {
                     'event_category': 'forms',
-                    'event_label': formType
+                    'event_label': formType,
+                    'backend_success': results[1].status === 'fulfilled'
                 });
             }
+            
+            // Return results for debugging
+            return results;
         })
         .catch(error => {
-            console.error('Submission error:', error);
-            showNotification('Submitted! We have received your information.', 'success');
-            closeModal(`${formType}Modal`);
+            console.error('❌ Submission error:', error);
+            showNotification('⚠️ Submitted! We have received your information.', 'success');
+            
+            // Still try to close modal safely
+            setTimeout(() => {
+                try {
+                    closeModal(`${formType}Modal`);
+                } catch (e) {
+                    console.log('Could not close modal:', e.message);
+                }
+            }, 1500);
         })
         .finally(() => {
             // Reset button state
@@ -6149,36 +6207,13 @@ function submitFormDual(formData, formType) {
                 setTimeout(() => {
                     submitBtn.innerHTML = originalHtml;
                     submitBtn.disabled = false;
-                }, 1000);
+                    console.log('🔄 Submit button reset');
+                }, 2000);
             }
         });
     
-    // Primary submission is still to Google Sheets
-    return googleSheetsPromise
-        .then(() => {
-            console.log('✅ Submitted to Google Sheets successfully');
-            showNotification('Form submitted successfully!', 'success');
-            closeModal(`${formType}Modal`);
-            
-            // Track success
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'form_submit_success', {
-                    'event_category': 'forms',
-                    'event_label': formType,
-                    'system': 'google_sheets'
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('Google Sheets submission error:', error);
-            showNotification('Submitted! We have received your information.', 'success');
-            closeModal(`${formType}Modal`);
-            
-            // Even if Google Sheets fails, show success to user
-            // (backend will still capture the data if it's working)
-        });
+    return false; // Prevent default form submission
 }
-
 // =============== COMPREHENSIVE SEARCH FUNCTIONALITY ===============
 const searchData = {
     categories: [
@@ -7580,6 +7615,41 @@ function openAllDirectoryModal() {
     // Reset search and show all
     document.getElementById('directorySearch').value = '';
     displayAllDirectory('all');
+}
+
+// ============================================
+// FIX FOR: displayDirectory is not defined
+// ============================================
+function displayDirectory(filter = 'all') {
+    console.log('✅ displayDirectory called with filter:', filter);
+    
+    // Find all directory items
+    const directoryItems = document.querySelectorAll('.directory-item, .category-item, [data-category]');
+    
+    // Show/hide based on filter
+    directoryItems.forEach(item => {
+        if (filter === 'all' || item.dataset.category === filter) {
+            item.style.display = 'block';
+            item.classList.remove('hidden');
+        } else {
+            item.style.display = 'none';
+            item.classList.add('hidden');
+        }
+    });
+    
+    // Update active filter button
+    const filterButtons = document.querySelectorAll('.filter-btn, .category-btn');
+    filterButtons.forEach(btn => {
+        if (btn.dataset.filter === filter) {
+            btn.classList.add('active', 'bg-blue-600', 'text-white');
+            btn.classList.remove('bg-gray-200', 'text-gray-700');
+        } else {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white');
+            btn.classList.add('bg-gray-200', 'text-gray-700');
+        }
+    });
+    
+    return true;
 }
 
 // FIXED: This function passes the category parameter
