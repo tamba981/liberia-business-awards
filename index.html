@@ -48,16 +48,17 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- AOS CSS -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- External CSS -->
-<link href="external.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <script src="https://cdn.tailwindcss.com"></script>
+<link href="external.css" rel="stylesheet">
+    <!-- Tailwind CDN removed for production. For production builds install Tailwind via PostCSS or use the Tailwind CLI. See https://tailwindcss.com/docs/installation -->
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#FF0000">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LBA Awards">
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
@@ -1009,10 +1010,9 @@ window.addEventListener('load', function() {
                 </div>
             </div>
             
-            <!-- Events Manager - NEEDS LOCAL IMAGE -->
-            <!-- Option A: Use a placeholder or generic team image -->
+            <!-- Events Manager - used existing local team image to avoid 404 -->
             <div class="team-member bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300" data-aos="fade-up" data-aos-delay="400">
-                <img src="images/team/events-manager.jpg" 
+                <img src="images/team/christopher.jpg" 
                      alt="Events Manager - Liberia Business Awards" 
                      class="w-full h-48 object-cover" 
                      loading="lazy"
@@ -6156,53 +6156,21 @@ function submitFormDual(formData, formType) {
                 }, 1000);
             }
         });
-    
     return false; // Prevent default form submission
 }
-    
-    // Show loading state
+
+// Show loading state
+function setLoadingState(formType) {
     const submitBtn = document.querySelector(`#${formType}Modal button[type="submit"]`);
     if (submitBtn) {
         const originalHtml = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
         submitBtn.disabled = true;
         
-        // Reset after submission
-        Promise.allSettled([googleSheetsPromise, backendPromise])
-            .finally(() => {
-                setTimeout(() => {
-                    submitBtn.innerHTML = originalHtml;
-                    submitBtn.disabled = false;
-                }, 1000);
-            });
+        return originalHtml; // Return original HTML to restore later
     }
-    
-    // Primary submission is still to Google Sheets
-    return googleSheetsPromise
-        .then(() => {
-            console.log('✅ Submitted to Google Sheets successfully');
-            showNotification('Form submitted successfully!', 'success');
-            closeModal(`${formType}Modal`);
-            
-            // Track success
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'form_submit_success', {
-                    'event_category': 'forms',
-                    'event_label': formType,
-                    'system': 'google_sheets'
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('Google Sheets submission error:', error);
-            showNotification('Submitted! We have received your information.', 'success');
-            closeModal(`${formType}Modal`);
-            
-            // Even if Google Sheets fails, show success to user
-            // (backend will still capture the data if it's working)
-        });
+    return null;
 }
-
         // =============== COMPREHENSIVE SEARCH FUNCTIONALITY ===============
 const searchData = {
     categories: [
@@ -8090,15 +8058,9 @@ if (window.matchMedia('(display-mode: standalone)').matches ||
     document.body.classList.add('pwa-mode');
 }
 
+
     </script> 
 
 </body>
 
 </html>
-
-
-
-
-
-
-
