@@ -1,0 +1,22 @@
+﻿// This script helps set up Firebase on Render.com
+console.log('=== Firebase Setup Instructions ===');
+console.log('');
+console.log('1. Go to Render.com Dashboard');
+console.log('2. Create new Web Service');
+console.log('3. Connect your GitHub repository');
+console.log('4. Add these Environment Variables:');
+console.log('');
+console.log('FIREBASE_API_KEY=AIzaSyC8MO55eg14CWogP4SingE3FR3gnF95AHY');
+console.log('FIREBASE_AUTH_DOMAIN=liberia-business-awards.firebaseapp.com');
+console.log('FIREBASE_PROJECT_ID=liberia-business-awards');
+console.log('FIREBASE_STORAGE_BUCKET=liberia-business-awards.firebasestorage.app');
+console.log('FIREBASE_MESSAGING_SENDER_ID=587090267399');
+console.log('FIREBASE_APP_ID=1:587090267399:web:71f874b090171e9c6fc9a2');
+console.log('FIREBASE_MEASUREMENT_ID=G-HFJYS6MM3N');
+console.log('');
+console.log('5. For serviceAccountKey.json:');
+console.log('   - Go to Firebase Console → Service Accounts');
+console.log('   - Generate new private key');
+console.log('   - Copy the entire JSON content');
+console.log('   - Add as Environment Variable: FIREBASE_SERVICE_ACCOUNT');
+console.log('   - Paste the entire JSON object');
