@@ -1,87 +1,80 @@
-// SIMPLE WORKING SERVER FOR RENDER
-console.log('🚀 Starting Liberia Business Awards Backend...');
+// LIBERIA BUSINESS AWARDS BACKEND - SIMPLE VERSION
+console.log('🚀 Starting Liberia Business Awards Backend Server...');
 
 const express = require('express');
-const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// =============== MIDDLEWARE ===============
-app.use(cors());
+// Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Debug middleware
+// Simple CORS - allow all origins for now
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    next();
 });
 
-// =============== ROUTES ===============
-// Health check endpoint
+// ============ ROUTES ============
+
+// 1. Health check
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Liberia Business Awards Backend',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'production',
-    port: PORT
-  });
+    res.json({
+        status: 'OK',
+        message: 'Liberia Business Awards Backend',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0'
+    });
 });
 
-// Root endpoint
+// 2. Homepage
 app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Welcome to Liberia Business Awards API',
-    endpoints: {
-      health: 'GET /api/health',
-      submit_form: 'POST /api/submit-form',
-      test_form: 'GET /api/submit-form/test',
-      auth_test: 'GET /api/auth/test'
-    }
-  });
+    res.json({
+        message: 'Welcome to Liberia Business Awards API',
+        endpoints: [
+            'GET  /api/health',
+            'GET  /api/submit-form (info)',
+            'POST /api/submit-form (submit data)',
+            'GET  /api/submit-form/test'
+        ]
+    });
 });
 
-// Auth test endpoint
-app.get('/api/auth/test', (req, res) => {
-  res.json({
-    message: 'Authentication test endpoint',
-    status: 'Not implemented yet',
-    future: 'Will integrate Firebase Auth here'
-  });
-});
-
-// =============== FORM SUBMISSION ENDPOINTS ===============
-// GET endpoint for testing
+// 3. Form submission GET (info page)
 app.get('/api/submit-form', (req, res) => {
-  res.json({
-    message: 'Form submission endpoint',
-    instructions: 'Use POST method to submit forms',
-    endpoint: 'POST /api/submit-form',
-    cors: 'Enabled',
-    example_curl: `curl -X POST https://liberia-business-awards-backend.onrender.com/api/submit-form -H "Content-Type: application/json" -d '{"form_type":"test","name":"Test"}'`
-  });
+    res.json({
+        message: 'Form submission endpoint',
+        instructions: 'Use POST method to submit form data',
+        example: {
+            method: 'POST',
+            url: '/api/submit-form',
+            headers: { 'Content-Type': 'application/json' },
+            body: {
+                form_type: 'contact',
+                name: 'John Doe',
+                email: 'john@example.com'
+            }
+        }
+    });
 });
 
-// POST endpoint for actual submissions
+// 4. Form submission POST (actual submission)
 app.post('/api/submit-form', (req, res) => {
     try {
-        const formData = req.body;
-        const formType = formData.form_type || 'unknown';
-        
-        console.log('📥 FORM SUBMISSION RECEIVED via POST:');
-        console.log('Form Type:', formType);
-        console.log('Data fields:', Object.keys(formData));
+        console.log('📥 Form submission received:', req.body.form_type);
         
         const response = {
             success: true,
-            message: `Form '${formType}' received successfully`,
-            form_type: formType,
-            received_at: new Date().toISOString(),
+            message: `Form '${req.body.form_type || 'unknown'}' submitted successfully`,
             data_received: true,
-            backend_version: '1.0.0'
+            timestamp: new Date().toISOString(),
+            form_type: req.body.form_type,
+            fields_count: Object.keys(req.body).length
         };
         
-        console.log('✅ Response:', response.message);
+        console.log('✅ Response:', response);
         res.json(response);
         
     } catch (error) {
@@ -94,39 +87,42 @@ app.post('/api/submit-form', (req, res) => {
     }
 });
 
-// Test endpoint for debugging
+// 5. Test endpoint
 app.get('/api/submit-form/test', (req, res) => {
     res.json({
-        message: 'Form submission endpoint is ready!',
-        test: 'Send a POST request to /api/submit-form',
-        example: {
-            form_type: 'contact',
-            name: 'John Doe',
-            email: 'john@example.com'
+        message: 'Form endpoint test successful',
+        status: 'Ready to receive submissions',
+        test_data: {
+            form_type: 'test',
+            name: 'Test User',
+            email: 'test@example.com'
         }
     });
 });
 
-// =============== 404 HANDLER (LAST!) ===============
-app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Endpoint not found',
-    requested: `${req.method} ${req.url}`,
-    available_endpoints: [
-      'GET /',
-      'GET /api/health',
-      'GET /api/auth/test',
-      'GET /api/submit-form (info)',
-      'POST /api/submit-form (submit data)',
-      'GET /api/submit-form/test'
-    ]
-  });
+// 6. Catch-all 404
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: 'Endpoint not found',
+        requested: `${req.method} ${req.originalUrl}`,
+        available_endpoints: [
+            'GET  /',
+            'GET  /api/health',
+            'GET  /api/submit-form',
+            'POST /api/submit-form',
+            'GET  /api/submit-form/test'
+        ]
+    });
 });
 
-// =============== START SERVER ===============
+// Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🌐 Available at: https://liberia-business-awards-backend.onrender.com`);
-  console.log(`📨 Form endpoint ready: POST /api/submit-form`);
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`🌐 Base URL: http://localhost:${PORT}`);
+    console.log(`📨 Form endpoint: POST http://localhost:${PORT}/api/submit-form`);
 });
 
+// Error handling
+process.on('unhandledRejection', (err) => {
+    console.error('🔥 Unhandled Rejection:', err);
+});
