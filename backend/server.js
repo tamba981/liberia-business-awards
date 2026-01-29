@@ -50,3 +50,25 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, promise) => {
   console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
 });
+
+// Add this route in your backend
+app.post('/api/form-submit', (req, res) => {
+    try {
+        console.log('📥 Form submission received:', req.body);
+        
+        // You can add database storage here later
+        // For now, just log and respond
+        
+        res.json({
+            success: true,
+            message: 'Form received successfully',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error processing form:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing form'
+        });
+    }
+});
