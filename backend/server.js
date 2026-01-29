@@ -1,3 +1,61 @@
+// =============== FORM SUBMISSION ENDPOINT ===============
+// GET endpoint for testing (optional)
+app.get('/api/submit-form', (req, res) => {
+  res.json({
+    message: 'Form submission endpoint',
+    instructions: 'Use POST method to submit forms',
+    endpoint: 'POST /api/submit-form',
+    example: {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: {
+        form_type: 'contact',
+        name: 'John Doe',
+        email: 'john@example.com',
+        message: 'Hello'
+      }
+    },
+    test_url: 'GET /api/submit-form/test'
+  });
+});
+
+// POST endpoint for actual submissions (KEEP THIS AS IS)
+app.post('/api/submit-form', (req, res) => {
+    try {
+        const formData = req.body;
+        const formType = formData.form_type || 'unknown';
+        
+        console.log('📥 FORM SUBMISSION RECEIVED:');
+        console.log('Form Type:', formType);
+        console.log('Timestamp:', new Date().toISOString());
+        console.log('Data received:', Object.keys(formData).length, 'fields');
+        
+        // Response
+        const response = {
+            success: true,
+            message: `Form '${formType}' received successfully`,
+            form_type: formType,
+            received_at: new Date().toISOString(),
+            data_received: true,
+            fields_received: Object.keys(formData).length,
+            backend_version: '1.0.0'
+        };
+        
+        console.log('✅ Sending response:', response.message);
+        res.json(response);
+        
+    } catch (error) {
+        console.error('❌ Error processing form submission:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing form submission',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+
 // SIMPLE WORKING SERVER FOR RENDER
 console.log('🚀 Starting Liberia Business Awards Backend...');
 
@@ -132,3 +190,4 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, promise) => {
   console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
 });
+
