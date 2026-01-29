@@ -1,110 +1,52 @@
-// Liberia Business Awards Backend Server
-// Load environment variables for Render.com
-if (process.env.NODE_ENV === 'production') {
-  console.log('🚀 Running in PRODUCTION mode on Render.com');
-  // Render automatically injects env variables
-} else {
-  require('dotenv').config();
-  console.log('🔧 Running in DEVELOPMENT mode locally');
-}
+// SIMPLE WORKING SERVER FOR RENDER
+console.log('🚀 Starting Liberia Business Awards Backend...');
 
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-
-// Initialize Express app
 const app = express();
+const PORT = process.env.PORT || 10000;
 
-// ======================
-// MIDDLEWARE
-// ======================
-app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
-app.use(morgan('dev'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// ======================
-// FIREBASE INITIALIZATION
-// ======================
-try {
-  const { auth } = require('./config/firebase.config');
-  if (auth) {
-    console.log('✅ Firebase Admin available');
-  }
-} catch (error) {
-  console.log('⚠️  Firebase not configured: ' + error.message);
-}
-
-// ======================
-// API ROUTES
-// ======================
-const authRoutes = require('./routes/auth.routes');
-app.use('/api/auth', authRoutes);
-
-// ======================
-// BASIC ROUTES
-// ======================
+// Basic middleware
+app.use(express.json());
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    service: 'Liberia Business Awards Backend',
-    version: '1.0.0',
+  console.log('📡 Health check requested');
+  res.json({ 
+    status: 'OK', 
+    message: 'Liberia Business Awards Backend',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    port: process.env.PORT
+    environment: process.env.NODE_ENV || 'production',
+    port: PORT
   });
 });
 
-// Welcome endpoint
+// Root endpoint
 app.get('/', (req, res) => {
-  res.json({
+  res.json({ 
     message: 'Welcome to Liberia Business Awards API',
     endpoints: {
-      health: '/api/health',
-      auth: '/api/auth'
+      health: '/api/health'
     }
   });
 });
 
-// ======================
-// ERROR HANDLING
-// ======================
-
-// 404 handler
+// Error handling
 app.use((req, res) => {
-  res.status(404).json({
-    error: 'Endpoint not found',
-    path: req.originalUrl
-  });
+  res.status(404).json({ error: 'Not found' });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err);
-  
-  res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message
-  });
-});
-
-// ======================
-// START SERVER
-// ======================
-const PORT = process.env.PORT || 3001;
-
+// Start server
 app.listen(PORT, () => {
-  console.log('🚀 Liberia Business Awards Backend Server running:');
-  console.log('   📍 Port: ' + PORT);
-  console.log('   🔗 Local: http://localhost:' + PORT);
-  console.log('   📊 Health: /api/health');
-  console.log('   🌐 Environment: ' + (process.env.NODE_ENV || 'development'));
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🔗 Health: http://localhost:${PORT}/api/health`);
+  console.log(`🌐 Frontend: ${process.env.FRONTEND_URL || 'Not set'}`);
+});
+
+// Handle errors
+process.on('uncaughtException', (err) => {
+  console.error('🔥 Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
 });
