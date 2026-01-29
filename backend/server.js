@@ -129,3 +129,4 @@ app.listen(PORT, () => {
   console.log(`🌐 Available at: https://liberia-business-awards-backend.onrender.com`);
   console.log(`📨 Form endpoint ready: POST /api/submit-form`);
 });
+
