@@ -1,3 +1,4 @@
+ <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,18 +49,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-    <!-- Tailwind CSS -->
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- AOS CSS -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- External CSS -->
 <link href="external.css" rel="stylesheet" media="print" onload="this.media='all'">
-    <!-- Tailwind CSS loaded via CDN for development -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#FF0000">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LBA Awards">
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
@@ -67,39 +65,36 @@
 <!-- iOS Splash Screens -->
 <link rel="apple-touch-startup-image" href="/splash-screen.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
     <script>
-    // Custom styles for Tailwind CDN
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add custom color classes to the page
-        const style = document.createElement('style');
-        style.textContent = `
-            .bg-lba-red { background-color: #FF0000 !important; }
-            .text-lba-red { color: #FF0000 !important; }
-            .border-lba-red { border-color: #FF0000 !important; }
-            .hover\\:bg-red-600:hover { background-color: #dc2626 !important; }
-            
-            .bg-lba-blue { background-color: #87CEEB !important; }
-            .text-lba-blue { color: #87CEEB !important; }
-            .border-lba-blue { border-color: #87CEEB !important; }
-            .hover\\:bg-blue-400:hover { background-color: #60a5fa !important; }
-            
-            .bg-lba-dark { background-color: #1a202c !important; }
-            .text-lba-dark { color: #1a202c !important; }
-            
-            .font-montserrat { font-family: 'Montserrat', sans-serif; }
-            .font-poppins { font-family: 'Poppins', sans-serif; }
-            
-            /* Ensure container works */
-            .container { width: 100%; max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
-            
-            /* Fix for specific elements */
-            .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
-            .from-lba-red { --tw-gradient-from: #FF0000; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 0, 0, 0)); }
-            .to-lba-blue { --tw-gradient-to: #87CEEB; }
-        `;
-        document.head.appendChild(style);
-    });
-</script>
-
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'lba-red': '#FF0000',
+                        'lba-blue': '#87CEEB',
+                        'lba-dark': '#1a202c',
+                    },
+                    fontFamily: {
+                        'montserrat': ['Montserrat', 'sans-serif'],
+                        'poppins': ['Poppins', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
     <style type="text/css">
         /* Loading Screen Styles */
         #loading-screen {
@@ -1014,9 +1009,10 @@ window.addEventListener('load', function() {
                 </div>
             </div>
             
-            <!-- Events Manager - used existing local team image to avoid 404 -->
+            <!-- Events Manager - NEEDS LOCAL IMAGE -->
+            <!-- Option A: Use a placeholder or generic team image -->
             <div class="team-member bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300" data-aos="fade-up" data-aos-delay="400">
-                <img src="images/team/christopher.jpg" 
+                <img src="images/team/events-manager.jpg" 
                      alt="Events Manager - Liberia Business Awards" 
                      class="w-full h-48 object-cover" 
                      loading="lazy"
@@ -4423,47 +4419,35 @@ From selling on the streets of Monrovia</p>
             const mobileMenuBtn = document.getElementById('mobile-menu-btn');
             const mobileMenu = document.getElementById('mobile-menu');
             
-            if (mobileMenuBtn && mobileMenu) {
-                mobileMenuBtn.addEventListener('click', function() {
-                    mobileMenu.classList.toggle('hidden');
-                });
-            } else {
-                console.warn('Mobile menu/button not found:', !!mobileMenuBtn, !!mobileMenu);
-            }
+            mobileMenuBtn.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
             
             // Back to top button
             const backToTopBtn = document.getElementById('backToTop');
             
             window.addEventListener('scroll', function() {
-                if (backToTopBtn) {
-                    if (window.pageYOffset > 300) {
-                        backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
-                        backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
-                    } else {
-                        backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
-                        backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
-                    }
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                    backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+                } else {
+                    backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+                    backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
                 }
             });
             
-            if (backToTopBtn) {
-                backToTopBtn.addEventListener('click', function() {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
-            } else {
-                console.warn('Back to top button not found');
-            }
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
             
             // Navbar background on scroll
             const navbar = document.getElementById('navbar');
             
             window.addEventListener('scroll', function() {
-                if (navbar) {
-                    if (window.pageYOffset > 50) {
-                        navbar.classList.add('shadow-lg');
-                    } else {
-                        navbar.classList.remove('shadow-lg');
-                    }
+                if (window.pageYOffset > 50) {
+                    navbar.classList.add('shadow-lg');
+                } else {
+                    navbar.classList.remove('shadow-lg');
                 }
             });
             
@@ -5521,18 +5505,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // Add to your DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
     updateNominationStatusDisplay();
-    if (typeof updateAllNominationButtons === 'function') {
-        updateAllNominationButtons();
-    } else {
-        console.warn('updateAllNominationButtons not available yet');
-    }
+    updateAllNominationButtons();
     
     // Set interval to check every hour
     setInterval(() => {
         updateNominationStatusDisplay();
-        if (typeof updateAllNominationButtons === 'function') {
-            updateAllNominationButtons();
-        }
+        updateAllNominationButtons();
     }, 3600000);
 });
 
@@ -5611,7 +5589,6 @@ function submitContactForm() {
     // Use DUAL submission (Google Sheets + Backend)
     return submitFormDual(formData, 'contact');
 }
-        // Form submission functions
         function submitNominationForm() {
     console.log('Nomination form submitted!');
     
@@ -5662,7 +5639,7 @@ function submitContactForm() {
     return submitFormDual(formData, 'registration');
 }
 
-       function submitPartnershipForm() {
+        function submitPartnershipForm() {
     console.log('Partnership form submitted!');
     
     const formData = {
@@ -5705,7 +5682,6 @@ function submitContactForm() {
     // Use DUAL submission (Google Sheets + Backend)
     return submitFormDual(formData, 'live-session');
 }
-
         // Newsletter Form Handler
 function setupNewsletterForm() {
     const newsletterForm = document.getElementById('newsletterForm');
@@ -6083,9 +6059,9 @@ function setupFormHandlers() {
             submitContactForm();
         };
 
+        // =============== COMPREHENSIVE SEARCH FUNCTIONALITY ===============
         // =============== DUAL FORM SUBMISSION (Google Sheets + Backend) ===============
 // This sends forms to BOTH Google Sheets AND your new backend
-
 function submitFormDual(formData, formType) {
     console.log(`Submitting ${formType} form to both systems...`);
     
@@ -6116,36 +6092,34 @@ function submitFormDual(formData, formType) {
     });
     
     // 2. Also submit to your new backend (SECONDARY - optional)
-    // ✅ FIXED URL: Changed from /api/form to /api/submit-form
     const backendPromise = fetch('https://liberia-business-awards-backend.onrender.com/api/submit-form', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            ...formData,
-            form_type: formType,
-            submission_source: 'liberia-business-awards-website',
-            received_at: new Date().toISOString(),
-            website_version: '3.0'
-        })
-    }).then(response => {
-        if (!response.ok) {
-            throw new Error(`Backend returned ${response.status}`);
-        }
-        return response.json();
-    }).then(data => {
-        console.log('✅ Backend submission successful:', data);
-        return data;
-    }).catch(error => {
-        console.log('⚠️ Backend submission failed (optional):', error.message);
-        // Still continue - Google Sheets is primary
-        return Promise.resolve({ 
-            backend_failed: true, 
-            error: error.message,
-            note: 'Google Sheets submission still worked' 
-        });
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        ...formData,
+        form_type: formType,
+        submission_source: 'liberia-business-awards-website',
+        received_at: new Date().toISOString()
+    })
+}).then(response => {
+    if (!response.ok) {
+        throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
+    }
+    return response.json();
+}).then(data => {
+    console.log('✅ Backend submission successful:', data);
+    return data;
+}).catch(error => {
+    console.log('⚠️ Backend submission (optional) failed:', error.message);
+    // Still continue - Google Sheets is primary
+    return Promise.resolve({ 
+        backend_failed: true, 
+        error: error.message,
+        note: 'Google Sheets submission still worked' 
     });
+});
     
     // Handle both promises
     Promise.allSettled([googleSheetsPromise, backendPromise])
@@ -6178,22 +6152,34 @@ function submitFormDual(formData, formType) {
                 }, 1000);
             }
         });
-    return false; // Prevent default form submission
+    
+    // Primary submission is still to Google Sheets
+    return googleSheetsPromise
+        .then(() => {
+            console.log('✅ Submitted to Google Sheets successfully');
+            showNotification('Form submitted successfully!', 'success');
+            closeModal(`${formType}Modal`);
+            
+            // Track success
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'form_submit_success', {
+                    'event_category': 'forms',
+                    'event_label': formType,
+                    'system': 'google_sheets'
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('Google Sheets submission error:', error);
+            showNotification('Submitted! We have received your information.', 'success');
+            closeModal(`${formType}Modal`);
+            
+            // Even if Google Sheets fails, show success to user
+            // (backend will still capture the data if it's working)
+        });
 }
 
-// Show loading state
-function setLoadingState(formType) {
-    const submitBtn = document.querySelector(`#${formType}Modal button[type="submit"]`);
-    if (submitBtn) {
-        const originalHtml = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
-        submitBtn.disabled = true;
-        
-        return originalHtml; // Return original HTML to restore later
-    }
-    return null;
-}
-        // =============== COMPREHENSIVE SEARCH FUNCTIONALITY ===============
+// =============== COMPREHENSIVE SEARCH FUNCTIONALITY ===============
 const searchData = {
     categories: [
         { 
@@ -7705,7 +7691,7 @@ function updateAllNominationButtons() {
     updateMobileNominationButton();
     
     // Update other nomination buttons
-    const nominationButtons = Array.from(document.querySelectorAll('[id*="nominate"], button')).filter(btn => (btn.textContent || '').includes('Nominate'));
+    const nominationButtons = document.querySelectorAll('[id*="nominate"], button:contains("Nominate")');
     
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -8079,7 +8065,6 @@ if (window.matchMedia('(display-mode: standalone)').matches ||
     console.log('📱 Running as PWA');
     document.body.classList.add('pwa-mode');
 }
-
 
     </script> 
 
