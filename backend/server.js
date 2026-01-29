@@ -9,11 +9,30 @@ const PORT = process.env.PORT || 10000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Simple CORS - allow all origins for now
+// PROPER CORS HANDLING - FIX THIS SECTION
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    // Allow specific origins
+    const allowedOrigins = [
+        'https://liberiabusinessawardslr.com',
+        'http://localhost:5500',
+        'http://localhost:3000',
+        'http://127.0.0.1:5500',
+        'https://liberia-business-awards.netlify.app'
+    ];
+    
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    }
+    
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
     next();
 });
 
@@ -126,3 +145,4 @@ app.listen(PORT, () => {
 process.on('unhandledRejection', (err) => {
     console.error('🔥 Unhandled Rejection:', err);
 });
+
