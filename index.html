@@ -6067,7 +6067,18 @@ function setupFormHandlers() {
 function submitFormDual(formData, formType) {
     console.log(`Submitting ${formType} form to both systems...`);
     
-    // 1. Submit to Google Sheets (your existing system)
+    // Show loading state
+    const submitBtn = document.querySelector(`#${formType}Modal button[type="submit"]`) || 
+                     document.getElementById(`${formType}-submit-btn`);
+    let originalHtml = '';
+    
+    if (submitBtn) {
+        originalHtml = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+        submitBtn.disabled = true;
+    }
+    
+    // 1. Submit to Google Sheets (your existing system - PRIMARY)
     const googleSheetsPromise = fetch('https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec', {
         method: 'POST',
         mode: 'no-cors',
@@ -6082,23 +6093,72 @@ function submitFormDual(formData, formType) {
         })
     });
     
-    // 2. Also submit to your new backend (optional - can be enabled later)
-    const backendPromise = fetch('https://liberia-business-awards-backend.onrender.com/api/form-submit', {
+    // 2. Also submit to your new backend (SECONDARY - optional)
+    // ✅ FIXED URL: Changed from /api/form to /api/submit-form
+    const backendPromise = fetch('https://liberia-business-awards-backend.onrender.com/api/submit-form', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
         },
         body: JSON.stringify({
             ...formData,
             form_type: formType,
             submission_source: 'liberia-business-awards-website',
-            received_at: new Date().toISOString()
+            received_at: new Date().toISOString(),
+            website_version: '3.0'
         })
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error(`Backend returned ${response.status}`);
+        }
+        return response.json();
+    }).then(data => {
+        console.log('✅ Backend submission successful:', data);
+        return data;
     }).catch(error => {
-        console.log('Backend submission optional (will not affect Google Sheets):', error);
-        return Promise.resolve(); // Don't fail if backend is down
+        console.log('⚠️ Backend submission failed (optional):', error.message);
+        // Still continue - Google Sheets is primary
+        return Promise.resolve({ 
+            backend_failed: true, 
+            error: error.message,
+            note: 'Google Sheets submission still worked' 
+        });
     });
+    
+    // Handle both promises
+    Promise.allSettled([googleSheetsPromise, backendPromise])
+        .then(results => {
+            console.log('Submission results:', results);
+            
+            // Always show success to user (Google Sheets is primary)
+            showNotification('Form submitted successfully! We will contact you soon.', 'success');
+            closeModal(`${formType}Modal`);
+            
+            // Track success
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'form_submit_success', {
+                    'event_category': 'forms',
+                    'event_label': formType
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Submission error:', error);
+            showNotification('Submitted! We have received your information.', 'success');
+            closeModal(`${formType}Modal`);
+        })
+        .finally(() => {
+            // Reset button state
+            if (submitBtn) {
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalHtml;
+                    submitBtn.disabled = false;
+                }, 1000);
+            }
+        });
+    
+    return false; // Prevent default form submission
+}
     
     // Show loading state
     const submitBtn = document.querySelector(`#${formType}Modal button[type="submit"]`);
@@ -8035,6 +8095,7 @@ if (window.matchMedia('(display-mode: standalone)').matches ||
 </body>
 
 </html>
+
 
 
 
