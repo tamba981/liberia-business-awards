@@ -1,4 +1,3 @@
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,12 +47,14 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <!-- Tailwind CSS -->
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- AOS CSS -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- External CSS -->
-<link href="external.css" rel="stylesheet">
-    <!-- Tailwind CDN removed for production. For production builds install Tailwind via PostCSS or use the Tailwind CLI. See https://tailwindcss.com/docs/installation -->
+<link href="external.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <!-- Tailwind CSS loaded via CDN for development -->
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#FF0000">
@@ -66,36 +67,39 @@
 <!-- iOS Splash Screens -->
 <link rel="apple-touch-startup-image" href="/splash-screen.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'lba-red': '#FF0000',
-                        'lba-blue': '#87CEEB',
-                        'lba-dark': '#1a202c',
-                    },
-                    fontFamily: {
-                        'montserrat': ['Montserrat', 'sans-serif'],
-                        'poppins': ['Poppins', 'sans-serif'],
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-in-out',
-                        'slide-up': 'slideUp 0.5s ease-out',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(20px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        },
-                    },
-                }
-            }
-        }
-    </script>
+    // Custom styles for Tailwind CDN
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add custom color classes to the page
+        const style = document.createElement('style');
+        style.textContent = `
+            .bg-lba-red { background-color: #FF0000 !important; }
+            .text-lba-red { color: #FF0000 !important; }
+            .border-lba-red { border-color: #FF0000 !important; }
+            .hover\\:bg-red-600:hover { background-color: #dc2626 !important; }
+            
+            .bg-lba-blue { background-color: #87CEEB !important; }
+            .text-lba-blue { color: #87CEEB !important; }
+            .border-lba-blue { border-color: #87CEEB !important; }
+            .hover\\:bg-blue-400:hover { background-color: #60a5fa !important; }
+            
+            .bg-lba-dark { background-color: #1a202c !important; }
+            .text-lba-dark { color: #1a202c !important; }
+            
+            .font-montserrat { font-family: 'Montserrat', sans-serif; }
+            .font-poppins { font-family: 'Poppins', sans-serif; }
+            
+            /* Ensure container works */
+            .container { width: 100%; max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+            
+            /* Fix for specific elements */
+            .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
+            .from-lba-red { --tw-gradient-from: #FF0000; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 0, 0, 0)); }
+            .to-lba-blue { --tw-gradient-to: #87CEEB; }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+
     <style type="text/css">
         /* Loading Screen Styles */
         #loading-screen {
@@ -4419,35 +4423,47 @@ From selling on the streets of Monrovia</p>
             const mobileMenuBtn = document.getElementById('mobile-menu-btn');
             const mobileMenu = document.getElementById('mobile-menu');
             
-            mobileMenuBtn.addEventListener('click', function() {
-                mobileMenu.classList.toggle('hidden');
-            });
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            } else {
+                console.warn('Mobile menu/button not found:', !!mobileMenuBtn, !!mobileMenu);
+            }
             
             // Back to top button
             const backToTopBtn = document.getElementById('backToTop');
             
             window.addEventListener('scroll', function() {
-                if (window.pageYOffset > 300) {
-                    backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
-                    backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
-                } else {
-                    backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
-                    backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                if (backToTopBtn) {
+                    if (window.pageYOffset > 300) {
+                        backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                        backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+                    } else {
+                        backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+                        backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                    }
                 }
             });
             
-            backToTopBtn.addEventListener('click', function() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
+            if (backToTopBtn) {
+                backToTopBtn.addEventListener('click', function() {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            } else {
+                console.warn('Back to top button not found');
+            }
             
             // Navbar background on scroll
             const navbar = document.getElementById('navbar');
             
             window.addEventListener('scroll', function() {
-                if (window.pageYOffset > 50) {
-                    navbar.classList.add('shadow-lg');
-                } else {
-                    navbar.classList.remove('shadow-lg');
+                if (navbar) {
+                    if (window.pageYOffset > 50) {
+                        navbar.classList.add('shadow-lg');
+                    } else {
+                        navbar.classList.remove('shadow-lg');
+                    }
                 }
             });
             
@@ -5505,12 +5521,18 @@ document.addEventListener('DOMContentLoaded', function() {
 // Add to your DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
     updateNominationStatusDisplay();
-    updateAllNominationButtons();
+    if (typeof updateAllNominationButtons === 'function') {
+        updateAllNominationButtons();
+    } else {
+        console.warn('updateAllNominationButtons not available yet');
+    }
     
     // Set interval to check every hour
     setInterval(() => {
         updateNominationStatusDisplay();
-        updateAllNominationButtons();
+        if (typeof updateAllNominationButtons === 'function') {
+            updateAllNominationButtons();
+        }
     }, 3600000);
 });
 
@@ -7683,7 +7705,7 @@ function updateAllNominationButtons() {
     updateMobileNominationButton();
     
     // Update other nomination buttons
-    const nominationButtons = document.querySelectorAll('[id*="nominate"], button:contains("Nominate")');
+    const nominationButtons = Array.from(document.querySelectorAll('[id*="nominate"], button')).filter(btn => (btn.textContent || '').includes('Nominate'));
     
     const now = new Date();
     const currentMonth = now.getMonth();
