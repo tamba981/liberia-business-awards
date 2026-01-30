@@ -4416,13 +4416,24 @@ From selling on the streets of Monrovia</p>
             }
             
             // Mobile menu toggle
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const mobileMenu = document.getElementById('mobile-menu');
-            
-            mobileMenuBtn.addEventListener('click', function() {
-                mobileMenu.classList.toggle('hidden');
-            });
-            
+const mobileMenuBtn = document.getElementById('mobileMenuBtn') || 
+                      document.querySelector('.mobile-menu-btn') ||
+                      document.querySelector('[data-toggle="mobile-menu"]');
+
+const mobileMenu = document.getElementById('mobileMenu') || 
+                   document.querySelector('.mobile-menu') ||
+                   document.querySelector('[data-target="mobile-menu"]');
+
+// Only add event listener if both elements exist
+if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+        console.log('📱 Mobile menu toggled');
+    });
+    console.log('✅ Mobile menu event listeners added');
+} else {
+    console.warn('⚠️ Mobile menu elements not found. Mobile menu button:', !!mobileMenuBtn, 'Mobile menu:', !!mobileMenu);
+}
             // Back to top button
             const backToTopBtn = document.getElementById('backToTop');
             
@@ -4964,10 +4975,29 @@ document.addEventListener('DOMContentLoaded', function() {
 function closeModal(modalId) {
     console.log('🔒 Attempting to close modal:', modalId);
     
-    // FIX: Check if element exists before accessing it
-    const modal = document.getElementById(modalId);
+    // Try multiple possible modal IDs
+    let modal = document.getElementById(modalId);
+    
+    // If not found, try common variations
     if (!modal) {
-        console.warn(`⚠️ Modal "${modalId}" not found. It might already be closed.`);
+        // Try without "Modal" suffix
+        modal = document.getElementById(modalId.replace('Modal', ''));
+        if (!modal) {
+            // Try with lowercase
+            modal = document.getElementById(modalId.toLowerCase());
+            if (!modal) {
+                // Try to find any modal that's open
+                const openModals = document.querySelectorAll('.modal.show, [data-modal].show, .modal[style*="display: block"]');
+                if (openModals.length > 0) {
+                    modal = openModals[0];
+                    console.log('🔍 Found open modal:', modal.id || 'unnamed');
+                }
+            }
+        }
+    }
+    
+    if (!modal) {
+        console.warn(`⚠️ Could not find modal "${modalId}". It might already be closed.`);
         return;
     }
     
@@ -4978,7 +5008,6 @@ function closeModal(modalId) {
     // Remove all modal backdrops
     const backdrops = document.querySelectorAll('.modal-backdrop');
     backdrops.forEach(backdrop => {
-        console.log('Removing backdrop:', backdrop);
         backdrop.remove();
     });
     
@@ -4987,7 +5016,7 @@ function closeModal(modalId) {
     document.body.style.overflow = 'auto';
     document.body.style.paddingRight = '';
     
-    console.log('✅ Modal closed successfully:', modalId);
+    console.log('✅ Modal closed successfully:', modal.id || 'unnamed');
 }
         
         // Toggle nomination type fields
