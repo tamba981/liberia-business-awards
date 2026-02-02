@@ -134,4 +134,101 @@ app.post('/api/submit-form', async (req, res) => {
         
         // Response
         const response = {
-            success: true
+            success: true,
+            message: `Form '${req.body.form_type}' submitted successfully`,
+            data_received: true,
+            saved_to_file: saveResult.success,
+            timestamp: new Date().toISOString(),
+            form_type: req.body.form_type,
+            fields_count: Object.keys(req.body).length
+        };
+        
+        if (saveResult.success && saveResult.filename) {
+            response.file_name = saveResult.filename;
+        }
+        
+        console.log('✅ Response:', response);
+        res.json(response);
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing form',
+            error: error.message
+        });
+    }
+});
+
+// 6. Statistics endpoint
+app.get('/api/stats', async (req, res) => {
+    try {
+        let fileCount = 0;
+        try {
+            const files = await fs.readdir(SUBMISSIONS_DIR);
+            fileCount = files.filter(file => file.endsWith('.json')).length;
+        } catch (error) {
+            // Directory doesn't exist yet
+            fileCount = 0;
+        }
+        
+        res.json({
+            success: true,
+            stats: {
+                total_submissions: fileCount,
+                storage_type: 'file_system',
+                directory: SUBMISSIONS_DIR
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching statistics',
+            error: error.message
+        });
+    }
+});
+
+// 7. Test endpoint
+app.get('/api/submit-form/test', (req, res) => {
+    res.json({
+        message: 'Form endpoint test successful',
+        status: 'Ready to receive submissions',
+        test_data: {
+            form_type: 'test',
+            name: 'Test User',
+            email: 'test@example.com'
+        }
+    });
+});
+
+// 8. Catch-all 404
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: 'Endpoint not found',
+        requested: `${req.method} ${req.originalUrl}`,
+        available_endpoints: [
+            'GET  /',
+            'GET  /api/health',
+            'GET  /api/submit-form',
+            'POST /api/submit-form',
+            'GET  /api/stats',
+            'GET  /api/submit-form/test'
+        ]
+    });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`🌐 Base URL: http://localhost:${PORT}`);
+    console.log(`📨 Form endpoint: POST http://localhost:${PORT}/api/submit-form`);
+    console.log(`📊 Stats endpoint: GET http://localhost:${PORT}/api/stats`);
+    console.log(`💾 Storage: ${SUBMISSIONS_DIR}`);
+    console.log('🚀 Ready to receive form submissions!');
+});
+
+// Error handling
+process.on('unhandledRejection', (err) => {
+    console.error('🔥 Unhandled Rejection:', err);
+});
