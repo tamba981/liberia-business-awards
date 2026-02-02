@@ -1,20 +1,98 @@
-// LIBERIA BUSINESS AWARDS BACKEND - SIMPLE & WORKING VERSION
+// LIBERIA BUSINESS AWARDS BACKEND - WITH MONGODB
 console.log('🚀 Starting Liberia Business Awards Backend Server...');
 
 const express = require('express');
+const mongoose = require('mongoose');
 const fs = require('fs').promises;
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Create submissions directory
+// ============ CONFIGURATION ============
+const MONGODB_URI = process.env.MONGODB_URI;
 const SUBMISSIONS_DIR = path.join(__dirname, 'submissions');
 
-// Middleware
+// ============ DATABASE CONNECTION ============
+let isMongoConnected = false;
+
+async function connectToMongoDB() {
+    if (!MONGODB_URI) {
+        console.log('⚠️ MONGODB_URI not set. Using file storage only.');
+        return false;
+    }
+    
+    try {
+        await mongoose.connect(MONGODB_URI);
+        console.log('✅ Connected to MongoDB Atlas');
+        isMongoConnected = true;
+        return true;
+    } catch (error) {
+        console.error('❌ MongoDB connection error:', error.message);
+        console.log('⚠️ Falling back to file storage only');
+        return false;
+    }
+}
+
+// ============ MONGOOSE SCHEMA ============
+const formSubmissionSchema = new mongoose.Schema({
+    form_type: String,
+    form_data: Object,
+    submission_source: String,
+    received_at: { type: Date, default: Date.now }
+});
+
+const FormSubmission = mongoose.model('FormSubmission', formSubmissionSchema);
+
+// ============ FILE STORAGE ============
+async function saveToFile(data) {
+    try {
+        await fs.mkdir(SUBMISSIONS_DIR, { recursive: true });
+        
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `${data.form_type}-${timestamp}.json`;
+        const filepath = path.join(SUBMISSIONS_DIR, filename);
+        
+        const dataToSave = {
+            ...data,
+            _saved_at: new Date().toISOString(),
+            _storage: 'file'
+        };
+        
+        await fs.writeFile(filepath, JSON.stringify(dataToSave, null, 2));
+        console.log(`💾 Saved to file: ${filename}`);
+        return { success: true, filename };
+    } catch (error) {
+        console.error('❌ Error saving to file:', error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+async function saveToDatabase(data) {
+    if (!isMongoConnected) {
+        return { success: false, reason: 'MongoDB not connected' };
+    }
+    
+    try {
+        const submission = new FormSubmission({
+            form_type: data.form_type,
+            form_data: data,
+            submission_source: data.submission_source || 'liberia-business-awards-website'
+        });
+        
+        await submission.save();
+        console.log(`💾 Saved to database ID: ${submission._id}`);
+        return { success: true, id: submission._id };
+    } catch (error) {
+        console.error('❌ Error saving to database:', error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ MIDDLEWARE ============
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS configuration
+// CORS
 app.use((req, res, next) => {
     const allowedOrigins = [
         'https://liberiabusinessawardslr.com',
@@ -41,117 +119,90 @@ app.use((req, res, next) => {
 
 // ============ ROUTES ============
 
-// 1. Homepage
-app.get('/', (req, res) => {
-    res.json({
-        message: 'Welcome to Liberia Business Awards API',
-        version: '1.0.0',
-        endpoints: [
-            'GET  /',
-            'GET  /api/health',
-            'GET  /api/submit-form (info)',
-            'POST /api/submit-form (submit data)',
-            'GET  /api/stats',
-            'GET  /api/submit-form/test'
-        ]
-    });
-});
-
-// 2. Health check
-app.get('/api/health', (req, res) => {
+// Health check
+app.get('/api/health', async (req, res) => {
+    const dbStatus = isMongoConnected ? 'connected' : 'disconnected';
+    let fileCount = 0;
+    let dbCount = 0;
+    
+    try {
+        const files = await fs.readdir(SUBMISSIONS_DIR);
+        fileCount = files.filter(f => f.endsWith('.json')).length;
+    } catch { /* Directory doesn't exist yet */ }
+    
+    if (isMongoConnected) {
+        try {
+            dbCount = await FormSubmission.countDocuments();
+        } catch { /* Ignore */ }
+    }
+    
     res.json({
         status: 'OK',
         message: 'Liberia Business Awards Backend',
         timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        uptime: process.uptime()
-    });
-});
-
-// 3. Form submission info
-app.get('/api/submit-form', (req, res) => {
-    res.json({
-        message: 'Form submission endpoint',
-        instructions: 'Use POST method to submit form data',
-        example: {
-            method: 'POST',
-            url: '/api/submit-form',
-            headers: { 'Content-Type': 'application/json' },
-            body: {
-                form_type: 'contact',
-                name: 'John Doe',
-                email: 'john@example.com'
+        version: '2.0.0',
+        storage: {
+            database: dbStatus,
+            file_system: 'active',
+            submissions: {
+                database: dbCount,
+                files: fileCount,
+                total: dbCount + fileCount
             }
         }
     });
 });
 
-// 4. Save submission to file
-async function saveSubmissionToFile(data) {
-    try {
-        // Create directory if it doesn't exist
-        await fs.mkdir(SUBMISSIONS_DIR, { recursive: true });
-        
-        // Create filename with timestamp
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `${data.form_type}-${timestamp}.json`;
-        const filepath = path.join(SUBMISSIONS_DIR, filename);
-        
-        // Add metadata
-        const dataToSave = {
-            ...data,
-            received_at: new Date().toISOString(),
-            saved_at: new Date().toISOString()
-        };
-        
-        // Save the data
-        await fs.writeFile(filepath, JSON.stringify(dataToSave, null, 2));
-        
-        console.log(`💾 Saved submission to: ${filename}`);
-        return { success: true, filename };
-    } catch (error) {
-        console.error('❌ Error saving submission:', error.message);
-        return { success: false, error: error.message };
-    }
-}
-
-// 5. Main form submission endpoint
+// Form submission
 app.post('/api/submit-form', async (req, res) => {
     try {
         console.log('📥 Form submission received:', req.body.form_type);
         
-        // Validate
         if (!req.body.form_type) {
             return res.status(400).json({
                 success: false,
-                message: 'Form type is required',
-                error: 'Missing form_type field'
+                message: 'Form type is required'
             });
         }
         
-        // Save to file
-        const saveResult = await saveSubmissionToFile(req.body);
+        // Add timestamp
+        req.body.received_at = new Date().toISOString();
+        
+        // Save to file (always works)
+        const fileResult = await saveToFile(req.body);
+        
+        // Save to database (if available)
+        const dbResult = await saveToDatabase(req.body);
         
         // Response
         const response = {
             success: true,
             message: `Form '${req.body.form_type}' submitted successfully`,
-            data_received: true,
-            saved_to_file: saveResult.success,
-            timestamp: new Date().toISOString(),
-            form_type: req.body.form_type,
-            fields_count: Object.keys(req.body).length
+            storage: {
+                file_system: fileResult.success,
+                database: dbResult.success,
+                dual_backup: fileResult.success && dbResult.success
+            },
+            details: {
+                timestamp: new Date().toISOString(),
+                form_type: req.body.form_type,
+                fields_count: Object.keys(req.body).length
+            }
         };
         
-        if (saveResult.success && saveResult.filename) {
-            response.file_name = saveResult.filename;
+        if (fileResult.success && fileResult.filename) {
+            response.details.file_name = fileResult.filename;
         }
         
-        console.log('✅ Response:', response);
+        if (dbResult.success && dbResult.id) {
+            response.details.database_id = dbResult.id;
+        }
+        
+        console.log('✅ Response:', JSON.stringify(response, null, 2));
         res.json(response);
         
     } catch (error) {
-        console.error('❌ Error:', error);
+        console.error('❌ Form submission error:', error);
         res.status(500).json({
             success: false,
             message: 'Error processing form',
@@ -160,75 +211,52 @@ app.post('/api/submit-form', async (req, res) => {
     }
 });
 
-// 6. Statistics endpoint
-app.get('/api/stats', async (req, res) => {
-    try {
-        let fileCount = 0;
-        try {
-            const files = await fs.readdir(SUBMISSIONS_DIR);
-            fileCount = files.filter(file => file.endsWith('.json')).length;
-        } catch (error) {
-            // Directory doesn't exist yet
-            fileCount = 0;
-        }
-        
-        res.json({
-            success: true,
-            stats: {
-                total_submissions: fileCount,
-                storage_type: 'file_system',
-                directory: SUBMISSIONS_DIR
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching statistics',
-            error: error.message
-        });
-    }
-});
-
-// 7. Test endpoint
-app.get('/api/submit-form/test', (req, res) => {
+// Homepage
+app.get('/', (req, res) => {
     res.json({
-        message: 'Form endpoint test successful',
-        status: 'Ready to receive submissions',
-        test_data: {
-            form_type: 'test',
-            name: 'Test User',
-            email: 'test@example.com'
-        }
-    });
-});
-
-// 8. Catch-all 404
-app.use('*', (req, res) => {
-    res.status(404).json({
-        error: 'Endpoint not found',
-        requested: `${req.method} ${req.originalUrl}`,
-        available_endpoints: [
+        message: 'Welcome to Liberia Business Awards API',
+        version: '2.0.0',
+        endpoints: [
             'GET  /',
             'GET  /api/health',
-            'GET  /api/submit-form',
             'POST /api/submit-form',
-            'GET  /api/stats',
             'GET  /api/submit-form/test'
         ]
     });
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`🌐 Base URL: http://localhost:${PORT}`);
-    console.log(`📨 Form endpoint: POST http://localhost:${PORT}/api/submit-form`);
-    console.log(`📊 Stats endpoint: GET http://localhost:${PORT}/api/stats`);
-    console.log(`💾 Storage: ${SUBMISSIONS_DIR}`);
-    console.log('🚀 Ready to receive form submissions!');
+// Test endpoint
+app.get('/api/submit-form/test', (req, res) => {
+    res.json({
+        message: 'API is working',
+        timestamp: new Date().toISOString()
+    });
 });
 
-// Error handling
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: 'Endpoint not found',
+        available: ['/', '/api/health', '/api/submit-form']
+    });
+});
+
+// ============ START SERVER ============
+async function startServer() {
+    await connectToMongoDB();
+    
+    app.listen(PORT, () => {
+        console.log(`✅ Server running on port ${PORT}`);
+        console.log(`🌐 URL: http://localhost:${PORT}`);
+        console.log(`📨 Endpoint: POST /api/submit-form`);
+        console.log(`🗄️  MongoDB: ${isMongoConnected ? '✅ Connected' : '❌ Not connected'}`);
+        console.log(`💾 File storage: ${SUBMISSIONS_DIR}`);
+    });
+}
+
+// Error handlers
 process.on('unhandledRejection', (err) => {
     console.error('🔥 Unhandled Rejection:', err);
 });
+
+startServer().catch(console.error);
