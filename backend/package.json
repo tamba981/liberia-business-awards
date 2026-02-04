@@ -1,28 +1,69 @@
 {
-  "name": "liberia-business-awards-backend",
+  "name": "liberia-business-awards-enterprise",
   "version": "3.0.0",
-  "description": "Complete Business Awards Management System",
+  "description": "Complete Business Awards Management System with Admin Dashboard",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "seed": "node seed.js",
+    "backup": "node scripts/backup.js",
+    "test": "jest --testTimeout=10000",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
-  "keywords": ["liberia", "business", "awards", "management", "dashboard"],
+  "keywords": [
+    "liberia",
+    "business",
+    "awards",
+    "management",
+    "dashboard",
+    "enterprise",
+    "admin"
+  ],
   "author": "Liberia Business Awards Team",
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.0",
     "mongoose": "^8.0.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
-    "express-validator": "^7.0.1"
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "dotenv": "^16.0.0",
+    "nodemailer": "^6.9.7",
+    "socket.io": "^4.7.2",
+    "redis": "^4.6.11",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "winston": "^3.11.0",
+    "moment": "^2.29.4",
+    "aws-sdk": "^2.1502.0",
+    "cloudinary": "^1.41.0",
+    "xlsx": "^0.18.5",
+    "pdfkit": "^0.14.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.53.0",
+    "prettier": "^3.0.3"
   },
   "engines": {
-    "node": ">=18.0.0"
-  }
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/liberia-business-awards/enterprise-backend"
+  },
+  "bugs": {
+    "url": "https://github.com/liberia-business-awards/enterprise-backend/issues"
+  },
+  "homepage": "https://liberiabusinessawardslr.com",
+  "private": true
 }
