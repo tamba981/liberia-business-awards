@@ -4998,9 +4998,17 @@ function closeModal(modalId) {
     }
     
     if (!modal) {
-        console.warn(`⚠️ Could not find modal "${modalId}". It might already be closed.`);
+    // Try alternative modal IDs
+    const altModalId = modalId.replace('-Modal', '') || 
+                      modalId.replace('Modal', '') || 
+                      'modal-' + modalId;
+    modal = document.getElementById(altModalId);
+    
+    if (!modal) {
+        console.log(`ℹ️ Modal "${modalId}" already closed or not found`);
         return;
     }
+}
     
     // Remove modal classes
     modal.classList.remove('show');
@@ -8171,3 +8179,4 @@ if (window.matchMedia('(display-mode: standalone)').matches ||
 </body>
 
 </html>
+
