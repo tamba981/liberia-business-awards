@@ -1,4 +1,4 @@
-// LIBERIA BUSINESS AWARDS BACKEND - GUARANTEED WORKING
+// LIBERIA BUSINESS AWARDS BACKEND - DEBUG VERSION
 console.log('🚀 Starting Liberia Business Awards Backend Server...');
 
 const express = require('express');
@@ -6,209 +6,265 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ============ MONGODB CONNECTION ============
+// ============ CONFIGURATION ============
 const MONGODB_URI = process.env.MONGODB_URI;
 
-console.log('📡 MongoDB Connection Attempt:');
-console.log('   URI Present:', !!MONGODB_URI);
+console.log('🔧 ENVIRONMENT CHECK:');
+console.log('   PORT:', PORT);
+console.log('   NODE_ENV:', process.env.NODE_ENV);
+console.log('   MONGODB_URI present:', !!MONGODB_URI);
 
+// Mask URI for security in logs
+if (MONGODB_URI) {
+    const maskedURI = MONGODB_URI.replace(/:\/\/[^:]+:[^@]+@/, '://***:***@');
+    console.log('   MONGODB_URI (masked):', maskedURI);
+}
+
+// ============ MONGODB CONNECTION ============
 async function connectToMongoDB() {
     if (!MONGODB_URI) {
-        console.log('❌ ERROR: MONGODB_URI environment variable is missing');
-        console.log('💡 Fix: Add MONGODB_URI to Render Environment Variables');
+        console.log('❌ MONGODB_URI not found in environment variables');
+        console.log('💡 Add MONGODB_URI to Render environment variables');
         return false;
     }
     
-    console.log('   Connecting with URI (password masked):', 
-        MONGODB_URI.replace(/:[^:@]*@/, ':****@'));
+    console.log('🔄 Attempting MongoDB connection...');
     
     try {
-        // SIMPLEST POSSIBLE CONNECTION - NO EXTRA OPTIONS
-        await mongoose.connect(MONGODB_URI);
+        // Use mongoose with detailed options
+        await mongoose.connect(MONGODB_URI, {
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+            family: 4, // Force IPv4
+            maxPoolSize: 10,
+        });
         
-        console.log('✅ SUCCESS: Connected to MongoDB Atlas!');
-        console.log('   Connection State:', mongoose.connection.readyState);
-        console.log('   Host:', mongoose.connection.host);
+        console.log('✅ MongoDB Connection SUCCESS!');
+        console.log('📊 Connection State:', mongoose.connection.readyState);
+        console.log('🏷️  Database Name:', mongoose.connection.name || 'Not specified');
+        console.log('👤 Connected as:', mongoose.connection.client?.s?.auth?.user || 'Unknown');
         
         return true;
     } catch (error) {
-        console.error('❌ CRITICAL ERROR: MongoDB connection failed');
+        console.error('❌ MongoDB Connection FAILED!');
         console.error('   Error:', error.message);
         console.error('   Code:', error.code);
+        console.error('   Name:', error.name);
         
-        // SPECIFIC FIXES BASED ON ERROR
-        if (error.message.includes('bad auth')) {
-            console.log('💡 FIX: Wrong username/password. Check:');
-            console.log('   1. Username: liberia-admin');
-            console.log('   2. Password: Motiva6060');
-            console.log('   3. User exists in MongoDB Atlas → Database Access');
-        } else if (error.message.includes('whitelist')) {
-            console.log('💡 FIX: IP not allowed. Check:');
-            console.log('   1. MongoDB Atlas → Network Access');
-            console.log('   2. Add 0.0.0.0/0 (allow from anywhere)');
+        // Detailed error analysis
+        if (error.message.includes('bad auth') || error.message.includes('authentication')) {
+            console.log('\n🔐 AUTHENTICATION FAILURE DIAGNOSIS:');
+            console.log('   1. Check username/password in MongoDB Atlas');
+            console.log('   2. Verify user "liberia-admin" exists and is active');
+            console.log('   3. Try resetting password in MongoDB Atlas');
+            console.log('   4. URL encode special characters in password (! → %21)');
         } else if (error.message.includes('ENOTFOUND')) {
-            console.log('💡 FIX: Invalid cluster URL. Check:');
-            console.log('   1. Cluster URL: cluster0.9outgyt.mongodb.net');
-            console.log('   2. Get exact URL from MongoDB Atlas Connect button');
+            console.log('\n🌐 NETWORK FAILURE:');
+            console.log('   1. Check cluster URL: cluster0.9outgyt.mongodb.net');
+            console.log('   2. Verify network access allows 0.0.0.0/0');
+        } else if (error.message.includes('whitelist')) {
+            console.log('\n🛡️ IP WHITELIST ISSUE:');
+            console.log('   1. Go to MongoDB Atlas → Network Access');
+            console.log('   2. Add 0.0.0.0/0 (allow from anywhere)');
         }
         
         return false;
     }
 }
 
-// ============ SIMPLE SCHEMA ============
-const SubmissionSchema = new mongoose.Schema({
-    form_type: String,
-    data: Object,
-    timestamp: { type: Date, default: Date.now }
+// ============ DATABASE SCHEMA ============
+const formSchema = new mongoose.Schema({
+    form_type: { type: String, required: true },
+    data: { type: Object, required: true },
+    submitted_at: { type: Date, default: Date.now }
 });
-const Submission = mongoose.model('Submission', SubmissionSchema);
+
+const Form = mongoose.model('Form', formSchema);
 
 // ============ MIDDLEWARE ============
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// CORS - Simplified
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
     next();
 });
 
 // ============ ROUTES ============
 
-// TEST ENDPOINT - FORCE MONGODB CONNECTION
-app.get('/api/test', async (req, res) => {
+// Debug endpoint
+app.get('/api/debug', async (req, res) => {
     const isConnected = mongoose.connection.readyState === 1;
     
-    if (!isConnected) {
-        // Try to reconnect
-        const reconnected = await connectToMongoDB();
-        if (!reconnected) {
-            return res.json({
-                success: false,
-                message: 'MongoDB not connected',
-                error: 'Connection failed',
-                connection_string: MONGODB_URI ? 'Present' : 'Missing'
+    let testResult = null;
+    if (isConnected) {
+        try {
+            const testDoc = await Form.create({ 
+                form_type: 'debug-test',
+                data: { test: true, timestamp: new Date().toISOString() }
             });
+            testResult = { id: testDoc._id, created: true };
+        } catch (error) {
+            testResult = { error: error.message };
         }
     }
     
-    // Try to create a document
-    try {
-        const testDoc = await Submission.create({
-            form_type: 'test',
-            data: { test: true, time: new Date().toISOString() }
-        });
-        
-        res.json({
-            success: true,
-            message: 'MongoDB WORKING!',
-            connected: true,
-            document_id: testDoc._id,
-            total_documents: await Submission.countDocuments()
-        });
-    } catch (error) {
-        res.json({
-            success: false,
-            message: 'MongoDB connection works but save failed',
-            error: error.message,
-            connected: true
-        });
-    }
+    res.json({
+        timestamp: new Date().toISOString(),
+        server: {
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            node: process.version
+        },
+        mongodb: {
+            connection_string_provided: !!MONGODB_URI,
+            ready_state: mongoose.connection.readyState,
+            state_description: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown',
+            is_connected: isConnected,
+            test_operation: testResult
+        },
+        environment: {
+            keys: Object.keys(process.env).filter(k => k.includes('MONGO') || k.includes('DB') || k === 'NODE_ENV' || k === 'PORT')
+        }
+    });
 });
 
-// HEALTH CHECK
-app.get('/api/health', (req, res) => {
+// Health check
+app.get('/api/health', async (req, res) => {
     const isConnected = mongoose.connection.readyState === 1;
+    let count = 0;
+    
+    if (isConnected) {
+        try {
+            count = await Form.countDocuments();
+        } catch (e) {
+            // Ignore count errors
+        }
+    }
     
     res.json({
         status: 'OK',
         timestamp: new Date().toISOString(),
         database: isConnected ? 'connected' : 'disconnected',
-        mongodb_uri_provided: !!MONGODB_URI,
-        connection_state: mongoose.connection.readyState
+        submissions: count,
+        mongodb_uri_provided: !!MONGODB_URI
     });
 });
 
-// FORM SUBMISSION
+// Form submission (simplified)
 app.post('/api/submit-form', async (req, res) => {
-    const isConnected = mongoose.connection.readyState === 1;
-    
-    if (!isConnected) {
-        // Still accept form even if MongoDB is down
-        return res.json({
-            success: true,
-            message: 'Form received (MongoDB offline)',
-            saved_to_mongodb: false,
-            mongodb_connected: false,
-            data: req.body
-        });
-    }
-    
     try {
-        const submission = await Submission.create({
-            form_type: req.body.form_type || 'unknown',
-            data: req.body
-        });
+        console.log('📥 Form submission received:', req.body.form_type || 'unknown');
         
-        res.json({
+        const isConnected = mongoose.connection.readyState === 1;
+        let savedId = null;
+        
+        if (isConnected) {
+            try {
+                const form = new Form({
+                    form_type: req.body.form_type || 'unknown',
+                    data: req.body
+                });
+                
+                const savedDoc = await form.save();
+                savedId = savedDoc._id;
+                console.log(`💾 Saved to MongoDB: ${savedId}`);
+            } catch (dbError) {
+                console.error('Database save error:', dbError.message);
+            }
+        }
+        
+        const response = {
             success: true,
-            message: 'Form saved to MongoDB!',
-            saved_to_mongodb: true,
-            mongodb_connected: true,
-            document_id: submission._id,
-            timestamp: new Date().toISOString()
-        });
+            message: `Form '${req.body.form_type || 'unknown'}' submitted successfully`,
+            timestamp: new Date().toISOString(),
+            mongodb: {
+                connected: isConnected,
+                saved: !!savedId,
+                document_id: savedId
+            }
+        };
+        
+        console.log('✅ Response:', JSON.stringify(response));
+        res.json(response);
+        
     } catch (error) {
-        res.json({
-            success: true,
-            message: 'Form received (MongoDB save error)',
-            saved_to_mongodb: false,
-            mongodb_connected: true,
+        console.error('❌ Form error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Form processing error',
             error: error.message
         });
     }
 });
 
-// HOME
+// Homepage
 app.get('/', (req, res) => {
     res.json({
-        message: 'Liberia Business Awards API',
-        status: 'Operational',
-        mongodb: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        service: 'Liberia Business Awards API',
+        version: '2.1.0',
+        status: 'operational',
         endpoints: [
+            'GET  /',
             'GET  /api/health',
-            'GET  /api/test',
+            'GET  /api/debug',
             'POST /api/submit-form'
-        ]
+        ],
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
     });
 });
 
 // ============ START SERVER ============
 async function startServer() {
-    console.log('🔧 Server Configuration:');
-    console.log('   Port:', PORT);
-    console.log('   Node:', process.version);
+    console.log('\n' + '='.repeat(50));
+    console.log('🚀 SERVER STARTUP SEQUENCE');
+    console.log('='.repeat(50));
     
-    // Connect to MongoDB
-    await connectToMongoDB();
+    const connected = await connectToMongoDB();
     
-    // Start server
     app.listen(PORT, () => {
-        console.log(`✅ Server running on port ${PORT}`);
-        console.log(`🌐 URL: https://liberia-business-awards-backend.onrender.com`);
-        console.log(`🧪 Test: GET /api/test`);
-        console.log(`📨 Submit: POST /api/submit-form`);
-        console.log(`💪 Status: GET /api/health`);
-        console.log(`🗄️  MongoDB: ${mongoose.connection.readyState === 1 ? '✅ CONNECTED' : '❌ DISCONNECTED'}`);
+        console.log('\n' + '='.repeat(50));
+        console.log('✅ SERVER RUNNING');
+        console.log('='.repeat(50));
+        console.log(`📡 Port: ${PORT}`);
+        console.log(`🌐 Local: http://localhost:${PORT}`);
+        console.log(`🌍 Public: https://liberia-business-awards-backend.onrender.com`);
+        console.log(`🗄️  MongoDB: ${connected ? '✅ CONNECTED' : '❌ DISCONNECTED'}`);
+        console.log(`🔗 Connection string: ${MONGODB_URI ? 'Provided' : 'Missing'}`);
+        console.log('='.repeat(50));
+        
+        if (!connected && MONGODB_URI) {
+            console.log('\n🔧 TROUBLESHOOTING REQUIRED:');
+            console.log('   1. Check /api/debug for detailed error info');
+            console.log('   2. Verify MongoDB Atlas user credentials');
+            console.log('   3. Ensure Network Access allows 0.0.0.0/0');
+            console.log('   4. Test connection string format');
+        }
     });
 }
 
-// Handle errors
+// Error handling
 process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Rejection:', err);
+    console.error('🔥 UNHANDLED REJECTION:', err);
+    console.error('Stack:', err.stack);
 });
 
-// Start
+process.on('uncaughtException', (err) => {
+    console.error('💥 UNCAUGHT EXCEPTION:', err);
+    console.error('Stack:', err.stack);
+    process.exit(1);
+});
+
+// Start server
 startServer().catch(err => {
-    console.error('Failed to start:', err);
+    console.error('❌ SERVER STARTUP FAILED:', err);
     process.exit(1);
 });
