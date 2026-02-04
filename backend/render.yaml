@@ -1,9 +1,10 @@
-﻿services:
+services:
   - type: web
     name: liberia-business-awards-backend
     env: node
     plan: free
     region: oregon
+    rootDir: backend
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /api/health
@@ -12,21 +13,13 @@
         value: production
       - key: PORT
         value: 10000
-      - key: FIREBASE_API_KEY
-        sync: false
-      - key: FIREBASE_AUTH_DOMAIN
-        sync: false
-      - key: FIREBASE_PROJECT_ID
-        sync: false
-      - key: FIREBASE_STORAGE_BUCKET
-        sync: false
-      - key: FIREBASE_MESSAGING_SENDER_ID
-        sync: false
-      - key: FIREBASE_APP_ID
-        sync: false
-      - key: FIREBASE_MEASUREMENT_ID
+      - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
         generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@liberiabusinessawardslr.com
+      - key: ADMIN_PASSWORD
+        value: Admin123!
       - key: FRONTEND_URL
         value: https://liberiabusinessawardslr.com
