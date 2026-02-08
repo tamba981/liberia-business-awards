@@ -5,53 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Login - Liberia Business Awards</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
-            min-height: 100vh;
+        :root {
+            --lba-red: #FF0000;
+            --lba-blue: #87CEEB;
+            --lba-dark: #1a202c;
+        }
+        
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--lba-red) 0%, var(--lba-blue) 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
         
         .login-container {
             width: 100%;
-            max-width: 400px;
-            padding: 40px;
+            max-width: 450px;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
         }
         
-        .logo {
+        .login-header {
+            background: var(--lba-dark);
+            color: white;
+            padding: 30px;
             text-align: center;
-            margin-bottom: 30px;
         }
         
-        .logo h2 {
-            color: #FF0000;
-            margin-bottom: 10px;
+        .login-header h1 {
             font-size: 28px;
-        }
-        
-        .logo p {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .logo-icon {
-            background: linear-gradient(135deg, #FF0000, #87CEEB);
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin: 0 auto 20px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 32px;
+            gap: 10px;
+        }
+        
+        .login-header p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .login-content {
+            padding: 30px;
+        }
+        
+        .login-tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab-btn.active {
+            color: var(--lba-red);
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--lba-red);
+            border-radius: 3px;
+        }
+        
+        .login-form {
+            display: none;
+        }
+        
+        .login-form.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .form-group {
@@ -76,22 +131,26 @@
         
         .form-group input:focus {
             outline: none;
-            border-color: #FF0000;
+            border-color: var(--lba-red);
             box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.1);
         }
         
         .login-btn {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #FF0000, #FF4444);
+            padding: 15px;
+            background: linear-gradient(135deg, var(--lba-red), #FF4444);
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            font-weight: 600;
             margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         
         .login-btn:hover {
@@ -107,25 +166,88 @@
         }
         
         .error-message {
-            color: #e74c3c;
-            margin: 15px 0;
+            background: #fee;
+            color: #c00;
             padding: 12px;
-            background: #fdf2f2;
             border-radius: 8px;
-            border-left: 4px solid #e74c3c;
+            border-left: 4px solid #c00;
+            margin: 15px 0;
             display: none;
             font-size: 14px;
         }
         
-        .back-link {
+        .success-message {
+            background: #dfd;
+            color: #080;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #080;
+            margin: 15px 0;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .test-info {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid var(--lba-blue);
+        }
+        
+        .test-info h4 {
+            color: var(--lba-dark);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .test-info ul {
+            list-style: none;
+            padding-left: 10px;
+        }
+        
+        .test-info li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .test-info strong {
+            color: var(--lba-red);
+        }
+        
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .api-status.online {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .api-status.offline {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+        
+        .footer-links {
             text-align: center;
-            margin-top: 30px;
+            margin-top: 25px;
             padding-top: 20px;
             border-top: 1px solid #eee;
         }
         
-        .back-link a {
-            color: #FF0000;
+        .footer-links a {
+            color: var(--lba-red);
             text-decoration: none;
             font-weight: 600;
             display: inline-flex;
@@ -133,97 +255,234 @@
             gap: 5px;
         }
         
-        .back-link a:hover {
+        .footer-links a:hover {
             text-decoration: underline;
         }
         
-        .test-credentials {
-            background: #f8f9fa;
+        .debug-panel {
+            background: #f5f5f5;
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            border-left: 3px solid #87CEEB;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+            max-height: 200px;
+            overflow-y: auto;
         }
         
-        .test-credentials h4 {
-            margin: 0 0 8px 0;
+        .debug-panel h5 {
+            margin-bottom: 10px;
             color: #333;
         }
         
-        .test-credentials p {
-            margin: 5px 0;
-            color: #666;
+        .debug-log {
+            font-family: monospace;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="logo">
-            <div class="logo-icon">
+        <!-- Header -->
+        <div class="login-header">
+            <h1>
                 <i class="fas fa-award"></i>
-            </div>
-            <h2>LBA Dashboard</h2>
-            <p>Liberia Business Awards Administration Portal</p>
+                LBA Dashboard
+            </h1>
+            <p>Liberia Business Awards Administration System</p>
         </div>
         
-        <div class="test-credentials">
-            <h4>Test Credentials:</h4>
-            <p><strong>Email:</strong> admin@liberiabusinessawardslr.com</p>
-            <p><strong>Password:</strong> Admin123!</p>
-        </div>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" required 
-                       placeholder="admin@liberiabusinessawardslr.com"
-                       value="admin@liberiabusinessawardslr.com">
+        <!-- Content -->
+        <div class="login-content">
+            <!-- API Status -->
+            <div class="api-status" id="apiStatus">
+                <i class="fas fa-sync fa-spin"></i>
+                <span>Checking API connection...</span>
             </div>
             
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required 
-                       placeholder="••••••••"
-                       value="Admin123!">
+            <!-- Tabs -->
+            <div class="login-tabs">
+                <button class="tab-btn active" data-tab="admin">Admin Login</button>
+                <button class="tab-btn" data-tab="business">Business Login</button>
+                <button class="tab-btn" data-tab="troubleshoot">Troubleshoot</button>
             </div>
             
-            <div id="errorMessage" class="error-message"></div>
+            <!-- Admin Login Form -->
+            <form class="login-form active" id="adminForm">
+                <div class="test-info">
+                    <h4><i class="fas fa-info-circle"></i> Default Admin Credentials</h4>
+                    <ul>
+                        <li><strong>Email:</strong> admin@liberiabusinessawardslr.com</li>
+                        <li><strong>Password:</strong> Admin123!</li>
+                    </ul>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminEmail">Email Address</label>
+                    <input type="email" id="adminEmail" required 
+                           value="admin@liberiabusinessawardslr.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" required 
+                           value="Admin123!">
+                </div>
+                
+                <div class="error-message" id="adminError"></div>
+                <div class="success-message" id="adminSuccess"></div>
+                
+                <button type="submit" class="login-btn" id="adminBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login as Admin</span>
+                </button>
+            </form>
             
-            <button type="submit" class="login-btn" id="loginButton">
-                Login to Dashboard
-            </button>
-        </form>
-        
-        <div class="back-link">
-            <a href="../index.html">
-                <i class="fas fa-arrow-left"></i> Back to Main Website
-            </a>
+            <!-- Business Login Form -->
+            <form class="login-form" id="businessForm">
+                <div class="test-info">
+                    <h4><i class="fas fa-building"></i> Business Account</h4>
+                    <p>Use your business registration email and password. If you haven't registered, please contact admin.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessEmail">Business Email</label>
+                    <input type="email" id="businessEmail" required 
+                           placeholder="yourbusiness@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="businessPassword">Password</label>
+                    <input type="password" id="businessPassword" required 
+                           placeholder="••••••••">
+                </div>
+                
+                <div class="error-message" id="businessError"></div>
+                
+                <button type="submit" class="login-btn" id="businessBtn">
+                    <i class="fas fa-building"></i>
+                    <span>Login to Business Portal</span>
+                </button>
+            </form>
+            
+            <!-- Troubleshoot Form -->
+            <div class="login-form" id="troubleshootForm">
+                <div class="test-info">
+                    <h4><i class="fas fa-tools"></i> Troubleshooting Options</h4>
+                    <p>If you're having issues logging in, try these options:</p>
+                </div>
+                
+                <div class="form-group">
+                    <button type="button" class="login-btn" onclick="testBackendConnection()" style="background: var(--lba-blue);">
+                        <i class="fas fa-plug"></i>
+                        Test Backend Connection
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <button type="button" class="login-btn" onclick="createTestAdmin()" style="background: #27ae60;">
+                        <i class="fas fa-user-plus"></i>
+                        Create Test Admin Account
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <button type="button" class="login-btn" onclick="resetLocalStorage()" style="background: #e74c3c;">
+                        <i class="fas fa-trash"></i>
+                        Clear Browser Data
+                    </button>
+                </div>
+                
+                <div class="debug-panel">
+                    <h5>Debug Information</h5>
+                    <div class="debug-log" id="debugLog">
+                        Loading debug information...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Links -->
+            <div class="footer-links">
+                <a href="../index.html">
+                    <i class="fas fa-arrow-left"></i> Back to Main Website
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Font Awesome for icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- SIMPLE API CONFIG - Inline to avoid path issues -->
+    <!-- Main Script -->
     <script>
-        // Simple API Configuration
+        // API Configuration
         const API_CONFIG = {
             BASE_URL: 'https://liberia-business-awards-backend.onrender.com',
             
-            getApiUrl: function(endpoint = '') {
+            getUrl: function(endpoint) {
                 return this.BASE_URL + endpoint;
             },
             
-            checkApiHealth: async function() {
+            testConnection: async function() {
                 try {
-                    const response = await fetch(this.getApiUrl('/api/health'));
+                    console.log('Testing connection to:', this.getUrl('/api/health'));
+                    const response = await fetch(this.getUrl('/api/health'), {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json().catch(() => ({}));
+                    
                     return {
                         success: response.ok,
                         status: response.status,
-                        statusText: response.statusText
+                        data: data,
+                        url: this.getUrl('/api/health')
                     };
                 } catch (error) {
+                    return {
+                        success: false,
+                        error: error.message,
+                        url: this.getUrl('/api/health')
+                    };
+                }
+            },
+            
+            login: async function(email, password, role = 'admin') {
+                try {
+                    console.log(`Attempting ${role} login for:`, email);
+                    
+                    const response = await fetch(this.getUrl('/api/auth/login'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password,
+                            role: role
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || `Login failed with status: ${response.status}`);
+                    }
+                    
+                    return {
+                        success: true,
+                        token: data.token,
+                        user: data.user,
+                        message: 'Login successful'
+                    };
+                    
+                } catch (error) {
+                    console.error('Login error:', error);
                     return {
                         success: false,
                         error: error.message
@@ -231,150 +490,420 @@
                 }
             },
             
-            login: async function(email, password) {
+            // Try alternative login endpoints
+            tryAlternativeLogin: async function(email, password) {
+                const endpoints = [
+                    '/api/auth/login',
+                    '/api/admin/login',
+                    '/api/login',
+                    '/auth/login'
+                ];
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        console.log('Trying endpoint:', endpoint);
+                        const response = await fetch(this.getUrl(endpoint), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ email, password })
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            return {
+                                success: true,
+                                token: data.token,
+                                user: data.user,
+                                endpoint: endpoint
+                            };
+                        }
+                    } catch (error) {
+                        console.log(`Endpoint ${endpoint} failed:`, error.message);
+                    }
+                }
+                
+                return {
+                    success: false,
+                    error: 'All login endpoints failed'
+                };
+            },
+            
+            // Direct database access simulation (for emergency)
+            createAdminDirectly: async function() {
                 try {
-                    const response = await fetch(this.getApiUrl('/api/auth/login'), {
+                    // This would be a direct API call to create admin if backend allows
+                    const response = await fetch(this.getUrl('/api/admin/create-default'), {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ email, password })
+                        body: JSON.stringify({
+                            email: 'admin@liberiabusinessawardslr.com',
+                            password: 'Admin123!',
+                            name: 'System Administrator',
+                            role: 'admin'
+                        })
                     });
                     
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.message || 'Login failed');
+                    if (response.ok) {
+                        return {
+                            success: true,
+                            message: 'Admin account created successfully'
+                        };
                     }
                     
-                    return await response.json();
+                    return {
+                        success: false,
+                        error: `Failed with status: ${response.status}`
+                    };
+                    
                 } catch (error) {
-                    throw error;
+                    return {
+                        success: false,
+                        error: error.message
+                    };
                 }
             }
         };
 
-        // Make available globally
-        window.API_CONFIG = API_CONFIG;
-        window.getApiUrl = API_CONFIG.getApiUrl.bind(API_CONFIG);
-        window.checkApiHealth = API_CONFIG.checkApiHealth.bind(API_CONFIG);
-        
-        console.log('✅ API Configuration loaded');
-        console.log('🌐 API URL:', API_CONFIG.BASE_URL);
-    </script>
+        // DOM Elements
+        let apiStatus, debugLog;
 
-    <!-- Login Logic -->
-    <script>
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Login page initialized');
+            console.log('🚀 LBA Dashboard Login Initialized');
             
-            const loginForm = document.getElementById('loginForm');
-            const errorElement = document.getElementById('errorMessage');
-            const loginButton = document.getElementById('loginButton');
+            // Get elements
+            apiStatus = document.getElementById('apiStatus');
+            debugLog = document.getElementById('debugLog');
             
-            loginForm.addEventListener('submit', async function(e) {
+            // Setup tab switching
+            setupTabs();
+            
+            // Setup forms
+            setupForms();
+            
+            // Test backend connection
+            testBackendConnection();
+            
+            // Auto-populate for testing
+            if (window.location.hostname.includes('liberiabusinessawardslr.com')) {
+                document.getElementById('adminEmail').value = 'admin@liberiabusinessawardslr.com';
+                document.getElementById('adminPassword').value = 'Admin123!';
+            }
+            
+            // Add debug info
+            updateDebugLog('System initialized');
+            updateDebugLog(`API Base URL: ${API_CONFIG.BASE_URL}`);
+            updateDebugLog(`Hostname: ${window.location.hostname}`);
+        });
+
+        // Tab Switching
+        function setupTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const forms = document.querySelectorAll('.login-form');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    
+                    // Update active tab
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show corresponding form
+                    forms.forEach(form => {
+                        form.classList.remove('active');
+                        if (form.id === tab + 'Form') {
+                            form.classList.add('active');
+                        }
+                    });
+                });
+            });
+        }
+
+        // Form Setup
+        function setupForms() {
+            // Admin Form
+            document.getElementById('adminForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                const email = document.getElementById('email').value.trim();
-                const password = document.getElementById('password').value;
+                const email = document.getElementById('adminEmail').value.trim();
+                const password = document.getElementById('adminPassword').value;
+                const errorEl = document.getElementById('adminError');
+                const successEl = document.getElementById('adminSuccess');
+                const btn = document.getElementById('adminBtn');
                 
-                // Reset error
-                errorElement.style.display = 'none';
-                loginButton.disabled = true;
-                loginButton.textContent = 'Checking API...';
+                // Reset messages
+                errorEl.style.display = 'none';
+                successEl.style.display = 'none';
+                
+                // Validate
+                if (!email || !password) {
+                    showError(errorEl, 'Please fill in all fields');
+                    return;
+                }
+                
+                // Update button state
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Logging in...</span>';
                 
                 try {
-                    console.log('🔄 Checking API health...');
+                    updateDebugLog(`Attempting admin login for: ${email}`);
                     
-                    // Check if API is available
-                    const healthCheck = await window.checkApiHealth();
-                    console.log('📊 Health check:', healthCheck);
+                    // Try regular login
+                    let result = await API_CONFIG.login(email, password, 'admin');
                     
-                    if (!healthCheck.success) {
-                        throw new Error(`API unavailable (Status: ${healthCheck.status || 'Unknown'}). Please try again later.`);
+                    // If that fails, try alternative endpoints
+                    if (!result.success) {
+                        updateDebugLog('Standard login failed, trying alternatives...');
+                        result = await API_CONFIG.tryAlternativeLogin(email, password);
                     }
                     
-                    loginButton.textContent = 'Logging in...';
-                    
-                    // Attempt login
-                    console.log('🔐 Attempting login for:', email);
-                    const loginResult = await API_CONFIG.login(email, password);
-                    
-                    console.log('✅ Login successful:', loginResult);
-                    
-                    if (loginResult.token && loginResult.user) {
-                        // Store authentication data
-                        localStorage.setItem('lba_auth_token', loginResult.token);
-                        localStorage.setItem('lba_user_data', JSON.stringify(loginResult.user));
-                        localStorage.setItem('lba_user_role', loginResult.user.role);
+                    if (result.success) {
+                        // Store authentication
+                        localStorage.setItem('lba_auth_token', result.token);
+                        localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+                        localStorage.setItem('lba_user_role', result.user.role);
                         
                         // Show success
-                        loginButton.textContent = '✓ Login Successful!';
-                        loginButton.style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
+                        showSuccess(successEl, 'Login successful! Redirecting...');
+                        updateDebugLog('✓ Login successful! Token received');
                         
-                        // Determine redirect URL based on role
-                        let redirectUrl = '../index.html';
-                        if (loginResult.user.role === 'admin') {
-                            redirectUrl = 'admin/index.html';
-                        } else if (loginResult.user.role === 'business') {
+                        // Determine redirect
+                        let redirectUrl = 'admin/index.html';
+                        if (result.user.role === 'business') {
                             redirectUrl = 'business/index.html';
                         }
                         
-                        console.log('🎯 Redirecting to:', redirectUrl);
-                        
-                        // Redirect after delay
+                        // Redirect
                         setTimeout(() => {
                             window.location.href = redirectUrl;
-                        }, 1000);
+                        }, 1500);
                         
                     } else {
-                        throw new Error('Invalid response from server');
+                        showError(errorEl, result.error || 'Invalid credentials. Please try again.');
+                        updateDebugLog(`✗ Login failed: ${result.error}`);
                     }
                     
                 } catch (error) {
-                    console.error('❌ Login error:', error);
-                    
-                    // Show error message
-                    errorElement.textContent = error.message || 'Invalid email or password. Please try again.';
-                    errorElement.style.display = 'block';
-                    
+                    showError(errorEl, 'Login error: ' + error.message);
+                    updateDebugLog(`✗ Exception: ${error.message}`);
+                } finally {
                     // Reset button
-                    loginButton.textContent = 'Login to Dashboard';
-                    loginButton.disabled = false;
-                    
-                    // Scroll to error
-                    errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }, 1000);
                 }
             });
             
-            // Test login button for quick testing
-            const testLoginBtn = document.createElement('button');
-            testLoginBtn.textContent = 'Test Quick Login';
-            testLoginBtn.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: #3498db;
-                color: white;
-                border: none;
-                padding: 10px 15px;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 12px;
-                z-index: 1000;
-                display: none;
-            `;
-            testLoginBtn.onclick = function() {
-                document.getElementById('email').value = 'admin@liberiabusinessawardslr.com';
-                document.getElementById('password').value = 'Admin123!';
-                loginForm.dispatchEvent(new Event('submit'));
-            };
-            document.body.appendChild(testLoginBtn);
+            // Business Form
+            document.getElementById('businessForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('businessEmail').value.trim();
+                const password = document.getElementById('businessPassword').value;
+                const errorEl = document.getElementById('businessError');
+                const btn = document.getElementById('businessBtn');
+                
+                errorEl.style.display = 'none';
+                
+                if (!email || !password) {
+                    showError(errorEl, 'Please fill in all fields');
+                    return;
+                }
+                
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Logging in...</span>';
+                
+                try {
+                    updateDebugLog(`Attempting business login for: ${email}`);
+                    
+                    const result = await API_CONFIG.login(email, password, 'business');
+                    
+                    if (result.success) {
+                        localStorage.setItem('lba_auth_token', result.token);
+                        localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+                        localStorage.setItem('lba_user_role', result.user.role);
+                        
+                        showSuccess(errorEl, 'Login successful! Redirecting...');
+                        errorEl.style.color = '#080';
+                        errorEl.style.borderLeftColor = '#080';
+                        errorEl.style.background = '#dfd';
+                        errorEl.style.display = 'block';
+                        
+                        setTimeout(() => {
+                            window.location.href = 'business/index.html';
+                        }, 1500);
+                        
+                    } else {
+                        showError(errorEl, result.error || 'Invalid business credentials');
+                    }
+                    
+                } catch (error) {
+                    showError(errorEl, 'Login error: ' + error.message);
+                } finally {
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }, 1000);
+                }
+            });
+        }
+
+        // Test Backend Connection
+        async function testBackendConnection() {
+            updateDebugLog('Testing backend connection...');
             
-            // Show test button in development
-            if (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')) {
-                testLoginBtn.style.display = 'block';
+            apiStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i><span>Checking API connection...</span>';
+            apiStatus.className = 'api-status';
+            
+            try {
+                const result = await API_CONFIG.testConnection();
+                updateDebugLog(`API Response: Status ${result.status}, Success: ${result.success}`);
+                
+                if (result.success) {
+                    apiStatus.innerHTML = `<i class="fas fa-check-circle"></i><span>API Online (Status: ${result.status})</span>`;
+                    apiStatus.className = 'api-status online';
+                    
+                    // Try to get more info
+                    if (result.data) {
+                        updateDebugLog(`API Data: ${JSON.stringify(result.data)}`);
+                    }
+                    
+                } else {
+                    apiStatus.innerHTML = `<i class="fas fa-times-circle"></i><span>API Offline (Error: ${result.error || 'Unknown'})</span>`;
+                    apiStatus.className = 'api-status offline';
+                    
+                    // Try alternative endpoints
+                    updateDebugLog('Trying alternative health check endpoints...');
+                    await testAlternativeEndpoints();
+                }
+                
+            } catch (error) {
+                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Connection Error: ${error.message}</span>`;
+                apiStatus.className = 'api-status offline';
+                updateDebugLog(`Connection error: ${error.message}`);
             }
-        });
+        }
+
+        // Test alternative endpoints
+        async function testAlternativeEndpoints() {
+            const endpoints = [
+                '/api/health',
+                '/health',
+                '/',
+                '/api',
+                '/api/v1/health'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const url = API_CONFIG.BASE_URL + endpoint;
+                    updateDebugLog(`Trying: ${url}`);
+                    
+                    const response = await fetch(url, { method: 'GET' });
+                    updateDebugLog(`  → Status: ${response.status} ${response.statusText}`);
+                    
+                    if (response.ok) {
+                        updateDebugLog(`✓ Found working endpoint: ${endpoint}`);
+                        return endpoint;
+                    }
+                } catch (error) {
+                    updateDebugLog(`  ✗ Failed: ${error.message}`);
+                }
+            }
+            
+            updateDebugLog('✗ No working endpoints found');
+            return null;
+        }
+
+        // Create Test Admin (Emergency)
+        async function createTestAdmin() {
+            updateDebugLog('Attempting to create test admin account...');
+            
+            const result = await API_CONFIG.createAdminDirectly();
+            
+            if (result.success) {
+                alert('✓ Test admin account created successfully!\nYou can now login with:\nEmail: admin@liberiabusinessawardslr.com\nPassword: Admin123!');
+                updateDebugLog('✓ Test admin created');
+            } else {
+                alert(`✗ Failed to create admin: ${result.error}\n\nPlease check:\n1. Backend is running\n2. Admin creation endpoint exists\n3. Database is accessible`);
+                updateDebugLog(`✗ Admin creation failed: ${result.error}`);
+            }
+        }
+
+        // Reset Local Storage
+        function resetLocalStorage() {
+            if (confirm('Clear all browser storage for LBA Dashboard?')) {
+                localStorage.removeItem('lba_auth_token');
+                localStorage.removeItem('lba_user_data');
+                localStorage.removeItem('lba_user_role');
+                sessionStorage.clear();
+                
+                updateDebugLog('✓ Local storage cleared');
+                alert('Browser data cleared. Please refresh the page.');
+            }
+        }
+
+        // Helper Functions
+        function showError(element, message) {
+            element.textContent = message;
+            element.style.display = 'block';
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showSuccess(element, message) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function updateDebugLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            
+            debugLog.innerHTML = logEntry + '<br>' + debugLog.innerHTML;
+            
+            // Keep only last 20 lines
+            const lines = debugLog.innerHTML.split('<br>');
+            if (lines.length > 20) {
+                debugLog.innerHTML = lines.slice(0, 20).join('<br>');
+            }
+            
+            // Also log to console
+            console.log('🔍', message);
+        }
+
+        // Quick access functions
+        window.testBackendConnection = testBackendConnection;
+        window.createTestAdmin = createTestAdmin;
+        window.resetLocalStorage = resetLocalStorage;
+        
+        // Emergency login bypass (for development only)
+        window.emergencyLogin = function(role = 'admin') {
+            if (confirm('Create emergency session for testing?')) {
+                localStorage.setItem('lba_auth_token', 'emergency-test-token-' + Date.now());
+                localStorage.setItem('lba_user_data', JSON.stringify({
+                    id: 'emergency-user',
+                    email: 'emergency@test.com',
+                    name: 'Emergency Test User',
+                    role: role,
+                    verified: true
+                }));
+                localStorage.setItem('lba_user_role', role);
+                
+                updateDebugLog('⚠ Emergency login created');
+                
+                setTimeout(() => {
+                    window.location.href = role + '/index.html';
+                }, 500);
+            }
+        };
     </script>
 </body>
 </html>
