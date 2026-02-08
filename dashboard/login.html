@@ -1,11 +1,18 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Login - Liberia Business Awards</title>
-    <link rel="stylesheet" href="../css/style.css">
     <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
         .login-container {
             max-width: 400px;
             margin: 100px auto;
@@ -20,8 +27,14 @@
             margin-bottom: 30px;
         }
         
-        .logo img {
-            max-width: 150px;
+        .logo h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .logo p {
+            color: #7f8c8d;
+            font-size: 14px;
         }
         
         .form-group {
@@ -32,6 +45,7 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
+            color: #2c3e50;
         }
         
         .form-group input {
@@ -40,6 +54,13 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
         
         .login-btn {
@@ -52,6 +73,7 @@
             font-size: 16px;
             cursor: pointer;
             transition: background 0.3s;
+            font-weight: 600;
         }
         
         .login-btn:hover {
@@ -61,6 +83,10 @@
         .error-message {
             color: #e74c3c;
             margin-top: 10px;
+            padding: 10px;
+            background: #fdf2f2;
+            border-radius: 5px;
+            border-left: 4px solid #e74c3c;
             display: none;
         }
         
@@ -68,13 +94,22 @@
             text-align: center;
             margin-top: 20px;
         }
+        
+        .back-link a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="logo">
-            <img src="../images/logo.png" alt="Liberia Business Awards">
             <h2>Dashboard Login</h2>
+            <p>Liberia Business Awards Administration</p>
         </div>
         
         <form id="loginForm">
@@ -98,59 +133,123 @@
         </div>
     </div>
 
-    <script src="../api/config.js"></script>
+    <!-- FIXED: Changed from ../api/config.js to api/config.js -->
+    <script src="api/config.js"></script>
     <script>
-    document.getElementById("loginForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-        const errorElement = document.getElementById("errorMessage");
-        const btn = this.querySelector(".login-btn");
-        
-        try {
-            btn.textContent = "Logging in...";
-            btn.disabled = true;
-            errorElement.style.display = "none";
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Login page loaded');
             
-            // Check if backend is available
-            const healthCheck = await checkApiHealth();
-            if (!healthCheck.success) {
-                throw new Error("Backend service is currently unavailable. Please try again later.");
+            // Auto-fill test credentials for easy testing
+            const url = new URL(window.location.href);
+            if (url.hostname.includes('liberiabusinessawardslr.com') || url.hostname === 'localhost') {
+                document.getElementById('email').value = 'admin@liberiabusinessawardslr.com';
+                document.getElementById('password').value = 'Admin123!';
             }
             
-            // Attempt login
-            const result = await login(email, password);
+            // Add global login function if not defined
+            if (typeof window.login !== 'function') {
+                window.login = async function(email, password) {
+                    try {
+                        const response = await window.API.login(email, password);
+                        
+                        if (response.token) {
+                            localStorage.setItem('lba_auth_token', response.token);
+                            localStorage.setItem('lba_user_data', JSON.stringify(response.user));
+                            localStorage.setItem('lba_user_role', response.user.role);
+                            
+                            // Determine redirect URL
+                            let redirectUrl = '../index.html';
+                            if (response.user.role === 'admin') {
+                                redirectUrl = 'admin/index.html';
+                            } else if (response.user.role === 'business') {
+                                redirectUrl = 'business/index.html';
+                            }
+                            
+                            return {
+                                success: true,
+                                redirectUrl: redirectUrl
+                            };
+                        }
+                        return {
+                            success: false,
+                            message: 'Invalid credentials'
+                        };
+                    } catch (error) {
+                        return {
+                            success: false,
+                            message: error.message || 'Login failed'
+                        };
+                    }
+                };
+            }
             
-            if (result.success) {
-                // Show success message
-                btn.textContent = "✓ Login Successful!";
-                btn.style.background = "#27ae60";
+            // Add checkApiHealth if not defined
+            if (typeof window.checkApiHealth !== 'function') {
+                window.checkApiHealth = async function() {
+                    try {
+                        const response = await fetch(window.getApiUrl('/api/health'));
+                        return {
+                            success: response.ok,
+                            status: response.status
+                        };
+                    } catch (error) {
+                        return {
+                            success: false,
+                            error: error.message
+                        };
+                    }
+                };
+            }
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('errorMessage');
+            const btn = this.querySelector('.login-btn');
+            
+            try {
+                btn.textContent = 'Logging in...';
+                btn.disabled = true;
+                errorElement.style.display = 'none';
                 
-                // Redirect after short delay
-                setTimeout(() => {
-                    window.location.href = result.redirectUrl;
-                }, 1000);
-            } else {
-                throw new Error(result.message || "Invalid email or password");
+                console.log('Attempting login with:', email);
+                
+                // Check API health
+                console.log('Checking API health...');
+                const healthCheck = await window.checkApiHealth();
+                console.log('Health check result:', healthCheck);
+                
+                if (!healthCheck.success) {
+                    throw new Error('Backend service is currently unavailable. Please try again later.');
+                }
+                
+                // Attempt login
+                console.log('Calling login API...');
+                const result = await window.login(email, password);
+                console.log('Login result:', result);
+                
+                if (result.success) {
+                    btn.textContent = '✓ Login Successful!';
+                    btn.style.background = '#27ae60';
+                    
+                    setTimeout(() => {
+                        window.location.href = result.redirectUrl;
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Invalid email or password');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+                btn.textContent = 'Login to Dashboard';
+                btn.disabled = false;
             }
-            
-        } catch (error) {
-            errorElement.textContent = error.message;
-            errorElement.style.display = "block";
-            btn.textContent = "Login to Dashboard";
-            btn.disabled = false;
-        }
-    });
-    
-    // Add test credentials helper
-    document.addEventListener("DOMContentLoaded", function() {
-        // Auto-fill test credentials for development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            document.getElementById("email").value = "admin@liberiabusinessawardslr.com";
-            document.getElementById("password").value = "Admin123!";
-        }
-    });
-</script>
+        });
+    </script>
 </body>
 </html>
