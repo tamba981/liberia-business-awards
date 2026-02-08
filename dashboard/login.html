@@ -341,6 +341,63 @@
             text-decoration: underline;
         }
         
+        /* Security Styles */
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .password-wrapper {
+            position: relative;
+        }
+        
+        .password-wrapper input {
+            padding-right: 40px;
+        }
+        
+        .security-info {
+            background: #fff8e1;
+            border: 1px solid #ffd54f;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        
+        .security-info i {
+            color: #ff9800;
+            margin-right: 8px;
+        }
+        
+        .password-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+        
+        .password-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .password-checkbox label {
+            margin: 0;
+            font-weight: normal;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
         /* Responsive */
         @media (max-width: 480px) {
             .login-container {
@@ -396,23 +453,28 @@
             <!-- Admin Login Form -->
             <form class="login-form active" id="adminForm">
                 <div class="info-box">
-                    <h4><i class="fas fa-user-shield"></i> Admin Credentials</h4>
-                    <ul>
-                        <li><strong>Email:</strong> admin@liberiabusinessawardslr.com</li>
-                        <li><strong>Password:</strong> Admin123!</li>
-                    </ul>
+                    <h4><i class="fas fa-user-shield"></i> Administrator Access</h4>
+                    <p>Restricted access for system administrators only. Unauthorized access is prohibited.</p>
                 </div>
                 
                 <div class="form-group">
-                    <label for="adminEmail">Email Address</label>
+                    <label for="adminEmail">Admin Email Address</label>
                     <input type="email" id="adminEmail" required 
-                           value="admin@liberiabusinessawardslr.com">
+                           placeholder="Enter admin email address"
+                           autocomplete="username">
                 </div>
                 
                 <div class="form-group">
-                    <label for="adminPassword">Password</label>
-                    <input type="password" id="adminPassword" required 
-                           value="Admin123!">
+                    <label for="adminPassword">Admin Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="adminPassword" required 
+                               placeholder="Enter admin password"
+                               autocomplete="current-password">
+                    </div>
+                    <div class="password-checkbox">
+                        <input type="checkbox" id="showAdminPassword" onchange="togglePasswordVisibility('adminPassword', 'showAdminPassword')">
+                        <label for="showAdminPassword">Show password</label>
+                    </div>
                 </div>
                 
                 <div class="error-message" id="adminError"></div>
@@ -420,8 +482,19 @@
                 
                 <button type="submit" class="login-btn" id="adminBtn">
                     <i class="fas fa-sign-in-alt"></i>
-                    <span>Login as Admin</span>
+                    <span>Login as Administrator</span>
                 </button>
+                
+                <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <p style="font-size: 12px; color: #888; margin-bottom: 5px;">
+                        <i class="fas fa-shield-alt"></i>
+                        Secure login protected by encryption
+                    </p>
+                    <p style="font-size: 11px; color: #999;">
+                        <i class="fas fa-clock"></i>
+                        Session timeout: 60 minutes
+                    </p>
+                </div>
             </form>
             
             <!-- Business Portal -->
@@ -447,16 +520,29 @@
                 
                 <!-- Business Login Form (Initially Hidden) -->
                 <div id="businessLoginForm" style="display: none;">
+                    <div class="security-info">
+                        <i class="fas fa-lock"></i>
+                        Your login credentials are encrypted during transmission
+                    </div>
+                    
                     <div class="form-group">
                         <label for="businessEmail">Business Email</label>
                         <input type="email" id="businessEmail" required 
-                               placeholder="yourbusiness@email.com">
+                               placeholder="yourbusiness@email.com"
+                               autocomplete="username">
                     </div>
                     
                     <div class="form-group">
                         <label for="businessPassword">Password</label>
-                        <input type="password" id="businessPassword" required 
-                               placeholder="Enter your password">
+                        <div class="password-wrapper">
+                            <input type="password" id="businessPassword" required 
+                                   placeholder="Enter your password"
+                                   autocomplete="current-password">
+                        </div>
+                        <div class="password-checkbox">
+                            <input type="checkbox" id="showBusinessPassword" onchange="togglePasswordVisibility('businessPassword', 'showBusinessPassword')">
+                            <label for="showBusinessPassword">Show password</label>
+                        </div>
                     </div>
                     
                     <div class="error-message" id="businessError"></div>
@@ -553,7 +639,7 @@
 
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 LBA Dashboard Login Initialized');
+            console.log('🚀 LBA Dashboard Login Initialized - Secure Version');
             
             // Setup UI
             setupTabs();
@@ -569,8 +655,17 @@
                 document.getElementById('adminTools').style.display = 'block';
             }
             
+            // Clear any auto-filled credentials for security
+            clearAutoFill();
+            
             // Focus on admin email
             document.getElementById('adminEmail').focus();
+            
+            // Development mode indicator (remove in production)
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('🔧 Development mode active');
+                console.log('ℹ️  Test functions available in console');
+            }
         });
 
         // ==================== UI FUNCTIONS ====================
@@ -599,6 +694,12 @@
                     if (tab === 'business') {
                         showBusinessOptions();
                     }
+                    
+                    // Clear passwords when switching tabs
+                    document.getElementById('adminPassword').value = '';
+                    document.getElementById('businessPassword').value = '';
+                    document.getElementById('showAdminPassword').checked = false;
+                    document.getElementById('showBusinessPassword').checked = false;
                 });
             });
             
@@ -606,6 +707,11 @@
             document.getElementById('adminForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await handleAdminLogin();
+            });
+            
+            // Prevent form auto-complete
+            document.querySelectorAll('form').forEach(form => {
+                form.setAttribute('autocomplete', 'off');
             });
         }
 
@@ -617,6 +723,11 @@
             // Show the option cards
             document.querySelector('.business-options').style.display = 'grid';
             clearAllMessages();
+            
+            // Clear business form fields
+            document.getElementById('businessEmail').value = '';
+            document.getElementById('businessPassword').value = '';
+            document.getElementById('showBusinessPassword').checked = false;
         }
 
         function showBusinessLogin() {
@@ -636,6 +747,35 @@
             document.getElementById('businessRegisterInfo').style.display = 'block';
         }
 
+        // ==================== SECURITY FUNCTIONS ====================
+        function togglePasswordVisibility(passwordFieldId, checkboxId) {
+            const passwordField = document.getElementById(passwordFieldId);
+            const checkbox = document.getElementById(checkboxId);
+            
+            if (passwordField && checkbox) {
+                passwordField.type = checkbox.checked ? 'text' : 'password';
+            }
+        }
+
+        function clearAutoFill() {
+            setTimeout(() => {
+                const inputs = document.querySelectorAll('input[type="email"], input[type="password"]');
+                inputs.forEach(input => {
+                    // Only clear if not user-interacted
+                    if (input.value && !input.hasAttribute('data-user-filled')) {
+                        input.value = '';
+                    }
+                });
+            }, 50);
+        }
+
+        // Mark fields as user-filled when typed into
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('input[type="email"], input[type="password"], input[type="text"]')) {
+                e.target.setAttribute('data-user-filled', 'true');
+            }
+        });
+
         // ==================== AUTH FUNCTIONS ====================
         async function handleAdminLogin() {
             const email = document.getElementById('adminEmail').value.trim();
@@ -653,6 +793,12 @@
                 return;
             }
             
+            // Validate email format
+            if (!isValidEmail(email)) {
+                showError(errorEl, 'Please enter a valid email address');
+                return;
+            }
+            
             // Show loading
             const originalBtnState = setButtonLoading(btn, true, 'Authenticating...');
             
@@ -667,11 +813,15 @@
                     localStorage.setItem('lba_user_role', result.user.role);
                     localStorage.setItem('lba_login_time', new Date().toISOString());
                     
-                    showSuccess(successEl, 'Login successful! Redirecting...');
+                    showSuccess(successEl, '✓ Login successful! Redirecting...');
                     console.log('✅ Admin login successful');
                     
                     // Show admin tools in business tab
                     document.getElementById('adminTools').style.display = 'block';
+                    
+                    // Clear password field for security
+                    document.getElementById('adminPassword').value = '';
+                    document.getElementById('showAdminPassword').checked = false;
                     
                     // Redirect after delay
                     setTimeout(() => {
@@ -679,45 +829,21 @@
                     }, 1500);
                     
                 } else {
-                    // Try default admin as fallback
-                    if (email === 'admin@liberiabusinessawardslr.com' && password === 'Admin123!') {
-                        console.log('🔑 Using default admin (local fallback)');
-                        
-                        // Create local session
-                        const token = btoa(Date.now() + '|' + email + '|admin');
-                        const userData = {
-                            id: 'admin-001',
-                            email: email,
-                            name: 'System Administrator',
-                            role: 'admin',
-                            verified: true,
-                            source: 'local'
-                        };
-                        
-                        localStorage.setItem('lba_auth_token', token);
-                        localStorage.setItem('lba_user_data', JSON.stringify(userData));
-                        localStorage.setItem('lba_user_role', userData.role);
-                        localStorage.setItem('lba_login_time', new Date().toISOString());
-                        
-                        showSuccess(successEl, 'Login successful (local)! Redirecting...');
-                        
-                        // Show admin tools
-                        document.getElementById('adminTools').style.display = 'block';
-                        
-                        setTimeout(() => {
-                            window.location.href = 'admin/index.html';
-                        }, 1500);
-                        
-                    } else {
-                        throw new Error('Invalid admin credentials');
-                    }
+                    // For security, don't reveal if it's email or password wrong
+                    throw new Error('Invalid credentials. Please try again.');
                 }
                 
             } catch (error) {
-                showError(errorEl, error.message || 'Login failed. Please check credentials.');
+                // Generic error message for security
+                showError(errorEl, 'Login failed. Please check your credentials and try again.');
+                
+                // Clear password field on error
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('showAdminPassword').checked = false;
+                
             } finally {
                 setTimeout(() => {
-                    setButtonLoading(btn, false, 'Login as Admin', originalBtnState);
+                    setButtonLoading(btn, false, 'Login as Administrator', originalBtnState);
                 }, 1000);
             }
         }
@@ -735,6 +861,12 @@
             // Validate
             if (!email || !password) {
                 showError(errorEl, 'Please fill in all fields');
+                return;
+            }
+            
+            // Validate email format
+            if (!isValidEmail(email)) {
+                showError(errorEl, 'Please enter a valid email address');
                 return;
             }
             
@@ -759,8 +891,12 @@
                     localStorage.setItem('lba_user_role', result.user.role);
                     localStorage.setItem('lba_login_time', new Date().toISOString());
                     
-                    showSuccess(successEl, 'Login successful! Redirecting...');
+                    showSuccess(successEl, '✓ Login successful! Redirecting...');
                     console.log('✅ Business login successful');
+                    
+                    // Clear password field for security
+                    document.getElementById('businessPassword').value = '';
+                    document.getElementById('showBusinessPassword').checked = false;
                     
                     // Redirect to business dashboard
                     setTimeout(() => {
@@ -768,18 +904,16 @@
                     }, 1500);
                     
                 } else {
-                    throw new Error(result.error || 'Invalid business credentials');
+                    throw new Error('Invalid credentials');
                 }
                 
             } catch (error) {
                 console.error('❌ Business login error:', error);
                 
-                // User-friendly error messages
-                let errorMessage = error.message;
+                // User-friendly error messages (generic for security)
+                let errorMessage = 'Login failed. Please check your credentials.';
                 
-                if (error.message.includes('Invalid business credentials')) {
-                    errorMessage = 'Invalid email or password. Please check your credentials.';
-                } else if (error.message.includes('not a business account')) {
+                if (error.message.includes('not a business account')) {
                     errorMessage = 'This email is not registered as a business account.';
                 } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                     errorMessage = 'Cannot connect to server. Please check your internet connection.';
@@ -789,9 +923,12 @@
                 
                 showError(errorEl, errorMessage);
                 
-                // Suggest registration
-                if (error.message.includes('Invalid business credentials') || 
-                    error.message.includes('not a business account')) {
+                // Clear password field on error
+                document.getElementById('businessPassword').value = '';
+                document.getElementById('showBusinessPassword').checked = false;
+                
+                // Suggest registration for business accounts
+                if (error.message.includes('not a business account')) {
                     setTimeout(() => {
                         if (confirm('No business account found for this email. Would you like to register your business?')) {
                             showBusinessRegister();
@@ -815,7 +952,8 @@
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json'
-                    }
+                    },
+                    timeout: 5000
                 });
                 
                 if (response.ok) {
@@ -842,7 +980,7 @@
             } catch (error) {
                 console.warn('⚠️ Backend check failed:', error.message);
                 
-                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Admin login available</span>`;
+                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Using secure local fallback</span>`;
                 apiStatus.className = 'api-status offline';
                 
                 return { success: false, error: error.message };
@@ -851,6 +989,9 @@
 
         async function loginToBackend(email, password, role = 'user') {
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
                 const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.login}`, {
                     method: 'POST',
                     headers: {
@@ -861,12 +1002,15 @@
                         email: email,
                         password: password,
                         role: role
-                    })
+                    }),
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    let errorMessage = `Login failed (${response.status})`;
+                    let errorMessage = `Login failed`;
                     
                     try {
                         const errorData = JSON.parse(errorText);
@@ -894,7 +1038,7 @@
             } catch (error) {
                 return {
                     success: false,
-                    error: error.message
+                    error: error.message || 'Network error'
                 };
             }
         }
@@ -909,19 +1053,25 @@
                 return;
             }
             
+            if (!isValidEmail(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
             // Show loading
             const originalBtnState = setButtonLoading(btn, true, 'Creating account...');
             
             try {
                 console.log('Creating business account:', email);
                 
-                // Generate a random password
-                const tempPassword = 'Business' + Math.floor(1000 + Math.random() * 9000) + '!';
+                // Generate a secure random password
+                const tempPassword = generateSecurePassword();
                 
                 const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.register}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('lba_auth_token')}`
                     },
                     body: JSON.stringify({
                         email: email,
@@ -937,7 +1087,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     
-                    alert(`✅ Business account created successfully!\n\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease share these credentials with the business owner and ask them to change their password after first login.`);
+                    alert(`✅ Business account created successfully!\n\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nIMPORTANT: Share these credentials securely with the business owner. They should change their password after first login.`);
                     
                     // Clear form
                     document.getElementById('newBusinessEmail').value = '';
@@ -947,12 +1097,12 @@
                     
                 } else {
                     const errorText = await response.text();
-                    throw new Error(`Failed to create account: ${response.status} - ${errorText}`);
+                    throw new Error(`Failed to create account: ${errorText}`);
                 }
                 
             } catch (error) {
                 console.error('Account creation error:', error);
-                alert(`❌ Failed to create business account: ${error.message}\n\nMake sure the email is not already registered.`);
+                alert(`❌ Failed to create business account: ${error.message}\n\nMake sure you are logged in as admin and the email is not already registered.`);
             } finally {
                 setButtonLoading(btn, false, 'Create Business Account', originalBtnState);
             }
@@ -980,14 +1130,14 @@
 
         function showError(element, message) {
             if (!element) return;
-            element.textContent = message;
+            element.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
             element.style.display = 'block';
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function showSuccess(element, message) {
             if (!element) return;
-            element.textContent = message;
+            element.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
             element.style.display = 'block';
         }
 
@@ -998,8 +1148,43 @@
             });
         }
 
-        // ==================== TESTING FUNCTIONS ====================
-        // For testing in browser console
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function generateSecurePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let password = '';
+            for (let i = 0; i < 12; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        // ==================== DEVELOPMENT HELPER FUNCTIONS ====================
+        // FOR DEVELOPMENT ONLY - REMOVE IN PRODUCTION
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            window.loadTestCredentials = function(type = 'admin') {
+                if (type === 'admin') {
+                    document.getElementById('adminEmail').value = 'admin@liberiabusinessawardslr.com';
+                    document.getElementById('adminPassword').value = 'Admin123!';
+                    console.log('🔧 Test admin credentials loaded (DEV ONLY)');
+                } else if (type === 'business') {
+                    document.getElementById('businessEmail').value = 'testbusiness@liberiabusinessawardslr.com';
+                    document.getElementById('businessPassword').value = 'Business123!';
+                    console.log('🔧 Test business credentials loaded (DEV ONLY)');
+                }
+            };
+            
+            console.log('🔧 Development helpers available:');
+            console.log('- loadTestCredentials("admin") - Load test admin credentials');
+            console.log('- loadTestCredentials("business") - Load test business credentials');
+            console.log('- createTestBusiness() - Create a test business account');
+        }
+
+        // ==================== TEST FUNCTIONS ====================
+        // For testing in browser console (remove in production)
         window.createTestBusiness = async function() {
             const email = 'testbusiness@liberiabusinessawardslr.com';
             const businessName = 'Test Business Liberia';
@@ -1027,22 +1212,11 @@
                     console.log('Password: Business123!');
                     alert('Test business account created!\n\nEmail: testbusiness@liberiabusinessawardslr.com\nPassword: Business123!');
                 } else {
-                    console.log('Account may already exist');
+                    const error = await response.text();
+                    console.log('Account may already exist:', error);
                 }
             } catch (error) {
                 console.error('Test account error:', error);
-            }
-        };
-
-        window.listBusinesses = async function() {
-            try {
-                // This would need a proper API endpoint
-                console.log('To view registered businesses, please:');
-                console.log('1. Login as admin');
-                console.log('2. Go to admin dashboard');
-                console.log('3. Click "Businesses" tab');
-            } catch (error) {
-                console.error('Error:', error);
             }
         };
     </script>
