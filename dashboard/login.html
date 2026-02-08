@@ -29,7 +29,7 @@
         
         .login-container {
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
             background: white;
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
@@ -178,6 +178,30 @@
             transform: none;
         }
         
+        .secondary-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--lba-blue), #99d6f0);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .secondary-btn:hover {
+            background: linear-gradient(135deg, #6bb9e2, #87CEEB);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.3);
+        }
+        
         .error-message {
             background: #fee;
             color: #c00;
@@ -200,7 +224,7 @@
             font-size: 14px;
         }
         
-        .credentials-info {
+        .info-box {
             background: #f0f8ff;
             padding: 15px;
             border-radius: 8px;
@@ -208,7 +232,7 @@
             border-left: 4px solid var(--lba-blue);
         }
         
-        .credentials-info h4 {
+        .info-box h4 {
             color: var(--lba-dark);
             margin-bottom: 10px;
             display: flex;
@@ -216,17 +240,17 @@
             gap: 8px;
         }
         
-        .credentials-info ul {
+        .info-box ul {
             list-style: none;
             padding-left: 10px;
         }
         
-        .credentials-info li {
+        .info-box li {
             margin-bottom: 8px;
             color: #555;
         }
         
-        .credentials-info strong {
+        .info-box strong {
             color: var(--lba-red);
         }
         
@@ -256,6 +280,45 @@
             background: #fff3cd;
             color: #856404;
             border-left: 4px solid #ffc107;
+        }
+        
+        .business-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .option-card {
+            background: #f9f9f9;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .option-card:hover {
+            border-color: var(--lba-blue);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .option-card i {
+            font-size: 32px;
+            color: var(--lba-red);
+            margin-bottom: 10px;
+        }
+        
+        .option-card h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .option-card p {
+            font-size: 13px;
+            color: #666;
         }
         
         .footer-links {
@@ -296,6 +359,10 @@
                 text-align: center;
                 padding: 15px;
             }
+            
+            .business-options {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -323,12 +390,12 @@
             <!-- Tabs -->
             <div class="login-tabs">
                 <button class="tab-btn active" data-tab="admin">Admin Login</button>
-                <button class="tab-btn" data-tab="business">Business Login</button>
+                <button class="tab-btn" data-tab="business">Business Portal</button>
             </div>
             
             <!-- Admin Login Form -->
             <form class="login-form active" id="adminForm">
-                <div class="credentials-info">
+                <div class="info-box">
                     <h4><i class="fas fa-user-shield"></i> Admin Credentials</h4>
                     <ul>
                         <li><strong>Email:</strong> admin@liberiabusinessawardslr.com</li>
@@ -357,37 +424,107 @@
                 </button>
             </form>
             
-            <!-- Business Login Form -->
-            <form class="login-form" id="businessForm">
-                <div class="credentials-info">
-                    <h4><i class="fas fa-building"></i> Business Account</h4>
-                    <p>Login with your business credentials. Need an account? <a href="../index.html" style="color: var(--lba-red); text-decoration: underline;">Register your business</a></p>
+            <!-- Business Portal -->
+            <div class="login-form" id="businessForm">
+                <div class="info-box">
+                    <h4><i class="fas fa-building"></i> Business Portal Access</h4>
+                    <p>Choose an option below to access or create your business account:</p>
                 </div>
                 
-                <div class="form-group">
-                    <label for="businessEmail">Business Email</label>
-                    <input type="email" id="businessEmail" required 
-                           placeholder="yourbusiness@email.com">
+                <div class="business-options">
+                    <div class="option-card" onclick="showBusinessLogin()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <h4>Existing Business</h4>
+                        <p>Already registered? Login with your business credentials</p>
+                    </div>
+                    
+                    <div class="option-card" onclick="showBusinessRegister()">
+                        <i class="fas fa-user-plus"></i>
+                        <h4>New Business</h4>
+                        <p>Register your business to get a dashboard account</p>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="businessPassword">Password</label>
-                    <input type="password" id="businessPassword" required 
-                           placeholder="Enter your password">
+                <!-- Business Login Form (Initially Hidden) -->
+                <div id="businessLoginForm" style="display: none;">
+                    <div class="form-group">
+                        <label for="businessEmail">Business Email</label>
+                        <input type="email" id="businessEmail" required 
+                               placeholder="yourbusiness@email.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="businessPassword">Password</label>
+                        <input type="password" id="businessPassword" required 
+                               placeholder="Enter your password">
+                    </div>
+                    
+                    <div class="error-message" id="businessError"></div>
+                    <div class="success-message" id="businessSuccess"></div>
+                    
+                    <button type="button" class="login-btn" onclick="handleBusinessLogin()" id="businessBtn">
+                        <i class="fas fa-building"></i>
+                        <span>Login to Business Dashboard</span>
+                    </button>
+                    
+                    <button type="button" class="secondary-btn" onclick="showBusinessOptions()">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Options</span>
+                    </button>
                 </div>
                 
-                <div class="error-message" id="businessError"></div>
-                <div class="success-message" id="businessSuccess" style="display: none;"></div>
-                
-                <button type="submit" class="login-btn" id="businessBtn">
-                    <i class="fas fa-building"></i>
-                    <span>Login to Business Portal</span>
-                </button>
-                
-                <div style="text-align: center; margin-top: 15px; font-size: 14px; color: #666;">
-                    <p>Forgot password? <a href="mailto:admin@liberiabusinessawardslr.com" style="color: var(--lba-red);">Contact Admin</a></p>
+                <!-- Business Registration Info (Initially Hidden) -->
+                <div id="businessRegisterInfo" style="display: none;">
+                    <div class="info-box">
+                        <h4><i class="fas fa-info-circle"></i> How to Register Your Business</h4>
+                        <p>To get business dashboard access, follow these steps:</p>
+                        <ol style="margin: 10px 0 10px 20px;">
+                            <li>Visit the main website: <a href="../index.html" style="color: var(--lba-red);">liberiabusinessawardslr.com</a></li>
+                            <li>Click "Register Your Business" button</li>
+                            <li>Fill out the complete registration form</li>
+                            <li>Submit required business documents</li>
+                            <li>Wait for admin verification (1-2 business days)</li>
+                            <li>Receive login credentials via email</li>
+                        </ol>
+                        <p><strong>Need help?</strong> Email: <a href="mailto:admin@liberiabusinessawardslr.com" style="color: var(--lba-red);">admin@liberiabusinessawardslr.com</a></p>
+                    </div>
+                    
+                    <button type="button" class="secondary-btn" onclick="window.open('../index.html', '_blank')">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>Go to Main Website & Register</span>
+                    </button>
+                    
+                    <button type="button" class="login-btn" onclick="showBusinessOptions()" style="margin-top: 10px;">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Options</span>
+                    </button>
                 </div>
-            </form>
+                
+                <!-- Quick Admin Tools (for admin convenience) -->
+                <div id="adminTools" style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc; display: none;">
+                    <div class="info-box">
+                        <h4><i class="fas fa-tools"></i> Admin Quick Tools</h4>
+                        <p>As an admin, you can create business accounts directly:</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newBusinessEmail">Business Email (for new account)</label>
+                        <input type="email" id="newBusinessEmail" 
+                               placeholder="newbusiness@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newBusinessName">Business Name</label>
+                        <input type="text" id="newBusinessName" 
+                               placeholder="ABC Company Liberia">
+                    </div>
+                    
+                    <button type="button" class="secondary-btn" onclick="createBusinessAccount()" id="createBusinessBtn">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Create Business Account</span>
+                    </button>
+                </div>
+            </div>
             
             <!-- Footer Links -->
             <div class="footer-links">
@@ -410,16 +547,8 @@
         const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
         const API_ENDPOINTS = {
             login: '/api/auth/login',
-            businessLogin: '/api/business/login',
+            register: '/api/auth/register',
             health: '/api/health'
-        };
-        
-        const DEFAULT_ADMIN = {
-            email: 'admin@liberiabusinessawardslr.com',
-            password: 'Admin123!',
-            name: 'System Administrator',
-            role: 'admin',
-            id: 'admin-001'
         };
 
         // ==================== INITIALIZATION ====================
@@ -428,20 +557,20 @@
             
             // Setup UI
             setupTabs();
-            setupForms();
             
             // Check backend status
             await checkBackendStatus();
             
+            // Check if admin is already logged in (show admin tools)
+            const authToken = localStorage.getItem('lba_auth_token');
+            const userRole = localStorage.getItem('lba_user_role');
+            
+            if (authToken && userRole === 'admin') {
+                document.getElementById('adminTools').style.display = 'block';
+            }
+            
             // Focus on admin email
             document.getElementById('adminEmail').focus();
-            
-            // Test credentials auto-fill for development
-            if (window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1')) {
-                console.log('Development mode: Auto-filling credentials');
-                document.getElementById('adminEmail').value = DEFAULT_ADMIN.email;
-                document.getElementById('adminPassword').value = DEFAULT_ADMIN.password;
-            }
         });
 
         // ==================== UI FUNCTIONS ====================
@@ -462,80 +591,52 @@
                         form.classList.remove('active');
                         if (form.id === tab + 'Form') {
                             form.classList.add('active');
-                            clearFormMessages(form.id);
+                            clearAllMessages();
                         }
                     });
                     
-                    // Focus first input
-                    const form = document.getElementById(tab + 'Form');
-                    if (form) {
-                        const firstInput = form.querySelector('input');
-                        if (firstInput) {
-                            setTimeout(() => firstInput.focus(), 100);
-                        }
+                    // Show business options by default
+                    if (tab === 'business') {
+                        showBusinessOptions();
                     }
                 });
             });
-        }
-
-        function setupForms() {
-            // Admin Form
+            
+            // Admin form submission
             document.getElementById('adminForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await handleAdminLogin();
             });
-            
-            // Business Form
-            document.getElementById('businessForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await handleBusinessLogin();
-            });
         }
 
-        // ==================== BACKEND FUNCTIONS ====================
-        async function checkBackendStatus() {
-            const apiStatus = document.getElementById('apiStatus');
+        function showBusinessOptions() {
+            document.getElementById('businessLoginForm').style.display = 'none';
+            document.getElementById('businessRegisterInfo').style.display = 'none';
+            document.getElementById('adminTools').style.display = 'none';
             
-            try {
-                apiStatus.innerHTML = `<i class="fas fa-sync fa-spin"></i><span>Connecting to backend...</span>`;
-                apiStatus.className = 'api-status connecting';
-                
-                const response = await fetchWithTimeout(`${BACKEND_URL}${API_ENDPOINTS.health}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                }, 5000);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('✅ Backend Status:', data);
-                    
-                    apiStatus.innerHTML = `<i class="fas fa-check-circle"></i><span>Backend Online - Ready for Login</span>`;
-                    apiStatus.className = 'api-status online';
-                    
-                    // Update status with backend info
-                    if (data.database) {
-                        apiStatus.innerHTML += `<br><small>Database: ${data.database}</small>`;
-                    }
-                    
-                    return { success: true, data: data };
-                    
-                } else {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-            } catch (error) {
-                console.warn('⚠️ Backend check failed:', error.message);
-                
-                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Offline - Local Mode Available</span>`;
-                apiStatus.className = 'api-status offline';
-                
-                return { success: false, error: error.message };
-            }
+            // Show the option cards
+            document.querySelector('.business-options').style.display = 'grid';
+            clearAllMessages();
         }
 
+        function showBusinessLogin() {
+            document.querySelector('.business-options').style.display = 'none';
+            document.getElementById('businessRegisterInfo').style.display = 'none';
+            document.getElementById('businessLoginForm').style.display = 'block';
+            
+            // Focus on email input
+            setTimeout(() => {
+                document.getElementById('businessEmail').focus();
+            }, 100);
+        }
+
+        function showBusinessRegister() {
+            document.querySelector('.business-options').style.display = 'none';
+            document.getElementById('businessLoginForm').style.display = 'none';
+            document.getElementById('businessRegisterInfo').style.display = 'block';
+        }
+
+        // ==================== AUTH FUNCTIONS ====================
         async function handleAdminLogin() {
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
@@ -544,35 +645,33 @@
             const btn = document.getElementById('adminBtn');
             
             // Reset messages
-            clearMessages(errorEl, successEl);
+            clearAllMessages();
             
             // Validate
-            if (!validateCredentials(email, password, errorEl)) return;
+            if (!email || !password) {
+                showError(errorEl, 'Please fill in all fields');
+                return;
+            }
             
             // Show loading
             const originalBtnState = setButtonLoading(btn, true, 'Authenticating...');
             
             try {
-                console.log('🔐 Attempting admin login...');
+                // Try backend login
+                const result = await loginToBackend(email, password, 'admin');
                 
-                // Try backend login first
-                const backendResult = await loginToBackend(email, password, 'admin');
-                
-                if (backendResult.success) {
-                    console.log('✅ Backend admin login successful');
-                    await handleSuccessfulLogin(backendResult, 'admin/index.html', successEl);
-                    return;
-                }
-                
-                // If backend fails, check if it's the default admin
-                if (email === DEFAULT_ADMIN.email && password === DEFAULT_ADMIN.password) {
-                    console.log('🔑 Using default admin (local fallback)');
+                if (result.success) {
+                    // Store authentication
+                    localStorage.setItem('lba_auth_token', result.token);
+                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+                    localStorage.setItem('lba_user_role', result.user.role);
+                    localStorage.setItem('lba_login_time', new Date().toISOString());
                     
-                    // Create local admin session
-                    const localResult = createLocalAdminSession();
+                    showSuccess(successEl, 'Login successful! Redirecting...');
+                    console.log('✅ Admin login successful');
                     
-                    showSuccess(successEl, 'Login successful! Redirecting to admin dashboard...');
-                    console.log('✅ Local admin login successful');
+                    // Show admin tools in business tab
+                    document.getElementById('adminTools').style.display = 'block';
                     
                     // Redirect after delay
                     setTimeout(() => {
@@ -580,14 +679,43 @@
                     }, 1500);
                     
                 } else {
-                    throw new Error('Invalid admin credentials');
+                    // Try default admin as fallback
+                    if (email === 'admin@liberiabusinessawardslr.com' && password === 'Admin123!') {
+                        console.log('🔑 Using default admin (local fallback)');
+                        
+                        // Create local session
+                        const token = btoa(Date.now() + '|' + email + '|admin');
+                        const userData = {
+                            id: 'admin-001',
+                            email: email,
+                            name: 'System Administrator',
+                            role: 'admin',
+                            verified: true,
+                            source: 'local'
+                        };
+                        
+                        localStorage.setItem('lba_auth_token', token);
+                        localStorage.setItem('lba_user_data', JSON.stringify(userData));
+                        localStorage.setItem('lba_user_role', userData.role);
+                        localStorage.setItem('lba_login_time', new Date().toISOString());
+                        
+                        showSuccess(successEl, 'Login successful (local)! Redirecting...');
+                        
+                        // Show admin tools
+                        document.getElementById('adminTools').style.display = 'block';
+                        
+                        setTimeout(() => {
+                            window.location.href = 'admin/index.html';
+                        }, 1500);
+                        
+                    } else {
+                        throw new Error('Invalid admin credentials');
+                    }
                 }
                 
             } catch (error) {
-                console.error('❌ Admin login failed:', error);
                 showError(errorEl, error.message || 'Login failed. Please check credentials.');
             } finally {
-                // Reset button
                 setTimeout(() => {
                     setButtonLoading(btn, false, 'Login as Admin', originalBtnState);
                 }, 1000);
@@ -602,10 +730,13 @@
             const btn = document.getElementById('businessBtn');
             
             // Reset messages
-            clearMessages(errorEl, successEl);
+            clearAllMessages();
             
             // Validate
-            if (!validateCredentials(email, password, errorEl)) return;
+            if (!email || !password) {
+                showError(errorEl, 'Please fill in all fields');
+                return;
+            }
             
             // Show loading
             const originalBtnState = setButtonLoading(btn, true, 'Authenticating...');
@@ -613,53 +744,114 @@
             try {
                 console.log('🏢 Attempting business login...');
                 
-                // Try business login endpoint
-                const backendResult = await loginToBackend(email, password, 'business');
+                // Try business login
+                const result = await loginToBackend(email, password, 'business');
                 
-                if (backendResult.success) {
+                if (result.success) {
+                    // Check if user has business role
+                    if (result.user.role !== 'business') {
+                        throw new Error('This account is not a business account');
+                    }
+                    
+                    // Store authentication
+                    localStorage.setItem('lba_auth_token', result.token);
+                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+                    localStorage.setItem('lba_user_role', result.user.role);
+                    localStorage.setItem('lba_login_time', new Date().toISOString());
+                    
+                    showSuccess(successEl, 'Login successful! Redirecting...');
                     console.log('✅ Business login successful');
-                    await handleSuccessfulLogin(backendResult, 'business/index.html', successEl);
-                    return;
+                    
+                    // Redirect to business dashboard
+                    setTimeout(() => {
+                        window.location.href = 'business/index.html';
+                    }, 1500);
+                    
+                } else {
+                    throw new Error(result.error || 'Invalid business credentials');
                 }
-                
-                // If business endpoint fails, try regular auth endpoint
-                console.log('🔄 Trying regular auth endpoint for business...');
-                const regularResult = await loginToBackend(email, password, 'user');
-                
-                if (regularResult.success && regularResult.user.role === 'business') {
-                    console.log('✅ Business login via regular endpoint successful');
-                    await handleSuccessfulLogin(regularResult, 'business/index.html', successEl);
-                    return;
-                }
-                
-                // If all backend attempts fail
-                throw new Error('Invalid business credentials or account not found');
                 
             } catch (error) {
-                console.error('❌ Business login failed:', error);
+                console.error('❌ Business login error:', error);
                 
-                // Check if it's a network error
-                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    showError(errorEl, 'Network error. Please check your internet connection and try again.');
+                // User-friendly error messages
+                let errorMessage = error.message;
+                
+                if (error.message.includes('Invalid business credentials')) {
+                    errorMessage = 'Invalid email or password. Please check your credentials.';
+                } else if (error.message.includes('not a business account')) {
+                    errorMessage = 'This email is not registered as a business account.';
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = 'Cannot connect to server. Please check your internet connection.';
                 } else if (error.message.includes('timeout')) {
-                    showError(errorEl, 'Connection timeout. The server may be busy. Please try again.');
-                } else {
-                    showError(errorEl, 'Login failed: ' + error.message);
+                    errorMessage = 'Connection timeout. Please try again.';
                 }
+                
+                showError(errorEl, errorMessage);
+                
+                // Suggest registration
+                if (error.message.includes('Invalid business credentials') || 
+                    error.message.includes('not a business account')) {
+                    setTimeout(() => {
+                        if (confirm('No business account found for this email. Would you like to register your business?')) {
+                            showBusinessRegister();
+                        }
+                    }, 500);
+                }
+                
             } finally {
-                // Reset button
                 setTimeout(() => {
-                    setButtonLoading(btn, false, 'Login to Business Portal', originalBtnState);
+                    setButtonLoading(btn, false, 'Login to Business Dashboard', originalBtnState);
                 }, 1000);
             }
         }
 
-        // ==================== AUTH FUNCTIONS ====================
+        // ==================== BACKEND FUNCTIONS ====================
+        async function checkBackendStatus() {
+            const apiStatus = document.getElementById('apiStatus');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.health}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Backend Status:', data);
+                    
+                    let statusText = 'Backend Online - Ready for Login';
+                    if (data.database) {
+                        statusText += `<br><small>Database: ${data.database}</small>`;
+                    }
+                    if (data.businesses) {
+                        statusText += `<br><small>Registered Businesses: ${data.businesses}</small>`;
+                    }
+                    
+                    apiStatus.innerHTML = `<i class="fas fa-check-circle"></i><span>${statusText}</span>`;
+                    apiStatus.className = 'api-status online';
+                    
+                    return { success: true, data: data };
+                    
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.warn('⚠️ Backend check failed:', error.message);
+                
+                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Admin login available</span>`;
+                apiStatus.className = 'api-status offline';
+                
+                return { success: false, error: error.message };
+            }
+        }
+
         async function loginToBackend(email, password, role = 'user') {
             try {
-                console.log(`📡 Connecting to: ${BACKEND_URL}${API_ENDPOINTS.login}`);
-                
-                const response = await fetchWithTimeout(`${BACKEND_URL}${API_ENDPOINTS.login}`, {
+                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.login}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -670,20 +862,17 @@
                         password: password,
                         role: role
                     })
-                }, 10000); // 10 second timeout for login
-                
-                console.log('Response status:', response.status);
+                });
                 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.log('Server response:', errorText);
-                    
                     let errorMessage = `Login failed (${response.status})`;
+                    
                     try {
                         const errorData = JSON.parse(errorText);
                         errorMessage = errorData.message || errorMessage;
                     } catch (e) {
-                        // Not JSON, use text as is
+                        // Not JSON
                     }
                     
                     return {
@@ -694,14 +883,6 @@
                 }
                 
                 const data = await response.json();
-                console.log('Login response data:', data);
-                
-                if (!data.token || !data.user) {
-                    return {
-                        success: false,
-                        error: 'Invalid response from server'
-                    };
-                }
                 
                 return {
                     success: true,
@@ -711,7 +892,6 @@
                 };
                 
             } catch (error) {
-                console.error('Backend login error:', error);
                 return {
                     success: false,
                     error: error.message
@@ -719,71 +899,66 @@
             }
         }
 
-        function createLocalAdminSession() {
-            const token = btoa(Date.now() + '|' + DEFAULT_ADMIN.email + '|' + DEFAULT_ADMIN.role);
-            const userData = {
-                ...DEFAULT_ADMIN,
-                verified: true,
-                source: 'local'
-            };
+        async function createBusinessAccount() {
+            const email = document.getElementById('newBusinessEmail').value.trim();
+            const businessName = document.getElementById('newBusinessName').value.trim();
+            const btn = document.getElementById('createBusinessBtn');
             
-            // Store session
-            localStorage.setItem('lba_auth_token', token);
-            localStorage.setItem('lba_user_data', JSON.stringify(userData));
-            localStorage.setItem('lba_user_role', userData.role);
-            localStorage.setItem('lba_login_time', new Date().toISOString());
-            localStorage.setItem('lba_auth_source', 'local');
+            if (!email || !businessName) {
+                alert('Please fill in both email and business name');
+                return;
+            }
             
-            return { token, user: userData };
-        }
-
-        async function handleSuccessfulLogin(result, redirectUrl, successElement) {
-            // Store authentication
-            localStorage.setItem('lba_auth_token', result.token);
-            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-            localStorage.setItem('lba_user_role', result.user.role);
-            localStorage.setItem('lba_login_time', new Date().toISOString());
-            localStorage.setItem('lba_auth_source', 'backend');
+            // Show loading
+            const originalBtnState = setButtonLoading(btn, true, 'Creating account...');
             
-            // Show success
-            showSuccess(successElement, 'Login successful! Redirecting...');
-            console.log('🎯 Redirecting to:', redirectUrl);
-            
-            // Redirect
-            setTimeout(() => {
-                window.location.href = redirectUrl;
-            }, 1500);
+            try {
+                console.log('Creating business account:', email);
+                
+                // Generate a random password
+                const tempPassword = 'Business' + Math.floor(1000 + Math.random() * 9000) + '!';
+                
+                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.register}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: tempPassword,
+                        name: businessName,
+                        role: 'business',
+                        businessName: businessName,
+                        phone: '+231 000 000 000',
+                        status: 'active'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    alert(`✅ Business account created successfully!\n\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease share these credentials with the business owner and ask them to change their password after first login.`);
+                    
+                    // Clear form
+                    document.getElementById('newBusinessEmail').value = '';
+                    document.getElementById('newBusinessName').value = '';
+                    
+                    console.log('Business account created:', data);
+                    
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to create account: ${response.status} - ${errorText}`);
+                }
+                
+            } catch (error) {
+                console.error('Account creation error:', error);
+                alert(`❌ Failed to create business account: ${error.message}\n\nMake sure the email is not already registered.`);
+            } finally {
+                setButtonLoading(btn, false, 'Create Business Account', originalBtnState);
+            }
         }
 
         // ==================== UTILITY FUNCTIONS ====================
-        function fetchWithTimeout(url, options, timeout = 8000) {
-            return Promise.race([
-                fetch(url, options),
-                new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Request timeout')), timeout)
-                )
-            ]);
-        }
-
-        function validateCredentials(email, password, errorElement) {
-            if (!email || !password) {
-                showError(errorElement, 'Please fill in all fields');
-                return false;
-            }
-            
-            if (!email.includes('@') || !email.includes('.')) {
-                showError(errorElement, 'Please enter a valid email address');
-                return false;
-            }
-            
-            if (password.length < 6) {
-                showError(errorElement, 'Password must be at least 6 characters');
-                return false;
-            }
-            
-            return true;
-        }
-
         function setButtonLoading(button, isLoading, loadingText = 'Loading...', originalState = null) {
             if (!originalState) {
                 originalState = {
@@ -816,60 +991,60 @@
             element.style.display = 'block';
         }
 
-        function clearMessages(errorEl, successEl) {
-            if (errorEl) errorEl.style.display = 'none';
-            if (successEl) successEl.style.display = 'none';
-        }
-
-        function clearFormMessages(formId) {
-            const form = document.getElementById(formId);
-            if (!form) return;
-            
-            const messages = form.querySelectorAll('.error-message, .success-message');
+        function clearAllMessages() {
+            const messages = document.querySelectorAll('.error-message, .success-message');
             messages.forEach(msg => {
                 msg.style.display = 'none';
             });
         }
 
-        // ==================== TEST BUSINESS ACCOUNT ====================
-        // For testing purposes only - creates a test business account
-        async function createTestBusinessAccount() {
+        // ==================== TESTING FUNCTIONS ====================
+        // For testing in browser console
+        window.createTestBusiness = async function() {
+            const email = 'testbusiness@liberiabusinessawardslr.com';
+            const businessName = 'Test Business Liberia';
+            
             try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.register}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        email: 'testbusiness@liberiabusinessawardslr.com',
+                        email: email,
                         password: 'Business123!',
-                        name: 'Test Business',
+                        name: 'Test Business Owner',
                         role: 'business',
-                        businessName: 'Test Business Liberia',
-                        phone: '+231 777 888 999'
+                        businessName: businessName,
+                        phone: '+231 777 888 999',
+                        status: 'active'
                     })
                 });
                 
                 if (response.ok) {
-                    console.log('✅ Test business account created');
-                    alert('Test business account created!\nEmail: testbusiness@liberiabusinessawardslr.com\nPassword: Business123!');
+                    console.log('✅ Test business account created!');
+                    console.log('Email:', email);
+                    console.log('Password: Business123!');
+                    alert('Test business account created!\n\nEmail: testbusiness@liberiabusinessawardslr.com\nPassword: Business123!');
                 } else {
                     console.log('Account may already exist');
                 }
             } catch (error) {
-                console.log('Test account creation:', error.message);
+                console.error('Test account error:', error);
             }
-        }
-
-        // ==================== GLOBAL FUNCTIONS ====================
-        // For testing in browser console
-        window.testBackend = async function() {
-            const status = await checkBackendStatus();
-            console.log('Backend status:', status);
-            return status;
         };
 
-        window.createTestBusiness = createTestBusinessAccount;
+        window.listBusinesses = async function() {
+            try {
+                // This would need a proper API endpoint
+                console.log('To view registered businesses, please:');
+                console.log('1. Login as admin');
+                console.log('2. Go to admin dashboard');
+                console.log('3. Click "Businesses" tab');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
     </script>
 </body>
 </html>
