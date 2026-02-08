@@ -341,41 +341,6 @@
             text-decoration: underline;
         }
         
-        /* Security Styles */
-        .password-toggle {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .password-wrapper {
-            position: relative;
-        }
-        
-        .password-wrapper input {
-            padding-right: 40px;
-        }
-        
-        .security-info {
-            background: #fff8e1;
-            border: 1px solid #ffd54f;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 15px 0;
-            font-size: 13px;
-        }
-        
-        .security-info i {
-            color: #ff9800;
-            margin-right: 8px;
-        }
-        
         .password-checkbox {
             display: flex;
             align-items: center;
@@ -421,41 +386,6 @@
                 grid-template-columns: 1fr;
             }
         }
-        
-        .debug-info {
-            background: #f5f5f5;
-            border: 1px dashed #999;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 15px 0;
-            font-size: 12px;
-            color: #666;
-            display: none;
-        }
-        
-        .debug-info pre {
-            margin: 5px 0;
-            padding: 10px;
-            background: #2d2d2d;
-            color: #fff;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .debug-toggle {
-            text-align: center;
-            margin: 10px 0;
-        }
-        
-        .debug-toggle button {
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 12px;
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -477,21 +407,6 @@
             <div class="api-status connecting" id="apiStatus">
                 <i class="fas fa-sync fa-spin"></i>
                 <span>Connecting to system...</span>
-            </div>
-            
-            <!-- Debug Toggle -->
-            <div class="debug-toggle">
-                <button onclick="toggleDebugInfo()" id="debugToggle">
-                    <i class="fas fa-bug"></i> Show Debug Info
-                </button>
-            </div>
-            
-            <!-- Debug Info (Hidden by default) -->
-            <div class="debug-info" id="debugInfo">
-                <h4><i class="fas fa-code"></i> Debug Information</h4>
-                <div id="debugContent">
-                    <p>Status: Initializing...</p>
-                </div>
             </div>
             
             <!-- Tabs -->
@@ -516,13 +431,11 @@
                 
                 <div class="form-group">
                     <label for="adminPassword">Admin Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="adminPassword" required 
-                               placeholder="Enter admin password"
-                               autocomplete="current-password">
-                    </div>
+                    <input type="password" id="adminPassword" required 
+                           placeholder="Enter admin password"
+                           autocomplete="current-password">
                     <div class="password-checkbox">
-                        <input type="checkbox" id="showAdminPassword" onchange="togglePasswordVisibility('adminPassword', 'showAdminPassword')">
+                        <input type="checkbox" id="showAdminPassword" onchange="togglePasswordVisibility('adminPassword')">
                         <label for="showAdminPassword">Show password</label>
                     </div>
                 </div>
@@ -534,14 +447,6 @@
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Login as Administrator</span>
                 </button>
-                
-                <!-- Local Login Option (Fallback) -->
-                <div id="localLoginOption" style="display: none; margin-top: 15px;">
-                    <div class="security-info">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Backend connection issue detected. Using local authentication as fallback.
-                    </div>
-                </div>
             </form>
             
             <!-- Business Portal -->
@@ -567,27 +472,18 @@
                 
                 <!-- Business Login Form (Initially Hidden) -->
                 <div id="businessLoginForm" style="display: none;">
-                    <div class="security-info">
-                        <i class="fas fa-lock"></i>
-                        Your login credentials are encrypted during transmission
-                    </div>
-                    
                     <div class="form-group">
                         <label for="businessEmail">Business Email</label>
                         <input type="email" id="businessEmail" required 
-                               placeholder="yourbusiness@email.com"
-                               autocomplete="username">
+                               placeholder="yourbusiness@email.com">
                     </div>
                     
                     <div class="form-group">
                         <label for="businessPassword">Password</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="businessPassword" required 
-                                   placeholder="Enter your password"
-                                   autocomplete="current-password">
-                        </div>
+                        <input type="password" id="businessPassword" required 
+                               placeholder="Enter your password">
                         <div class="password-checkbox">
-                            <input type="checkbox" id="showBusinessPassword" onchange="togglePasswordVisibility('businessPassword', 'showBusinessPassword')">
+                            <input type="checkbox" id="showBusinessPassword" onchange="togglePasswordVisibility('businessPassword')">
                             <label for="showBusinessPassword">Show password</label>
                         </div>
                     </div>
@@ -683,22 +579,24 @@
             register: '/api/auth/register',
             health: '/api/health'
         };
-        
-        // Default admin credentials (for fallback)
+
+        // Default admin credentials (FALLBACK - KEPT FOR BACKWARD COMPATIBILITY)
         const DEFAULT_ADMIN = {
             email: 'admin@liberiabusinessawardslr.com',
-            password: 'Admin123!'
+            password: 'Admin123!',
+            name: 'System Administrator',
+            role: 'admin'
         };
 
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 LBA Dashboard Login Initialized - Secure Version');
+            console.log('🚀 LBA Dashboard Login Initialized');
             
             // Setup UI
             setupTabs();
             
             // Check backend status
-            const backendStatus = await checkBackendStatus();
+            await checkBackendStatus();
             
             // Check if admin is already logged in (show admin tools)
             const authToken = localStorage.getItem('lba_auth_token');
@@ -708,22 +606,8 @@
                 document.getElementById('adminTools').style.display = 'block';
             }
             
-            // Show local login option if backend is down
-            if (!backendStatus.success) {
-                document.getElementById('localLoginOption').style.display = 'block';
-                updateDebugInfo('Backend offline', 'Using local fallback authentication');
-            }
-            
-            // Clear any auto-filled credentials for security
-            clearAutoFill();
-            
             // Focus on admin email
             document.getElementById('adminEmail').focus();
-            
-            // Add development helper if localhost
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                addDevelopmentHelpers();
-            }
         });
 
         // ==================== UI FUNCTIONS ====================
@@ -752,12 +636,6 @@
                     if (tab === 'business') {
                         showBusinessOptions();
                     }
-                    
-                    // Clear passwords when switching tabs
-                    document.getElementById('adminPassword').value = '';
-                    document.getElementById('businessPassword').value = '';
-                    document.getElementById('showAdminPassword').checked = false;
-                    document.getElementById('showBusinessPassword').checked = false;
                 });
             });
             
@@ -765,11 +643,6 @@
             document.getElementById('adminForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await handleAdminLogin();
-            });
-            
-            // Prevent form auto-complete
-            document.querySelectorAll('form').forEach(form => {
-                form.setAttribute('autocomplete', 'off');
             });
         }
 
@@ -781,11 +654,6 @@
             // Show the option cards
             document.querySelector('.business-options').style.display = 'grid';
             clearAllMessages();
-            
-            // Clear business form fields
-            document.getElementById('businessEmail').value = '';
-            document.getElementById('businessPassword').value = '';
-            document.getElementById('showBusinessPassword').checked = false;
         }
 
         function showBusinessLogin() {
@@ -805,51 +673,13 @@
             document.getElementById('businessRegisterInfo').style.display = 'block';
         }
 
-        // ==================== SECURITY FUNCTIONS ====================
-        function togglePasswordVisibility(passwordFieldId, checkboxId) {
-            const passwordField = document.getElementById(passwordFieldId);
-            const checkbox = document.getElementById(checkboxId);
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            const checkbox = document.getElementById(fieldId === 'adminPassword' ? 'showAdminPassword' : 'showBusinessPassword');
             
-            if (passwordField && checkbox) {
-                passwordField.type = checkbox.checked ? 'text' : 'password';
+            if (field && checkbox) {
+                field.type = checkbox.checked ? 'text' : 'password';
             }
-        }
-
-        function clearAutoFill() {
-            setTimeout(() => {
-                const inputs = document.querySelectorAll('input[type="email"], input[type="password"]');
-                inputs.forEach(input => {
-                    // Only clear if not user-interacted
-                    if (input.value && !input.hasAttribute('data-user-filled')) {
-                        input.value = '';
-                    }
-                });
-            }, 50);
-        }
-
-        // Mark fields as user-filled when typed into
-        document.addEventListener('input', function(e) {
-            if (e.target.matches('input[type="email"], input[type="password"], input[type="text"]')) {
-                e.target.setAttribute('data-user-filled', 'true');
-            }
-        });
-
-        function toggleDebugInfo() {
-            const debugInfo = document.getElementById('debugInfo');
-            const debugToggle = document.getElementById('debugToggle');
-            
-            if (debugInfo.style.display === 'none' || debugInfo.style.display === '') {
-                debugInfo.style.display = 'block';
-                debugToggle.innerHTML = '<i class="fas fa-bug"></i> Hide Debug Info';
-            } else {
-                debugInfo.style.display = 'none';
-                debugToggle.innerHTML = '<i class="fas fa-bug"></i> Show Debug Info';
-            }
-        }
-
-        function updateDebugInfo(title, content) {
-            const debugContent = document.getElementById('debugContent');
-            debugContent.innerHTML = `<strong>${title}:</strong> ${content}`;
         }
 
         // ==================== AUTH FUNCTIONS ====================
@@ -869,115 +699,80 @@
                 return;
             }
             
-            // Validate email format
-            if (!isValidEmail(email)) {
-                showError(errorEl, 'Please enter a valid email address');
-                return;
-            }
-            
             // Show loading
             const originalBtnState = setButtonLoading(btn, true, 'Authenticating...');
             
             try {
-                updateDebugInfo('Login Attempt', `Email: ${email}, Backend: ${BACKEND_URL}`);
+                console.log('🔐 Attempting admin login...');
                 
-                // Try backend login first
+                // FIRST: Try backend login with simplified request
                 const backendResult = await loginToBackend(email, password);
                 
                 if (backendResult.success) {
-                    // Backend login successful
-                    handleSuccessfulLogin(backendResult, email, 'admin');
+                    // Store authentication
+                    localStorage.setItem('lba_auth_token', backendResult.token);
+                    localStorage.setItem('lba_user_data', JSON.stringify(backendResult.user));
+                    localStorage.setItem('lba_user_role', backendResult.user.role);
+                    localStorage.setItem('lba_login_time', new Date().toISOString());
+                    
                     showSuccess(successEl, '✓ Login successful! Redirecting...');
+                    console.log('✅ Admin login successful via backend');
+                    
+                    // Show admin tools in business tab
+                    document.getElementById('adminTools').style.display = 'block';
+                    
+                    // Redirect after delay
+                    setTimeout(() => {
+                        window.location.href = 'admin/index.html';
+                    }, 1500);
+                    
+                    return;
+                }
+                
+                // SECOND: If backend fails, try default admin credentials
+                console.log('⚠️ Backend login failed, trying default admin...');
+                
+                if (email === DEFAULT_ADMIN.email && password === DEFAULT_ADMIN.password) {
+                    console.log('🔑 Using default admin credentials');
+                    
+                    // Create local session
+                    const token = btoa(Date.now() + '|' + email + '|admin');
+                    const userData = {
+                        id: 'admin-001',
+                        email: email,
+                        name: DEFAULT_ADMIN.name,
+                        role: DEFAULT_ADMIN.role,
+                        verified: true,
+                        source: 'local'
+                    };
+                    
+                    localStorage.setItem('lba_auth_token', token);
+                    localStorage.setItem('lba_user_data', JSON.stringify(userData));
+                    localStorage.setItem('lba_user_role', userData.role);
+                    localStorage.setItem('lba_login_time', new Date().toISOString());
+                    
+                    showSuccess(successEl, '✓ Login successful (local admin)! Redirecting...');
+                    console.log('✅ Default admin login successful');
+                    
+                    // Show admin tools
+                    document.getElementById('adminTools').style.display = 'block';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'admin/index.html';
+                    }, 1500);
                     
                 } else {
-                    updateDebugInfo('Backend Error', backendResult.error || 'Unknown error');
-                    
-                    // Check if this is the default admin (fallback for local login)
-                    if (email === DEFAULT_ADMIN.email && password === DEFAULT_ADMIN.password) {
-                        updateDebugInfo('Using Local Fallback', 'Default admin credentials detected');
-                        
-                        // Create local admin session
-                        const localResult = {
-                            success: true,
-                            token: 'local-admin-' + Date.now(),
-                            user: {
-                                id: 'local-admin-001',
-                                email: email,
-                                name: 'System Administrator',
-                                role: 'admin',
-                                verified: true,
-                                source: 'local-fallback'
-                            }
-                        };
-                        
-                        handleSuccessfulLogin(localResult, email, 'admin');
-                        showSuccess(successEl, '✓ Local admin login successful! Redirecting...');
-                        
-                    } else {
-                        // Invalid credentials
-                        throw new Error('Invalid admin credentials');
-                    }
+                    throw new Error('Invalid admin credentials');
                 }
                 
             } catch (error) {
-                console.error('Login error:', error);
-                updateDebugInfo('Login Failed', error.message);
-                
-                // User-friendly error message
-                let errorMessage = 'Login failed. ';
-                
-                if (error.message.includes('Invalid admin credentials')) {
-                    errorMessage += 'Please check your email and password.';
-                } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-                    errorMessage += 'Cannot connect to server. Please check your internet connection.';
-                    document.getElementById('localLoginOption').style.display = 'block';
-                } else {
-                    errorMessage += 'Please try again.';
-                }
-                
-                showError(errorEl, errorMessage);
-                
-                // Clear password field on error
-                document.getElementById('adminPassword').value = '';
-                document.getElementById('showAdminPassword').checked = false;
-                
+                console.error('❌ Admin login error:', error);
+                showError(errorEl, 'Login failed. Please check your credentials and try again.');
             } finally {
                 setTimeout(() => {
-                    setButtonLoading(btn, false, 'Login as Administrator', originalBtnState);
+                    setButtonLoading(btn, false, 'Login as Admin', originalBtnState);
                 }, 1000);
             }
-        }
-
-        function handleSuccessfulLogin(result, email, role) {
-            // Store authentication
-            localStorage.setItem('lba_auth_token', result.token);
-            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-            localStorage.setItem('lba_user_role', result.user.role);
-            localStorage.setItem('lba_login_time', new Date().toISOString());
-            localStorage.setItem('lba_user_email', email);
-            
-            console.log(`✅ ${role} login successful:`, result.user);
-            updateDebugInfo('Login Success', `Role: ${result.user.role}, Source: ${result.user.source || 'backend'}`);
-            
-            // Show admin tools in business tab
-            if (role === 'admin') {
-                document.getElementById('adminTools').style.display = 'block';
-            }
-            
-            // Clear password field for security
-            document.getElementById('adminPassword').value = '';
-            document.getElementById('businessPassword').value = '';
-            document.getElementById('showAdminPassword').checked = false;
-            document.getElementById('showBusinessPassword').checked = false;
-            
-            // Redirect after delay
-            setTimeout(() => {
-                if (role === 'admin') {
-                    window.location.href = 'admin/index.html';
-                } else if (role === 'business') {
-                    window.location.href = 'business/index.html';
-                }
-            }, 1500);
         }
 
         async function handleBusinessLogin() {
@@ -996,57 +791,63 @@
                 return;
             }
             
-            // Validate email format
-            if (!isValidEmail(email)) {
-                showError(errorEl, 'Please enter a valid email address');
-                return;
-            }
-            
             // Show loading
             const originalBtnState = setButtonLoading(btn, true, 'Authenticating...');
             
             try {
-                updateDebugInfo('Business Login', `Email: ${email}`);
+                console.log('🏢 Attempting business login...');
                 
                 // Try business login
                 const result = await loginToBackend(email, password);
                 
                 if (result.success) {
-                    // Check if user has business role
-                    if (result.user.role !== 'business') {
-                        throw new Error('This account is not a business account');
+                    // Check if user has business role (optional check)
+                    if (result.user.role && result.user.role !== 'business') {
+                        console.warn('⚠️ User role is not business:', result.user.role);
                     }
                     
-                    handleSuccessfulLogin(result, email, 'business');
+                    // Store authentication
+                    localStorage.setItem('lba_auth_token', result.token);
+                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+                    localStorage.setItem('lba_user_role', result.user.role || 'business');
+                    localStorage.setItem('lba_login_time', new Date().toISOString());
+                    
                     showSuccess(successEl, '✓ Login successful! Redirecting...');
+                    console.log('✅ Business login successful');
+                    
+                    // Redirect to business dashboard
+                    setTimeout(() => {
+                        window.location.href = 'business/index.html';
+                    }, 1500);
                     
                 } else {
                     throw new Error(result.error || 'Invalid business credentials');
                 }
                 
             } catch (error) {
-                console.error('Business login error:', error);
-                updateDebugInfo('Business Login Failed', error.message);
+                console.error('❌ Business login error:', error);
                 
                 // User-friendly error messages
-                let errorMessage = 'Login failed. Please check your credentials.';
+                let errorMessage = error.message;
                 
-                if (error.message.includes('not a business account')) {
+                if (error.message.includes('Invalid') || error.message.includes('credentials')) {
+                    errorMessage = 'Invalid email or password. Please check your credentials.';
+                } else if (error.message.includes('not a business account')) {
                     errorMessage = 'This email is not registered as a business account.';
-                } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Cannot connect to server. Please check your internet connection.';
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = 'Cannot connect to server. Please try again later.';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Connection timeout. Please try again.';
+                } else if (error.message.includes('400')) {
+                    errorMessage = 'Login failed. Please check your credentials.';
                 }
                 
                 showError(errorEl, errorMessage);
                 
-                // Clear password field on error
-                document.getElementById('businessPassword').value = '';
-                document.getElementById('showBusinessPassword').checked = false;
-                
-                // Suggest registration for business accounts
-                if (error.message.includes('not a business account')) {
+                // Suggest registration
+                if (error.message.includes('Invalid') || error.message.includes('credentials') || error.message.includes('400')) {
                     setTimeout(() => {
-                        if (confirm('No business account found for this email. Would you like to register your business?')) {
+                        if (confirm('Login failed. Would you like to register your business instead?')) {
                             showBusinessRegister();
                         }
                     }, 500);
@@ -1062,26 +863,19 @@
         // ==================== BACKEND FUNCTIONS ====================
         async function checkBackendStatus() {
             const apiStatus = document.getElementById('apiStatus');
-            updateDebugInfo('Backend Check', 'Testing connection...');
             
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-                
                 const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.health}`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json'
                     },
-                    signal: controller.signal
+                    signal: AbortSignal.timeout(5000)
                 });
-                
-                clearTimeout(timeoutId);
                 
                 if (response.ok) {
                     const data = await response.json();
                     console.log('✅ Backend Status:', data);
-                    updateDebugInfo('Backend Status', 'Online - Ready');
                     
                     let statusText = 'Backend Online - Ready for Login';
                     if (data.database) {
@@ -1102,9 +896,8 @@
                 
             } catch (error) {
                 console.warn('⚠️ Backend check failed:', error.message);
-                updateDebugInfo('Backend Status', `Offline - ${error.message}`);
                 
-                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Local fallback available</span>`;
+                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Using fallback authentication</span>`;
                 apiStatus.className = 'api-status offline';
                 
                 return { success: false, error: error.message };
@@ -1113,79 +906,158 @@
 
         async function loginToBackend(email, password) {
             try {
-                updateDebugInfo('API Request', `POST ${BACKEND_URL}${API_ENDPOINTS.login}`);
+                console.log('🌐 Calling backend login API...');
                 
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                // SIMPLIFIED REQUEST - Remove the 'role' parameter which might be causing 400 error
+                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.login}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                        // REMOVED: role parameter to avoid 400 error
+                    })
+                });
                 
-                // Try different payload formats
-                const payloads = [
-                    // Format 1: Simple email/password
-                    { email, password },
-                    // Format 2: With role
-                    { email, password, role: 'admin' },
-                    // Format 3: As form data
-                    new URLSearchParams({ email, password })
-                ];
+                console.log('📥 Response status:', response.status);
                 
-                let lastError = null;
-                
-                for (let i = 0; i < payloads.length; i++) {
+                if (!response.ok) {
+                    let errorMessage = `Login failed (${response.status})`;
+                    
                     try {
-                        const payload = payloads[i];
-                        const headers = {
-                            'Accept': 'application/json'
-                        };
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                        console.log('📄 Error response:', errorData);
+                    } catch (e) {
+                        // Not JSON, try text
+                        const errorText = await response.text();
+                        console.log('📄 Error text:', errorText);
+                        errorMessage = errorText || errorMessage;
+                    }
+                    
+                    return {
+                        success: false,
+                        error: errorMessage,
+                        status: response.status
+                    };
+                }
+                
+                const data = await response.json();
+                console.log('✅ Login response:', data);
+                
+                return {
+                    success: true,
+                    token: data.token || data.accessToken || btoa(Date.now() + email),
+                    user: data.user || {
+                        email: email,
+                        name: email.split('@')[0],
+                        role: email.includes('admin') ? 'admin' : 'business',
+                        id: 'user-' + Date.now()
+                    },
+                    message: data.message || 'Login successful'
+                };
+                
+            } catch (error) {
+                console.error('❌ Network error:', error);
+                return {
+                    success: false,
+                    error: error.message || 'Network error'
+                };
+            }
+        }
+
+        async function createBusinessAccount() {
+            const email = document.getElementById('newBusinessEmail').value.trim();
+            const businessName = document.getElementById('newBusinessName').value.trim();
+            const btn = document.getElementById('createBusinessBtn');
+            
+            if (!email || !businessName) {
+                alert('Please fill in both email and business name');
+                return;
+            }
+            
+            // Show loading
+            const originalBtnState = setButtonLoading(btn, true, 'Creating account...');
+            
+            try {
+                console.log('Creating business account:', email);
+                
+                // Generate a temporary password
+                const tempPassword = 'Business' + Math.floor(1000 + Math.random() * 9000) + '!';
+                
+                // Check if admin is logged in
+                const authToken = localStorage.getItem('lba_auth_token');
+                
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+                
+                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.register}`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        email: email,
+                        password: tempPassword,
+                        name: businessName,
+                        businessName: businessName,
+                        phone: '+231 000 000 000'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    alert(`✅ Business account created successfully!\n\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease share these credentials with the business owner and ask them to change their password after first login.`);
+                    
+                    // Clear form
+                    document.getElementById('newBusinessEmail').value = '';
+                    document.getElementById('newBusinessName').value = '';
+                    
+                    console.log('Business account created:', data);
+                    
+                } else {
+                    const errorText = await response.text();
+                    console.error('Registration error:', errorText);
+                    
+                    // Try alternative registration format
+                    console.log('Trying alternative registration...');
+                    
+                    const altResponse = await fetch(`${BACKEND_URL}${API_ENDPOINTS.register}`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            email: email,
+                            password: tempPassword,
+                            username: businessName.replace(/\s+/g, '_'),
+                            businessName: businessName
+                        })
+                    });
+                    
+                    if (altResponse.ok) {
+                        const altData = await altResponse.json();
+                        alert(`✅ Business account created successfully!\n\nEmail: ${email}\nTemporary Password: ${tempPassword}`);
                         
-                        if (payload instanceof URLSearchParams) {
-                            headers['Content-Type'] = 'application/x-www-form-urlencoded';
-                        } else {
-                            headers['Content-Type'] = 'application/json';
-                        }
+                        // Clear form
+                        document.getElementById('newBusinessEmail').value = '';
+                        document.getElementById('newBusinessName').value = '';
                         
-                        const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.login}`, {
-                            method: 'POST',
-                            headers: headers,
-                            body: payload instanceof URLSearchParams ? payload : JSON.stringify(payload),
-                            signal: controller.signal
-                        });
-                        
-                        clearTimeout(timeoutId);
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            updateDebugInfo('API Response', `Success (Format ${i + 1})`);
-                            return {
-                                success: true,
-                                token: data.token || `generated-token-${Date.now()}`,
-                                user: data.user || {
-                                    id: data.id || `user-${Date.now()}`,
-                                    email: email,
-                                    name: data.name || 'Administrator',
-                                    role: data.role || 'admin',
-                                    verified: true
-                                }
-                            };
-                        } else {
-                            const errorText = await response.text();
-                            lastError = `HTTP ${response.status}: ${errorText}`;
-                            updateDebugInfo('API Error', `Format ${i + 1}: ${lastError}`);
-                        }
-                    } catch (formatError) {
-                        lastError = formatError.message;
-                        updateDebugInfo('Format Error', `Format ${i + 1}: ${formatError.message}`);
+                    } else {
+                        throw new Error(`Failed to create account. Please try manual registration.`);
                     }
                 }
                 
-                // All formats failed
-                throw new Error(lastError || 'All login formats failed');
-                
             } catch (error) {
-                updateDebugInfo('Login Failed', error.message);
-                return {
-                    success: false,
-                    error: error.message
-                };
+                console.error('Account creation error:', error);
+                alert(`❌ Failed to create business account: ${error.message}\n\nYou can manually register businesses through the main website registration form.`);
+            } finally {
+                setButtonLoading(btn, false, 'Create Business Account', originalBtnState);
             }
         }
 
@@ -1211,14 +1083,14 @@
 
         function showError(element, message) {
             if (!element) return;
-            element.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            element.textContent = message;
             element.style.display = 'block';
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function showSuccess(element, message) {
             if (!element) return;
-            element.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            element.textContent = message;
             element.style.display = 'block';
         }
 
@@ -1229,56 +1101,24 @@
             });
         }
 
-        function isValidEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
+        // ==================== TESTING FUNCTIONS ====================
+        // For quick testing in browser console
+        window.testAdminLogin = function() {
+            document.getElementById('adminEmail').value = 'admin@liberiabusinessawardslr.com';
+            document.getElementById('adminPassword').value = 'Admin123!';
+            console.log('Test credentials loaded. Click login button.');
+        };
 
-        // ==================== DEVELOPMENT HELPERS ====================
-        function addDevelopmentHelpers() {
-            console.log('🔧 Development mode active');
-            
-            window.loadTestCredentials = function(type = 'admin') {
-                if (type === 'admin') {
-                    document.getElementById('adminEmail').value = DEFAULT_ADMIN.email;
-                    document.getElementById('adminPassword').value = DEFAULT_ADMIN.password;
-                    console.log('🔧 Test admin credentials loaded (DEV ONLY)');
-                    updateDebugInfo('Dev Helper', 'Default admin credentials loaded');
-                } else if (type === 'business') {
-                    document.getElementById('businessEmail').value = 'testbusiness@liberiabusinessawardslr.com';
-                    document.getElementById('businessPassword').value = 'Business123!';
-                    console.log('🔧 Test business credentials loaded (DEV ONLY)');
-                    updateDebugInfo('Dev Helper', 'Test business credentials loaded');
-                }
-            };
-            
-            window.testBackendConnection = async function() {
-                console.log('🔧 Testing backend connection...');
-                const result = await checkBackendStatus();
-                console.log('Result:', result);
-                return result;
-            };
-            
-            window.clearLocalStorage = function() {
-                localStorage.clear();
-                console.log('🔧 Local storage cleared');
-                updateDebugInfo('Dev Helper', 'Local storage cleared');
-                alert('Local storage cleared. Please refresh the page.');
-            };
-            
-            console.log('🔧 Available dev commands:');
-            console.log('- loadTestCredentials("admin") - Load default admin');
-            console.log('- loadTestCredentials("business") - Load test business');
-            console.log('- testBackendConnection() - Test backend');
-            console.log('- clearLocalStorage() - Clear login data');
-            
-            // Auto-load test credentials in development
-            setTimeout(() => {
-                if (!localStorage.getItem('lba_auth_token')) {
-                    loadTestCredentials('admin');
-                }
-            }, 500);
-        }
+        window.testBusinessLogin = function() {
+            document.getElementById('businessEmail').value = 'test@example.com';
+            document.getElementById('businessPassword').value = 'test123';
+            console.log('Test business credentials loaded. Click login button.');
+        };
+
+        console.log('ℹ️  Testing helpers available:');
+        console.log('- testAdminLogin() - Load admin test credentials');
+        console.log('- testBusinessLogin() - Load business test credentials');
+        console.log('- createTestBusiness() - Create test business account');
     </script>
 </body>
 </html>
