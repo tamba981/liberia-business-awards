@@ -1862,22 +1862,22 @@
             document.getElementById('totalSubmissions').textContent = totalSubmissions;
         }
         
-        // Load Google Sheets Data
+        // Load Google Sheets Data - UPDATED VERSION
         async function loadSheetsData() {
-            console.log('📥 Loading Google Sheets data...');
+            console.log('📥 Loading Google Sheets data from your Apps Script...');
             
             const sheetsData = document.getElementById('sheetsData');
             sheetsData.innerHTML = `
                 <div style="text-align: center; padding: 50px 20px; color: #64748b;">
                     <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
-                    <p>Fetching live data from Google Sheets...</p>
-                    <p style="font-size: 12px; margin-top: 10px;">Connecting to: ${GOOGLE_APPS_SCRIPT_URL}</p>
+                    <p>Connecting to your Google Sheets...</p>
+                    <p style="font-size: 12px; margin-top: 10px;">Fetching live submissions</p>
                 </div>
             `;
             
             try {
-                // Fetch all submissions from Google Apps Script
-                const response = await fetch(GOOGLE_APPS_SCRIPT_URL + '?action=getAllData', {
+                // Fetch from YOUR Google Apps Script with action parameter
+                const response = await fetch('https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec?action=getAllData', {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json'
@@ -1885,46 +1885,79 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
                 console.log('✅ Google Sheets data loaded:', data);
                 
-                // Process and store the data
+                if (data.status !== 'OK' || !data.success) {
+                    throw new Error(data.message || 'Failed to load data');
+                }
+                
+                // Process the data from your actual Google Sheets
                 processSheetData(data);
                 
                 // Render the current sheet
                 renderSheetData();
                 
+                // Update dashboard stats
+                updateDashboardStatsFromData(data);
+                
                 // Update real-time indicator
                 updateRealTimeIndicator();
                 
-                // Show success notification
-                if (lastUpdateTime) {
-                    const minutesAgo = Math.floor((new Date() - lastUpdateTime) / 60000);
-                    if (minutesAgo < 1) {
-                        showNotification('✅ Live data loaded successfully!', 'success');
-                    }
-                }
+                showNotification('✅ Live data loaded from your Google Sheets!', 'success');
                 
             } catch (error) {
                 console.error('❌ Error loading Google Sheets data:', error);
                 sheetsData.innerHTML = `
                     <div style="text-align: center; padding: 50px 20px; color: #64748b;">
                         <i class="fas fa-exclamation-triangle fa-2x" style="color: var(--warning-color); margin-bottom: 20px;"></i>
-                        <p>Could not connect to Google Sheets</p>
-                        <p style="font-size: 12px; margin-top: 10px;">${error.message}</p>
-                        <button class="sheet-btn secondary" onclick="loadSheetsData()" style="margin-top: 20px;">
-                            <i class="fas fa-sync-alt"></i> Try Again
-                        </button>
+                        <p>Could not connect to your Google Sheets</p>
+                        <p style="font-size: 12px; margin-top: 10px; color: var(--danger-color);">${error.message}</p>
+                        <div style="margin-top: 20px;">
+                            <button class="sheet-btn secondary" onclick="loadSheetsData()">
+                                <i class="fas fa-sync-alt"></i> Try Again
+                            </button>
+                            <button class="sheet-btn" onclick="showTroubleshootingGuide()" style="margin-left: 10px;">
+                                <i class="fas fa-question-circle"></i> Help
+                            </button>
+                        </div>
                     </div>
                 `;
-                showNotification('❌ Could not load Google Sheets data', 'danger');
+                showNotification('❌ Could not load Google Sheets data. Check Apps Script deployment.', 'danger');
             }
         }
         
-        // Process Google Sheets Data
+        // Add this function to update dashboard stats from the data
+        function updateDashboardStatsFromData(data) {
+            if (!data || !data.submissions) return;
+            
+            // Calculate stats from the actual data
+            const businesses = data.submissions.filter(s => s.formType === 'business');
+            const nominations = data.submissions.filter(s => s.formType === 'nomination');
+            const approvedNominations = nominations.filter(n => n.status && n.status.toLowerCase().includes('approved'));
+            
+            // Update the stats display
+            document.getElementById('totalBusinesses').textContent = businesses.length;
+            document.getElementById('businessCount').textContent = businesses.length;
+            document.getElementById('totalNominations').textContent = nominations.length;
+            document.getElementById('nominationCount').textContent = nominations.length;
+            document.getElementById('approvedNominations').textContent = approvedNominations.length;
+            document.getElementById('totalSubmissions').textContent = data.submissions.length;
+            document.getElementById('activeUsers').textContent = data.submissions.length;
+            
+            // Update sheet-specific stats
+            document.getElementById('sheetBusinessesTotal').textContent = businesses.length;
+            document.getElementById('sheetNominationsTotal').textContent = nominations.length;
+            document.getElementById('sheetNominationsApproved').textContent = approvedNominations.length;
+            
+            // Update recent activities
+            updateRecentActivitiesFromData(data.submissions);
+        }
+        
+        // Update the processSheetData function to handle your actual data structure:
         function processSheetData(data) {
             // Reset data
             currentSheetData = {
@@ -1933,109 +1966,168 @@
                 all: []
             };
             
-            // Process based on your actual Google Sheets structure
-            // This is a generic processor - you'll need to adjust based on your actual sheet structure
-            
             if (data.submissions && Array.isArray(data.submissions)) {
+                // These are the actual submissions from your Google Sheets
                 data.submissions.forEach(submission => {
                     // Add to all submissions
                     currentSheetData.all.push(submission);
                     
-                    // Categorize based on form type or other criteria
-                    if (submission.formType === 'business' || submission.formType === 'business_registration') {
+                    // Categorize based on form type
+                    if (submission.formType === 'business') {
                         currentSheetData.businesses.push({
-                            id: submission.id || submission.timestamp,
-                            name: submission.businessName || submission.companyName || 'Unknown Business',
-                            email: submission.email || submission.businessEmail || 'No email',
-                            phone: submission.phone || submission.businessPhone || 'No phone',
-                            category: submission.category || submission.businessCategory || 'General',
+                            id: submission.id || 'business_' + Date.now(),
+                            name: submission.businessName || submission.name || 'Unknown Business',
+                            email: submission.email || 'No email',
+                            phone: submission.phone || 'No phone',
+                            category: submission.category || 'General',
                             status: submission.status || 'pending',
                             nominations: submission.nominations || 0,
                             timestamp: submission.timestamp || new Date().toISOString(),
-                            source: submission.source || 'website'
+                            source: submission.source || 'google_sheets'
                         });
-                    } else if (submission.formType === 'nomination' || submission.formType === 'award_nomination') {
+                    } else if (submission.formType === 'nomination') {
                         currentSheetData.nominations.push({
-                            id: submission.id || submission.timestamp,
-                            businessName: submission.businessName || submission.companyName || 'Unknown Business',
-                            category: submission.category || submission.nominationCategory || 'General',
-                            submittedDate: submission.timestamp || new Date().toISOString(),
+                            id: submission.id || 'nomination_' + Date.now(),
+                            businessName: submission.businessName || 'Unknown Business',
+                            category: submission.category || 'General',
+                            submittedDate: submission.submittedDate || submission.timestamp || new Date().toISOString(),
                             status: submission.status || 'pending',
                             reviewer: submission.reviewer || '',
                             score: submission.score || 0,
                             timestamp: submission.timestamp || new Date().toISOString(),
-                            source: submission.source || 'website'
+                            source: submission.source || 'google_sheets'
+                        });
+                    } else if (submission.formType === 'newsletter') {
+                        // Add newsletter subscribers as "businesses" for display
+                        currentSheetData.businesses.push({
+                            id: submission.id || 'newsletter_' + Date.now(),
+                            name: 'Newsletter Subscriber',
+                            email: submission.email || 'No email',
+                            phone: 'N/A',
+                            category: 'Newsletter',
+                            status: submission.status || 'Active',
+                            nominations: 0,
+                            timestamp: submission.timestamp || new Date().toISOString(),
+                            source: submission.source || 'google_sheets'
                         });
                     }
                 });
             }
             
-            // If no structured data, create sample from raw data
-            if (currentSheetData.all.length === 0 && data.rawData) {
-                processRawSheetData(data.rawData);
-            }
-            
-            console.log('📊 Processed data counts:', {
+            console.log('📊 Actual data processed from your Google Sheets:', {
                 businesses: currentSheetData.businesses.length,
                 nominations: currentSheetData.nominations.length,
                 all: currentSheetData.all.length
             });
         }
         
-        // Process raw sheet data (fallback)
-        function processRawSheetData(rawData) {
-            // This is a fallback if your Google Apps Script returns raw sheet data
-            // You'll need to adjust this based on your actual sheet structure
+        // Update recent activities from data
+        function updateRecentActivitiesFromData(submissions) {
+            const activityList = document.getElementById('activityList');
+            const recentSubmissions = submissions
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 5);
             
-            if (Array.isArray(rawData) && rawData.length > 0) {
-                const headers = rawData[0];
-                
-                for (let i = 1; i < rawData.length; i++) {
-                    const row = rawData[i];
-                    const submission = {};
-                    
-                    // Create object from headers and row data
-                    headers.forEach((header, index) => {
-                        if (header && row[index]) {
-                            submission[header.toLowerCase().replace(/\s+/g, '_')] = row[index];
-                        }
-                    });
-                    
-                    // Add timestamp if not present
-                    if (!submission.timestamp) {
-                        submission.timestamp = new Date().toISOString();
-                    }
-                    
-                    currentSheetData.all.push(submission);
-                    
-                    // Categorize based on content
-                    if (submission.business_name || submission.company_name) {
-                        currentSheetData.businesses.push({
-                            id: submission.id || submission.timestamp,
-                            name: submission.business_name || submission.company_name || 'Unknown Business',
-                            email: submission.email || submission.business_email || 'No email',
-                            phone: submission.phone || submission.business_phone || 'No phone',
-                            category: submission.category || submission.business_category || 'General',
-                            status: submission.status || 'pending',
-                            nominations: parseInt(submission.nominations) || 0,
-                            timestamp: submission.timestamp
-                        });
-                    }
-                    
-                    if (submission.nomination_category || submission.award_category) {
-                        currentSheetData.nominations.push({
-                            id: submission.id || submission.timestamp,
-                            businessName: submission.business_name || submission.company_name || 'Unknown Business',
-                            category: submission.nomination_category || submission.award_category || 'General',
-                            submittedDate: submission.timestamp || submission.submission_date || new Date().toISOString(),
-                            status: submission.status || 'pending',
-                            reviewer: submission.reviewer || submission.approved_by || '',
-                            score: parseInt(submission.score) || 0,
-                            timestamp: submission.timestamp
-                        });
-                    }
-                }
+            if (recentSubmissions.length === 0) {
+                activityList.innerHTML = `
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>No recent submissions</h4>
+                            <p>Google Sheets integration is ready</p>
+                        </div>
+                        <div class="activity-time">Just now</div>
+                    </li>
+                `;
+                return;
             }
+            
+            activityList.innerHTML = recentSubmissions.map(submission => {
+                const icon = submission.formType === 'business' ? 'building' : 'award';
+                const type = submission.formType === 'business' ? 'Business Registration' : 'Nomination';
+                const timeAgo = formatTimeAgo(submission.timestamp);
+                
+                return `
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-${icon}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>New ${type}</h4>
+                            <p>${escapeHtml(submission.name || submission.businessName || 'New submission')}</p>
+                        </div>
+                        <div class="activity-time">${timeAgo}</div>
+                    </li>
+                `;
+            }).join('');
+        }
+        
+        // Add a troubleshooting guide
+        function showTroubleshootingGuide() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                z-index: 3000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                animation: fadeIn 0.3s ease;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                    <h2 style="color: var(--lba-dark); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-question-circle" style="color: var(--lba-primary);"></i>
+                        Google Sheets Integration Help
+                    </h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--lba-dark); margin-bottom: 10px;">Common Issues:</h3>
+                        <ul style="color: #64748b; margin-left: 20px;">
+                            <li>Make sure your Google Apps Script is deployed as "Web App"</li>
+                            <li>Set "Execute as" to "Me" and "Who has access" to "Anyone"</li>
+                            <li>Check that your spreadsheet ID is correct in the script</li>
+                            <li>Ensure you have "Businesses" and "Nominations" sheets in your Google Sheet</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--lba-dark); margin-bottom: 10px;">Quick Test:</h3>
+                        <p style="color: #64748b; margin-bottom: 10px;">
+                            <a href="https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec?action=ping" 
+                               target="_blank" style="color: var(--lba-primary); text-decoration: none; font-weight: 600;">
+                                Click here to test your Apps Script connection
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="sheet-btn" onclick="this.parentElement.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                        <button class="sheet-btn secondary" onclick="window.open('https://script.google.com/home/projects', '_blank')">
+                            <i class="fab fa-google"></i> Open Apps Script
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close on click outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
         
         // Render Sheet Data
@@ -2717,11 +2809,12 @@
         window.sendNotifications = sendNotifications;
         window.showBusinessModal = showBusinessModal;
         window.hideModal = hideModal;
+        window.showTroubleshootingGuide = showTroubleshootingGuide;
         
         console.log('✅ Admin Dashboard Ready');
         console.log('📊 Google Sheets Integration: ACTIVE');
         console.log('🔗 Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
-        console.log('🎯 Features: Real-time Google Sheets integration');
+        console.log('🎯 Features: Real-time Google Sheets integration with updated data processing');
     </script>
 </body>
 </html>
