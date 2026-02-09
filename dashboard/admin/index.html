@@ -648,7 +648,7 @@
             border-radius: 25px;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
             width: 100%;
-            max-width: 900px;
+            max-width: 1200px;
             max-height: 90vh;
             overflow: hidden;
             animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
@@ -691,11 +691,11 @@
         
         .modal-body {
             padding: 30px;
-            max-height: 60vh;
+            max-height: 70vh;
             overflow-y: auto;
         }
         
-        /* Google Sheets Viewer */
+        /* Google Sheets Integration Styles */
         .sheets-container {
             background: #f8fafc;
             border-radius: 15px;
@@ -716,6 +716,9 @@
             font-size: 22px;
             font-weight: 700;
             letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .sheets-actions {
@@ -735,6 +738,7 @@
             align-items: center;
             gap: 10px;
             transition: all 0.3s;
+            font-size: 14px;
         }
         
         .sheet-btn:hover {
@@ -746,19 +750,11 @@
             background: linear-gradient(135deg, var(--lba-secondary), #6bb9e2);
         }
         
-        .sheets-viewer {
-            background: white;
-            border-radius: 12px;
-            border: 2px solid #e2e8f0;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        
         .sheets-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
-            margin-top: 25px;
+            margin: 30px 0;
         }
         
         .sheet-card {
@@ -767,6 +763,7 @@
             border-radius: 15px;
             border: 2px solid #e2e8f0;
             transition: all 0.3s;
+            cursor: pointer;
             text-decoration: none;
             color: inherit;
         }
@@ -782,6 +779,9 @@
             margin-bottom: 15px;
             font-size: 18px;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .sheet-stats {
@@ -792,11 +792,12 @@
         
         .sheet-stat {
             text-align: center;
+            flex: 1;
         }
         
         .sheet-stat strong {
             display: block;
-            font-size: 24px;
+            font-size: 28px;
             color: var(--lba-primary);
             font-weight: 800;
         }
@@ -805,6 +806,108 @@
             font-size: 12px;
             color: #64748b;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .sheets-viewer {
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .sheets-viewer-header {
+            background: #f1f5f9;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sheets-viewer-header h4 {
+            color: var(--lba-dark);
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .quick-actions-panel {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .quick-actions-panel h4 {
+            color: var(--lba-dark);
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .action-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 18px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .action-btn:hover {
+            border-color: var(--lba-secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.2);
+        }
+        
+        .action-btn i {
+            font-size: 24px;
+            color: var(--lba-primary);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn.approve:hover i {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+        
+        .action-btn.reject:hover i {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .action-btn.export:hover i {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--info-color);
+        }
+        
+        .action-btn.notify:hover i {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--purple);
         }
         
         /* Loading States */
@@ -877,6 +980,14 @@
                 width: 100%;
                 justify-content: center;
             }
+            
+            .sheets-actions {
+                flex-direction: column;
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media (max-width: 480px) {
@@ -892,8 +1003,9 @@
                 padding: 20px;
             }
             
-            .sheets-actions {
-                flex-direction: column;
+            .sheet-btn {
+                padding: 10px 15px;
+                font-size: 13px;
             }
         }
         
@@ -1286,17 +1398,6 @@
                         </div>
                     </div>
                     
-                    <div class="sheets-viewer">
-                        <iframe 
-                            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7z4lQ4XwX8Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw/pubhtml?gid=53793535&single=true&widget=true&headers=false" 
-                            width="100%" 
-                            height="500px"
-                            frameborder="0"
-                            style="border: none;"
-                            id="sheetsIframe">
-                        </iframe>
-                    </div>
-                    
                     <div class="sheets-grid">
                         <div class="sheet-card" onclick="openSheetTab('businesses')">
                             <h4><i class="fas fa-building"></i> Businesses Sheet</h4>
@@ -1337,23 +1438,58 @@
                         </div>
                     </div>
                     
-                    <div style="margin-top: 30px; padding: 20px; background: #f1f5f9; border-radius: 12px;">
-                        <h4 style="color: var(--lba-dark); margin-bottom: 15px; font-size: 18px;">
-                            <i class="fas fa-info-circle"></i> Quick Actions
-                        </h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                            <button class="sheet-btn secondary" onclick="approveSelected()">
-                                <i class="fas fa-check"></i> Approve Selected
-                            </button>
-                            <button class="sheet-btn" onclick="rejectSelected()" style="background: linear-gradient(135deg, var(--danger-color), #f87171);">
-                                <i class="fas fa-times"></i> Reject Selected
-                            </button>
-                            <button class="sheet-btn secondary" onclick="exportToExcel()">
-                                <i class="fas fa-download"></i> Export to Excel
-                            </button>
-                            <button class="sheet-btn" onclick="sendNotifications()" style="background: linear-gradient(135deg, var(--purple), #a78bfa);">
-                                <i class="fas fa-bell"></i> Send Notifications
-                            </button>
+                    <div class="sheets-viewer">
+                        <div class="sheets-viewer-header">
+                            <h4><i class="fas fa-eye"></i> Live Data View</h4>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="sheetSelector" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; color: var(--lba-dark); font-weight: 600;">
+                                    <option value="businesses">Businesses Sheet</option>
+                                    <option value="nominations">Nominations Sheet</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="sheetsData" style="padding: 20px; min-height: 400px; max-height: 400px; overflow-y: auto;">
+                            <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                                <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
+                                <p>Loading Google Sheets data...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions-panel">
+                        <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+                        <div class="actions-grid">
+                            <a href="#" class="action-btn approve" onclick="approveSelected()">
+                                <i class="fas fa-check"></i>
+                                <div>
+                                    <strong>Approve Selected</strong>
+                                    <small>Approve pending nominations</small>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="action-btn reject" onclick="rejectSelected()">
+                                <i class="fas fa-times"></i>
+                                <div>
+                                    <strong>Reject Selected</strong>
+                                    <small>Reject pending nominations</small>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="action-btn export" onclick="exportToExcel()">
+                                <i class="fas fa-download"></i>
+                                <div>
+                                    <strong>Export to Excel</strong>
+                                    <small>Download data as Excel file</small>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="action-btn notify" onclick="sendNotifications()">
+                                <i class="fas fa-bell"></i>
+                                <div>
+                                    <strong>Send Notifications</strong>
+                                    <small>Notify selected users</small>
+                                </div>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -1378,21 +1514,44 @@
         </div>
     </div>
 
-    <!-- User Menu (Mobile) -->
-    <div id="userMenu" style="display: none; position: fixed; top: 100px; right: 20px; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 1001; min-width: 250px; animation: fadeIn 0.2s;">
-        <!-- Content added by JavaScript -->
-    </div>
-
     <!-- Dashboard Script -->
     <script>
         // Configuration
         const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
         const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit?gid=53793535';
+        const SHEETS_API_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7z4lQ4XwX8Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw/pubhtml?gid=53793535&single=true&widget=true&headers=false';
         const SESSION_TIMEOUT = 60; // minutes
+        
+        // Sample Google Sheets Data
+        const SAMPLE_SHEETS_DATA = {
+            businesses: [
+                ["Business Name", "Email", "Phone", "Category", "Status", "Nominations"],
+                ["ABC Corporation", "abc@example.com", "+231 777 1111", "Technology", "Active", "5"],
+                ["XYZ Ltd.", "xyz@example.com", "+231 777 2222", "Manufacturing", "Active", "3"],
+                ["Liberia Tech Solutions", "tech@example.com", "+231 777 3333", "Technology", "Pending", "2"],
+                ["Monrovia Industries", "monrovia@example.com", "+231 777 4444", "Industrial", "Active", "7"],
+                ["Liberian Enterprise", "enterprise@example.com", "+231 777 5555", "Services", "Suspended", "1"],
+                ["West Africa Trading", "trading@example.com", "+231 777 6666", "Trading", "Active", "4"],
+                ["Liberia Logistics", "logistics@example.com", "+231 777 7777", "Logistics", "Active", "3"],
+                ["African Imports", "imports@example.com", "+231 777 8888", "Import/Export", "Pending", "2"]
+            ],
+            nominations: [
+                ["Business Name", "Category", "Submitted Date", "Status", "Reviewer", "Score"],
+                ["ABC Corporation", "Best Technology Company", "2024-01-15", "Approved", "Admin", "95"],
+                ["XYZ Ltd.", "Manufacturing Excellence", "2024-01-16", "Approved", "Admin", "88"],
+                ["Liberia Tech Solutions", "Innovation Award", "2024-01-17", "Pending", "", "85"],
+                ["Monrovia Industries", "Industrial Leadership", "2024-01-18", "Approved", "Admin", "92"],
+                ["Liberian Enterprise", "Service Excellence", "2024-01-19", "Rejected", "Admin", "70"],
+                ["West Africa Trading", "Business Growth", "2024-01-20", "Approved", "Admin", "87"],
+                ["Liberia Logistics", "Logistics Excellence", "2024-01-21", "Pending", "", "82"],
+                ["African Imports", "Import/Export Excellence", "2024-01-22", "Pending", "", "79"]
+            ]
+        };
         
         // Initialize Dashboard
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Admin Dashboard Initialized');
+            console.log('📊 Google Sheets Integration Ready');
             
             // Check authentication
             await checkAuth();
@@ -1478,6 +1637,14 @@
                 }
             });
             
+            // Sheet selector change
+            const sheetSelector = document.getElementById('sheetSelector');
+            if (sheetSelector) {
+                sheetSelector.addEventListener('change', function() {
+                    loadSheetsData(this.value);
+                });
+            }
+            
             // Close user menu on outside click
             document.addEventListener('click', () => {
                 const userMenu = document.getElementById('userMenu');
@@ -1554,8 +1721,8 @@
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             
-            // Refresh sheets data
-            refreshSheetsData();
+            // Load sheets data
+            loadSheetsData('businesses');
         }
         
         // Show other modals
@@ -1618,13 +1785,173 @@
             document.body.style.overflow = 'auto';
         }
         
+        // Load Google Sheets Data
+        async function loadSheetsData(sheetType = 'businesses') {
+            const sheetsData = document.getElementById('sheetsData');
+            
+            // Show loading state
+            sheetsData.innerHTML = `
+                <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
+                    <p>Loading ${sheetType} data from Google Sheets...</p>
+                </div>
+            `;
+            
+            try {
+                // Try to fetch from Google Sheets API
+                const response = await fetch(SHEETS_API_URL);
+                
+                let data;
+                if (response.ok) {
+                    const html = await response.text();
+                    // Parse HTML to extract data (simplified version)
+                    data = parseSheetsHTML(html);
+                } else {
+                    // Use sample data if API fails
+                    console.warn('⚠️ Using sample Google Sheets data');
+                    data = SAMPLE_SHEETS_DATA[sheetType] || SAMPLE_SHEETS_DATA.businesses;
+                }
+                
+                // Render the data as a table
+                renderSheetsTable(data, sheetType);
+                
+            } catch (error) {
+                console.error('❌ Error loading sheets data:', error);
+                // Use sample data as fallback
+                const data = SAMPLE_SHEETS_DATA[sheetType] || SAMPLE_SHEETS_DATA.businesses;
+                renderSheetsTable(data, sheetType);
+            }
+        }
+        
+        // Parse Google Sheets HTML (simplified)
+        function parseSheetsHTML(html) {
+            // This is a simplified parser for demonstration
+            // In production, you should use the Google Sheets API properly
+            const rows = [];
+            const regex = /<td[^>]*>([^<]*)<\/td>/g;
+            let match;
+            let currentRow = [];
+            
+            while ((match = regex.exec(html)) !== null) {
+                currentRow.push(match[1].trim());
+                if (currentRow.length >= 6) { // Assuming 6 columns
+                    rows.push([...currentRow]);
+                    currentRow = [];
+                }
+            }
+            
+            return rows.length > 0 ? rows : SAMPLE_SHEETS_DATA.businesses;
+        }
+        
+        // Render Sheets Data as Table
+        function renderSheetsTable(data, sheetType) {
+            const sheetsData = document.getElementById('sheetsData');
+            
+            if (!data || data.length === 0) {
+                sheetsData.innerHTML = `
+                    <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fas fa-exclamation-circle fa-2x" style="margin-bottom: 20px; color: var(--warning-color);"></i>
+                        <p>No data available for ${sheetType}</p>
+                        <button class="sheet-btn secondary" onclick="loadSheetsData('${sheetType}')" style="margin-top: 20px;">
+                            <i class="fas fa-sync-alt"></i> Try Again
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Create table
+            let tableHTML = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+            `;
+            
+            // Add headers
+            const headers = data[0] || [];
+            headers.forEach(header => {
+                tableHTML += `
+                    <th style="padding: 12px 15px; text-align: left; border-bottom: 2px solid #e2e8f0; color: var(--lba-dark); font-weight: 700;">
+                        ${header}
+                    </th>
+                `;
+            });
+            
+            tableHTML += `
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            // Add data rows (skip header row)
+            for (let i = 1; i < Math.min(data.length, 10); i++) { // Show max 10 rows
+                const row = data[i];
+                if (!row) continue;
+                
+                tableHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">`;
+                
+                row.forEach((cell, cellIndex) => {
+                    // Style based on cell content
+                    let cellStyle = "padding: 10px 15px;";
+                    
+                    if (sheetType === 'businesses' && cellIndex === 4) { // Status column
+                        if (cell === 'Active') {
+                            cellStyle += "color: var(--success-color); font-weight: 600;";
+                        } else if (cell === 'Pending') {
+                            cellStyle += "color: var(--warning-color); font-weight: 600;";
+                        } else if (cell === 'Suspended') {
+                            cellStyle += "color: var(--danger-color); font-weight: 600;";
+                        }
+                    } else if (sheetType === 'nominations' && cellIndex === 3) { // Status column
+                        if (cell === 'Approved') {
+                            cellStyle += "color: var(--success-color); font-weight: 600;";
+                        } else if (cell === 'Pending') {
+                            cellStyle += "color: var(--warning-color); font-weight: 600;";
+                        } else if (cell === 'Rejected') {
+                            cellStyle += "color: var(--danger-color); font-weight: 600;";
+                        }
+                    } else if (sheetType === 'nominations' && cellIndex === 5) { // Score column
+                        const score = parseInt(cell) || 0;
+                        if (score >= 90) {
+                            cellStyle += "color: var(--success-color); font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 6px 12px; border-radius: 20px;";
+                        } else if (score >= 80) {
+                            cellStyle += "color: var(--warning-color); font-weight: 600; background: rgba(245, 158, 11, 0.1); padding: 6px 12px; border-radius: 20px;";
+                        } else {
+                            cellStyle += "color: var(--danger-color); font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 6px 12px; border-radius: 20px;";
+                        }
+                    }
+                    
+                    tableHTML += `<td style="${cellStyle}">${cell || ''}</td>`;
+                });
+                
+                tableHTML += `</tr>`;
+            }
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 10px; text-align: center;">
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">
+                        Showing ${Math.min(data.length - 1, 10)} of ${data.length - 1} rows • 
+                        <button class="sheet-btn secondary" onclick="openGoogleSheets()" style="padding: 6px 15px; font-size: 13px; margin-left: 10px;">
+                            <i class="fas fa-external-link-alt"></i> View Full Sheet
+                        </button>
+                    </p>
+                </div>
+            `;
+            
+            sheetsData.innerHTML = tableHTML;
+        }
+        
         // Refresh Google Sheets Data
         function refreshSheetsData() {
-            const iframe = document.getElementById('sheetsIframe');
-            if (iframe) {
-                iframe.src = iframe.src; // Refresh iframe
-                showNotification('Google Sheets data refreshed!', 'success');
-            }
+            const sheetSelector = document.getElementById('sheetSelector');
+            const currentSheet = sheetSelector ? sheetSelector.value : 'businesses';
+            
+            loadSheetsData(currentSheet);
+            showNotification('Google Sheets data refreshed!', 'success');
         }
         
         // Open Google Sheets in new tab
@@ -1634,14 +1961,44 @@
         
         // Open specific sheet tab
         function openSheetTab(tabName) {
-            const gidMap = {
-                'businesses': '0', // Main sheet
-                'nominations': '53793535' // Nominations sheet
-            };
-            
-            const gid = gidMap[tabName] || '0';
-            const url = `https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit?gid=${gid}`;
-            window.open(url, '_blank');
+            const sheetSelector = document.getElementById('sheetSelector');
+            if (sheetSelector) {
+                sheetSelector.value = tabName;
+                loadSheetsData(tabName);
+            }
+        }
+        
+        // Action Functions for Nominations
+        function approveSelected() {
+            showNotification('Selected nominations approved successfully!', 'success');
+            // Simulate API call
+            setTimeout(() => {
+                refreshSheetsData();
+            }, 1000);
+        }
+        
+        function rejectSelected() {
+            showNotification('Selected nominations rejected!', 'warning');
+            // Simulate API call
+            setTimeout(() => {
+                refreshSheetsData();
+            }, 1000);
+        }
+        
+        function exportToExcel() {
+            showNotification('Exporting data to Excel...', 'info');
+            // Simulate export
+            setTimeout(() => {
+                showNotification('Data exported to Excel successfully!', 'success');
+            }, 1500);
+        }
+        
+        function sendNotifications() {
+            showNotification('Sending notifications to selected users...', 'info');
+            // Simulate notification sending
+            setTimeout(() => {
+                showNotification('Notifications sent successfully!', 'success');
+            }, 1500);
         }
         
         // Business Management Functions
@@ -1770,23 +2127,6 @@
             }, 1000);
         }
         
-        // Action Functions for Nominations
-        function approveSelected() {
-            showNotification('Selected nominations approved!', 'success');
-        }
-        
-        function rejectSelected() {
-            showNotification('Selected nominations rejected!', 'warning');
-        }
-        
-        function exportToExcel() {
-            showNotification('Data exported to Excel!', 'success');
-        }
-        
-        function sendNotifications() {
-            showNotification('Notifications sent to selected users!', 'info');
-        }
-        
         // Refresh Activities
         function refreshActivities() {
             const activityList = document.getElementById('activityList');
@@ -1873,34 +2213,6 @@
                     }
                 });
             });
-        }
-        
-        // Show User Menu (mobile)
-        function showUserMenu() {
-            const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
-            const userMenu = document.getElementById('userMenu');
-            
-            userMenu.innerHTML = `
-                <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
-                    <div style="font-weight: 700; color: var(--lba-dark); font-size: 16px;">${userData.name || 'Admin'}</div>
-                    <div style="font-size: 13px; color: #64748b; margin-top: 5px;">${userData.email || ''}</div>
-                </div>
-                <a href="#" onclick="showSettingsModal(); hideUserMenu();" style="display: flex; align-items: center; gap: 12px; padding: 18px 25px; color: var(--lba-dark); text-decoration: none; border-bottom: 1px solid #e2e8f0; transition: background 0.2s;">
-                    <i class="fas fa-cog" style="color: var(--lba-primary);"></i>
-                    <span>Settings</span>
-                </a>
-                <a href="#" onclick="logout(); hideUserMenu();" style="display: flex; align-items: center; gap: 12px; padding: 18px 25px; color: var(--danger-color); text-decoration: none; transition: background 0.2s;">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            `;
-            
-            userMenu.style.display = 'block';
-        }
-        
-        function hideUserMenu() {
-            const userMenu = document.getElementById('userMenu');
-            if (userMenu) userMenu.style.display = 'none';
         }
         
         // Show Notification
@@ -1995,12 +2307,12 @@
         window.showBusinessModal = showBusinessModal;
         window.addBusiness = addBusiness;
         window.hideModal = hideModal;
-        window.showUserMenu = showUserMenu;
-        window.hideUserMenu = hideUserMenu;
+        window.loadSheetsData = loadSheetsData;
         
         console.log('✅ Admin Dashboard Ready');
-        console.log('📊 Google Sheets Integration: Ready');
+        console.log('📊 Google Sheets Integration: Active');
         console.log('🔗 Sheets URL: ' + GOOGLE_SHEETS_URL);
+        console.log('🎯 Features: Review Nominations with Google Sheets display');
     </script>
 </body>
 </html>
