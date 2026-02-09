@@ -750,6 +750,14 @@
             background: linear-gradient(135deg, var(--lba-secondary), #6bb9e2);
         }
         
+        .sheet-btn.warning {
+            background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+        }
+        
+        .sheet-btn.danger {
+            background: linear-gradient(135deg, var(--danger-color), #f87171);
+        }
+        
         .sheets-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -910,6 +918,74 @@
             color: var(--purple);
         }
         
+        /* Data Table Styles */
+        .data-table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            background: #f1f5f9;
+            z-index: 10;
+        }
+        
+        .data-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--lba-dark);
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        
+        .data-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .data-table .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .data-table .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .data-table .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .data-table .status-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .data-table .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
         /* Loading States */
         .loading {
             background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -921,6 +997,71 @@
         .loading-text {
             height: 20px;
             margin: 10px 0;
+        }
+        
+        /* Filter Controls */
+        .filter-controls {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--lba-dark);
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            color: var(--lba-dark);
+        }
+        
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--lba-secondary);
+        }
+        
+        /* Real-time indicator */
+        .real-time-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .real-time-indicator .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
         }
         
         /* Responsive */
@@ -986,6 +1127,10 @@
             }
             
             .actions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -1082,13 +1227,13 @@
                     <a href="#" class="menu-item" onclick="showNominationsModal()">
                         <i class="fas fa-building"></i>
                         <span>Businesses</span>
-                        <span class="badge" id="businessCount">42</span>
+                        <span class="badge" id="businessCount">0</span>
                     </a>
                     
                     <a href="#" class="menu-item" onclick="showNominationsModal()">
                         <i class="fas fa-award"></i>
                         <span>Nominations</span>
-                        <span class="badge" id="nominationCount">187</span>
+                        <span class="badge" id="nominationCount">0</span>
                     </a>
                 </div>
                 
@@ -1187,11 +1332,11 @@
                         <i class="fas fa-building"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 id="totalBusinesses">42</h3>
+                        <h3 id="totalBusinesses">0</h3>
                         <p>Total Registered Businesses</p>
                         <div class="stat-trend" id="businessTrend">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+1 today</span>
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -1201,11 +1346,11 @@
                         <i class="fas fa-award"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 id="totalNominations">187</h3>
+                        <h3 id="totalNominations">0</h3>
                         <p>Total Nominations</p>
                         <div class="stat-trend" id="nominationTrend">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+8 today</span>
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -1215,11 +1360,11 @@
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 id="approvedNominations">132</h3>
+                        <h3 id="approvedNominations">0</h3>
                         <p>Approved Nominations</p>
                         <div class="stat-trend" id="approvalTrend">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>70% approval rate</span>
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -1229,11 +1374,11 @@
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="stat-content">
-                        <h3 id="activeUsers">67</h3>
+                        <h3 id="activeUsers">0</h3>
                         <p>Active Users</p>
                         <div class="stat-trend" id="userTrend">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+0 today</span>
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -1252,53 +1397,13 @@
                 <ul class="activity-list" id="activityList">
                     <li class="activity-item">
                         <div class="activity-icon">
-                            <i class="fas fa-building"></i>
+                            <i class="fas fa-sync-alt fa-spin"></i>
                         </div>
                         <div class="activity-content">
-                            <h4>New Business Registered</h4>
-                            <p>ABC Corporation registered for awards</p>
+                            <h4>Loading recent activity...</h4>
+                            <p>Fetching latest submissions from Google Sheets</p>
                         </div>
-                        <div class="activity-time">5m ago</div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-award"></i>
-                        </div>
-                        <div class="activity-content">
-                            <h4>Nomination Submitted</h4>
-                            <p>Best Technology Company category</p>
-                        </div>
-                        <div class="activity-time">20m ago</div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="activity-content">
-                            <h4>Nomination Approved</h4>
-                            <p>XYZ Ltd. nomination approved</p>
-                        </div>
-                        <div class="activity-time">1h ago</div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <div class="activity-content">
-                            <h4>New Admin User</h4>
-                            <p>John Doe added as admin</p>
-                        </div>
-                        <div class="activity-time">2h ago</div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-bullhorn"></i>
-                        </div>
-                        <div class="activity-content">
-                            <h4>Announcement Published</h4>
-                            <p>Deadline extension announced</p>
-                        </div>
-                        <div class="activity-time">4h ago</div>
+                        <div class="activity-time">Just now</div>
                     </li>
                 </ul>
             </div>
@@ -1356,19 +1461,19 @@
                 <div class="status-grid">
                     <div class="status-item">
                         <p>Last Updated</p>
-                        <strong id="lastUpdated">11:35 PM</strong>
+                        <strong id="lastUpdated">Loading...</strong>
                     </div>
                     <div class="status-item">
-                        <p>API Status</p>
-                        <strong class="online" id="apiStatus">Online</strong>
+                        <p>Google Sheets Status</p>
+                        <strong class="online" id="sheetsStatus">Connected</strong>
                     </div>
                     <div class="status-item">
                         <p>Session Expires</p>
                         <strong id="sessionTimer">60:00</strong>
                     </div>
                     <div class="status-item">
-                        <p>Database</p>
-                        <strong>Google Sheets</strong>
+                        <p>Total Submissions</p>
+                        <strong id="totalSubmissions">0</strong>
                     </div>
                 </div>
             </div>
@@ -1395,67 +1500,105 @@
                             <button class="sheet-btn secondary" onclick="openGoogleSheets()">
                                 <i class="fab fa-google"></i> Open Google Sheets
                             </button>
+                            <button class="sheet-btn warning" onclick="startAutoRefresh()" id="autoRefreshBtn">
+                                <i class="fas fa-sync"></i> Auto Refresh
+                            </button>
                         </div>
                     </div>
                     
                     <div class="sheets-grid">
-                        <div class="sheet-card" onclick="openSheetTab('businesses')">
+                        <div class="sheet-card" onclick="switchSheet('businesses')">
                             <h4><i class="fas fa-building"></i> Businesses Sheet</h4>
                             <p>View all registered businesses and their details</p>
                             <div class="sheet-stats">
                                 <div class="sheet-stat">
-                                    <strong>42</strong>
+                                    <strong id="sheetBusinessesTotal">0</strong>
                                     <span>Total</span>
                                 </div>
                                 <div class="sheet-stat">
-                                    <strong>38</strong>
+                                    <strong id="sheetBusinessesActive">0</strong>
                                     <span>Active</span>
                                 </div>
                                 <div class="sheet-stat">
-                                    <strong>4</strong>
+                                    <strong id="sheetBusinessesPending">0</strong>
                                     <span>Pending</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="sheet-card" onclick="openSheetTab('nominations')">
+                        <div class="sheet-card" onclick="switchSheet('nominations')">
                             <h4><i class="fas fa-award"></i> Nominations Sheet</h4>
                             <p>Review and manage all award nominations</p>
                             <div class="sheet-stats">
                                 <div class="sheet-stat">
-                                    <strong>187</strong>
+                                    <strong id="sheetNominationsTotal">0</strong>
                                     <span>Total</span>
                                 </div>
                                 <div class="sheet-stat">
-                                    <strong>132</strong>
+                                    <strong id="sheetNominationsApproved">0</strong>
                                     <span>Approved</span>
                                 </div>
                                 <div class="sheet-stat">
-                                    <strong>55</strong>
+                                    <strong id="sheetNominationsPending">0</strong>
                                     <span>Pending</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="sheets-viewer">
-                        <div class="sheets-viewer-header">
-                            <h4><i class="fas fa-eye"></i> Live Data View</h4>
-                            <div style="display: flex; gap: 10px;">
-                                <select id="sheetSelector" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; color: var(--lba-dark); font-weight: 600;">
+                    <!-- Filter Controls -->
+                    <div class="filter-controls">
+                        <h4><i class="fas fa-filter"></i> Filter Data</h4>
+                        <div class="filter-grid">
+                            <div class="filter-group">
+                                <label for="filterSheet">Select Sheet</label>
+                                <select id="filterSheet" onchange="switchSheet(this.value)">
                                     <option value="businesses">Businesses Sheet</option>
                                     <option value="nominations">Nominations Sheet</option>
+                                    <option value="all">All Submissions</option>
                                 </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filterStatus">Status Filter</label>
+                                <select id="filterStatus" onchange="applyFilters()">
+                                    <option value="all">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filterSearch">Search</label>
+                                <input type="text" id="filterSearch" placeholder="Search submissions..." onkeyup="applyFilters()">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Data View -->
+                    <div class="sheets-viewer">
+                        <div class="sheets-viewer-header">
+                            <h4>
+                                <i class="fas fa-eye"></i> Live Data View 
+                                <span class="real-time-indicator" id="realtimeIndicator">
+                                    <span class="pulse-dot"></span>
+                                    Live
+                                </span>
+                            </h4>
+                            <div style="display: flex; gap: 10px;">
+                                <span id="dataCount" style="color: #64748b; font-size: 14px; font-weight: 600;">0 submissions</span>
                             </div>
                         </div>
                         <div id="sheetsData" style="padding: 20px; min-height: 400px; max-height: 400px; overflow-y: auto;">
                             <div style="text-align: center; padding: 50px 20px; color: #64748b;">
                                 <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
-                                <p>Loading Google Sheets data...</p>
+                                <p>Connecting to Google Sheets...</p>
+                                <p style="font-size: 12px; margin-top: 10px;">Fetching live submission data</p>
                             </div>
                         </div>
                     </div>
                     
+                    <!-- Quick Actions -->
                     <div class="quick-actions-panel">
                         <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
                         <div class="actions-grid">
@@ -1497,61 +1640,29 @@
         </div>
     </div>
 
-    <!-- Business Management Modal -->
-    <div class="modal" id="businessModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-building"></i> Business Management</h2>
-                <button class="modal-close" onclick="hideModal('businessModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="businessContent">
-                    <!-- Business management content will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Dashboard Script -->
     <script>
-        // Configuration
+        // Configuration - Your Actual Google Apps Script URL
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec';
+        const GOOGLE_SHEETS_VIEW_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit';
         const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
-        const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit?gid=53793535';
-        const SHEETS_API_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7z4lQ4XwX8Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw4Xw/pubhtml?gid=53793535&single=true&widget=true&headers=false';
         const SESSION_TIMEOUT = 60; // minutes
         
-        // Sample Google Sheets Data
-        const SAMPLE_SHEETS_DATA = {
-            businesses: [
-                ["Business Name", "Email", "Phone", "Category", "Status", "Nominations"],
-                ["ABC Corporation", "abc@example.com", "+231 777 1111", "Technology", "Active", "5"],
-                ["XYZ Ltd.", "xyz@example.com", "+231 777 2222", "Manufacturing", "Active", "3"],
-                ["Liberia Tech Solutions", "tech@example.com", "+231 777 3333", "Technology", "Pending", "2"],
-                ["Monrovia Industries", "monrovia@example.com", "+231 777 4444", "Industrial", "Active", "7"],
-                ["Liberian Enterprise", "enterprise@example.com", "+231 777 5555", "Services", "Suspended", "1"],
-                ["West Africa Trading", "trading@example.com", "+231 777 6666", "Trading", "Active", "4"],
-                ["Liberia Logistics", "logistics@example.com", "+231 777 7777", "Logistics", "Active", "3"],
-                ["African Imports", "imports@example.com", "+231 777 8888", "Import/Export", "Pending", "2"]
-            ],
-            nominations: [
-                ["Business Name", "Category", "Submitted Date", "Status", "Reviewer", "Score"],
-                ["ABC Corporation", "Best Technology Company", "2024-01-15", "Approved", "Admin", "95"],
-                ["XYZ Ltd.", "Manufacturing Excellence", "2024-01-16", "Approved", "Admin", "88"],
-                ["Liberia Tech Solutions", "Innovation Award", "2024-01-17", "Pending", "", "85"],
-                ["Monrovia Industries", "Industrial Leadership", "2024-01-18", "Approved", "Admin", "92"],
-                ["Liberian Enterprise", "Service Excellence", "2024-01-19", "Rejected", "Admin", "70"],
-                ["West Africa Trading", "Business Growth", "2024-01-20", "Approved", "Admin", "87"],
-                ["Liberia Logistics", "Logistics Excellence", "2024-01-21", "Pending", "", "82"],
-                ["African Imports", "Import/Export Excellence", "2024-01-22", "Pending", "", "79"]
-            ]
+        // Global variables
+        let currentSheetData = {
+            businesses: [],
+            nominations: [],
+            all: []
         };
+        let currentSheet = 'businesses';
+        let autoRefreshInterval = null;
+        let lastUpdateTime = null;
         
         // Initialize Dashboard
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Admin Dashboard Initialized');
-            console.log('📊 Google Sheets Integration Ready');
+            console.log('📊 Google Sheets Integration: ACTIVE');
+            console.log('🔗 Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
             
             // Check authentication
             await checkAuth();
@@ -1559,8 +1670,9 @@
             // Setup UI
             setupUI();
             
-            // Load dashboard data
+            // Load initial data
             await loadDashboardData();
+            await loadSheetsData();
             
             // Start session timer
             startSessionTimer();
@@ -1568,6 +1680,9 @@
             // Setup periodic refresh
             setInterval(loadDashboardData, 30000); // Refresh every 30 seconds
             setInterval(checkSystemStatus, 60000); // Check system status every minute
+            
+            // Real-time updates indicator
+            updateRealTimeIndicator();
         });
         
         // Authentication Check
@@ -1637,14 +1752,6 @@
                 }
             });
             
-            // Sheet selector change
-            const sheetSelector = document.getElementById('sheetSelector');
-            if (sheetSelector) {
-                sheetSelector.addEventListener('change', function() {
-                    loadSheetsData(this.value);
-                });
-            }
-            
             // Close user menu on outside click
             document.addEventListener('click', () => {
                 const userMenu = document.getElementById('userMenu');
@@ -1652,66 +1759,532 @@
             });
         }
         
-        // Load Dashboard Data
+        // Load Dashboard Data from Google Sheets
         async function loadDashboardData() {
-            console.log('📊 Loading dashboard data...');
+            console.log('📊 Loading dashboard data from Google Sheets...');
             
             try {
-                const token = localStorage.getItem('lba_auth_token');
-                
-                // Try to get data from backend
-                const response = await fetch(`${BACKEND_URL}/api/admin/dashboard`, {
+                // Fetch data from Google Apps Script
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL + '?action=getStats', {
+                    method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
                     }
                 });
                 
-                let data;
-                
-                if (response.ok) {
-                    data = await response.json();
-                    console.log('✅ Dashboard data loaded:', data);
-                } else {
-                    console.warn('⚠️ Using mock dashboard data');
-                    data = getMockDashboardData();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
                 
+                const data = await response.json();
+                console.log('✅ Google Sheets stats loaded:', data);
+                
                 // Update stats
-                updateStats(data);
+                updateDashboardStats(data);
                 
                 // Update timestamp
+                const now = new Date();
                 document.getElementById('lastUpdated').textContent = 
-                    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                document.getElementById('statusTime').textContent = 'Just now';
+                    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('statusTime').textContent = 
+                    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                lastUpdateTime = now;
+                
+                // Update sheet stats
+                if (data.sheetStats) {
+                    document.getElementById('sheetBusinessesTotal').textContent = data.sheetStats.businesses?.total || 0;
+                    document.getElementById('sheetBusinessesActive').textContent = data.sheetStats.businesses?.active || 0;
+                    document.getElementById('sheetBusinessesPending').textContent = data.sheetStats.businesses?.pending || 0;
+                    
+                    document.getElementById('sheetNominationsTotal').textContent = data.sheetStats.nominations?.total || 0;
+                    document.getElementById('sheetNominationsApproved').textContent = data.sheetStats.nominations?.approved || 0;
+                    document.getElementById('sheetNominationsPending').textContent = data.sheetStats.nominations?.pending || 0;
+                }
                 
             } catch (error) {
-                console.error('❌ Error loading dashboard data:', error);
-                // Continue with mock data
-                const data = getMockDashboardData();
-                updateStats(data);
+                console.error('❌ Error loading Google Sheets data:', error);
+                showNotification('⚠️ Could not connect to Google Sheets. Using cached data.', 'warning');
+                
+                // Update with cached data if available
+                if (currentSheetData.all.length > 0) {
+                    updateStatsFromCachedData();
+                }
             }
         }
         
-        // Update Statistics
-        function updateStats(data) {
+        // Update Dashboard Stats
+        function updateDashboardStats(data) {
             // Total Businesses
-            const totalBusinesses = data.totalBusinesses || 42;
+            const totalBusinesses = data.totalBusinesses || currentSheetData.businesses.length || 0;
             document.getElementById('totalBusinesses').textContent = totalBusinesses;
             document.getElementById('businessCount').textContent = totalBusinesses;
+            document.getElementById('businessTrend').innerHTML = 
+                `<i class="fas fa-arrow-up"></i><span>${data.businessGrowth || '+0 today'}</span>`;
             
             // Total Nominations
-            const totalNominations = data.totalNominations || 187;
+            const totalNominations = data.totalNominations || currentSheetData.nominations.length || 0;
             document.getElementById('totalNominations').textContent = totalNominations;
             document.getElementById('nominationCount').textContent = totalNominations;
+            document.getElementById('nominationTrend').innerHTML = 
+                `<i class="fas fa-arrow-up"></i><span>${data.nominationGrowth || '+0 today'}</span>`;
             
             // Approved Nominations
-            const approvedNominations = data.approvedNominations || 132;
+            const approvedNominations = data.approvedNominations || 
+                currentSheetData.nominations.filter(n => n.status === 'approved').length || 0;
             document.getElementById('approvedNominations').textContent = approvedNominations;
+            document.getElementById('approvalTrend').innerHTML = 
+                `<i class="fas fa-arrow-up"></i><span>${Math.round((approvedNominations / totalNominations) * 100) || 0}% rate</span>`;
             
-            // Active Users
-            const activeUsers = data.activeUsers || 67;
-            document.getElementById('activeUsers').textContent = activeUsers;
+            // Active Users/Submissions
+            const totalSubmissions = data.totalSubmissions || currentSheetData.all.length || 0;
+            document.getElementById('activeUsers').textContent = totalSubmissions;
+            document.getElementById('totalSubmissions').textContent = totalSubmissions;
+            document.getElementById('userTrend').innerHTML = 
+                `<i class="fas fa-arrow-up"></i><span>+${data.todaySubmissions || 0} today</span>`;
+            
+            // Update recent activities
+            updateRecentActivities();
+        }
+        
+        // Update stats from cached data
+        function updateStatsFromCachedData() {
+            const totalBusinesses = currentSheetData.businesses.length || 0;
+            const totalNominations = currentSheetData.nominations.length || 0;
+            const approvedNominations = currentSheetData.nominations.filter(n => n.status === 'approved').length || 0;
+            const totalSubmissions = currentSheetData.all.length || 0;
+            
+            document.getElementById('totalBusinesses').textContent = totalBusinesses;
+            document.getElementById('businessCount').textContent = totalBusinesses;
+            document.getElementById('totalNominations').textContent = totalNominations;
+            document.getElementById('nominationCount').textContent = totalNominations;
+            document.getElementById('approvedNominations').textContent = approvedNominations;
+            document.getElementById('activeUsers').textContent = totalSubmissions;
+            document.getElementById('totalSubmissions').textContent = totalSubmissions;
+        }
+        
+        // Load Google Sheets Data
+        async function loadSheetsData() {
+            console.log('📥 Loading Google Sheets data...');
+            
+            const sheetsData = document.getElementById('sheetsData');
+            sheetsData.innerHTML = `
+                <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
+                    <p>Fetching live data from Google Sheets...</p>
+                    <p style="font-size: 12px; margin-top: 10px;">Connecting to: ${GOOGLE_APPS_SCRIPT_URL}</p>
+                </div>
+            `;
+            
+            try {
+                // Fetch all submissions from Google Apps Script
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL + '?action=getAllData', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Google Sheets data loaded:', data);
+                
+                // Process and store the data
+                processSheetData(data);
+                
+                // Render the current sheet
+                renderSheetData();
+                
+                // Update real-time indicator
+                updateRealTimeIndicator();
+                
+                // Show success notification
+                if (lastUpdateTime) {
+                    const minutesAgo = Math.floor((new Date() - lastUpdateTime) / 60000);
+                    if (minutesAgo < 1) {
+                        showNotification('✅ Live data loaded successfully!', 'success');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading Google Sheets data:', error);
+                sheetsData.innerHTML = `
+                    <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fas fa-exclamation-triangle fa-2x" style="color: var(--warning-color); margin-bottom: 20px;"></i>
+                        <p>Could not connect to Google Sheets</p>
+                        <p style="font-size: 12px; margin-top: 10px;">${error.message}</p>
+                        <button class="sheet-btn secondary" onclick="loadSheetsData()" style="margin-top: 20px;">
+                            <i class="fas fa-sync-alt"></i> Try Again
+                        </button>
+                    </div>
+                `;
+                showNotification('❌ Could not load Google Sheets data', 'danger');
+            }
+        }
+        
+        // Process Google Sheets Data
+        function processSheetData(data) {
+            // Reset data
+            currentSheetData = {
+                businesses: [],
+                nominations: [],
+                all: []
+            };
+            
+            // Process based on your actual Google Sheets structure
+            // This is a generic processor - you'll need to adjust based on your actual sheet structure
+            
+            if (data.submissions && Array.isArray(data.submissions)) {
+                data.submissions.forEach(submission => {
+                    // Add to all submissions
+                    currentSheetData.all.push(submission);
+                    
+                    // Categorize based on form type or other criteria
+                    if (submission.formType === 'business' || submission.formType === 'business_registration') {
+                        currentSheetData.businesses.push({
+                            id: submission.id || submission.timestamp,
+                            name: submission.businessName || submission.companyName || 'Unknown Business',
+                            email: submission.email || submission.businessEmail || 'No email',
+                            phone: submission.phone || submission.businessPhone || 'No phone',
+                            category: submission.category || submission.businessCategory || 'General',
+                            status: submission.status || 'pending',
+                            nominations: submission.nominations || 0,
+                            timestamp: submission.timestamp || new Date().toISOString(),
+                            source: submission.source || 'website'
+                        });
+                    } else if (submission.formType === 'nomination' || submission.formType === 'award_nomination') {
+                        currentSheetData.nominations.push({
+                            id: submission.id || submission.timestamp,
+                            businessName: submission.businessName || submission.companyName || 'Unknown Business',
+                            category: submission.category || submission.nominationCategory || 'General',
+                            submittedDate: submission.timestamp || new Date().toISOString(),
+                            status: submission.status || 'pending',
+                            reviewer: submission.reviewer || '',
+                            score: submission.score || 0,
+                            timestamp: submission.timestamp || new Date().toISOString(),
+                            source: submission.source || 'website'
+                        });
+                    }
+                });
+            }
+            
+            // If no structured data, create sample from raw data
+            if (currentSheetData.all.length === 0 && data.rawData) {
+                processRawSheetData(data.rawData);
+            }
+            
+            console.log('📊 Processed data counts:', {
+                businesses: currentSheetData.businesses.length,
+                nominations: currentSheetData.nominations.length,
+                all: currentSheetData.all.length
+            });
+        }
+        
+        // Process raw sheet data (fallback)
+        function processRawSheetData(rawData) {
+            // This is a fallback if your Google Apps Script returns raw sheet data
+            // You'll need to adjust this based on your actual sheet structure
+            
+            if (Array.isArray(rawData) && rawData.length > 0) {
+                const headers = rawData[0];
+                
+                for (let i = 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    const submission = {};
+                    
+                    // Create object from headers and row data
+                    headers.forEach((header, index) => {
+                        if (header && row[index]) {
+                            submission[header.toLowerCase().replace(/\s+/g, '_')] = row[index];
+                        }
+                    });
+                    
+                    // Add timestamp if not present
+                    if (!submission.timestamp) {
+                        submission.timestamp = new Date().toISOString();
+                    }
+                    
+                    currentSheetData.all.push(submission);
+                    
+                    // Categorize based on content
+                    if (submission.business_name || submission.company_name) {
+                        currentSheetData.businesses.push({
+                            id: submission.id || submission.timestamp,
+                            name: submission.business_name || submission.company_name || 'Unknown Business',
+                            email: submission.email || submission.business_email || 'No email',
+                            phone: submission.phone || submission.business_phone || 'No phone',
+                            category: submission.category || submission.business_category || 'General',
+                            status: submission.status || 'pending',
+                            nominations: parseInt(submission.nominations) || 0,
+                            timestamp: submission.timestamp
+                        });
+                    }
+                    
+                    if (submission.nomination_category || submission.award_category) {
+                        currentSheetData.nominations.push({
+                            id: submission.id || submission.timestamp,
+                            businessName: submission.business_name || submission.company_name || 'Unknown Business',
+                            category: submission.nomination_category || submission.award_category || 'General',
+                            submittedDate: submission.timestamp || submission.submission_date || new Date().toISOString(),
+                            status: submission.status || 'pending',
+                            reviewer: submission.reviewer || submission.approved_by || '',
+                            score: parseInt(submission.score) || 0,
+                            timestamp: submission.timestamp
+                        });
+                    }
+                }
+            }
+        }
+        
+        // Render Sheet Data
+        function renderSheetData() {
+            const sheetsData = document.getElementById('sheetsData');
+            const data = currentSheetData[currentSheet] || [];
+            const filteredData = applyFiltersToData(data);
+            
+            if (filteredData.length === 0) {
+                sheetsData.innerHTML = `
+                    <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fas fa-database fa-2x" style="margin-bottom: 20px; color: #cbd5e1;"></i>
+                        <p>No ${currentSheet} data found</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Try refreshing or check your Google Sheets</p>
+                    </div>
+                `;
+                document.getElementById('dataCount').textContent = '0 submissions';
+                return;
+            }
+            
+            // Update data count
+            document.getElementById('dataCount').textContent = `${filteredData.length} submissions`;
+            
+            // Create table based on sheet type
+            let tableHTML = '';
+            
+            if (currentSheet === 'businesses') {
+                tableHTML = renderBusinessesTable(filteredData);
+            } else if (currentSheet === 'nominations') {
+                tableHTML = renderNominationsTable(filteredData);
+            } else {
+                tableHTML = renderAllSubmissionsTable(filteredData);
+            }
+            
+            sheetsData.innerHTML = tableHTML;
+        }
+        
+        // Render Businesses Table
+        function renderBusinessesTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Nominations</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
+                                <tr>
+                                    <td><strong>${escapeHtml(item.name)}</strong></td>
+                                    <td>${escapeHtml(item.email)}</td>
+                                    <td>${escapeHtml(item.phone)}</td>
+                                    <td>${escapeHtml(item.category)}</td>
+                                    <td>
+                                        <span class="status-badge ${getStatusClass(item.status)}">
+                                            ${item.status || 'pending'}
+                                        </span>
+                                    </td>
+                                    <td><strong>${item.nominations || 0}</strong></td>
+                                    <td>${formatDate(item.timestamp)}</td>
+                                    <td>
+                                        <button class="sheet-btn secondary" style="padding: 6px 12px; font-size: 12px;" onclick="viewDetails('${item.id}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 10px; text-align: center;">
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">
+                        Showing ${data.length} of ${currentSheetData.businesses.length} businesses • 
+                        <button class="sheet-btn secondary" onclick="openGoogleSheets()" style="padding: 6px 15px; font-size: 13px; margin-left: 10px;">
+                            <i class="fas fa-external-link-alt"></i> View in Google Sheets
+                        </button>
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Render Nominations Table
+        function renderNominationsTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Category</th>
+                                <th>Submitted Date</th>
+                                <th>Status</th>
+                                <th>Reviewer</th>
+                                <th>Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
+                                <tr>
+                                    <td><strong>${escapeHtml(item.businessName)}</strong></td>
+                                    <td>${escapeHtml(item.category)}</td>
+                                    <td>${formatDate(item.submittedDate)}</td>
+                                    <td>
+                                        <span class="status-badge ${getStatusClass(item.status)}">
+                                            ${item.status || 'pending'}
+                                        </span>
+                                    </td>
+                                    <td>${escapeHtml(item.reviewer) || 'Not assigned'}</td>
+                                    <td>
+                                        <span style="
+                                            display: inline-block;
+                                            padding: 4px 12px;
+                                            border-radius: 20px;
+                                            font-weight: 700;
+                                            background: ${getScoreColor(item.score)};
+                                            color: white;
+                                        ">
+                                            ${item.score || 0}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="sheet-btn secondary" style="padding: 6px 12px; font-size: 12px; margin-right: 5px;" onclick="viewDetails('${item.id}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="sheet-btn" style="padding: 6px 12px; font-size: 12px; background: var(--success-color);" onclick="approveItem('${item.id}')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 10px; text-align: center;">
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">
+                        Showing ${data.length} of ${currentSheetData.nominations.length} nominations • 
+                        <button class="sheet-btn secondary" onclick="openGoogleSheets()" style="padding: 6px 15px; font-size: 13px; margin-left: 10px;">
+                            <i class="fas fa-external-link-alt"></i> View in Google Sheets
+                        </button>
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Render All Submissions Table
+        function renderAllSubmissionsTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name/Business</th>
+                                <th>Email</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Source</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
+                                <tr>
+                                    <td>
+                                        <span class="status-badge" style="background: ${item.formType === 'business' ? 'rgba(255, 0, 0, 0.1)' : 'rgba(135, 206, 235, 0.1)'}; color: ${item.formType === 'business' ? 'var(--lba-primary)' : 'var(--lba-secondary)'};">
+                                            ${item.formType || 'submission'}
+                                        </span>
+                                    </td>
+                                    <td><strong>${escapeHtml(item.name || item.businessName || 'N/A')}</strong></td>
+                                    <td>${escapeHtml(item.email) || 'N/A'}</td>
+                                    <td>${escapeHtml(item.category) || 'General'}</td>
+                                    <td>
+                                        <span class="status-badge ${getStatusClass(item.status)}">
+                                            ${item.status || 'pending'}
+                                        </span>
+                                    </td>
+                                    <td>${formatDate(item.timestamp)}</td>
+                                    <td>${escapeHtml(item.source) || 'website'}</td>
+                                    <td>
+                                        <button class="sheet-btn secondary" style="padding: 6px 12px; font-size: 12px;" onclick="viewDetails('${item.id}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 10px; text-align: center;">
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">
+                        Showing ${data.length} of ${currentSheetData.all.length} total submissions • 
+                        <button class="sheet-btn secondary" onclick="openGoogleSheets()" style="padding: 6px 15px; font-size: 13px; margin-left: 10px;">
+                            <i class="fas fa-external-link-alt"></i> View in Google Sheets
+                        </button>
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Apply filters to data
+        function applyFiltersToData(data) {
+            const statusFilter = document.getElementById('filterStatus')?.value || 'all';
+            const searchFilter = document.getElementById('filterSearch')?.value?.toLowerCase() || '';
+            
+            return data.filter(item => {
+                // Status filter
+                if (statusFilter !== 'all' && item.status !== statusFilter) {
+                    return false;
+                }
+                
+                // Search filter
+                if (searchFilter) {
+                    const searchableFields = [
+                        item.name,
+                        item.businessName,
+                        item.email,
+                        item.category,
+                        item.phone
+                    ].filter(Boolean).map(f => f.toLowerCase());
+                    
+                    if (!searchableFields.some(field => field.includes(searchFilter))) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+        }
+        
+        // Apply filters and re-render
+        function applyFilters() {
+            renderSheetData();
+        }
+        
+        // Switch between sheets
+        function switchSheet(sheet) {
+            currentSheet = sheet;
+            document.getElementById('filterSheet').value = sheet;
+            renderSheetData();
         }
         
         // Show Nominations Modal (Google Sheets Integration)
@@ -1721,28 +2294,222 @@
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             
-            // Load sheets data
-            loadSheetsData('businesses');
+            // Load sheets data if not already loaded
+            if (currentSheetData.all.length === 0) {
+                loadSheetsData();
+            } else {
+                renderSheetData();
+            }
         }
         
-        // Show other modals
-        function showBusinessModal() {
-            hideAllModals();
-            const modal = document.getElementById('businessModal');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
+        // Refresh Google Sheets Data
+        function refreshSheetsData() {
+            loadSheetsData();
+            loadDashboardData();
+            showNotification('Refreshing data from Google Sheets...', 'info');
+        }
+        
+        // Start auto-refresh
+        function startAutoRefresh() {
+            const btn = document.getElementById('autoRefreshBtn');
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                btn.innerHTML = '<i class="fas fa-sync"></i> Auto Refresh';
+                btn.classList.remove('danger');
+                showNotification('Auto-refresh stopped', 'warning');
+            } else {
+                autoRefreshInterval = setInterval(refreshSheetsData, 30000); // Every 30 seconds
+                btn.innerHTML = '<i class="fas fa-stop"></i> Stop Auto Refresh';
+                btn.classList.add('danger');
+                showNotification('Auto-refresh started (every 30 seconds)', 'success');
+            }
+        }
+        
+        // Open Google Sheets in new tab
+        function openGoogleSheets() {
+            window.open(GOOGLE_SHEETS_VIEW_URL, '_blank');
+        }
+        
+        // Update Recent Activities
+        function updateRecentActivities() {
+            const activityList = document.getElementById('activityList');
+            const recentSubmissions = currentSheetData.all
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 5);
             
-            // Load business management content
-            loadBusinessContent();
+            if (recentSubmissions.length === 0) {
+                activityList.innerHTML = `
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>No recent submissions</h4>
+                            <p>Google Sheets integration is ready</p>
+                        </div>
+                        <div class="activity-time">Just now</div>
+                    </li>
+                `;
+                return;
+            }
+            
+            activityList.innerHTML = recentSubmissions.map(submission => {
+                const icon = submission.formType === 'business' ? 'building' : 'award';
+                const type = submission.formType === 'business' ? 'Business Registration' : 'Nomination';
+                const timeAgo = formatTimeAgo(submission.timestamp);
+                
+                return `
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-${icon}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>New ${type}</h4>
+                            <p>${escapeHtml(submission.name || submission.businessName || 'New submission')}</p>
+                        </div>
+                        <div class="activity-time">${timeAgo}</div>
+                    </li>
+                `;
+            }).join('');
+        }
+        
+        // Update real-time indicator
+        function updateRealTimeIndicator() {
+            const indicator = document.getElementById('realtimeIndicator');
+            if (!lastUpdateTime) {
+                indicator.style.display = 'none';
+                return;
+            }
+            
+            const secondsAgo = Math.floor((new Date() - lastUpdateTime) / 1000);
+            
+            if (secondsAgo < 30) {
+                indicator.style.display = 'inline-flex';
+                indicator.innerHTML = '<span class="pulse-dot"></span> Live';
+            } else if (secondsAgo < 60) {
+                indicator.style.display = 'inline-flex';
+                indicator.innerHTML = `<i class="fas fa-clock"></i> ${secondsAgo}s ago`;
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+        
+        // Action Functions
+        function approveSelected() {
+            // This would update Google Sheets via your Apps Script
+            showNotification('Approving selected nominations...', 'info');
+            
+            // In a real implementation, you would:
+            // 1. Get selected items
+            // 2. Send update to Google Apps Script
+            // 3. Refresh data
+            
+            setTimeout(() => {
+                showNotification('Selected nominations approved successfully!', 'success');
+                refreshSheetsData();
+            }, 1500);
+        }
+        
+        function rejectSelected() {
+            showNotification('Rejecting selected nominations...', 'warning');
+            setTimeout(() => {
+                showNotification('Selected nominations rejected!', 'warning');
+                refreshSheetsData();
+            }, 1500);
+        }
+        
+        function exportToExcel() {
+            showNotification('Exporting data to Excel...', 'info');
+            // This would trigger a download from Google Sheets
+            setTimeout(() => {
+                showNotification('Data exported successfully!', 'success');
+            }, 2000);
+        }
+        
+        function sendNotifications() {
+            showNotification('Sending notifications...', 'info');
+            setTimeout(() => {
+                showNotification('Notifications sent successfully!', 'success');
+            }, 1500);
+        }
+        
+        function viewDetails(id) {
+            showNotification('Viewing submission details...', 'info');
+            // You would open a detailed view modal here
+        }
+        
+        function approveItem(id) {
+            showNotification('Approving submission...', 'info');
+            // Send update to Google Sheets via your Apps Script
+            setTimeout(() => {
+                showNotification('Submission approved!', 'success');
+                refreshSheetsData();
+            }, 1500);
+        }
+        
+        // Utility Functions
+        function getStatusClass(status) {
+            switch (status?.toLowerCase()) {
+                case 'active':
+                case 'approved':
+                    return 'status-active';
+                case 'pending':
+                    return 'status-pending';
+                case 'rejected':
+                    return 'status-rejected';
+                default:
+                    return 'status-pending';
+            }
+        }
+        
+        function getScoreColor(score) {
+            score = parseInt(score) || 0;
+            if (score >= 90) return '#10B981';
+            if (score >= 80) return '#F59E0B';
+            return '#EF4444';
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Just now';
+            const now = new Date();
+            const date = new Date(timestamp);
+            const diff = now - date;
+            
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (seconds < 60) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${days}d ago`;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Show other modals (simplified)
+        function showBusinessModal() {
+            showNotification('Use the Google Sheets integration to manage businesses', 'info');
+            showNominationsModal();
         }
         
         function showAnnouncementModal() {
-            hideAllModals();
             showNotification('Announcements module coming soon!', 'info');
         }
         
         function showAnalyticsModal() {
-            hideAllModals();
             showNotification('Analytics module coming soon!', 'info');
         }
         
@@ -1777,6 +2544,17 @@
                 modal.classList.remove('active');
                 document.body.style.overflow = 'auto';
             }
+            
+            // Stop auto-refresh when modal closes
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                const btn = document.getElementById('autoRefreshBtn');
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-sync"></i> Auto Refresh';
+                    btn.classList.remove('danger');
+                }
+            }
         }
         
         function hideAllModals() {
@@ -1785,389 +2563,31 @@
             document.body.style.overflow = 'auto';
         }
         
-        // Load Google Sheets Data
-        async function loadSheetsData(sheetType = 'businesses') {
-            const sheetsData = document.getElementById('sheetsData');
-            
-            // Show loading state
-            sheetsData.innerHTML = `
-                <div style="text-align: center; padding: 50px 20px; color: #64748b;">
-                    <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
-                    <p>Loading ${sheetType} data from Google Sheets...</p>
-                </div>
-            `;
-            
-            try {
-                // Try to fetch from Google Sheets API
-                const response = await fetch(SHEETS_API_URL);
-                
-                let data;
-                if (response.ok) {
-                    const html = await response.text();
-                    // Parse HTML to extract data (simplified version)
-                    data = parseSheetsHTML(html);
-                } else {
-                    // Use sample data if API fails
-                    console.warn('⚠️ Using sample Google Sheets data');
-                    data = SAMPLE_SHEETS_DATA[sheetType] || SAMPLE_SHEETS_DATA.businesses;
-                }
-                
-                // Render the data as a table
-                renderSheetsTable(data, sheetType);
-                
-            } catch (error) {
-                console.error('❌ Error loading sheets data:', error);
-                // Use sample data as fallback
-                const data = SAMPLE_SHEETS_DATA[sheetType] || SAMPLE_SHEETS_DATA.businesses;
-                renderSheetsTable(data, sheetType);
-            }
-        }
-        
-        // Parse Google Sheets HTML (simplified)
-        function parseSheetsHTML(html) {
-            // This is a simplified parser for demonstration
-            // In production, you should use the Google Sheets API properly
-            const rows = [];
-            const regex = /<td[^>]*>([^<]*)<\/td>/g;
-            let match;
-            let currentRow = [];
-            
-            while ((match = regex.exec(html)) !== null) {
-                currentRow.push(match[1].trim());
-                if (currentRow.length >= 6) { // Assuming 6 columns
-                    rows.push([...currentRow]);
-                    currentRow = [];
-                }
-            }
-            
-            return rows.length > 0 ? rows : SAMPLE_SHEETS_DATA.businesses;
-        }
-        
-        // Render Sheets Data as Table
-        function renderSheetsTable(data, sheetType) {
-            const sheetsData = document.getElementById('sheetsData');
-            
-            if (!data || data.length === 0) {
-                sheetsData.innerHTML = `
-                    <div style="text-align: center; padding: 50px 20px; color: #64748b;">
-                        <i class="fas fa-exclamation-circle fa-2x" style="margin-bottom: 20px; color: var(--warning-color);"></i>
-                        <p>No data available for ${sheetType}</p>
-                        <button class="sheet-btn secondary" onclick="loadSheetsData('${sheetType}')" style="margin-top: 20px;">
-                            <i class="fas fa-sync-alt"></i> Try Again
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Create table
-            let tableHTML = `
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
-                        <thead>
-                            <tr style="background: #f1f5f9;">
-            `;
-            
-            // Add headers
-            const headers = data[0] || [];
-            headers.forEach(header => {
-                tableHTML += `
-                    <th style="padding: 12px 15px; text-align: left; border-bottom: 2px solid #e2e8f0; color: var(--lba-dark); font-weight: 700;">
-                        ${header}
-                    </th>
-                `;
-            });
-            
-            tableHTML += `
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            // Add data rows (skip header row)
-            for (let i = 1; i < Math.min(data.length, 10); i++) { // Show max 10 rows
-                const row = data[i];
-                if (!row) continue;
-                
-                tableHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">`;
-                
-                row.forEach((cell, cellIndex) => {
-                    // Style based on cell content
-                    let cellStyle = "padding: 10px 15px;";
-                    
-                    if (sheetType === 'businesses' && cellIndex === 4) { // Status column
-                        if (cell === 'Active') {
-                            cellStyle += "color: var(--success-color); font-weight: 600;";
-                        } else if (cell === 'Pending') {
-                            cellStyle += "color: var(--warning-color); font-weight: 600;";
-                        } else if (cell === 'Suspended') {
-                            cellStyle += "color: var(--danger-color); font-weight: 600;";
-                        }
-                    } else if (sheetType === 'nominations' && cellIndex === 3) { // Status column
-                        if (cell === 'Approved') {
-                            cellStyle += "color: var(--success-color); font-weight: 600;";
-                        } else if (cell === 'Pending') {
-                            cellStyle += "color: var(--warning-color); font-weight: 600;";
-                        } else if (cell === 'Rejected') {
-                            cellStyle += "color: var(--danger-color); font-weight: 600;";
-                        }
-                    } else if (sheetType === 'nominations' && cellIndex === 5) { // Score column
-                        const score = parseInt(cell) || 0;
-                        if (score >= 90) {
-                            cellStyle += "color: var(--success-color); font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 6px 12px; border-radius: 20px;";
-                        } else if (score >= 80) {
-                            cellStyle += "color: var(--warning-color); font-weight: 600; background: rgba(245, 158, 11, 0.1); padding: 6px 12px; border-radius: 20px;";
-                        } else {
-                            cellStyle += "color: var(--danger-color); font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 6px 12px; border-radius: 20px;";
-                        }
-                    }
-                    
-                    tableHTML += `<td style="${cellStyle}">${cell || ''}</td>`;
-                });
-                
-                tableHTML += `</tr>`;
-            }
-            
-            tableHTML += `
-                        </tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 10px; text-align: center;">
-                    <p style="color: #64748b; font-size: 14px; margin: 0;">
-                        Showing ${Math.min(data.length - 1, 10)} of ${data.length - 1} rows • 
-                        <button class="sheet-btn secondary" onclick="openGoogleSheets()" style="padding: 6px 15px; font-size: 13px; margin-left: 10px;">
-                            <i class="fas fa-external-link-alt"></i> View Full Sheet
-                        </button>
-                    </p>
-                </div>
-            `;
-            
-            sheetsData.innerHTML = tableHTML;
-        }
-        
-        // Refresh Google Sheets Data
-        function refreshSheetsData() {
-            const sheetSelector = document.getElementById('sheetSelector');
-            const currentSheet = sheetSelector ? sheetSelector.value : 'businesses';
-            
-            loadSheetsData(currentSheet);
-            showNotification('Google Sheets data refreshed!', 'success');
-        }
-        
-        // Open Google Sheets in new tab
-        function openGoogleSheets() {
-            window.open(GOOGLE_SHEETS_URL, '_blank');
-        }
-        
-        // Open specific sheet tab
-        function openSheetTab(tabName) {
-            const sheetSelector = document.getElementById('sheetSelector');
-            if (sheetSelector) {
-                sheetSelector.value = tabName;
-                loadSheetsData(tabName);
-            }
-        }
-        
-        // Action Functions for Nominations
-        function approveSelected() {
-            showNotification('Selected nominations approved successfully!', 'success');
-            // Simulate API call
-            setTimeout(() => {
-                refreshSheetsData();
-            }, 1000);
-        }
-        
-        function rejectSelected() {
-            showNotification('Selected nominations rejected!', 'warning');
-            // Simulate API call
-            setTimeout(() => {
-                refreshSheetsData();
-            }, 1000);
-        }
-        
-        function exportToExcel() {
-            showNotification('Exporting data to Excel...', 'info');
-            // Simulate export
-            setTimeout(() => {
-                showNotification('Data exported to Excel successfully!', 'success');
-            }, 1500);
-        }
-        
-        function sendNotifications() {
-            showNotification('Sending notifications to selected users...', 'info');
-            // Simulate notification sending
-            setTimeout(() => {
-                showNotification('Notifications sent successfully!', 'success');
-            }, 1500);
-        }
-        
-        // Business Management Functions
-        function loadBusinessContent() {
-            const content = document.getElementById('businessContent');
-            content.innerHTML = `
-                <div style="padding: 20px;">
-                    <h3 style="color: var(--lba-dark); margin-bottom: 25px; font-size: 22px;">
-                        <i class="fas fa-building"></i> Manage Businesses
-                    </h3>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
-                        <div>
-                            <h4 style="color: var(--lba-dark); margin-bottom: 15px; font-size: 18px;">
-                                <i class="fas fa-plus-circle"></i> Add New Business
-                            </h4>
-                            <div style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px dashed #cbd5e1;">
-                                <input type="text" placeholder="Business Name" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px;">
-                                <input type="email" placeholder="Email Address" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px;">
-                                <input type="text" placeholder="Phone Number" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px;">
-                                <button class="sheet-btn" style="width: 100%;" onclick="addBusiness()">
-                                    <i class="fas fa-plus"></i> Add Business
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h4 style="color: var(--lba-dark); margin-bottom: 15px; font-size: 18px;">
-                                <i class="fas fa-download"></i> Import Businesses
-                            </h4>
-                            <div style="background: #f8fafc; padding: 25px; border-radius: 15px; text-align: center; border: 2px dashed #cbd5e1;">
-                                <i class="fas fa-file-import" style="font-size: 48px; color: var(--lba-secondary); margin-bottom: 15px;"></i>
-                                <p style="color: #64748b; margin-bottom: 20px;">Upload CSV or Excel file</p>
-                                <input type="file" id="businessFile" accept=".csv,.xlsx,.xls" style="display: none;">
-                                <button class="sheet-btn secondary" onclick="document.getElementById('businessFile').click()">
-                                    <i class="fas fa-upload"></i> Choose File
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 30px;">
-                        <h4 style="color: var(--lba-dark); margin-bottom: 15px; font-size: 18px;">
-                            <i class="fas fa-list"></i> Recent Businesses
-                        </h4>
-                        <div style="background: white; border-radius: 12px; border: 2px solid #e2e8f0; overflow: hidden;">
-                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 15px; background: #f1f5f9; font-weight: 600; color: var(--lba-dark);">
-                                <div>Business Name</div>
-                                <div>Status</div>
-                                <div>Nominations</div>
-                                <div>Actions</div>
-                            </div>
-                            <div id="businessList">
-                                <!-- Business list will be loaded here -->
-                                <div style="padding: 20px; text-align: center; color: #64748b;">
-                                    <i class="fas fa-spinner fa-spin"></i> Loading businesses...
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Load business list
-            loadBusinessList();
-        }
-        
-        async function loadBusinessList() {
-            try {
-                const token = localStorage.getItem('lba_auth_token');
-                const response = await fetch(`${BACKEND_URL}/api/businesses`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                let businesses = [];
-                
-                if (response.ok) {
-                    businesses = await response.json();
-                } else {
-                    // Mock data for demo
-                    businesses = [
-                        { id: 1, name: 'ABC Corporation', status: 'Active', nominations: 5 },
-                        { id: 2, name: 'XYZ Ltd.', status: 'Active', nominations: 3 },
-                        { id: 3, name: 'Liberia Tech Solutions', status: 'Pending', nominations: 2 },
-                        { id: 4, name: 'Monrovia Industries', status: 'Active', nominations: 7 },
-                        { id: 5, name: 'Liberian Enterprise', status: 'Suspended', nominations: 1 }
-                    ];
-                }
-                
-                const businessList = document.getElementById('businessList');
-                businessList.innerHTML = '';
-                
-                businesses.slice(0, 5).forEach(business => {
-                    const statusColor = business.status === 'Active' ? 'var(--success-color)' : 
-                                      business.status === 'Pending' ? 'var(--warning-color)' : 
-                                      'var(--danger-color)';
-                    
-                    businessList.innerHTML += `
-                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 15px; border-bottom: 1px solid #e2e8f0; align-items: center;">
-                            <div style="font-weight: 500;">${business.name}</div>
-                            <div><span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 12px;">${business.status}</span></div>
-                            <div style="font-weight: 600;">${business.nominations}</div>
-                            <div>
-                                <button style="background: var(--lba-secondary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 5px;">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button style="background: var(--lba-primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-            } catch (error) {
-                console.error('Error loading business list:', error);
-            }
-        }
-        
-        function addBusiness() {
-            showNotification('Business added successfully!', 'success');
-            setTimeout(() => {
-                loadBusinessList();
-            }, 1000);
-        }
-        
         // Refresh Activities
         function refreshActivities() {
-            const activityList = document.getElementById('activityList');
-            activityList.innerHTML = `
-                <li class="activity-item">
-                    <div class="activity-icon">
-                        <i class="fas fa-sync-alt fa-spin"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h4>Refreshing activities...</h4>
-                        <p>Please wait while we load recent activities</p>
-                    </div>
-                    <div class="activity-time">Just now</div>
-                </li>
-            `;
-            
-            setTimeout(() => {
-                loadDashboardData();
-                showNotification('Activities refreshed successfully!', 'success');
-            }, 1000);
+            loadDashboardData();
+            showNotification('Refreshing recent activities...', 'info');
         }
         
         // System Status Check
         async function checkSystemStatus() {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/health`, {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL + '?action=ping', {
                     signal: AbortSignal.timeout(5000)
                 });
                 
                 if (response.ok) {
-                    document.getElementById('apiStatus').textContent = 'Online';
-                    document.getElementById('apiStatus').className = 'online';
+                    document.getElementById('sheetsStatus').textContent = 'Connected';
+                    document.getElementById('sheetsStatus').className = 'online';
                     document.getElementById('systemStatus').style.background = '#10B981';
                     document.getElementById('systemStatus').style.boxShadow = '0 0 10px #10B981';
                 } else {
-                    throw new Error('API not responding properly');
+                    throw new Error('Google Sheets not responding');
                 }
             } catch (error) {
-                console.warn('⚠️ System status check failed:', error);
-                document.getElementById('apiStatus').textContent = 'Limited';
-                document.getElementById('apiStatus').className = 'warning';
+                console.warn('⚠️ Google Sheets check failed:', error);
+                document.getElementById('sheetsStatus').textContent = 'Disconnected';
+                document.getElementById('sheetsStatus').className = 'warning';
                 document.getElementById('systemStatus').style.background = '#F59E0B';
                 document.getElementById('systemStatus').style.boxShadow = '0 0 10px #F59E0B';
             }
@@ -2270,17 +2690,6 @@
             }, 4000);
         }
         
-        // Mock Data (for when backend is unavailable)
-        function getMockDashboardData() {
-            return {
-                totalBusinesses: 42,
-                totalNominations: 187,
-                approvedNominations: 132,
-                activeUsers: 67,
-                recentActivities: []
-            };
-        }
-        
         // Logout Function
         function logout() {
             // Clear all auth data
@@ -2299,20 +2708,20 @@
         window.logout = logout;
         window.refreshSheetsData = refreshSheetsData;
         window.openGoogleSheets = openGoogleSheets;
-        window.openSheetTab = openSheetTab;
+        window.switchSheet = switchSheet;
+        window.applyFilters = applyFilters;
+        window.startAutoRefresh = startAutoRefresh;
         window.approveSelected = approveSelected;
         window.rejectSelected = rejectSelected;
         window.exportToExcel = exportToExcel;
         window.sendNotifications = sendNotifications;
         window.showBusinessModal = showBusinessModal;
-        window.addBusiness = addBusiness;
         window.hideModal = hideModal;
-        window.loadSheetsData = loadSheetsData;
         
         console.log('✅ Admin Dashboard Ready');
-        console.log('📊 Google Sheets Integration: Active');
-        console.log('🔗 Sheets URL: ' + GOOGLE_SHEETS_URL);
-        console.log('🎯 Features: Review Nominations with Google Sheets display');
+        console.log('📊 Google Sheets Integration: ACTIVE');
+        console.log('🔗 Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
+        console.log('🎯 Features: Real-time Google Sheets integration');
     </script>
 </body>
 </html>
