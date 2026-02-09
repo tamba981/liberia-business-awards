@@ -1,152 +1,606 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Dashboard - Liberia Business Awards</title>
-    <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Business-specific styles */
-        .business-header {
-            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        :root {
+            /* LBA Brand Colors */
+            --lba-red: #FF0000;
+            --lba-blue: #87CEEB;
+            --lba-dark: #1a202c;
+            --lba-light: #f8f9fa;
+            
+            /* Dashboard Variables */
+            --sidebar-width: 280px;
+            --header-height: 80px;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
         }
         
-        .business-profile {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fb;
+            color: var(--lba-dark);
+            min-height: 100vh;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--lba-dark);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 30px 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header h3 {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            color: var(--lba-blue);
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        .sidebar-menu {
+            padding: 25px 0;
+        }
+        
+        .menu-item {
+            padding: 14px 25px;
             display: flex;
             align-items: center;
-            gap: 20px;
+            color: #cbd5e0;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
         }
         
-        .business-logo {
-            width: 80px;
-            height: 80px;
-            background: white;
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-left-color: var(--lba-red);
+        }
+        
+        .menu-item i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .menu-item span {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .menu-item .badge {
+            background: var(--lba-red);
+            color: white;
+            padding: 2px 8px;
             border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: var(--lba-dark);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--lba-light);
+            padding: 10px 20px;
+            border-radius: 12px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--lba-red), var(--lba-blue));
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            color: #1a237e;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
         }
         
-        .business-info h2 {
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+        }
+        
+        .stat-card:nth-child(1) .stat-icon {
+            background: linear-gradient(135deg, var(--lba-red), #ff4444);
+        }
+        
+        .stat-card:nth-child(2) .stat-icon {
+            background: linear-gradient(135deg, var(--lba-blue), #99d6f0);
+        }
+        
+        .stat-card:nth-child(3) .stat-icon {
+            background: linear-gradient(135deg, var(--success-color), #5cd85c);
+        }
+        
+        .stat-card:nth-child(4) .stat-icon {
+            background: linear-gradient(135deg, var(--warning-color), #ffdb4d);
+        }
+        
+        .stat-content h3 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--lba-dark);
+            margin-bottom: 5px;
+        }
+        
+        .stat-content p {
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        /* Business Profile */
+        .business-profile-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--lba-red), var(--lba-blue));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .profile-info h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .profile-info p {
+            color: var(--lba-blue);
+            font-size: 15px;
             margin-bottom: 5px;
         }
         
         .verification-badge {
             display: inline-block;
-            background: #4caf50;
+            background: var(--success-color);
             color: white;
-            padding: 4px 12px;
+            padding: 6px 15px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 13px;
+            font-weight: 600;
             margin-top: 10px;
         }
         
-        .dashboard-cards {
+        .profile-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
-            margin-top: 20px;
+            margin-top: 30px;
         }
         
-        .card {
-            background: white;
-            border-radius: 10px;
+        .profile-stat {
+            text-align: center;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
         }
         
-        .card-header {
+        .profile-stat strong {
+            display: block;
+            font-size: 32px;
+            margin-bottom: 5px;
+            color: white;
+        }
+        
+        .profile-stat span {
+            font-size: 13px;
+            color: var(--lba-blue);
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .action-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .action-card:hover {
+            border-color: var(--lba-blue);
+            transform: translateY(-5px);
+        }
+        
+        .action-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--lba-blue), #99d6f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+            margin: 0 auto 20px;
+        }
+        
+        .action-card h3 {
+            color: var(--lba-dark);
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .action-card p {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Recent Nominations */
+        .nominations-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-top: 30px;
+        }
+        
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            padding: 20px 30px;
+            background: var(--lba-light);
+            font-weight: 600;
+            color: var(--lba-dark);
+        }
+        
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--lba-light);
+            align-items: center;
+        }
+        
+        .table-row:last-child {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-draft { background: #f1f5f9; color: #475569; }
+        .status-submitted { background: #dbeafe; color: #1d4ed8; }
+        .status-approved { background: #dcfce7; color: #15803d; }
+        .status-winner { background: #fef3c7; color: #d97706; }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .table-header, .table-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: var(--lba-red);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 992px) {
+            .menu-toggle {
+                display: flex;
+            }
+        }
+        
+        /* Loading */
+        .loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
-        .card-header h3 {
-            color: #1a237e;
+        .modal-header h2 {
+            color: var(--lba-dark);
         }
         
-        .nomination-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .status-pending { background: #ffeb3b; color: #333; }
-        .status-approved { background: #4caf50; color: white; }
-        .status-rejected { background: #f44336; color: white; }
-        .status-review { background: #2196f3; color: white; }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .btn {
-            padding: 8px 16px;
+        .modal-close {
+            background: none;
             border: none;
-            border-radius: 5px;
+            font-size: 24px;
             cursor: pointer;
-            font-weight: 600;
+            color: #64748b;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--lba-dark);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
             transition: all 0.3s;
         }
         
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--lba-blue);
+            box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.2);
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
         .btn-primary {
-            background: #1a237e;
+            background: linear-gradient(135deg, var(--lba-red), #ff4444);
             color: white;
         }
         
         .btn-primary:hover {
-            background: #283593;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
         }
         
         .btn-secondary {
-            background: #f5f5f5;
-            color: #333;
+            background: var(--lba-light);
+            color: var(--lba-dark);
         }
         
         .btn-secondary:hover {
-            background: #e0e0e0;
+            background: #e2e8f0;
         }
         
-        .document-list {
-            list-style: none;
-        }
-        
-        .document-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f5f5f5;
-        }
-        
-        .document-item:last-child {
-            border-bottom: none;
-        }
-        
-        .document-actions button {
-            margin-left: 5px;
+        .btn-block {
+            width: 100%;
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h3>Business Portal</h3>
-                <p id="businessName">Loading...</p>
+                <p>Liberia Business Awards</p>
             </div>
             
             <div class="sidebar-menu">
@@ -163,7 +617,7 @@
                 <a href="nominations.html" class="menu-item">
                     <i class="fas fa-award"></i>
                     <span>My Nominations</span>
-                    <span class="badge" id="myNominationsCount">0</span>
+                    <span class="badge" id="nominationsCount">0</span>
                 </a>
                 
                 <a href="documents.html" class="menu-item">
@@ -174,10 +628,10 @@
                 <a href="notifications.html" class="menu-item">
                     <i class="fas fa-bell"></i>
                     <span>Notifications</span>
-                    <span class="badge" id="notificationCount">0</span>
+                    <span class="badge" id="notificationsCount">0</span>
                 </a>
                 
-                <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
+                <div style="padding: 25px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
                     <a href="settings.html" class="menu-item">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
@@ -193,180 +647,610 @@
         
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Business Header -->
-            <div class="business-header">
-                <div class="business-profile">
-                    <div class="business-logo" id="businessLogo">
+            <!-- Header -->
+            <div class="header">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1>Business Dashboard</h1>
+                        <p>Welcome back, <span id="businessName" style="color: var(--lba-red); font-weight: 600;">Business</span></p>
+                    </div>
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">B</div>
+                    <div>
+                        <div id="userEmail">business@example.com</div>
+                        <div style="font-size: 12px; color: #64748b;">Business Account</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Business Profile Card -->
+            <div class="business-profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">
                         <i class="fas fa-building"></i>
                     </div>
-                    <div class="business-info">
-                        <h2 id="businessTitle">Business Name</h2>
-                        <p id="businessIndustry">Industry â€¢ Location</p>
+                    <div class="profile-info">
+                        <h2 id="companyName">Your Company Name</h2>
+                        <p id="businessIndustry">Industry • Location</p>
+                        <p id="businessContact">Contact: loading...</p>
                         <div id="verificationStatus" class="verification-badge">
                             Verification Pending
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Quick Stats -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: #e8eaf6; color: #1a237e;">
-                        <i class="fas fa-award"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="totalAwards">0</h3>
-                        <p>Awards Won</p>
-                    </div>
-                </div>
                 
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: #e3f2fd; color: #1565c0;">
-                        <i class="fas fa-paper-plane"></i>
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <strong id="profileCompletion">0%</strong>
+                        <span>Profile Complete</span>
                     </div>
-                    <div class="stat-content">
-                        <h3 id="activeNominations">0</h3>
-                        <p>Active Nominations</p>
+                    <div class="profile-stat">
+                        <strong id="awardsWon">0</strong>
+                        <span>Awards Won</span>
                     </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: #e8f5e9; color: #2e7d32;">
-                        <i class="fas fa-file-check"></i>
+                    <div class="profile-stat">
+                        <strong id="activeNominations">0</strong>
+                        <span>Active Nominations</span>
                     </div>
-                    <div class="stat-content">
-                        <h3 id="documentsUploaded">0</h3>
-                        <p>Documents Uploaded</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: #fff3e0; color: #ef6c00;">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="profileCompletion">0%</h3>
-                        <p>Profile Completion</p>
+                    <div class="profile-stat">
+                        <strong id="documentsUploaded">0</strong>
+                        <span>Documents</span>
                     </div>
                 </div>
             </div>
             
-            <!-- Dashboard Content -->
-            <div class="dashboard-cards">
-                <!-- Recent Nominations -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Recent Nominations</h3>
-                        <a href="nominations.html" class="btn btn-secondary">View All</a>
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a href="#" class="action-card" onclick="showNominationModal()">
+                    <div class="action-icon">
+                        <i class="fas fa-plus-circle"></i>
                     </div>
-                    <div id="recentNominations">
-                        <p>Loading nominations...</p>
-                    </div>
-                </div>
+                    <h3>Submit Nomination</h3>
+                    <p>Submit your business for awards consideration</p>
+                </a>
                 
-                <!-- Required Documents -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Required Documents</h3>
-                        <a href="documents.html" class="btn btn-primary">Upload</a>
+                <a href="profile.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-edit"></i>
                     </div>
-                    <ul class="document-list" id="requiredDocuments">
-                        <li class="document-item">
-                            <span>Business Registration Certificate</span>
-                            <span class="document-actions">
-                                <button class="btn btn-primary btn-sm">Upload</button>
-                            </span>
-                        </li>
-                        <li class="document-item">
-                            <span>Tax Clearance Certificate</span>
-                            <span class="document-actions">
-                                <button class="btn btn-primary btn-sm">Upload</button>
-                            </span>
-                        </li>
-                    </ul>
-                </div>
+                    <h3>Update Profile</h3>
+                    <p>Complete your business profile information</p>
+                </a>
                 
-                <!-- Quick Actions -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Quick Actions</h3>
+                <a href="documents.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-upload"></i>
                     </div>
-                    <div class="action-buttons" style="display: grid; gap: 10px;">
-                        <button onclick="window.location.href='nominations.html?action=new'" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Submit New Nomination
-                        </button>
-                        <button onclick="window.location.href='profile.html'" class="btn btn-secondary">
-                            <i class="fas fa-edit"></i> Update Business Profile
-                        </button>
-                        <button onclick="window.location.href='documents.html'" class="btn btn-secondary">
-                            <i class="fas fa-upload"></i> Upload Documents
-                        </button>
-                        <button onclick="viewAwards()" class="btn btn-secondary">
-                            <i class="fas fa-trophy"></i> View Award History
-                        </button>
+                    <h3>Upload Documents</h3>
+                    <p>Submit required business documents</p>
+                </a>
+                
+                <a href="nominations.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3>View History</h3>
+                    <p>See your nomination history and status</p>
+                </a>
+            </div>
+            
+            <!-- Recent Nominations -->
+            <div style="margin-top: 40px;">
+                <h2 style="color: var(--lba-dark); margin-bottom: 20px; font-size: 24px;">
+                    <i class="fas fa-history"></i> Recent Nominations
+                </h2>
+                
+                <div class="nominations-table">
+                    <div class="table-header">
+                        <div>Nomination Title</div>
+                        <div>Category</div>
+                        <div>Status</div>
+                        <div>Submitted</div>
+                    </div>
+                    
+                    <div id="nominationsList">
+                        <div class="table-row">
+                            <div class="loading" style="height: 20px;"></div>
+                            <div class="loading" style="height: 20px;"></div>
+                            <div class="loading" style="height: 20px; width: 100px;"></div>
+                            <div class="loading" style="height: 20px; width: 120px;"></div>
+                        </div>
+                        <div class="table-row">
+                            <div class="loading" style="height: 20px;"></div>
+                            <div class="loading" style="height: 20px;"></div>
+                            <div class="loading" style="height: 20px; width: 100px;"></div>
+                            <div class="loading" style="height: 20px; width: 120px;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- API Configuration -->
-    <script src="../../api/config.js"></script>
     
-    <!-- Business Dashboard Script -->
-    <script>
-    document.getElementById("loginForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-        const errorElement = document.getElementById("errorMessage");
-        const btn = this.querySelector(".login-btn");
-        
-        try {
-            btn.textContent = "Logging in...";
-            btn.disabled = true;
-            errorElement.style.display = "none";
+    <!-- Nomination Modal -->
+    <div class="modal" id="nominationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Submit Nomination</h2>
+                <button class="modal-close" onclick="hideModal('nominationModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             
-            // Check if backend is available
-            const healthCheck = await checkApiHealth();
-            if (!healthCheck.success) {
-                throw new Error("Backend service is currently unavailable. Please try again later.");
-            }
-            
-            // Attempt login
-            const result = await login(email, password);
-            
-            if (result.success) {
-                // Show success message
-                btn.textContent = "✓ Login Successful!";
-                btn.style.background = "#27ae60";
+            <form id="nominationForm" onsubmit="submitNomination(event)">
+                <div class="form-group">
+                    <label for="nominationTitle">Nomination Title *</label>
+                    <input type="text" id="nominationTitle" required 
+                           placeholder="e.g., Best Technology Company 2025">
+                </div>
                 
-                // Redirect after short delay
-                setTimeout(() => {
-                    window.location.href = result.redirectUrl;
-                }, 1000);
-            } else {
-                throw new Error(result.message || "Invalid email or password");
+                <div class="form-group">
+                    <label for="nominationCategory">Category *</label>
+                    <select id="nominationCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="technology">Technology</option>
+                        <option value="agriculture">Agriculture</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="finance">Finance</option>
+                        <option value="tourism">Tourism</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="education">Education</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nominationDescription">Description *</label>
+                    <textarea id="nominationDescription" rows="4" required
+                              placeholder="Describe your business achievements and why you deserve this award..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nominationAchievements">Key Achievements</label>
+                    <textarea id="nominationAchievements" rows="3"
+                              placeholder="List your key business achievements (one per line)"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-paper-plane"></i> Submit Nomination
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
+        const SESSION_TIMEOUT = 60; // minutes
+        
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🏢 Business Dashboard Initialized');
+            
+            // Check authentication
+            if (!await checkAuth()) {
+                window.location.href = '../login.html';
+                return;
             }
             
-        } catch (error) {
-            errorElement.textContent = error.message;
-            errorElement.style.display = "block";
-            btn.textContent = "Login to Dashboard";
-            btn.disabled = false;
+            // Setup UI
+            setupUI();
+            
+            // Load dashboard data
+            await loadDashboardData();
+            
+            // Start session timer
+            startSessionTimer();
+        });
+        
+        // Authentication Check
+        async function checkAuth() {
+            const token = localStorage.getItem('lba_auth_token');
+            const userRole = localStorage.getItem('lba_user_role');
+            
+            if (!token || userRole !== 'business') {
+                console.warn('⚠️ Not authenticated or not business user');
+                return false;
+            }
+            
+            // Verify token
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Token invalid');
+                }
+                
+                return true;
+            } catch (error) {
+                console.warn('⚠️ Token verification failed');
+                return false;
+            }
         }
-    });
-    
-    // Add test credentials helper
-    document.addEventListener("DOMContentLoaded", function() {
-        // Auto-fill test credentials for development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            document.getElementById("email").value = "admin@liberiabusinessawardslr.com";
-            document.getElementById("password").value = "Admin123!";
+        
+        // Setup UI
+        function setupUI() {
+            // Load user data
+            const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+            
+            document.getElementById('businessName').textContent = userData.name || 'Business';
+            document.getElementById('companyName').textContent = userData.company || 'Your Company';
+            document.getElementById('userEmail').textContent = userData.email || '';
+            document.getElementById('businessContact').textContent = `Contact: ${userData.phone || 'Not provided'}`;
+            document.getElementById('userAvatar').textContent = userData.name?.charAt(0) || 'B';
+            document.getElementById('profileAvatar').textContent = userData.company?.charAt(0) || 'B';
+            
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 992 && 
+                    !sidebar.contains(e.target) && 
+                    !menuToggle.contains(e.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            });
+            
+            // Logout handler
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            // Update menu toggle on resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 992) {
+                    sidebar.classList.remove('active');
+                }
+            });
         }
-    });
-</script>
+        
+        // Load Dashboard Data
+        async function loadDashboardData() {
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                
+                // Get dashboard data
+                const response = await fetch(`${BACKEND_URL}/api/business/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load dashboard data');
+                }
+                
+                const data = await response.json();
+                
+                // Update stats
+                updateStats(data.dashboard);
+                
+                // Update nominations list
+                updateNominationsList(data.dashboard.recent_nominations);
+                
+            } catch (error) {
+                console.error('❌ Dashboard load error:', error);
+                // Use mock data for demo
+                loadMockData();
+            }
+        }
+        
+        // Update Statistics
+        function updateStats(data) {
+            const stats = data.stats || {};
+            const profile = data.profile || {};
+            
+            // Update profile stats
+            document.getElementById('profileCompletion').textContent = 
+                `${stats.profile_completion || 0}%`;
+            document.getElementById('awardsWon').textContent = 
+                stats.total_awards || 0;
+            document.getElementById('activeNominations').textContent = 
+                stats.active_nominations || 0;
+            document.getElementById('documentsUploaded').textContent = 
+                stats.documents_uploaded || 0;
+            
+            // Update verification status
+            const verificationEl = document.getElementById('verificationStatus');
+            if (profile.verified) {
+                verificationEl.textContent = '✓ Verified';
+                verificationEl.style.background = '#10B981';
+            } else if (profile.status === 'pending') {
+                verificationEl.textContent = '⏳ Pending Verification';
+                verificationEl.style.background = '#F59E0B';
+            } else {
+                verificationEl.textContent = '✗ Not Verified';
+                verificationEl.style.background = '#EF4444';
+            }
+            
+            // Update business info
+            document.getElementById('businessIndustry').textContent = 
+                profile.business_type ? `${profile.business_type} • ${profile.location || 'Location'}` : 'Industry • Location';
+        }
+        
+        // Update Nominations List
+        function updateNominationsList(nominations) {
+            const nominationsList = document.getElementById('nominationsList');
+            
+            if (!nominations || nominations.length === 0) {
+                nominationsList.innerHTML = `
+                    <div class="table-row" style="text-align: center; padding: 40px;">
+                        <div style="grid-column: 1 / -1; color: #64748b;">
+                            <i class="fas fa-award" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <p>No nominations yet</p>
+                            <button class="btn btn-primary" onclick="showNominationModal()" 
+                                    style="margin-top: 15px;">
+                                <i class="fas fa-plus"></i> Submit Your First Nomination
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('nominationsCount').textContent = '0';
+                return;
+            }
+            
+            let html = '';
+            nominations.forEach(nomination => {
+                const statusClass = `status-${nomination.status || 'draft'}`;
+                const statusText = (nomination.status || 'draft').replace('_', ' ').toUpperCase();
+                const date = new Date(nomination.created_at).toLocaleDateString();
+                
+                html += `
+                    <div class="table-row">
+                        <div style="font-weight: 500;">${nomination.title || 'Untitled'}</div>
+                        <div>${nomination.category || 'General'}</div>
+                        <div><span class="status-badge ${statusClass}">${statusText}</span></div>
+                        <div>${date}</div>
+                    </div>
+                `;
+            });
+            
+            nominationsList.innerHTML = html;
+            document.getElementById('nominationsCount').textContent = nominations.length;
+        }
+        
+        // Show Nomination Modal
+        function showNominationModal() {
+            hideAllModals();
+            document.getElementById('nominationModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Hide Modal
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function hideAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Submit Nomination
+        async function submitNomination(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            try {
+                // Show loading
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                submitBtn.disabled = true;
+                
+                const token = localStorage.getItem('lba_auth_token');
+                const nominationData = {
+                    title: document.getElementById('nominationTitle').value,
+                    category: document.getElementById('nominationCategory').value,
+                    description: document.getElementById('nominationDescription').value,
+                    achievements: document.getElementById('nominationAchievements').value.split('\n').filter(a => a.trim()),
+                    year: new Date().getFullYear()
+                };
+                
+                const response = await fetch(`${BACKEND_URL}/api/nominations`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(nominationData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to submit nomination');
+                }
+                
+                const result = await response.json();
+                
+                // Show success message
+                showNotification('Nomination submitted successfully!', 'success');
+                
+                // Close modal
+                hideModal('nominationModal');
+                
+                // Reset form
+                form.reset();
+                
+                // Reload dashboard data
+                await loadDashboardData();
+                
+            } catch (error) {
+                console.error('❌ Nomination submission error:', error);
+                showNotification('Failed to submit nomination. Please try again.', 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+        
+        // Session Timer
+        function startSessionTimer() {
+            let timeLeft = SESSION_TIMEOUT * 60;
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                
+                if (timeLeft <= 300) { // 5 minutes warning
+                    if (timeLeft === 300) {
+                        showNotification('Session will expire in 5 minutes', 'warning');
+                    }
+                }
+                
+                if (timeLeft <= 60) { // 1 minute warning
+                    if (timeLeft === 60) {
+                        showNotification('Session will expire in 1 minute', 'warning');
+                    }
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showNotification('Session expired. Redirecting to login...', 'error');
+                    setTimeout(logout, 2000);
+                }
+            }, 1000);
+            
+            // Reset timer on user activity
+            ['click', 'mousemove', 'keypress'].forEach(event => {
+                document.addEventListener(event, () => {
+                    timeLeft = SESSION_TIMEOUT * 60;
+                });
+            });
+        }
+        
+        // Mock Data (for demo)
+        function loadMockData() {
+            const mockData = {
+                dashboard: {
+                    stats: {
+                        total_awards: 2,
+                        active_nominations: 3,
+                        documents_uploaded: 5,
+                        profile_completion: 75
+                    },
+                    recent_nominations: [
+                        {
+                            title: 'Best Technology Innovation 2025',
+                            category: 'Technology',
+                            status: 'submitted',
+                            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+                        },
+                        {
+                            title: 'Excellence in Customer Service',
+                            category: 'Service',
+                            status: 'approved',
+                            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                        },
+                        {
+                            title: 'Sustainable Business Practices',
+                            category: 'Sustainability',
+                            status: 'draft',
+                            created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+                        }
+                    ],
+                    profile: {
+                        verified: true,
+                        status: 'active',
+                        business_type: 'Technology',
+                        location: 'Monrovia'
+                    }
+                }
+            };
+            
+            updateStats(mockData.dashboard);
+            updateNominationsList(mockData.dashboard.recent_nominations);
+        }
+        
+        // Show Notification
+        function showNotification(message, type = 'success') {
+            // Remove existing notifications
+            const existing = document.querySelectorAll('.notification');
+            existing.forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 30px;
+                right: 30px;
+                background: ${type === 'success' ? '#10B981' : type === 'warning' ? '#F59E0B' : '#EF4444'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 9999;
+                animation: slideIn 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 600;
+            `;
+            
+            const icon = type === 'success' ? 'check-circle' : 
+                         type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle';
+            
+            notification.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Add CSS animation
+            if (!document.querySelector('#notification-style')) {
+                const style = document.createElement('style');
+                style.id = 'notification-style';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOut {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Remove after 4 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+        
+        // Logout
+        function logout() {
+            localStorage.removeItem('lba_auth_token');
+            localStorage.removeItem('lba_user_data');
+            localStorage.removeItem('lba_user_role');
+            window.location.href = '../login.html';
+        }
+        
+        // Export functions to global scope
+        window.showNominationModal = showNominationModal;
+        window.hideModal = hideModal;
+        window.logout = logout;
+        
+        console.log('✅ Business Dashboard Ready');
+    </script>
 </body>
 </html>
