@@ -1645,7 +1645,6 @@
         // Configuration - Your Actual Google Apps Script URL
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec';
         const GOOGLE_SHEETS_VIEW_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit';
-        const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
         const SESSION_TIMEOUT = 60; // minutes
         
         // Global variables
@@ -1657,6 +1656,7 @@
         let currentSheet = 'businesses';
         let autoRefreshInterval = null;
         let lastUpdateTime = null;
+        let isUsingTestData = false;
         
         // Initialize Dashboard
         document.addEventListener('DOMContentLoaded', async function() {
@@ -1670,20 +1670,80 @@
             // Setup UI
             setupUI();
             
-            // Load initial data
-            await loadDashboardData();
-            await loadSheetsData();
+            // Test connection first
+            const isConnected = await testConnection();
+            
+            if (isConnected) {
+                // Load actual data
+                await loadDashboardData();
+                await loadSheetsData();
+            } else {
+                // Use test data
+                useTestData();
+                showNotification('⚠️ Using test data. Google Sheets data will show when connection is established.', 'warning');
+            }
             
             // Start session timer
             startSessionTimer();
             
-            // Setup periodic refresh
-            setInterval(loadDashboardData, 30000); // Refresh every 30 seconds
-            setInterval(checkSystemStatus, 60000); // Check system status every minute
+            // Setup periodic refresh (but only if connected)
+            if (isConnected) {
+                setInterval(loadDashboardData, 30000);
+                setInterval(checkSystemStatus, 60000);
+            }
             
             // Real-time updates indicator
             updateRealTimeIndicator();
+            
+            console.log('✅ Admin Dashboard Ready');
         });
+        
+        // Test connection to Google Apps Script
+        async function testConnection() {
+            try {
+                console.log('🔌 Testing connection to Google Apps Script...');
+                
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL + '?action=ping', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const responseText = await response.text();
+                console.log('📡 Raw response:', responseText);
+                
+                // Try to parse as JSON
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.warn('⚠️ Response is not valid JSON:', responseText);
+                    // Check if it's the "API is working" message
+                    if (responseText.includes('API is working')) {
+                        console.log('✅ API is responding (text format)');
+                        return true;
+                    }
+                    return false;
+                }
+                
+                // Check response structure
+                if (data && data.status === 'OK') {
+                    console.log('✅ Connection successful:', data.message || 'API is working');
+                    return true;
+                }
+                
+                return false;
+                
+            } catch (error) {
+                console.error('❌ Connection test failed:', error);
+                return false;
+            }
+        }
         
         // Authentication Check
         async function checkAuth() {
@@ -1776,34 +1836,75 @@
                     throw new Error(`HTTP ${response.status}`);
                 }
                 
-                const data = await response.json();
-                console.log('✅ Google Sheets stats loaded:', data);
+                const responseText = await response.text();
+                console.log('📡 Raw stats response:', responseText);
                 
-                // Update stats
-                updateDashboardStats(data);
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.warn('⚠️ Could not parse stats response as JSON');
+                    // Check if it's the default API message
+                    if (responseText.includes('API is working')) {
+                        console.log('ℹ️ API is working but no stats data yet');
+                        // Use test data or existing data
+                        if (currentSheetData.all.length > 0) {
+                            updateStatsFromCachedData();
+                        }
+                        return;
+                    }
+                    throw new Error('Invalid JSON response');
+                }
                 
-                // Update timestamp
-                const now = new Date();
-                document.getElementById('lastUpdated').textContent = 
-                    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                document.getElementById('statusTime').textContent = 
-                    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                lastUpdateTime = now;
+                // Check if this is the API welcome message
+                if (data.message && data.message.includes('API is working')) {
+                    console.log('ℹ️ Received API welcome message, no stats data yet');
+                    if (currentSheetData.all.length > 0) {
+                        updateStatsFromCachedData();
+                    }
+                    return;
+                }
                 
-                // Update sheet stats
-                if (data.sheetStats) {
-                    document.getElementById('sheetBusinessesTotal').textContent = data.sheetStats.businesses?.total || 0;
-                    document.getElementById('sheetBusinessesActive').textContent = data.sheetStats.businesses?.active || 0;
-                    document.getElementById('sheetBusinessesPending').textContent = data.sheetStats.businesses?.pending || 0;
+                // Check if we have actual stats data
+                if (data.status === 'OK' && data.success === true && data.data) {
+                    console.log('✅ Google Sheets stats loaded:', data.data);
+                    updateDashboardStats(data.data);
                     
-                    document.getElementById('sheetNominationsTotal').textContent = data.sheetStats.nominations?.total || 0;
-                    document.getElementById('sheetNominationsApproved').textContent = data.sheetStats.nominations?.approved || 0;
-                    document.getElementById('sheetNominationsPending').textContent = data.sheetStats.nominations?.pending || 0;
+                    // Update timestamp
+                    const now = new Date();
+                    document.getElementById('lastUpdated').textContent = 
+                        now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('statusTime').textContent = 
+                        now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    lastUpdateTime = now;
+                    
+                    // Update sheet stats
+                    if (data.data.sheetStats) {
+                        document.getElementById('sheetBusinessesTotal').textContent = data.data.sheetStats.businesses?.total || 0;
+                        document.getElementById('sheetBusinessesActive').textContent = data.data.sheetStats.businesses?.active || 0;
+                        document.getElementById('sheetBusinessesPending').textContent = data.data.sheetStats.businesses?.pending || 0;
+                        
+                        document.getElementById('sheetNominationsTotal').textContent = data.data.sheetStats.nominations?.total || 0;
+                        document.getElementById('sheetNominationsApproved').textContent = data.data.sheetStats.nominations?.approved || 0;
+                        document.getElementById('sheetNominationsPending').textContent = data.data.sheetStats.nominations?.pending || 0;
+                    }
+                    
+                    // Show we're connected
+                    document.getElementById('sheetsStatus').textContent = 'Connected';
+                    document.getElementById('sheetsStatus').className = 'online';
+                    
+                } else {
+                    console.warn('⚠️ Unexpected stats response structure:', data);
+                    showNotification('⚠️ Unexpected data format from Google Sheets', 'warning');
                 }
                 
             } catch (error) {
                 console.error('❌ Error loading Google Sheets data:', error);
-                showNotification('⚠️ Could not connect to Google Sheets. Using cached data.', 'warning');
+                
+                // Don't show error if we're using test data
+                if (!isUsingTestData) {
+                    showNotification('⚠️ Could not connect to Google Sheets. Using cached data.', 'warning');
+                }
                 
                 // Update with cached data if available
                 if (currentSheetData.all.length > 0) {
@@ -1862,7 +1963,7 @@
             document.getElementById('totalSubmissions').textContent = totalSubmissions;
         }
         
-        // Load Google Sheets Data - UPDATED VERSION
+        // Load Google Sheets Data - FIXED VERSION
         async function loadSheetsData() {
             console.log('📥 Loading Google Sheets data from your Apps Script...');
             
@@ -1888,29 +1989,118 @@
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                const data = await response.json();
-                console.log('✅ Google Sheets data loaded:', data);
+                const responseText = await response.text();
+                console.log('📡 Raw response text:', responseText);
                 
-                if (data.status !== 'OK' || !data.success) {
-                    throw new Error(data.message || 'Failed to load data');
+                // Try to parse as JSON
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.warn('⚠️ Response is not valid JSON:', responseText);
+                    
+                    // Check if it's the API welcome message
+                    if (responseText.includes('API is working')) {
+                        console.log('ℹ️ API is working but no data yet');
+                        
+                        // Show informational message
+                        sheetsData.innerHTML = `
+                            <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                                <i class="fas fa-info-circle fa-2x" style="color: var(--lba-secondary); margin-bottom: 20px;"></i>
+                                <h4 style="color: var(--lba-dark); margin-bottom: 10px;">Google Sheets Ready</h4>
+                                <p>Your Google Sheets integration is working correctly!</p>
+                                <p style="font-size: 14px; margin-top: 15px;">No data found yet. Submit your first form to see data here.</p>
+                                <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: center;">
+                                    <button class="sheet-btn secondary" onclick="useTestData()">
+                                        <i class="fas fa-vial"></i> Use Sample Data
+                                    </button>
+                                    <button class="sheet-btn" onclick="window.open('https://docs.google.com/forms', '_blank')">
+                                        <i class="fas fa-plus"></i> Create Form
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        showNotification('✅ Google Sheets connected. No data yet.', 'info');
+                        return;
+                    }
+                    
+                    throw new Error('Invalid JSON response from Google Sheets');
                 }
                 
-                // Process the data from your actual Google Sheets
-                processSheetData(data);
+                // Check if this is the API welcome message
+                if (data.message && data.message.includes('API is working')) {
+                    console.log('ℹ️ Received API welcome message, no data yet');
+                    
+                    sheetsData.innerHTML = `
+                        <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                            <i class="fas fa-check-circle fa-2x" style="color: var(--success-color); margin-bottom: 20px;"></i>
+                            <h4 style="color: var(--lba-dark); margin-bottom: 10px;">Connection Successful</h4>
+                            <p>${data.message}</p>
+                            <p style="font-size: 14px; margin-top: 15px; color: var(--lba-secondary);">
+                                Your Google Apps Script is deployed correctly. Form submissions will appear here.
+                            </p>
+                            <div style="margin-top: 25px;">
+                                <button class="sheet-btn" onclick="useTestData()">
+                                    <i class="fas fa-eye"></i> View Sample Data
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    showNotification('✅ ' + data.message, 'success');
+                    return;
+                }
                 
-                // Render the current sheet
-                renderSheetData();
-                
-                // Update dashboard stats
-                updateDashboardStatsFromData(data);
-                
-                // Update real-time indicator
-                updateRealTimeIndicator();
-                
-                showNotification('✅ Live data loaded from your Google Sheets!', 'success');
+                // Check for expected data structure
+                if (data.status === 'OK' && data.success === true && data.submissions) {
+                    console.log('✅ Google Sheets data loaded successfully:', data);
+                    
+                    // Process the data from your actual Google Sheets
+                    processSheetData(data);
+                    
+                    // Render the current sheet
+                    renderSheetData();
+                    
+                    // Update dashboard stats
+                    updateDashboardStatsFromData(data);
+                    
+                    // Update real-time indicator
+                    updateRealTimeIndicator();
+                    
+                    showNotification('✅ Live data loaded from Google Sheets!', 'success');
+                    
+                    // Mark that we're using real data
+                    isUsingTestData = false;
+                    
+                } else {
+                    console.warn('⚠️ Unexpected data structure:', data);
+                    
+                    sheetsData.innerHTML = `
+                        <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                            <i class="fas fa-exclamation-triangle fa-2x" style="color: var(--warning-color); margin-bottom: 20px;"></i>
+                            <h4 style="color: var(--lba-dark); margin-bottom: 10px;">Unexpected Response Format</h4>
+                            <p>Google Sheets returned an unexpected data format.</p>
+                            <p style="font-size: 12px; margin-top: 10px; color: var(--danger-color);">
+                                Expected: {"status":"OK","success":true,"submissions":[...]}
+                            </p>
+                            <div style="margin-top: 20px;">
+                                <button class="sheet-btn secondary" onclick="loadSheetsData()">
+                                    <i class="fas fa-sync-alt"></i> Try Again
+                                </button>
+                                <button class="sheet-btn" onclick="useTestData()" style="margin-left: 10px;">
+                                    <i class="fas fa-vial"></i> Use Sample Data
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    showNotification('⚠️ Unexpected data format from Google Sheets', 'warning');
+                }
                 
             } catch (error) {
                 console.error('❌ Error loading Google Sheets data:', error);
+                
                 sheetsData.innerHTML = `
                     <div style="text-align: center; padding: 50px 20px; color: #64748b;">
                         <i class="fas fa-exclamation-triangle fa-2x" style="color: var(--warning-color); margin-bottom: 20px;"></i>
@@ -1923,10 +2113,14 @@
                             <button class="sheet-btn" onclick="showTroubleshootingGuide()" style="margin-left: 10px;">
                                 <i class="fas fa-question-circle"></i> Help
                             </button>
+                            <button class="sheet-btn warning" onclick="useTestData()" style="margin-left: 10px;">
+                                <i class="fas fa-vial"></i> Use Sample Data
+                            </button>
                         </div>
                     </div>
                 `;
-                showNotification('❌ Could not load Google Sheets data. Check Apps Script deployment.', 'danger');
+                
+                showNotification('❌ Could not load Google Sheets data. ' + error.message, 'danger');
             }
         }
         
@@ -1938,6 +2132,13 @@
             const businesses = data.submissions.filter(s => s.formType === 'business');
             const nominations = data.submissions.filter(s => s.formType === 'nomination');
             const approvedNominations = nominations.filter(n => n.status && n.status.toLowerCase().includes('approved'));
+            
+            console.log('📊 Calculated stats:', {
+                businesses: businesses.length,
+                nominations: nominations.length,
+                approved: approvedNominations.length,
+                total: data.submissions.length
+            });
             
             // Update the stats display
             document.getElementById('totalBusinesses').textContent = businesses.length;
@@ -1957,7 +2158,7 @@
             updateRecentActivitiesFromData(data.submissions);
         }
         
-        // Update the processSheetData function to handle your actual data structure:
+        // Update the processSheetData function
         function processSheetData(data) {
             // Reset data
             currentSheetData = {
@@ -2014,7 +2215,7 @@
                 });
             }
             
-            console.log('📊 Actual data processed from your Google Sheets:', {
+            console.log('📊 Processed data counts:', {
                 businesses: currentSheetData.businesses.length,
                 nominations: currentSheetData.nominations.length,
                 all: currentSheetData.all.length
@@ -2036,7 +2237,7 @@
                         </div>
                         <div class="activity-content">
                             <h4>No recent submissions</h4>
-                            <p>Google Sheets integration is ready</p>
+                            <p>Submit your first form to see activity here</p>
                         </div>
                         <div class="activity-time">Just now</div>
                     </li>
@@ -2045,8 +2246,10 @@
             }
             
             activityList.innerHTML = recentSubmissions.map(submission => {
-                const icon = submission.formType === 'business' ? 'building' : 'award';
-                const type = submission.formType === 'business' ? 'Business Registration' : 'Nomination';
+                const icon = submission.formType === 'business' ? 'building' : 
+                            submission.formType === 'nomination' ? 'award' : 'envelope';
+                const type = submission.formType === 'business' ? 'Business Registration' : 
+                            submission.formType === 'nomination' ? 'Nomination' : 'Newsletter';
                 const timeAgo = formatTimeAgo(submission.timestamp);
                 
                 return `
@@ -2056,7 +2259,7 @@
                         </div>
                         <div class="activity-content">
                             <h4>New ${type}</h4>
-                            <p>${escapeHtml(submission.name || submission.businessName || 'New submission')}</p>
+                            <p>${escapeHtml(submission.name || submission.businessName || submission.email || 'New submission')}</p>
                         </div>
                         <div class="activity-time">${timeAgo}</div>
                     </li>
@@ -2064,70 +2267,106 @@
             }).join('');
         }
         
-        // Add a troubleshooting guide
-        function showTroubleshootingGuide() {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.7);
-                z-index: 3000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 20px;
-                animation: fadeIn 0.3s ease;
-            `;
+        // Function to use test data
+        function useTestData() {
+            console.log('🔄 Switching to test data mode...');
             
-            modal.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;">
-                    <h2 style="color: var(--lba-dark); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-question-circle" style="color: var(--lba-primary);"></i>
-                        Google Sheets Integration Help
-                    </h2>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: var(--lba-dark); margin-bottom: 10px;">Common Issues:</h3>
-                        <ul style="color: #64748b; margin-left: 20px;">
-                            <li>Make sure your Google Apps Script is deployed as "Web App"</li>
-                            <li>Set "Execute as" to "Me" and "Who has access" to "Anyone"</li>
-                            <li>Check that your spreadsheet ID is correct in the script</li>
-                            <li>Ensure you have "Businesses" and "Nominations" sheets in your Google Sheet</li>
-                        </ul>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: var(--lba-dark); margin-bottom: 10px;">Quick Test:</h3>
-                        <p style="color: #64748b; margin-bottom: 10px;">
-                            <a href="https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec?action=ping" 
-                               target="_blank" style="color: var(--lba-primary); text-decoration: none; font-weight: 600;">
-                                Click here to test your Apps Script connection
-                            </a>
-                        </p>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button class="sheet-btn" onclick="this.parentElement.parentElement.parentElement.remove()">
-                            <i class="fas fa-times"></i> Close
-                        </button>
-                        <button class="sheet-btn secondary" onclick="window.open('https://script.google.com/home/projects', '_blank')">
-                            <i class="fab fa-google"></i> Open Apps Script
-                        </button>
-                    </div>
-                </div>
-            `;
+            // Create comprehensive test data
+            const testData = {
+                status: 'OK',
+                success: true,
+                submissions: createTestSubmissions(),
+                count: 20,
+                timestamp: new Date().toISOString()
+            };
             
-            document.body.appendChild(modal);
+            // Process the test data
+            processSheetData(testData);
             
-            // Close on click outside
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.remove();
-                }
-            });
+            // Update stats
+            updateDashboardStatsFromData(testData);
+            
+            // Render the data
+            renderSheetData();
+            
+            // Show success message
+            showNotification('✅ Sample data loaded successfully! Real data will appear when forms are submitted.', 'success');
+            
+            // Mark that we're using test data
+            isUsingTestData = true;
+            
+            // Update UI to show test mode
+            document.getElementById('realtimeIndicator').innerHTML = '<i class="fas fa-vial"></i> Sample Data';
+            document.getElementById('realtimeIndicator').style.background = 'rgba(245, 158, 11, 0.1)';
+            document.getElementById('realtimeIndicator').style.color = 'var(--warning-color)';
+        }
+        
+        // Create comprehensive test submissions
+        function createTestSubmissions() {
+            const submissions = [];
+            const businessNames = [
+                'Liberian Tech Solutions Inc.', 'Monrovia Logistics Ltd', 'Green Agriculture Liberia',
+                'Liberia Shipping Partners', 'West African Imports Co.', 'Liberian Crafts Collective',
+                'Liberia Digital Agency', 'Liberian Coffee Exporters', 'Liberia Tourism Network',
+                'Liberian Construction Group', 'Liberian Fish Processing', 'Liberian Retail Chain',
+                'Liberia Manufacturing Ltd', 'Liberian Transportation Co.', 'Liberia Energy Solutions'
+            ];
+            
+            const categories = ['Technology', 'Logistics', 'Agriculture', 'Manufacturing', 'Tourism', 
+                               'Construction', 'Retail', 'Services', 'Energy', 'Fisheries'];
+            
+            const statuses = ['active', 'pending', 'approved', 'rejected'];
+            
+            // Create business submissions
+            for (let i = 0; i < 10; i++) {
+                const status = statuses[Math.floor(Math.random() * 2)]; // active or pending
+                submissions.push({
+                    id: 'business_' + Date.now() + '_' + i,
+                    formType: 'business',
+                    timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    name: businessNames[i],
+                    businessName: businessNames[i],
+                    email: `contact@${businessNames[i].toLowerCase().replace(/[^a-z]/g, '')}.com`,
+                    phone: '+231 77' + Math.floor(Math.random() * 9000000 + 1000000),
+                    category: categories[Math.floor(Math.random() * categories.length)],
+                    status: status,
+                    nominations: Math.floor(Math.random() * 5),
+                    source: 'website'
+                });
+            }
+            
+            // Create nomination submissions
+            for (let i = 0; i < 8; i++) {
+                const status = statuses[Math.floor(Math.random() * 4)]; // any status
+                submissions.push({
+                    id: 'nomination_' + Date.now() + '_' + i,
+                    formType: 'nomination',
+                    timestamp: new Date(Date.now() - Math.random() * 15 * 24 * 60 * 60 * 1000).toISOString(),
+                    businessName: businessNames[Math.floor(Math.random() * businessNames.length)],
+                    category: categories[Math.floor(Math.random() * categories.length)],
+                    submittedDate: new Date(Date.now() - Math.random() * 15 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: status,
+                    reviewer: status === 'approved' || status === 'rejected' ? 'Admin User' : '',
+                    score: status === 'approved' ? Math.floor(Math.random() * 20 + 80) : 
+                           status === 'rejected' ? Math.floor(Math.random() * 30 + 50) : 0,
+                    source: 'website'
+                });
+            }
+            
+            // Create newsletter submissions
+            for (let i = 0; i < 5; i++) {
+                submissions.push({
+                    id: 'newsletter_' + Date.now() + '_' + i,
+                    formType: 'newsletter',
+                    timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    email: `subscriber${i}@example.com`,
+                    source: 'website_footer',
+                    status: 'Active',
+                    name: 'Newsletter Subscriber'
+                });
+            }
+            
+            return submissions;
         }
         
         // Render Sheet Data
@@ -2782,6 +3021,72 @@
             }, 4000);
         }
         
+        // Add a troubleshooting guide
+        function showTroubleshootingGuide() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                z-index: 3000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                animation: fadeIn 0.3s ease;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                    <h2 style="color: var(--lba-dark); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-question-circle" style="color: var(--lba-primary);"></i>
+                        Google Sheets Integration Help
+                    </h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--lba-dark); margin-bottom: 10px;">Common Issues:</h3>
+                        <ul style="color: #64748b; margin-left: 20px;">
+                            <li>Make sure your Google Apps Script is deployed as "Web App"</li>
+                            <li>Set "Execute as" to "Me" and "Who has access" to "Anyone"</li>
+                            <li>Check that your spreadsheet ID is correct in the script</li>
+                            <li>Ensure you have "Businesses" and "Nominations" sheets in your Google Sheet</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--lba-dark); margin-bottom: 10px;">Quick Test:</h3>
+                        <p style="color: #64748b; margin-bottom: 10px;">
+                            <a href="https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec?action=ping" 
+                               target="_blank" style="color: var(--lba-primary); text-decoration: none; font-weight: 600;">
+                                Click here to test your Apps Script connection
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="sheet-btn" onclick="this.parentElement.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                        <button class="sheet-btn secondary" onclick="window.open('https://script.google.com/home/projects', '_blank')">
+                            <i class="fab fa-google"></i> Open Apps Script
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close on click outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+        
         // Logout Function
         function logout() {
             // Clear all auth data
@@ -2810,11 +3115,12 @@
         window.showBusinessModal = showBusinessModal;
         window.hideModal = hideModal;
         window.showTroubleshootingGuide = showTroubleshootingGuide;
+        window.useTestData = useTestData;
         
         console.log('✅ Admin Dashboard Ready');
         console.log('📊 Google Sheets Integration: ACTIVE');
         console.log('🔗 Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
-        console.log('🎯 Features: Real-time Google Sheets integration with updated data processing');
+        console.log('🎯 Features: Real-time Google Sheets integration with sample data fallback');
     </script>
 </body>
 </html>
