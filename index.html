@@ -5148,7 +5148,25 @@ function submitFormDual(formData, formType) {
     
     return false;
 }
+    function submitContactForm() {
+    console.log('📧 Submitting contact form...');
     
+    const formData = {
+        name: document.getElementById('contact-name')?.value || '',
+        email: document.getElementById('contact-email')?.value || '',
+        subject: document.getElementById('contact-subject')?.value || '',
+        message: document.getElementById('contact-message')?.value || ''
+    };
+    
+    // Validate
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+        showNotification('⚠️ Please fill in all fields', 'error');
+        return false;
+    }
+    
+    return submitFormDual(formData, 'contact');
+}
+
     // Handle both promises
     Promise.allSettled([googleSheetsPromise])
         .then(results => {
@@ -5935,7 +5953,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (event.key === 'Enter') {
                 performSearch();
             }
+
+            const newsletterForm = document.getElementById('newsletterForm');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('newsletter-email')?.value;
+            if (!email) return;
+            
+            submitFormDual({ 
+                email: email, 
+                formType: 'newsletter' 
+            }, 'newsletter');
         });
+    }
+});
         
         // Clear button functionality
         const clearButton = document.createElement('button');
