@@ -5046,19 +5046,21 @@ function closeModal(modalId) {
             }
         }
 
-        // ============================================
-// ✅ CORRECT: SINGLE GOOGLE APPS SCRIPT BACKEND
+// ============================================
+// ✅ GOOGLE APPS SCRIPT CONFIGURATION
 // ============================================
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQRYP7FwaD24qp78UcxlEaFxaWn9i7RdsfM7L3gL8ftFbahehaIawGAbsTtvZNxP6L/exec';
 
-// =============== SIMPLIFIED DUAL FORM SUBMISSION (Google Sheets + Backup) ===============
-// FIXED VERSION: Uses ONLY Google Apps Script - Removes broken Render.com backend
+// ============================================
+// ✅ MASTER FORM SUBMISSION FUNCTION
+// ============================================
 function submitFormDual(formData, formType) {
     console.log(`🚀 Submitting ${formType} form to Google Sheets...`);
     
     // Show loading state
     const submitBtn = document.querySelector(`#${formType}Modal button[type="submit"]`) || 
-                     document.getElementById(`${formType}-submit-btn`);
+                     document.getElementById(`${formType}-submit-btn`) ||
+                     document.querySelector(`button[onclick*="${formType}"]`);
     let originalHtml = '';
     
     if (submitBtn) {
@@ -5067,10 +5069,10 @@ function submitFormDual(formData, formType) {
         submitBtn.disabled = true;
     }
     
-    // 1. Submit to Google Apps Script (PRIMARY - WORKING 100%)
+    // Submit to Google Apps Script
     const googleSheetsPromise = fetch(GOOGLE_APPS_SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors', // CRITICAL: Google Apps Script requires no-cors
+        mode: 'no-cors',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -5081,73 +5083,594 @@ function submitFormDual(formData, formType) {
             source: 'liberia-business-awards-website'
         })
     }).then(() => {
-        console.log('✅ Google Sheets submission successful');
-        return { google_sheets: 'success' };
+        console.log(`✅ ${formType} form submitted to Google Sheets`);
+        return { success: true };
     }).catch(error => {
-        console.log('⚠️ Google Sheets submission failed:', error.message);
-        return { google_sheets: 'failed', error: error.message };
+        console.log(`⚠️ ${formType} submission error:`, error.message);
+        return { success: false, error: error.message };
     });
     
-    // 2. REMOVED: Broken Render.com backend - No longer used
-    
-    // Handle the promise
+    // Handle response
     Promise.allSettled([googleSheetsPromise])
-        .then(results => {
-            console.log('📊 Submission results:', results);
-            
-            // Always show success to user
+        .then(() => {
             showNotification('✅ Form submitted successfully! We will contact you soon.', 'success');
             
-            // Close modal safely with delay
             setTimeout(() => {
-                const modalId = `${formType}Modal`;
-                closeModal(modalId);
+                closeModal(`${formType}Modal`);
                 
-                // Reset form if it exists
-                const formSelector = `#${formType}Modal form`;
-                const form = document.querySelector(formSelector);
-                if (form) {
-                    form.reset();
-                    console.log('🔄 Form reset');
-                }
+                // Reset form
+                const form = document.querySelector(`#${formType}Modal form`);
+                if (form) form.reset();
             }, 1500);
-            
-            // Track success
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'form_submit_success', {
-                    'event_category': 'forms',
-                    'event_label': formType,
-                    'backend': 'google_apps_script'
-                });
-            }
-            
-            return results;
         })
         .catch(error => {
             console.error('❌ Submission error:', error);
-            showNotification('⚠️ Submitted! We have received your information.', 'success');
+            showNotification('⚠️ Form submitted! We received your information.', 'success');
             
             setTimeout(() => {
-                try {
-                    closeModal(`${formType}Modal`);
-                } catch (e) {
-                    console.log('Could not close modal:', e.message);
-                }
+                try { closeModal(`${formType}Modal`); } catch(e) {}
             }, 1500);
         })
         .finally(() => {
-            // Reset button state
             if (submitBtn) {
                 setTimeout(() => {
                     submitBtn.innerHTML = originalHtml;
                     submitBtn.disabled = false;
-                    console.log('🔄 Submit button reset');
                 }, 2000);
             }
         });
     
     return false;
 }
+
+// ============================================
+// ✅ FORM SUBMISSION HANDLERS
+// ============================================
+
+// Registration Form
+function submitRegistrationForm() {
+    console.log('📝 Submitting registration form...');
+    
+    const formData = {
+        businessName: document.getElementById('reg-business-name')?.value || '',
+        businessType: document.getElementById('reg-business-type')?.value || '',
+        contactName: document.getElementById('reg-contact-name')?.value || '',
+        position: document.getElementById('reg-position')?.value || '',
+        email: document.getElementById('reg-email')?.value || '',
+        phone: document.getElementById('reg-phone')?.value || '',
+        address: document.getElementById('reg-address')?.value || '',
+        description: document.getElementById('reg-description')?.value || ''
+    };
+    
+    // Validate
+    for (let [key, value] of Object.entries(formData)) {
+        if (!value) {
+            showNotification(`⚠️ Please fill in all fields`, 'error');
+            return false;
+        }
+    }
+    
+    return submitFormDual(formData, 'register');
+}
+
+// Nomination Form
+function submitNominationForm() {
+    console.log('🏆 Submitting nomination form...');
+    
+    const formData = {
+        nominationType: document.getElementById('nomination-type')?.value || '',
+        county: document.getElementById('county')?.value || '',
+        africaCountry: document.getElementById('africa-country')?.value || '',
+        internationalCountry: document.getElementById('international-country')?.value || '',
+        businessName: document.getElementById('nom-business-name')?.value || '',
+        category: document.getElementById('nom-category')?.value || '',
+        reason: document.getElementById('nom-reason')?.value || '',
+        yourName: document.getElementById('nom-name')?.value || '',
+        yourEmail: document.getElementById('nom-email')?.value || '',
+        relationship: document.getElementById('nom-relationship')?.value || ''
+    };
+    
+    // Validate required fields
+    if (!formData.businessName || !formData.category || !formData.yourName || !formData.yourEmail) {
+        showNotification('⚠️ Please fill in all required fields', 'error');
+        return false;
+    }
+    
+    return submitFormDual(formData, 'nominate');
+}
+
+// Partnership Form
+function submitPartnershipForm() {
+    console.log('🤝 Submitting partnership form...');
+    
+    const formData = {
+        name: document.getElementById('partner-name')?.value || '',
+        company: document.getElementById('partner-company')?.value || '',
+        email: document.getElementById('partner-email')?.value || '',
+        phone: document.getElementById('partner-phone')?.value || '',
+        interest: document.getElementById('partner-interest')?.value || '',
+        message: document.getElementById('partner-message')?.value || ''
+    };
+    
+    // Validate
+    for (let [key, value] of Object.entries(formData)) {
+        if (!value) {
+            showNotification('⚠️ Please fill in all fields', 'error');
+            return false;
+        }
+    }
+    
+    return submitFormDual(formData, 'partner');
+}
+
+// Contact Form
+function submitContactForm() {
+    console.log('📧 Submitting contact form...');
+    
+    const formData = {
+        name: document.getElementById('contact-name')?.value || '',
+        email: document.getElementById('contact-email')?.value || '',
+        subject: document.getElementById('contact-subject')?.value || '',
+        message: document.getElementById('contact-message')?.value || ''
+    };
+    
+    // Validate
+    for (let [key, value] of Object.entries(formData)) {
+        if (!value) {
+            showNotification('⚠️ Please fill in all fields', 'error');
+            return false;
+        }
+    }
+    
+    return submitFormDual(formData, 'contact');
+}
+
+// Live Session Form
+function submitLiveSessionForm() {
+    console.log('🎥 Submitting live session form...');
+    
+    const formData = {
+        topic: document.getElementById('session-topic')?.value || '',
+        date: document.getElementById('session-date')?.value || '',
+        name: document.getElementById('session-name')?.value || '',
+        email: document.getElementById('session-email')?.value || '',
+        business: document.getElementById('session-business')?.value || '',
+        question: document.getElementById('session-question')?.value || ''
+    };
+    
+    // Validate required fields
+    if (!formData.topic || !formData.date || !formData.name || !formData.email) {
+        showNotification('⚠️ Please fill in required fields', 'error');
+        return false;
+    }
+    
+    return submitFormDual(formData, 'liveSession');
+}
+
+// ============================================
+// ✅ NOTIFICATION SYSTEM
+// ============================================
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-xl shadow-xl z-50 max-w-md transform transition-all duration-300 ${
+        type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+    }`;
+    
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} text-xl mr-3"></i>
+            <p class="font-medium">${message}</p>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 hover:opacity-75">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+// ============================================
+// ✅ SETUP FORM HANDLERS
+// ============================================
+function setupFormHandlers() {
+    console.log('🔧 Setting up form handlers...');
+    
+    // Newsletter form
+    const newsletterForm = document.getElementById('newsletterForm');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('newsletter-email')?.value;
+            if (email) {
+                submitFormDual({ email: email }, 'newsletter');
+            }
+        });
+    }
+    
+    console.log('✅ Form handlers setup complete');
+}
+
+function setupRealTimeValidation() {
+    // Optional: Add real-time validation
+    console.log('🔍 Validation ready');
+}
+
+// ============================================
+// ✅ MODAL FUNCTIONS
+// ============================================
+function openModal(modalId) {
+    console.log('🔓 Opening modal:', modalId);
+    
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        console.log(`⚠️ Modal ${modalId} not found`);
+        return;
+    }
+    
+    // Remove aria-hidden when opening
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100', 'pointer-events-auto');
+    
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.remove('scale-95');
+        modalContent.classList.add('scale-100');
+    }
+    
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalId) {
+    console.log('🔒 Closing modal:', modalId);
+    
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    
+    // Set aria-hidden when closing
+    modal.setAttribute('aria-hidden', 'true');
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.remove('scale-100');
+        modalContent.classList.add('scale-95');
+    }
+    
+    document.body.style.overflow = 'auto';
+}
+
+// ============================================
+// ✅ NOMINATION STATUS FUNCTIONS
+// ============================================
+function checkNominationStatus() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    const isNominationOpen = 
+        (currentMonth === 2 && currentDate >= 1) || // March
+        (currentMonth === 3) || // April
+        (currentMonth === 4 && currentDate <= 30); // May
+    
+    if (isNominationOpen) {
+        openModal('nominateModal');
+        return true;
+    } else {
+        showNominationClosedNotification();
+        return false;
+    }
+}
+
+function showNominationClosedNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 p-6 rounded-xl shadow-xl z-50 max-w-sm bg-white border-l-4 border-lba-red';
+    
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+    
+    notification.innerHTML = `
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-lba-red/10 rounded-full flex items-center justify-center">
+                    <i class="fas fa-calendar-times text-lba-red text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <h4 class="text-lg font-bold text-gray-800">Nominations Closed</h4>
+                <p class="text-gray-600 mt-1">Next nomination period: March 1 - May 30, ${nextYear}</p>
+                <button onclick="this.closest('.fixed').remove()" class="mt-4 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) notification.remove();
+    }, 8000);
+}
+
+// ============================================
+// ✅ PAGE INITIALIZATION
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing page...');
+    
+    // Initialize AOS
+    if (typeof AOS !== 'undefined') {
+        AOS.init({
+            duration: 1000,
+            once: true,
+            offset: 100
+        });
+    }
+    
+    // Setup form handlers
+    setupFormHandlers();
+    setupRealTimeValidation();
+    
+    // Initialize sliders
+    initImageSlider();
+    initPartnersSlider();
+    
+    // Initialize directory
+    if (typeof initDirectory === 'function') {
+        initDirectory();
+    }
+    
+    // Update nomination buttons
+    updateAllNominationButtons();
+    
+    // Update countdown
+    updateCountdown();
+    setInterval(updateCountdown, 60000);
+    
+    console.log('✅ Page initialization complete!');
+});
+
+// ============================================
+// ✅ SLIDER FUNCTIONS
+// ============================================
+function initImageSlider() {
+    const slider = document.querySelector('.image-slider');
+    if (!slider) return;
+    
+    const slidesContainer = slider.querySelector('.slides-container');
+    const slides = slider.querySelectorAll('.slide');
+    const prevBtn = slider.querySelector('.slider-prev');
+    const nextBtn = slider.querySelector('.slider-next');
+    const dots = slider.querySelectorAll('.slider-dot');
+    
+    if (!slidesContainer || slides.length === 0) return;
+    
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+    
+    function updateSlider() {
+        slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+        
+        dots.forEach((dot, index) => {
+            if (index === currentSlide) {
+                dot.classList.add('dot-active', 'bg-white', 'w-3');
+                dot.classList.remove('bg-white/80', 'w-2');
+            } else {
+                dot.classList.remove('dot-active', 'bg-white', 'w-3');
+                dot.classList.add('bg-white/80', 'w-2');
+            }
+        });
+    }
+    
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateSlider();
+    }
+    
+    function prevSlide() {
+        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        updateSlider();
+    }
+    
+    if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+    if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+    
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            currentSlide = index;
+            updateSlider();
+        });
+    });
+    
+    let slideInterval = setInterval(nextSlide, 5000);
+    
+    slider.addEventListener('mouseenter', () => clearInterval(slideInterval));
+    slider.addEventListener('mouseleave', () => {
+        slideInterval = setInterval(nextSlide, 5000);
+    });
+    
+    updateSlider();
+}
+
+function initPartnersSlider() {
+    const slider = document.querySelector('.partners-slider');
+    if (!slider) return;
+    
+    const track = slider.querySelector('.partners-track');
+    const slides = slider.querySelectorAll('.partner-slide');
+    const prevBtn = slider.querySelector('.slider-prev');
+    const nextBtn = slider.querySelector('.slider-next');
+    const dots = slider.querySelectorAll('.partner-dot');
+    
+    if (!track || slides.length === 0) return;
+    
+    let currentSlide = 0;
+    const slidesPerView = window.innerWidth >= 1024 ? 6 : window.innerWidth >= 768 ? 4 : 2;
+    const totalSlides = slides.length;
+    
+    function updateSlider() {
+        const slideWidth = 100 / slidesPerView;
+        track.style.transform = `translateX(-${currentSlide * slideWidth}%)`;
+        
+        dots.forEach((dot, index) => {
+            if (index === Math.floor(currentSlide / slidesPerView)) {
+                dot.classList.add('partner-dot-active', 'bg-lba-red', 'w-3');
+                dot.classList.remove('bg-gray-400', 'w-2');
+            } else {
+                dot.classList.remove('partner-dot-active', 'bg-lba-red', 'w-3');
+                dot.classList.add('bg-gray-400', 'w-2');
+            }
+        });
+    }
+    
+    function nextSlide() {
+        const maxSlide = Math.ceil(totalSlides / slidesPerView) - 1;
+        currentSlide = (currentSlide + slidesPerView) % (maxSlide * slidesPerView);
+        if (currentSlide + slidesPerView > totalSlides) currentSlide = 0;
+        updateSlider();
+    }
+    
+    function prevSlide() {
+        const maxSlide = Math.ceil(totalSlides / slidesPerView) - 1;
+        currentSlide = (currentSlide - slidesPerView + (maxSlide * slidesPerView)) % (maxSlide * slidesPerView);
+        updateSlider();
+    }
+    
+    if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+    if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+    
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            currentSlide = index * slidesPerView;
+            updateSlider();
+        });
+    });
+    
+    let slideInterval = setInterval(nextSlide, 5000);
+    
+    slider.addEventListener('mouseenter', () => clearInterval(slideInterval));
+    slider.addEventListener('mouseleave', () => {
+        slideInterval = setInterval(nextSlide, 5000);
+    });
+    
+    window.addEventListener('resize', updateSlider);
+    updateSlider();
+}
+
+// ============================================
+// ✅ COUNTDOWN FUNCTIONS
+// ============================================
+function updateCountdown() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    let ceremonyYear = currentYear;
+    
+    if ((currentMonth === 11 && currentDate >= 20) || currentMonth === 0) {
+        ceremonyYear = currentYear;
+    } else {
+        ceremonyYear = currentYear + 1;
+    }
+    
+    const ceremonyDate = new Date(ceremonyYear, 11, 19, 18, 0, 0);
+    const diff = ceremonyDate - now;
+    
+    if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        const daysEl = document.getElementById('countdown-days');
+        const hoursEl = document.getElementById('countdown-hours');
+        const minutesEl = document.getElementById('countdown-minutes');
+        
+        if (daysEl) daysEl.textContent = days.toString().padStart(2, '0');
+        if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
+        if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
+    }
+}
+
+// ============================================
+// ✅ NOMINATION BUTTON UPDATES
+// ============================================
+function updateAllNominationButtons() {
+    const isNominationOpen = (() => {
+        const now = new Date();
+        const month = now.getMonth();
+        const date = now.getDate();
+        return (month === 2 && date >= 1) || month === 3 || (month === 4 && date <= 30);
+    })();
+    
+    const buttons = document.querySelectorAll('#navNominateBtn, #heroNominateBtn, #mobileNominateBtn, #categoriesNominateBtn, #startNominationBtn');
+    
+    buttons.forEach(btn => {
+        if (btn) {
+            if (isNominationOpen) {
+                btn.classList.remove('bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed');
+                btn.classList.add('bg-lba-red', 'hover:bg-red-600');
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    openModal('nominateModal');
+                };
+                if (btn.id === 'navNominateBtn') {
+                    const textSpan = btn.querySelector('span') || btn;
+                    if (textSpan) textSpan.textContent = 'Nominate Now';
+                }
+            } else {
+                btn.classList.remove('bg-lba-red', 'hover:bg-red-600');
+                btn.classList.add('bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed');
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    showNominationClosedNotification();
+                };
+                if (btn.id === 'navNominateBtn') {
+                    const textSpan = btn.querySelector('span') || btn;
+                    if (textSpan) textSpan.textContent = 'Nominations Closed';
+                }
+            }
+        }
+    });
+}
+
+// ============================================
+// ✅ BACK TO TOP BUTTON
+// ============================================
+window.addEventListener('scroll', function() {
+    const backToTop = document.getElementById('backToTop');
+    if (backToTop) {
+        if (window.pageYOffset > 300) {
+            backToTop.classList.remove('opacity-0', 'pointer-events-none');
+            backToTop.classList.add('opacity-100', 'pointer-events-auto');
+        } else {
+            backToTop.classList.remove('opacity-100', 'pointer-events-auto');
+            backToTop.classList.add('opacity-0', 'pointer-events-none');
+        }
+    }
+});
+
+document.getElementById('backToTop')?.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ============================================
+// ✅ DEBUG HELPER
+// ============================================
+console.log('✅ All form handlers are ready!');
+console.log('📝 Available functions:');
+console.log('   - submitRegistrationForm()');
+console.log('   - submitNominationForm()');
+console.log('   - submitPartnershipForm()');
+console.log('   - submitContactForm()');
+console.log('   - submitLiveSessionForm()');
     function submitContactForm() {
     console.log('📧 Submitting contact form...');
     
