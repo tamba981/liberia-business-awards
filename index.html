@@ -5690,63 +5690,6 @@ console.log('   - submitLiveSessionForm()');
     return submitFormDual(formData, 'contact');
 }
 
-    // Handle both promises
-    Promise.allSettled([googleSheetsPromise])
-        .then(results => {
-            console.log('📊 Submission results:', results);
-            
-            // Always show success to user
-            showNotification('✅ Form submitted successfully! We will contact you soon.', 'success');
-            
-            // FIXED: Close modal safely with delay
-            setTimeout(() => {
-                const modalId = `${formType}Modal`;
-                closeModal(modalId);
-                
-                // Reset form if it exists
-                const formSelector = `#${formType}Modal form`;
-                const form = document.querySelector(formSelector);
-                if (form) {
-                    form.reset();
-                    console.log('🔄 Form reset');
-                }
-            }, 1500); // Delay to show success message
-            
-            // Track success
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'form_submit_success', {
-                    'event_category': 'forms',
-                    'event_label': formType,
-                    'backend_success': results[1].status === 'fulfilled'
-                });
-            }
-            
-            // Return results for debugging
-            return results;
-        })
-        .catch(error => {
-            console.error('❌ Submission error:', error);
-            showNotification('⚠️ Submitted! We have received your information.', 'success');
-            
-            // Still try to close modal safely
-            setTimeout(() => {
-                try {
-                    closeModal(`${formType}Modal`);
-                } catch (e) {
-                    console.log('Could not close modal:', e.message);
-                }
-            }, 1500);
-        })
-        .finally(() => {
-            // Reset button state
-            if (submitBtn) {
-                setTimeout(() => {
-                    submitBtn.innerHTML = originalHtml;
-                    submitBtn.disabled = false;
-                    console.log('🔄 Submit button reset');
-                }, 2000);
-            }
-        });
     
 // =============== COMPREHENSIVE SEARCH FUNCTIONALITY ===============
 const searchData = {
@@ -7689,6 +7632,7 @@ if (window.matchMedia('(display-mode: standalone)').matches ||
 </body>
 
 </html>
+
 
 
 
