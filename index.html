@@ -672,58 +672,66 @@ window.addEventListener('load', function() {
     </div>
 
     <!-- Navigation -->
-    <nav class="bg-white shadow-md sticky top-0 z-50" id="navbar" aria-label="Main navigation">
+<nav class="bg-white shadow-md sticky top-0 z-50" id="navbar" aria-label="Main navigation">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
         <div class="flex items-center">
             <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
                 <img src="images/logo.png" 
-     alt="Liberia Business Awards Logo - Home" 
-     class="h-20 mr-3 object-contain"
-     width="80"
-     height="80">
+                     alt="Liberia Business Awards Logo - Home" 
+                     class="h-20 mr-3 object-contain"
+                     width="80"
+                     height="80">
             </a>
-                <!-- Removed "LBA 3.0" text as requested -->
-            </div>
-            <div class="hidden md:flex space-x-8">
-    <a href="#about" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">About</a>
-    <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Team Message</a>
-    <a href="#team" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Team</a>
-    <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Categories</a>
-    <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Featured</a>
-    <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Blog</a>
-    <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Partnership</a>
-    <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Contact</a>
-    <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Dashboard</a>
-</div>
-            <div class="flex items-center space-x-4">
-    <!-- Dynamic Nominate Button -->
-    <button onclick="checkNominationStatus()" id="navNominateBtn" class="bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition">
-        <span id="nominateBtnText">Nominate</span>
-        <i class="fas fa-caret-down ml-1" id="nominateBtnIcon"></i>
-    </button>
-    <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition">Partner</button>
-</div>
+        </div>
         
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white px-4 py-4 shadow-lg">
-            <div class="flex flex-col space-y-3">
-                <a href="#about" class="text-gray-700 hover:text-lba-red font-medium">About</a>
-                <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium">Team Message</a>
-                <a href="#team" class="text-gray-700 hover:text-lba-red font-medium">Team</a>
-                <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium">Categories</a>
-                <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium">Featured</a>
-                <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium">Blog</a>
-                <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium">Partnership</a>
-                <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium">Contact</a>
-                <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium">Dashboard</a>
-                <div class="pt-4 flex space-x-4">
-                    <button onclick="openModal('registerModal')" class="bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Register</button>
-                    <button onclick="checkNominationStatus()" class="bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm" id="mobileNominateBtn">Nominate</button>
-                    <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Partner</button>
-                </div>
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex space-x-8">
+            <a href="#about" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">About</a>
+            <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Team Message</a>
+            <a href="#team" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Team</a>
+            <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Categories</a>
+            <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Featured</a>
+            <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Blog</a>
+            <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Partnership</a>
+            <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Contact</a>
+            <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Dashboard</a>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <!-- Desktop Buttons -->
+            <button onclick="checkNominationStatus()" id="navNominateBtn" class="hidden md:block bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition">
+                <span id="nominateBtnText">Nominate</span>
+                <i class="fas fa-caret-down ml-1" id="nominateBtnIcon"></i>
+            </button>
+            <button onclick="openModal('partnerModal')" class="hidden md:block bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition">Partner</button>
+            
+            <!-- Mobile Menu Button - THIS WAS MISSING! -->
+            <button id="mobileMenuBtn" class="block md:hidden p-2 text-gray-600 hover:text-lba-red focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Mobile Menu - FIXED ID -->
+    <div id="mobileMenu" class="hidden md:hidden bg-white px-4 py-4 shadow-lg border-t border-gray-200">
+        <div class="flex flex-col space-y-3">
+            <a href="#about" class="text-gray-700 hover:text-lba-red font-medium py-2">About</a>
+            <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium py-2">Team Message</a>
+            <a href="#team" class="text-gray-700 hover:text-lba-red font-medium py-2">Team</a>
+            <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium py-2">Categories</a>
+            <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium py-2">Featured</a>
+            <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium py-2">Blog</a>
+            <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium py-2">Partnership</a>
+            <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium py-2">Contact</a>
+            <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium py-2">Dashboard</a>
+            <div class="pt-4 flex space-x-4">
+                <button onclick="openModal('registerModal')" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Register</button>
+                <button onclick="checkNominationStatus()" class="flex-1 bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm" id="mobileNominateBtn">Nominate</button>
+                <button onclick="openModal('partnerModal')" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Partner</button>
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Hero Section -->
     <section class="hero-bg pt-32 pb-20 px-4 text-white">
@@ -7632,6 +7640,7 @@ if (window.matchMedia('(display-mode: standalone)').matches ||
 </body>
 
 </html>
+
 
 
 
