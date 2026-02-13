@@ -7652,11 +7652,136 @@ if (window.matchMedia('(display-mode: standalone)').matches ||
     document.body.classList.add('pwa-mode');
 }
 
+     // ============================================
+// ✅ FIX #1: MISSING FUNCTIONS - ADD THIS ENTIRE BLOCK
+// ============================================
+
+// Animate counters on stats section
+function animateCounters() {
+    console.log('📊 Animating counters...');
+    const counters = document.querySelectorAll('.stats-counter [data-count]');
+    
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-count'));
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                counter.textContent = target;
+                clearInterval(timer);
+            } else {
+                counter.textContent = Math.floor(current);
+            }
+        }, 30);
+    });
+}
+
+// Contact business from directory
+function contactBusiness(businessId) {
+    console.log('📞 Contacting business ID:', businessId);
+    const business = businessDirectory.find(b => b.id === businessId);
+    if (business) {
+        const subject = encodeURIComponent(`Inquiry about ${business.name}`);
+        const body = encodeURIComponent(`I'm interested in learning more about ${business.name}.\n\nAward: ${business.award}\nLocation: ${business.location}`);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    } else {
+        console.warn('⚠️ Business not found:', businessId);
+    }
+}
+
+// Social sharing functions for featured businesses
+function shareBusinessOnFacebook(businessName, award) {
+    console.log('📱 Sharing on Facebook:', businessName);
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(`🏆 Check out ${businessName}, winner of ${award}! 🇱🇷`);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank', 'width=600,height=400');
+}
+
+function shareBusinessOnTwitter(businessName, award) {
+    console.log('🐦 Sharing on Twitter:', businessName);
+    const text = encodeURIComponent(`🏆 ${businessName} won the ${award} at the Liberia Business Awards! 🇱🇷 #LiberiaBusinessAwards #LBA3.0`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank', 'width=600,height=400');
+}
+
+function shareBusinessOnLinkedIn(businessName, award) {
+    console.log('💼 Sharing on LinkedIn:', businessName);
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(`${businessName} - ${award} Winner`);
+    const summary = encodeURIComponent(`Congratulations to ${businessName} for winning the ${award} at the Liberia Business Awards 3.0!`);
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&title=${title}&summary=${summary}`, '_blank', 'width=600,height=400');
+}
+
+// Test functions for console (referenced in debug logs)
+function testNominationManually() {
+    console.log('🧪 Running manual nomination test...');
+    // Pre-fill nomination form with test data
+    const testData = {
+        businessName: 'Test Business',
+        category: 'manufacturing-company-year',
+        yourName: 'Test User',
+        yourEmail: 'test@example.com',
+        reason: 'This is a test nomination'
+    };
+    
+    // Open modal and fill fields
+    openModal('nominateModal');
+    setTimeout(() => {
+        document.getElementById('nom-business-name').value = testData.businessName;
+        document.getElementById('nom-category').value = testData.category;
+        document.getElementById('nom-name').value = testData.yourName;
+        document.getElementById('nom-email').value = testData.yourEmail;
+        document.getElementById('nom-reason').value = testData.reason;
+        console.log('✅ Test nomination form pre-filled');
+    }, 500);
+}
+
+function testContactManually() {
+    console.log('🧪 Running manual contact test...');
+    // Pre-fill contact form with test data
+    const testData = {
+        name: 'Test User',
+        email: 'test@example.com',
+        subject: 'Test Contact',
+        message: 'This is a test contact message'
+    };
+    
+    document.getElementById('contact-name').value = testData.name;
+    document.getElementById('contact-email').value = testData.email;
+    document.getElementById('contact-subject').value = testData.subject;
+    document.getElementById('contact-message').value = testData.message;
+    
+    console.log('✅ Test contact form pre-filled');
+    // Scroll to contact section
+    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Initialize counters when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Trigger counter animation when stats section is visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounters();
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    const statsSection = document.querySelector('.stats-counter');
+    if (statsSection) {
+        observer.observe(statsSection);
+    }
+});
+
+console.log('✅ All missing functions added successfully!');
+
     </script> 
 
 </body>
 
 </html>
+
 
 
 
