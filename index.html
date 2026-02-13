@@ -5074,16 +5074,21 @@ function submitFormDual(formData, formType) {
     console.log(`🚀 Submitting ${formType} form to Google Sheets...`);
     
     // Show loading state
-    const submitBtn = document.querySelector(`#${formType}Modal button[type="submit"]`) || 
-                     document.getElementById(`${formType}-submit-btn`) ||
-                     document.querySelector(`button[onclick*="${formType}"]`);
-    let originalHtml = '';
+    const submitBtn = document.getElementById(`${formType}-submit-btn`) || 
+                 document.querySelector(`#${formType}Modal button[type="submit"]`) ||
+                 document.querySelector(`button[onclick*="${formType}"]`) ||
+                 document.getElementById(`contact-submit-btn`);
+let originalHtml = '';
+let originalText = '';
+
+if (submitBtn) {
+    originalHtml = submitBtn.innerHTML;
+    originalText = submitBtn.querySelector('.button-text')?.innerText || submitBtn.innerText;
     
-    if (submitBtn) {
-        originalHtml = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
-        submitBtn.disabled = true;
-    }
+    // Disable button and show spinner
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i><span class="button-text">Submitting...</span>';
+}
     
     // Submit to Google Apps Script
     const googleSheetsPromise = fetch(GOOGLE_APPS_SCRIPT_URL, {
@@ -5128,13 +5133,14 @@ function submitFormDual(formData, formType) {
             }, 1500);
         })
         .finally(() => {
-            if (submitBtn) {
-                setTimeout(() => {
-                    submitBtn.innerHTML = originalHtml;
-                    submitBtn.disabled = false;
-                }, 2000);
-            }
-        });
+    if (submitBtn) {
+        setTimeout(() => {
+            submitBtn.innerHTML = originalHtml;
+            submitBtn.disabled = false;
+            console.log('🔄 Submit button reset');
+        }, 2000);
+    }
+});
     
     return false;
 }
@@ -7648,6 +7654,7 @@ if (window.matchMedia('(display-mode: standalone)').matches ||
 </body>
 
 </html>
+
 
 
 
