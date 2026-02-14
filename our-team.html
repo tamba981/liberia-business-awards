@@ -6,35 +6,63 @@
     <title>Our Team - Liberia Business Awards</title>
     <style>
         body { 
-            font-family: Arial, sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
             line-height: 1.6;
+            background: #f9f9f9;
         }
         .back-btn { 
             background: #FF0000; 
             color: white; 
-            padding: 10px 20px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             cursor: pointer;
             margin-bottom: 20px;
-            transition: background 0.3s ease;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(255,0,0,0.3);
         }
         .back-btn:hover {
             background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255,0,0,0.4);
+        }
+        .back-btn i {
+            margin-right: 8px;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
         .hero {
-            background: linear-gradient(135deg, #FF0000, #87CEEB);
+            background: linear-gradient(135deg, #FF0000, #87CEEB, #4A90E2);
+            background-size: 200% 200%;
+            animation: gradientShift 10s ease infinite;
             color: white;
-            padding: 60px 20px;
+            padding: 70px 20px;
             text-align: center;
-            border-radius: 15px;
-            margin-bottom: 40px;
+            border-radius: 20px;
+            margin-bottom: 50px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
         }
         .team-grid {
             display: grid;
@@ -44,158 +72,336 @@
         }
         .team-member {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
+            border-radius: 20px;
+            padding: 30px 20px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .team-member::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #FF0000, #87CEEB);
         }
         .team-member:hover {
             transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
-        .team-photo {
+        .photo-container {
             width: 150px;
             height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
             margin: 0 auto 20px;
+            border-radius: 50%;
             border: 5px solid #f0f0f0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .team-member:hover .photo-container {
+            border-color: #FF0000;
+            transform: scale(1.05);
+        }
+        .team-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
         }
         .team-name {
             color: #FF0000;
-            margin-bottom: 5px;
+            margin: 15px 0 5px;
+            font-size: 1.4rem;
         }
         .team-role {
             color: #87CEEB;
-            font-weight: bold;
+            font-weight: 600;
             margin-bottom: 15px;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .team-bio {
             color: #666;
             margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding: 0 10px;
         }
         .social-links {
             display: flex;
             justify-content: center;
             gap: 15px;
+            margin-top: 15px;
         }
         .social-links a {
             color: #666;
             font-size: 20px;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
         .social-links a:hover {
-            color: #FF0000;
+            color: white;
+            background: #FF0000;
+            transform: translateY(-3px);
+        }
+        .join-team {
+            text-align: center;
+            margin-top: 60px;
+            padding: 50px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .join-team h2 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        .join-team p {
+            color: #666;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 25px;
+        }
+        .join-btn {
+            background: #FF0000;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,0,0,0.3);
+        }
+        .join-btn:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,0,0,0.4);
+        }
+        .role-badge {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .hero p { font-size: 1rem; }
+            .team-grid { grid-template-columns: 1fr; }
+            .join-team { padding: 30px 20px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <button class="back-btn" onclick="goBack()">← Back to Main Site</button>
+        <button class="back-btn" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i> Back to Main Site
+        </button>
         
         <div class="hero">
-            <h1>Meet Our Team</h1>
-            <p class="subtitle">The passionate individuals driving Liberia Business Awards forward</p>
+            <h1>🌟 Meet Our Team</h1>
+            <p>The passionate individuals driving Liberia Business Awards forward</p>
         </div>
 
         <div class="team-grid">
-            <!-- Leadership Team -->
-            <!-- UPDATED: Darlington F. Tamba with local image -->
+            <!-- ========== LEADERSHIP TEAM ========== -->
+
+            <!-- 1. Darlington F. Tamba - Founder & CEO -->
             <div class="team-member">
-                <img src="images/team/darlington.jpg" 
-                     alt="Darlington F. Tamba - Founder & CEO" 
-                     class="team-photo">
+                <div class="photo-container">
+                    <img src="images/team/darlington.jpg" 
+                         alt="Darlington F. Tamba - Founder & CEO" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Darlington+F.+Tamba&size=200&background=FF0000&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Founder & CEO</span>
                 <h2 class="team-name">Darlington F. Tamba</h2>
-                <p class="team-role">Founder & CEO</p>
-                <p class="team-bio">Visionary leader with a passion for celebrating Liberian business excellence and driving economic growth through recognition and networking.</p>
+                <p class="team-role">Chief Executive Officer</p>
+                <p class="team-bio">Visionary leader with a passion for celebrating Liberian business excellence and driving economic growth through recognition and networking. Over 10 years of experience in business development.</p>
                 <div class="social-links">
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://linkedin.com/in/darlington-tamba" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/darlingtontamba" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:darlington@liberiabusinessawards.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
-            <!-- UPDATED: Stephen V. Shilue with local image -->
+            <!-- 2. Stephen V. Shilue - Co-Founder & COO -->
             <div class="team-member">
-                <img src="images/team/stephen.jpg" 
-                     alt="Stephen V. Shilue - Co-Founder & COO" 
-                     class="team-photo">
+                <div class="photo-container">
+                    <img src="images/team/stephen.jpg" 
+                         alt="Stephen V. Shilue - Co-Founder & COO" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Stephen+V.+Shilue&size=200&background=87CEEB&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Co-Founder & COO</span>
                 <h2 class="team-name">Stephen V. Shilue</h2>
-                <p class="team-role">Co-Founder & COO</p>
-                <p class="team-bio">Operations expert ensuring seamless execution of all LBA events and initiatives across Liberia.</p>
+                <p class="team-role">Chief Operating Officer</p>
+                <p class="team-bio">Operations expert ensuring seamless execution of all LBA events and initiatives across Liberia. Specialist in logistics and project management.</p>
                 <div class="social-links">
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://linkedin.com/in/stephen-shilue" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/stephenshilue" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:stephen@liberiabusinessawards.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
-            <!-- Extended Team -->
-            <!-- UPDATED: Christopher O. Fallah with local image -->
+            <!-- 3. Christopher O. Fallah - Executive Director -->
             <div class="team-member">
-                <img src="images/team/christopher.jpg" 
-                     alt="Christopher O. Fallah - Marketing Director" 
-                     class="team-photo">
+                <div class="photo-container">
+                    <img src="images/team/christopher.jpg" 
+                         alt="Christopher O. Fallah - Executive Director" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Christopher+Fallah&size=200&background=FF0000&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Executive Director</span>
                 <h2 class="team-name">Christopher O. Fallah</h2>
-                <p class="team-role">Executive Director – Programs, Partnerships & Growth</p>
-                <p class="team-bio">Creative strategist building the LBA brand and engaging with Liberia's business community.</p>
+                <p class="team-role">Programs, Partnerships & Growth</p>
+                <p class="team-bio">Creative strategist building the LBA brand and engaging with Liberia's business community. Leads partnership development and program innovation.</p>
                 <div class="social-links">
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://linkedin.com/in/christopher-fallah" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/chrisfallah" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:christopher@liberiabusinessawards.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
-            <!-- UPDATED: Amanda K. Sherman - Add her local photo or placeholder -->
+            <!-- 4. Amanda K. Sherman - Events Manager -->
             <div class="team-member">
-                <img src="images/team/amanda.jpg" 
-                     alt="Amanda K. Sherman - Events Manager" 
-                     class="team-photo">
+                <div class="photo-container">
+                    <img src="images/team/amanda.jpg" 
+                         alt="Amanda K. Sherman - Events Manager" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Amanda+K.+Sherman&size=200&background=87CEEB&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Events Manager</span>
                 <h2 class="team-name">Amanda K. Sherman</h2>
-                <p class="team-role">Events Manager</p>
-                <p class="team-bio">Detail-oriented professional creating unforgettable award ceremonies and networking events.</p>
+                <p class="team-role">Event Operations</p>
+                <p class="team-bio">Detail-oriented professional creating unforgettable award ceremonies and networking events. Expert in event coordination and vendor management.</p>
                 <div class="social-links">
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://linkedin.com/in/amanda-sherman" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/amandasherman" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:amanda@liberiabusinessawards.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
-            <!-- UPDATED: Michael B. Williams - Add his local photo or placeholder -->
+            <!-- 5. Michael B. Williams - Partnership Director -->
             <div class="team-member">
-                <img src="images/team/michael.jpg" 
-                     alt="Michael B. Williams - Partnership Director" 
-                     class="team-photo">
+                <div class="photo-container">
+                    <img src="images/team/michael.jpg" 
+                         alt="Michael B. Williams - Partnership Director" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Michael+B.+Williams&size=200&background=FF0000&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Partnership Director</span>
                 <h2 class="team-name">Michael B. Williams</h2>
-                <p class="team-role">Partnership Director</p>
-                <p class="team-bio">Relationship builder forging strategic alliances with organizations supporting Liberian businesses.</p>
+                <p class="team-role">Strategic Alliances</p>
+                <p class="team-bio">Relationship builder forging strategic alliances with organizations supporting Liberian businesses. Over 8 years in business development.</p>
                 <div class="social-links">
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://linkedin.com/in/michael-williams" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/michaelwilliams" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:michael@liberiabusinessawards.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
 
-            <!-- UPDATED: Patricia M. Cole - Add her local photo or placeholder -->
+            <!-- 6. Patricia M. Cole - Communications Manager -->
             <div class="team-member">
-                <img src="images/team/patricia.jpg" 
-                     alt="Patricia M. Cole - Communications Manager" 
-                     class="team-photo">
+                <div class="photo-container">
+                    <img src="images/team/patricia.jpg" 
+                         alt="Patricia M. Cole - Communications Manager" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Patricia+M.+Cole&size=200&background=87CEEB&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Communications Manager</span>
                 <h2 class="team-name">Patricia M. Cole</h2>
-                <p class="team-role">Communications Manager</p>
-                <p class="team-bio">Storyteller sharing the success stories of Liberian businesses with local and international audiences.</p>
+                <p class="team-role">Media & Communications</p>
+                <p class="team-bio">Storyteller sharing the success stories of Liberian businesses with local and international audiences. Expert in PR and digital media.</p>
                 <div class="social-links">
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://linkedin.com/in/patricia-cole" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/patriciacole" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:patricia@liberiabusinessawards.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+
+            <!-- 7. James T. Morris - Advisory Board -->
+            <div class="team-member">
+                <div class="photo-container">
+                    <img src="images/team/james.jpg" 
+                         alt="James T. Morris - Advisory Board" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=James+T.+Morris&size=200&background=FF0000&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Advisory Board</span>
+                <h2 class="team-name">James T. Morris</h2>
+                <p class="team-role">Green Farms Liberia</p>
+                <p class="team-bio">Agricultural expert and past winner of Agriculture Business of the Year, providing strategic guidance to the awards program.</p>
+                <div class="social-links">
+                    <a href="https://linkedin.com/in/james-morris" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/jamesmorris" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:james@greenfarmsliberia.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+
+            <!-- 8. Sarah P. Johnson - Tech Advisor -->
+            <div class="team-member">
+                <div class="photo-container">
+                    <img src="images/team/sarah.jpg" 
+                         alt="Sarah P. Johnson - Tech Advisor" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Sarah+P.+Johnson&size=200&background=87CEEB&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Tech Advisor</span>
+                <h2 class="team-name">Sarah P. Johnson</h2>
+                <p class="team-role">TechHub Liberia</p>
+                <p class="team-bio">Technology innovator and startup mentor, advising on digital transformation and innovation strategy for LBA.</p>
+                <div class="social-links">
+                    <a href="https://linkedin.com/in/sarah-johnson" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/sarahjohnson" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:sarah@techhubliberia.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+
+            <!-- 9. Michael B. Kromah - Export Advisor -->
+            <div class="team-member">
+                <div class="photo-container">
+                    <img src="images/team/kromah.jpg" 
+                         alt="Michael B. Kromah - Export Advisor" 
+                         class="team-photo"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Michael+B.+Kromah&size=200&background=FF0000&color=fff&length=2&font-size=0.5&bold=true';">
+                </div>
+                <span class="role-badge">Export Advisor</span>
+                <h2 class="team-name">Michael B. Kromah</h2>
+                <p class="team-role">Liberian Gold Coffee</p>
+                <p class="team-bio">Export expert helping Liberian businesses access international markets. Winner of Export Excellence Award 2024.</p>
+                <div class="social-links">
+                    <a href="https://linkedin.com/in/michael-kromah" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://twitter.com/michaelkromah" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="mailto:michael@liberiangoldcoffee.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
                 </div>
             </div>
         </div>
 
-        <div style="text-align: center; margin-top: 50px; padding: 40px; background: #f8f9fa; border-radius: 15px;">
-            <h2>Join Our Team</h2>
+        <!-- Join Team Section -->
+        <div class="join-team">
+            <h2>🤝 Join Our Team</h2>
             <p>Passionate about celebrating Liberian business excellence? We're always looking for talented individuals to join our mission.</p>
-            <button style="background: #FF0000; color: white; border: none; padding: 15px 30px; border-radius: 25px; font-size: 16px; cursor: pointer; margin-top: 20px;" onclick="goBack()">View Opportunities</button>
+            <button class="join-btn" onclick="window.location.href='mailto:careers@liberiabusinessawards.com?subject=Career%20Opportunity%20Inquiry'">
+                <i class="fas fa-paper-plane"></i> View Opportunities
+            </button>
         </div>
     </div>
 
