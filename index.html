@@ -739,25 +739,25 @@ window.addEventListener('load', function() {
         </div>
     </div>
     
-    <!-- Mobile Menu -->
-    <div id="mobileMenu" class="hidden md:hidden bg-white px-4 py-4 shadow-lg border-t border-gray-200">
-        <div class="flex flex-col space-y-3">
-            <a href="#about" class="text-gray-700 hover:text-lba-red font-medium py-2">About</a>
-            <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium py-2">Team Message</a>
-            <a href="#team" class="text-gray-700 hover:text-lba-red font-medium py-2">Team</a>
-            <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium py-2">Categories</a>
-            <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium py-2">Featured</a>
-            <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium py-2">Blog</a>
-            <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium py-2">Partnership</a>
-            <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium py-2">Contact</a>
-            <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium py-2">Dashboard</a>
-            <div class="pt-4 flex space-x-4">
-                <button onclick="openModal('registerModal')" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Register</button>
-                <button onclick="checkNominationStatus()" class="flex-1 bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm" id="mobileNominateBtn">Nominate</button>
-                <button onclick="openModal('partnerModal')" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Partner</button>
-            </div>
+<!-- Mobile Menu -->
+<div id="mobileMenu" class="hidden md:hidden bg-white px-4 py-4 shadow-lg border-t border-gray-200">
+    <div class="flex flex-col space-y-3">
+        <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">About</a>
+        <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team Message</a>
+        <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team</a>
+        <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Categories</a>
+        <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Featured</a>
+        <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Blog</a>
+        <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Partnership</a>
+        <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Contact</a>
+        <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Dashboard</a>
+        <div class="pt-4 flex space-x-4">
+            <button onclick="openModal('registerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Register</button>
+            <button onclick="checkNominationStatus(); closeMobileMenu();" class="flex-1 bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm" id="mobileNominateBtn">Nominate</button>
+            <button onclick="openModal('partnerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Partner</button>
         </div>
     </div>
+</div>
 </nav>
 
     <!-- Hero Section -->
@@ -4463,24 +4463,62 @@ From selling on the streets of Monrovia</p>
                 fidObserver.observe({entryTypes: ['first-input']});
             }
             
-            // Mobile menu toggle
-const mobileMenuBtn = document.getElementById('mobileMenuBtn') || 
-                      document.querySelector('.mobile-menu-btn') ||
-                      document.querySelector('[data-toggle="mobile-menu"]');
+           // ============================================
+// ✅ MOBILE MENU FUNCTIONALITY
+// ============================================
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
 
-const mobileMenu = document.getElementById('mobileMenu') || 
-                   document.querySelector('.mobile-menu') ||
-                   document.querySelector('[data-target="mobile-menu"]');
-
-// Only add event listener if both elements exist
 if (mobileMenuBtn && mobileMenu) {
-    mobileMenuBtn.addEventListener('click', function() {
+    // Toggle menu on button click
+    mobileMenuBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
         mobileMenu.classList.toggle('hidden');
-        console.log('📱 Mobile menu toggled');
+        console.log('📱 Mobile menu toggled:', mobileMenu.classList.contains('hidden') ? 'closed' : 'open');
     });
-    console.log('✅ Mobile menu event listeners added');
-} else {
-    console.warn('⚠️ Mobile menu elements not found. Mobile menu button:', !!mobileMenuBtn, 'Mobile menu:', !!mobileMenu);
+    console.log('✅ Mobile menu button initialized');
+}
+
+// ============================================
+// ✅ MOBILE MENU AUTO-CLOSE FUNCTION
+// ============================================
+function closeMobileMenu() {
+    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        console.log('📱 Mobile menu closed');
+    }
+}
+
+// Close menu when clicking on any link inside the menu
+document.querySelectorAll('#mobileMenu a, #mobileMenu button').forEach(element => {
+    element.addEventListener('click', function() {
+        closeMobileMenu();
+    });
+});
+
+// Close menu when clicking outside
+document.addEventListener('click', function(event) {
+    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        // If click is outside both menu and menu button
+        if (!mobileMenu.contains(event.target) && !mobileMenuBtn?.contains(event.target)) {
+            mobileMenu.classList.add('hidden');
+            console.log('📱 Mobile menu closed (outside click)');
+        }
+    }
+});
+
+// Close menu on window resize (if going from mobile to desktop)
+window.addEventListener('resize', function() {
+    if (mobileMenu && window.innerWidth >= 768) { // md breakpoint
+        mobileMenu.classList.add('hidden');
+    }
+});
+
+// Prevent menu from closing when clicking inside the menu
+if (mobileMenu) {
+    mobileMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
 }
             // Back to top button
             const backToTopBtn = document.getElementById('backToTop');
@@ -4938,6 +4976,39 @@ function updateMobileNominationButton() {
         };
     }
 }
+
+ // ============================================
+// ✅ MOBILE MENU AUTO-CLOSE FUNCTION
+// ============================================
+function closeMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        console.log('📱 Mobile menu closed');
+    }
+}
+
+// Also close menu when clicking outside
+document.addEventListener('click', function(event) {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    
+    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        // If click is outside both menu and menu button, close menu
+        if (!mobileMenu.contains(event.target) && !mobileMenuBtn?.contains(event.target)) {
+            mobileMenu.classList.add('hidden');
+            console.log('📱 Mobile menu closed (outside click)');
+        }
+    }
+});
+
+// Close menu on window resize (if going from mobile to desktop)
+window.addEventListener('resize', function() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu && window.innerWidth >= 768) { // md breakpoint
+        mobileMenu.classList.add('hidden');
+    }
+});
 
 // Add to your existing DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -7807,6 +7878,7 @@ console.log('✅ All missing functions added successfully!');
 </body>
 
 </html>
+
 
 
 
