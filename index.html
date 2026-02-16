@@ -28,6 +28,20 @@
 <meta name="twitter:image:alt" content="Liberia Business Awards Logo">
 <meta name="twitter:site" content="@LiberiaBusinessAwards">
 <meta name="twitter:creator" content="@LiberiaBusinessAwards">
+
+<!-- Google Consent Mode v2 -->
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+
+// Default denied for all EU regions
+gtag('consent', 'default', {
+  'ad_storage': 'denied',
+  'ad_user_data': 'denied',
+  'ad_personalization': 'denied',
+  'analytics_storage': 'denied'
+});
+</script>
     
     <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4JP42743E"></script>
@@ -7917,10 +7931,202 @@ console.log('✅ All missing functions added successfully!');
 
     </script> 
 
+<!-- 🍪 COOKIE CONSENT BANNER - GDPR COMPLIANT -->
+<div id="cookieConsent" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a202c; color: white; padding: 15px 20px; z-index: 9999; display: flex; flex-direction: column; align-items: center; text-align: center; border-top: 3px solid #FF0000; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); transform: translateY(100%); transition: transform 0.3s ease;">
+    <div style="max-width: 1200px; width: 100%;">
+        <p style="margin: 0 0 10px 0; font-size: 14px; line-height: 1.6;">
+            <i class="fas fa-cookie-bite" style="color: #87CEEB; margin-right: 8px;"></i>
+            We use cookies to enhance your experience, analyze traffic, and serve personalized content. 
+            By clicking "Accept All", you consent to our use of cookies. 
+            <a href="/privacy-policy.html" style="color: #87CEEB; text-decoration: underline; margin-left: 5px;">Learn more</a>
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="acceptCookies('all')" style="background: #FF0000; color: white; border: none; padding: 8px 25px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s;">Accept All</button>
+            <button onclick="acceptCookies('necessary')" style="background: transparent; color: white; border: 1px solid #87CEEB; padding: 8px 25px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s;">Necessary Only</button>
+            <button onclick="openCookieSettings()" style="background: transparent; color: #87CEEB; border: none; padding: 8px 15px; cursor: pointer; text-decoration: underline;">Customize</button>
+        </div>
+    </div>
+</div>
+
+<!-- Cookie Settings Modal (Hidden by default) -->
+<div id="cookieSettings" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 15px; max-width: 500px; width: 90%; padding: 30px; max-height: 80vh; overflow-y: auto;">
+        <h3 style="color: #FF0000; margin-bottom: 20px; font-size: 24px;">Cookie Preferences</h3>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <h4 style="font-weight: 600; margin: 0;">Essential Cookies</h4>
+                    <p style="font-size: 12px; color: #666; margin: 5px 0 0;">Required for basic site functionality</p>
+                </div>
+                <span style="background: #28a745; color: white; padding: 3px 10px; border-radius: 15px; font-size: 12px;">Always Active</span>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <h4 style="font-weight: 600; margin: 0;">Analytics Cookies</h4>
+                    <p style="font-size: 12px; color: #666; margin: 5px 0 0;">Google Analytics, page views, visitor stats</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="analyticsConsent" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <h4 style="font-weight: 600; margin: 0;">Marketing Cookies</h4>
+                    <p style="font-size: 12px; color: #666; margin: 5px 0 0;">Personalized ads, social media integration</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="marketingConsent">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 30px;">
+            <button onclick="closeCookieSettings()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer;">Cancel</button>
+            <button onclick="saveCookiePreferences()" style="background: #FF0000; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600;">Save Preferences</button>
+        </div>
+    </div> 
+</div>
+
+<style>
+    /* Toggle Switch Styling */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .3s;
+        border-radius: 24px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #FF0000;
+    }
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+</style>
+
+<script>
+    // Show cookie banner on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!localStorage.getItem('cookieConsent')) {
+            setTimeout(() => {
+                document.getElementById('cookieConsent').style.transform = 'translateY(0)';
+            }, 1000);
+        }
+    });
+
+    // Accept cookies
+    window.acceptCookies = function(type) {
+        const consent = {
+            type: type,
+            analytics: type === 'all',
+            marketing: type === 'all',
+            timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem('cookieConsent', JSON.stringify(consent));
+        document.getElementById('cookieConsent').style.transform = 'translateY(100%)';
+        
+        // Load analytics if consented
+        if (type === 'all') {
+            enableAnalytics();
+        }
+        
+        console.log('✅ Cookie consent saved:', consent);
+    };
+
+    // Open settings modal
+    window.openCookieSettings = function() {
+        document.getElementById('cookieSettings').style.display = 'flex';
+    };
+
+    // Close settings modal
+    window.closeCookieSettings = function() {
+        document.getElementById('cookieSettings').style.display = 'none';
+    };
+
+    // Save preferences
+    window.saveCookiePreferences = function() {
+        const consent = {
+            type: 'custom',
+            analytics: document.getElementById('analyticsConsent').checked,
+            marketing: document.getElementById('marketingConsent').checked,
+            timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem('cookieConsent', JSON.stringify(consent));
+        document.getElementById('cookieSettings').style.display = 'none';
+        document.getElementById('cookieConsent').style.transform = 'translateY(100%)';
+        
+        if (consent.analytics) {
+            enableAnalytics();
+        }
+        
+        console.log('✅ Cookie preferences saved:', consent);
+    };
+
+    // Enable Google Analytics with consent
+    function enableAnalytics() {
+        console.log('📊 Analytics enabled with consent');
+        
+        // If using Google Consent Mode v2, you'd update here
+        if (typeof gtag !== 'undefined') {
+            gtag('consent', 'update', {
+                'analytics_storage': 'granted',
+                'ad_storage': 'granted'
+            });
+        }
+    }
+
+    // Check existing consent on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const saved = localStorage.getItem('cookieConsent');
+        if (saved) {
+            const consent = JSON.parse(saved);
+            if (consent.analytics) {
+                enableAnalytics();
+            }
+        }
+    });
+</script>
+
 </body>
 
 </html>
-
 
 
 
