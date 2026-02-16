@@ -1640,12 +1640,12 @@
         </div>
     </div>
 
-    <!-- Dashboard Script - OPTIMIZED VERSION -->
+        <!-- Dashboard Script - FIXED VERSION -->
     <script>
         // ============================================
-        // CONFIGURATION
+        // CONFIGURATION - UPDATED
         // ============================================
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQRYP7FwaD24qp78UcxlEaFxaWn9i7RdsfM7L3gL8ftFbahehaIawGAbsTtvZNxP6L/exec';
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUuhMnnXBsOrd7vI2yiAe2er84axpFjIdz4f7SPjFCnDiFtTwi2goHoou6ghK7pXs2/exec';
         const GOOGLE_SHEETS_VIEW_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit';
         const SESSION_TIMEOUT = 60; // minutes
         const REFRESH_INTERVAL = 30000; // 30 seconds
@@ -1682,6 +1682,9 @@
                 
                 // Setup UI components
                 setupUserInterface();
+                
+                // Verify API endpoints
+                await verifyApiEndpoints();
                 
                 // Test API connection
                 await testApiConnection();
@@ -1744,10 +1747,12 @@
             const menuToggle = document.getElementById('menuToggle');
             const sidebar = document.getElementById('sidebar');
             
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-                menuToggle.style.transform = sidebar.classList.contains('active') ? 'rotate(90deg)' : 'rotate(0)';
-            });
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                    menuToggle.style.transform = sidebar.classList.contains('active') ? 'rotate(90deg)' : 'rotate(0)';
+                });
+            }
             
             // Close sidebar on outside click (mobile)
             document.addEventListener('click', (e) => {
@@ -1761,7 +1766,7 @@
             });
             
             // Logout handler
-            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
             
             // Window resize handler
             window.addEventListener('resize', handleWindowResize);
@@ -1805,8 +1810,94 @@
         }
 
         // ============================================
-        // API CONNECTION
+        // API CONNECTION - FIXED
         // ============================================
+        async function fetchWithTimeout(url, options = {}) {
+            const { timeout = 10000, ...fetchOptions } = options;
+            
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                // ✅ FIXED: Added the actual fetch call
+                const response = await fetch(url, { 
+                    ...fetchOptions, 
+                    signal: controller.signal 
+                });
+                
+                clearTimeout(id);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.text();
+                
+            } catch (error) {
+                clearTimeout(id);
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timeout');
+                }
+                throw error;
+            }
+        }
+
+        async function fetchWithRetry(url, options = {}, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    return await fetchWithTimeout(url, options);
+                } catch (error) {
+                    console.log(`🔄 Retry ${i + 1}/${retries} for ${url}`);
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                }
+            }
+        }
+
+        async function fetchJson(url, options = {}) {
+            try {
+                const response = await fetchWithRetry(url, {
+                    ...options,
+                    timeout: 15000,
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                }, 3);
+                
+                const data = JSON.parse(response);
+                
+                if (data.status === 'ERROR') {
+                    throw new Error(data.error?.message || 'API error');
+                }
+                
+                return data;
+                
+            } catch (error) {
+                console.error('❌ Fetch error:', error);
+                throw error;
+            }
+        }
+
+        async function verifyApiEndpoints() {
+            console.log('🔍 Verifying API endpoints...');
+            
+            const endpoints = ['ping', 'getStats', 'getAllData', 'getActivity'];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetchWithTimeout(
+                        `${GOOGLE_APPS_SCRIPT_URL}?action=${endpoint}`,
+                        { timeout: 5000 }
+                    );
+                    console.log(`✅ ${endpoint}: OK`);
+                } catch (error) {
+                    console.warn(`⚠️ ${endpoint}: Failed - ${error.message}`);
+                }
+            }
+        }
+
         async function testApiConnection() {
             console.log('🔌 Testing API connection...');
             
@@ -1815,7 +1906,7 @@
                     timeout: 10000
                 });
                 
-                if (response === 'OK') {
+                if (response === 'OK' || response.includes('OK')) {
                     dashboardState.isConnected = true;
                     console.log('✅ API Connection: OK');
                     return true;
@@ -1863,7 +1954,7 @@
         }
 
         // ============================================
-        // DATA LOADING
+        // DATA LOADING - FIXED
         // ============================================
         async function loadInitialData() {
             console.log('📊 Loading initial data...');
@@ -1925,14 +2016,15 @@
         }
 
         // ============================================
-        // API FETCH FUNCTIONS
+        // API FETCH FUNCTIONS - FIXED
         // ============================================
         async function fetchDashboardStats() {
             try {
                 const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getStats`);
                 
-                if (response && response.success && response.data) {
-                    return response.data;
+                // Check correct response structure
+                if (response && response.success === true) {
+                    return response;
                 }
                 
                 throw new Error('Invalid response format');
@@ -1947,7 +2039,7 @@
             try {
                 const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllData`);
                 
-                if (response && response.success && response.data) {
+                if (response && response.success === true && response.data) {
                     return response.data;
                 }
                 
@@ -1963,8 +2055,8 @@
             try {
                 const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getActivity`);
                 
-                if (response && response.success && response.data) {
-                    return response.data.activity;
+                if (response && response.success === true && response.data) {
+                    return response.data.activity || [];
                 }
                 
                 throw new Error('Invalid activity data');
@@ -1992,9 +2084,9 @@
             
             // Categorize submissions
             data.submissions.forEach(submission => {
-                if (submission.formType === 'business') {
+                if (submission.formType === 'business' || submission.formType === 'register') {
                     dashboardState.sheetData.businesses.push(enhanceBusinessData(submission));
-                } else if (submission.formType === 'nomination') {
+                } else if (submission.formType === 'nomination' || submission.formType === 'nominate') {
                     dashboardState.sheetData.nominations.push(enhanceNominationData(submission));
                 }
             });
@@ -2026,7 +2118,7 @@
             return {
                 id: submission.id || generateId('nomination'),
                 businessName: submission.business_name || submission.displayName || 'Unknown Business',
-                category: submission.nominated_category || 'General',
+                category: submission.nominated_category || submission.category || 'General',
                 submittedDate: submission.timestamp || new Date().toISOString(),
                 status: submission.status || 'pending',
                 statusClass: submission.statusClass || 'warning',
@@ -2040,21 +2132,37 @@
         }
 
         // ============================================
-        // UI UPDATES
+        // UI UPDATES - FIXED
         // ============================================
-        function updateDashboardStats(stats) {
-            if (!stats) return;
+        function updateDashboardStats(response) {
+            if (!response) return;
+            
+            // Handle both response formats
+            const stats = response.data || response;
             
             // Update main stats
-            document.getElementById('totalBusinesses').textContent = stats.summary?.totalBusinesses || 0;
-            document.getElementById('totalNominations').textContent = stats.summary?.totalNominations || 0;
-            document.getElementById('approvedNominations').textContent = stats.summary?.approvedNominations || 0;
-            document.getElementById('totalSubmissions').textContent = stats.totalSubmissions || 0;
-            document.getElementById('activeUsers').textContent = stats.totalSubmissions || 0;
+            document.getElementById('totalBusinesses').textContent = stats.totalBusinesses || 
+                                                                   stats.businessCount || 
+                                                                   stats.sheetStats?.Registrations?.total || 0;
+            
+            document.getElementById('totalNominations').textContent = stats.totalNominations || 
+                                                                      stats.nominationCount || 
+                                                                      stats.sheetStats?.Nominations?.total || 0;
+            
+            document.getElementById('approvedNominations').textContent = stats.approvedNominations || 
+                                                                        stats.sheetStats?.Nominations?.approved || 0;
+            
+            document.getElementById('totalSubmissions').textContent = stats.totalSubmissions || 
+                                                                      stats.submissionCount || 0;
+            document.getElementById('activeUsers').textContent = stats.totalSubmissions || 
+                                                                 stats.activeUsers || 0;
             
             // Update menu badges
-            document.getElementById('businessCount').textContent = stats.summary?.totalBusinesses || 0;
-            document.getElementById('nominationCount').textContent = stats.summary?.totalNominations || 0;
+            document.getElementById('businessCount').textContent = stats.totalBusinesses || 
+                                                                  stats.sheetStats?.Registrations?.total || 0;
+            
+            document.getElementById('nominationCount').textContent = stats.totalNominations || 
+                                                                    stats.sheetStats?.Nominations?.total || 0;
             
             // Update trend indicators
             updateTrendIndicators(stats);
@@ -2066,24 +2174,24 @@
         function updateTrendIndicators(stats) {
             // Business trend
             const businessTrend = document.getElementById('businessTrend');
-            const businessGrowth = stats.summary?.totalBusinesses > 0 ? '+0 today' : '+0 today';
+            const businessGrowth = stats.todayBusinesses > 0 ? `+${stats.todayBusinesses} today` : 'No new today';
             businessTrend.innerHTML = `<i class="fas fa-chart-line"></i><span>${businessGrowth}</span>`;
             
             // Nomination trend
             const nominationTrend = document.getElementById('nominationTrend');
-            const nominationGrowth = stats.summary?.totalNominations > 0 ? '+0 today' : '+0 today';
+            const nominationGrowth = stats.todayNominations > 0 ? `+${stats.todayNominations} today` : 'No new today';
             nominationTrend.innerHTML = `<i class="fas fa-chart-line"></i><span>${nominationGrowth}</span>`;
             
             // Approval trend
             const approvalTrend = document.getElementById('approvalTrend');
-            const approvalRate = stats.summary?.totalNominations > 0 
-                ? Math.round((stats.summary.approvedNominations / stats.summary.totalNominations) * 100) + '% rate'
-                : '0% rate';
+            const totalNoms = stats.totalNominations || 0;
+            const approvedNoms = stats.approvedNominations || 0;
+            const approvalRate = totalNoms > 0 ? Math.round((approvedNoms / totalNoms) * 100) + '% rate' : '0% rate';
             approvalTrend.innerHTML = `<i class="fas fa-percentage"></i><span>${approvalRate}</span>`;
             
             // User trend
             const userTrend = document.getElementById('userTrend');
-            const userGrowth = stats.todaySubmissions > 0 ? `+${stats.todaySubmissions} today` : '+0 today';
+            const userGrowth = stats.todaySubmissions > 0 ? `+${stats.todaySubmissions} today` : 'No activity today';
             userTrend.innerHTML = `<i class="fas fa-users"></i><span>${userGrowth}</span>`;
         }
 
@@ -2124,9 +2232,9 @@
             if (!stats.sheetStats) return;
             
             // Businesses sheet
-            const businessStats = stats.sheetStats.Businesses || {};
+            const businessStats = stats.sheetStats.Registrations || stats.sheetStats.Businesses || {};
             document.getElementById('sheetBusinessesTotal').textContent = businessStats.total || 0;
-            document.getElementById('sheetBusinessesActive').textContent = businessStats.active || 0;
+            document.getElementById('sheetBusinessesActive').textContent = businessStats.active || businessStats.approved || 0;
             document.getElementById('sheetBusinessesPending').textContent = businessStats.pending || 0;
             
             // Nominations sheet
@@ -2279,25 +2387,22 @@
             
             // Create basic data structure
             const fallbackData = {
-                status: 'OK',
                 success: true,
                 data: {
                     totalSubmissions: 0,
                     todaySubmissions: 0,
-                    summary: {
-                        totalBusinesses: 0,
-                        totalNominations: 0,
-                        approvedNominations: 0,
-                        pendingReview: 0
-                    },
+                    totalBusinesses: 0,
+                    totalNominations: 0,
+                    approvedNominations: 0,
+                    pendingReview: 0,
                     sheetStats: {
-                        Businesses: { total: 0, active: 0, pending: 0 },
+                        Registrations: { total: 0, active: 0, pending: 0 },
                         Nominations: { total: 0, approved: 0, pending: 0 }
                     }
                 }
             };
             
-            updateDashboardStats(fallbackData.data);
+            updateDashboardStats(fallbackData);
             updateConnectionStatus(false);
         }
 
@@ -2439,7 +2544,7 @@
                                     <td>${escapeHtml(item.phone)}</td>
                                     <td>${escapeHtml(item.category)}</td>
                                     <td>
-                                        <span class="status-badge status-${item.statusClass}">
+                                        <span class="status-badge status-${item.statusClass || 'warning'}">
                                             ${item.status}
                                         </span>
                                     </td>
@@ -2477,7 +2582,7 @@
                                     <td><strong>${escapeHtml(item.businessName)}</strong></td>
                                     <td>${escapeHtml(item.category)}</td>
                                     <td>
-                                        <span class="status-badge status-${item.statusClass}">
+                                        <span class="status-badge status-${item.statusClass || 'warning'}">
                                             ${item.status}
                                         </span>
                                     </td>
@@ -2545,7 +2650,7 @@
                                     <td><strong>${escapeHtml(item.name || item.businessName || 'N/A')}</strong></td>
                                     <td>${escapeHtml(item.email || 'N/A')}</td>
                                     <td>
-                                        <span class="status-badge status-${item.statusClass}">
+                                        <span class="status-badge status-${item.statusClass || 'info'}">
                                             ${item.status}
                                         </span>
                                     </td>
@@ -2631,53 +2736,6 @@
         // ============================================
         // UTILITY FUNCTIONS
         // ============================================
-        async function fetchWithTimeout(url, options = {}) {
-            const { timeout = 10000, ...fetchOptions } = options;
-            
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeout);
-            
-            try {
-                const response = await fetch(url, {
-                    ...fetchOptions,
-                    signal: controller.signal
-                });
-                
-                clearTimeout(id);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                return await response.text();
-                
-            } catch (error) {
-                clearTimeout(id);
-                throw error;
-            }
-        }
-
-        async function fetchJson(url, options = {}) {
-            try {
-                const response = await fetchWithTimeout(url, {
-                    ...options,
-                    timeout: 15000
-                });
-                
-                const data = JSON.parse(response);
-                
-                if (data.status === 'ERROR') {
-                    throw new Error(data.error?.message || 'API error');
-                }
-                
-                return data;
-                
-            } catch (error) {
-                console.error('❌ Fetch error:', error);
-                throw error;
-            }
-        }
-
         function formatTimeAgo(timestamp) {
             if (!timestamp) return 'Just now';
             
@@ -2717,6 +2775,7 @@
         }
 
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
@@ -2898,4 +2957,5 @@
     </script>
 </body>
 </html>
+
 
