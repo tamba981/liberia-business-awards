@@ -6581,8 +6581,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (event.key === 'Enter') {
                 performSearch();
             }
-
-            const newsletterForm = document.getElementById('newsletterForm');
+        });
+        
+        // Also trigger search when typing
+        searchInput.addEventListener('input', function() {
+            performSearch();
+        });
+    }
+    
+    // Newsletter form handler - MOVED OUTSIDE the search input listener
+    const newsletterForm = document.getElementById('newsletterForm');
     if (newsletterForm) {
         newsletterForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -6595,7 +6603,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 'newsletter');
         });
     }
+    
+    // Collect initial dynamic content
+    setTimeout(collectDynamicContent, 1000);
 });
+
         
         // Clear button functionality
         const clearButton = document.createElement('button');
@@ -8111,6 +8123,7 @@ console.log('✅ All missing functions added successfully!');
 </body>
 
 </html>
+
 
 
 
