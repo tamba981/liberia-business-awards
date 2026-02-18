@@ -4902,8 +4902,20 @@ function showNominationClosedNotification() {
     notification.setAttribute('role', 'alert');
     notification.setAttribute('aria-live', 'polite');
     
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    // Determine the correct nomination year
+    let nominationYear = currentYear;
+    
+    // If we're AFTER May 30, then next nominations are next year
+    if ((currentMonth > 4) || // After May (June-December)
+        (currentMonth === 4 && currentDate > 30)) { // After May 30
+        nominationYear = currentYear + 1;
+    }
+    // Otherwise (Jan 1 - May 30), nominations are THIS year
     
     notification.innerHTML = `
         <div class="flex">
@@ -4914,13 +4926,13 @@ function showNominationClosedNotification() {
             </div>
             <div class="ml-4">
                 <h4 class="text-lg font-bold text-gray-800">Nominations Closed</h4>
-                <p class="text-gray-600 mt-1">The nomination period for ${currentYear} has ended.</p>
+                <p class="text-gray-600 mt-1">The nomination period for ${currentYear} has not started yet.</p>
                 
                 <div class="mt-4 p-3 bg-gray-50 rounded-lg">
                     <p class="text-sm text-gray-700">
                         <i class="fas fa-calendar-alt text-lba-blue mr-2"></i>
                         <strong>Next Nomination Period:</strong><br>
-                        March 1 - May 30, ${nextYear}
+                        March 1 - May 30, ${nominationYear}
                     </p>
                 </div>
                 
@@ -8128,6 +8140,7 @@ console.log('✅ All missing functions added successfully!');
 </body>
 
 </html>
+
 
 
 
