@@ -1,4 +1,4 @@
- <html lang="en">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4902,20 +4902,8 @@ function showNominationClosedNotification() {
     notification.setAttribute('role', 'alert');
     notification.setAttribute('aria-live', 'polite');
     
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const currentDate = now.getDate();
-    
-    // Determine the correct nomination year
-    let nominationYear = currentYear;
-    
-    // If we're AFTER May 30, then next nominations are next year
-    if ((currentMonth > 4) || // After May (June-December)
-        (currentMonth === 4 && currentDate > 30)) { // After May 30
-        nominationYear = currentYear + 1;
-    }
-    // Otherwise (Jan 1 - May 30), nominations are THIS year
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
     
     notification.innerHTML = `
         <div class="flex">
@@ -4926,13 +4914,13 @@ function showNominationClosedNotification() {
             </div>
             <div class="ml-4">
                 <h4 class="text-lg font-bold text-gray-800">Nominations Closed</h4>
-                <p class="text-gray-600 mt-1">The nomination period for ${currentYear} has not started yet.</p>
+                <p class="text-gray-600 mt-1">The nomination period for ${currentYear} has ended.</p>
                 
                 <div class="mt-4 p-3 bg-gray-50 rounded-lg">
                     <p class="text-sm text-gray-700">
                         <i class="fas fa-calendar-alt text-lba-blue mr-2"></i>
                         <strong>Next Nomination Period:</strong><br>
-                        March 1 - May 30, ${nominationYear}
+                        March 1 - May 30, ${nextYear}
                     </p>
                 </div>
                 
@@ -5559,7 +5547,36 @@ function checkNominationStatus() {
     }
 }
 
-
+function showNominationClosedNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 p-6 rounded-xl shadow-xl z-50 max-w-sm bg-white border-l-4 border-lba-red';
+    
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+    
+    notification.innerHTML = `
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-lba-red/10 rounded-full flex items-center justify-center">
+                    <i class="fas fa-calendar-times text-lba-red text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <h4 class="text-lg font-bold text-gray-800">Nominations Closed</h4>
+                <p class="text-gray-600 mt-1">Next nomination period: March 1 - May 30, ${nextYear}</p>
+                <button onclick="this.closest('.fixed').remove()" class="mt-4 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) notification.remove();
+    }, 8000);
+}
 
 // ============================================
 // ✅ PAGE INITIALIZATION
@@ -6581,16 +6598,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (event.key === 'Enter') {
                 performSearch();
             }
-        });
-        
-        // Also trigger search when typing
-        searchInput.addEventListener('input', function() {
-            performSearch();
-        });
-    }
-    
-    // Newsletter form handler - MOVED OUTSIDE the search input listener
-    const newsletterForm = document.getElementById('newsletterForm');
+
+            const newsletterForm = document.getElementById('newsletterForm');
     if (newsletterForm) {
         newsletterForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -6603,11 +6612,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 'newsletter');
         });
     }
-    
-    // Collect initial dynamic content
-    setTimeout(collectDynamicContent, 1000);
 });
-
         
         // Clear button functionality
         const clearButton = document.createElement('button');
@@ -8123,43 +8128,3 @@ console.log('✅ All missing functions added successfully!');
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
