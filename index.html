@@ -5559,36 +5559,7 @@ function checkNominationStatus() {
     }
 }
 
-function showNominationClosedNotification() {
-    const notification = document.createElement('div');
-    notification.className = 'fixed top-4 right-4 p-6 rounded-xl shadow-xl z-50 max-w-sm bg-white border-l-4 border-lba-red';
-    
-    const currentYear = new Date().getFullYear();
-    const nextYear = currentYear + 1;
-    
-    notification.innerHTML = `
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-lba-red/10 rounded-full flex items-center justify-center">
-                    <i class="fas fa-calendar-times text-lba-red text-xl"></i>
-                </div>
-            </div>
-            <div class="ml-4">
-                <h4 class="text-lg font-bold text-gray-800">Nominations Closed</h4>
-                <p class="text-gray-600 mt-1">Next nomination period: March 1 - May 30, ${nextYear}</p>
-                <button onclick="this.closest('.fixed').remove()" class="mt-4 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition">
-                    Close
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) notification.remove();
-    }, 8000);
-}
+
 
 // ============================================
 // ✅ PAGE INITIALIZATION
@@ -8140,6 +8111,7 @@ console.log('✅ All missing functions added successfully!');
 </body>
 
 </html>
+
 
 
 
