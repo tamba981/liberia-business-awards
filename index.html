@@ -5590,7 +5590,8 @@ function submitRegistrationForm() {
     
     const formData = {
         businessName: document.getElementById('reg-business-name')?.value || '',
-        businessType: document.getElementById('reg-business-type')?.value || '',
+        sector: document.getElementById('reg-business-sector')?.value || '',  // NEW
+        businessSize: document.getElementById('reg-business-type')?.value || '', // NEW
         contactName: document.getElementById('reg-contact-name')?.value || '',
         position: document.getElementById('reg-position')?.value || '',
         email: document.getElementById('reg-email')?.value || '',
@@ -5601,13 +5602,13 @@ function submitRegistrationForm() {
     
     // Validate
     for (let [key, value] of Object.entries(formData)) {
-        if (!value) {
+        if (!value && key !== 'businessSize') { // businessSize might be optional
             showNotification(`⚠️ Please fill in all fields`, 'error');
             return false;
         }
     }
     
-    return submitFormDual(formData, 'register');
+    return enhancedSubmitFormDual(formData, 'register');
 }
 
 // Nomination Form
@@ -8717,6 +8718,7 @@ if ('connection' in navigator) {
 </body>
 
 </html>
+
 
 
 
