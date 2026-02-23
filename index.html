@@ -17,9 +17,7 @@
 <link rel="canonical" href="https://liberiabusinessawardslr.com">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Liberia Business Awards">
- <!-- Favicon -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' fill='%23FF0000'>🏆</text></svg>">
-
+ 
 <!-- Twitter Card Meta Tags -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Liberia Business Awards 3.0">
@@ -4607,7 +4605,19 @@ if (mobileMenu) {
                     navbar.classList.remove('shadow-lg');
                 }
             });
+
             
+ // ============================================
+// ✅ LEAP YEAR HELPER FUNCTIONS
+// ============================================
+function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function getLastDayOfFebruary(year) {
+    return isLeapYear(year) ? 29 : 28;
+}
+
 // =============== SIMPLIFIED COUNTDOWN LOGIC ===============
 function updateCountdown() {
     const now = new Date();
@@ -4648,13 +4658,14 @@ function updateCountdown() {
         return;
     }
     
-    // DECEMBER 20 to FEBRUARY 28 - Countdown to March 1 (nominations open)
-    const isDec20ToFeb28 = 
+    // DECEMBER 20 to END OF FEBRUARY - Countdown to March 1 (nominations open)
+    const lastDayFeb = getLastDayOfFebruary(currentYear);
+    const isDec20ToFebEnd = 
         (currentMonth === 11 && currentDate >= 20) || // December 20-31
         (currentMonth === 0) || // January
-        (currentMonth === 1 && currentDate <= 28); // February 1-28
+        (currentMonth === 1 && currentDate <= lastDayFeb); // February 1-last day
     
-    if (isDec20ToFeb28) {
+    if (isDec20ToFebEnd) {
         const nextMar1 = new Date(currentYear, 2, 1, 0, 0, 0); // March 1 of current year
         const diff = nextMar1 - now;
         updateCountdownDisplay(diff);
@@ -5135,22 +5146,83 @@ document.addEventListener('DOMContentLoaded', function() {
             setupRealTimeValidation();
         });
         
-        // Modal functions
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-            modal.classList.add('opacity-100', 'pointer-events-auto');
-            setTimeout(() => {
-                const modalContent = modal.querySelector('.modal-content');
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100');
-            }, 10);
-            document.body.style.overflow = 'hidden';
+        // ============================================
+// ✅ MODAL FUNCTIONS
+// ============================================
+
+// ============================================
+// ✅ ACCESSIBILITY: Focus Trap for Modals
+// ============================================
+function trapFocus(modalElement) {
+    const focusableElements = modalElement.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length === 0) return;
+    
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+    
+    // Remove any existing listener to avoid duplicates
+    const keydownHandler = function(e) {
+        if (e.key === 'Tab') {
+            if (e.shiftKey) { // Shift + Tab
+                if (document.activeElement === firstFocusable) {
+                    e.preventDefault();
+                    lastFocusable.focus();
+                }
+            } else { // Tab
+                if (document.activeElement === lastFocusable) {
+                    e.preventDefault();
+                    firstFocusable.focus();
+                }
+            }
         }
         
-        // ============================================
-// FIXED: closeModal function with null check
-// ============================================
+        if (e.key === 'Escape') {
+            closeModal(modalElement.id);
+        }
+    };
+    
+    modalElement.addEventListener('keydown', keydownHandler);
+    
+    // Store the handler so we can remove it later if needed
+    modalElement._keydownHandler = keydownHandler;
+}
+
+function openModal(modalId) {
+    console.log('🔓 Opening modal:', modalId);
+    
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        console.log(`⚠️ Modal ${modalId} not found`);
+        return;
+    }
+    
+    // Remove aria-hidden when opening
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100', 'pointer-events-auto');
+    
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.remove('scale-95');
+        modalContent.classList.add('scale-100');
+    }
+    
+    document.body.style.overflow = 'hidden';
+    
+    // Set focus to first focusable element
+    setTimeout(() => {
+        const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable) focusable.focus();
+        
+        // Add focus trap
+        trapFocus(modal);
+    }, 100);
+}
+
+// Update closeModal to remove the keydown handler
 function closeModal(modalId) {
     console.log('🔒 Attempting to close modal:', modalId);
     
@@ -5176,35 +5248,42 @@ function closeModal(modalId) {
     }
     
     if (!modal) {
-    // Try alternative modal IDs
-    const altModalId = modalId.replace('-Modal', '') || 
-                      modalId.replace('Modal', '') || 
-                      'modal-' + modalId;
-    modal = document.getElementById(altModalId);
-    
-    if (!modal) {
-        console.log(`ℹ️ Modal "${modalId}" already closed or not found`);
-        return;
+        // Try alternative modal IDs
+        const altModalId = modalId.replace('-Modal', '') || 
+                          modalId.replace('Modal', '') || 
+                          'modal-' + modalId;
+        modal = document.getElementById(altModalId);
+        
+        if (!modal) {
+            console.log(`ℹ️ Modal "${modalId}" already closed or not found`);
+            return;
+        }
     }
-}
     
-    // Remove modal classes
-    modal.classList.remove('show');
-    modal.style.display = 'none';
+    // Remove keydown handler if it exists
+    if (modal._keydownHandler) {
+        modal.removeEventListener('keydown', modal._keydownHandler);
+        delete modal._keydownHandler;
+    }
     
-    // Remove all modal backdrops
-    const backdrops = document.querySelectorAll('.modal-backdrop');
-    backdrops.forEach(backdrop => {
-        backdrop.remove();
-    });
+    // Set aria-hidden when closing
+    modal.setAttribute('aria-hidden', 'true');
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
     
-    // Restore body styles
-    document.body.classList.remove('modal-open');
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.remove('scale-100');
+        modalContent.classList.add('scale-95');
+    }
+    
     document.body.style.overflow = 'auto';
     document.body.style.paddingRight = '';
     
     console.log('✅ Modal closed successfully:', modal.id || 'unnamed');
 }
+        
+        
         
         // Toggle nomination type fields
         function toggleNominationType() {
@@ -5227,6 +5306,136 @@ function closeModal(modalId) {
 // ============================================
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
 
+
+ // ============================================
+// ✅ OFFLINE FORM QUEUE SYSTEM
+// ============================================
+const formQueue = [];
+
+// Load queued submissions from localStorage on page load
+function loadFormQueue() {
+    try {
+        const savedQueue = localStorage.getItem('formQueue');
+        if (savedQueue) {
+            const queue = JSON.parse(savedQueue);
+            formQueue.push(...queue);
+            console.log(`📦 Loaded ${queue.length} queued submissions`);
+            
+            // If we're online now, try to process the queue
+            if (navigator.onLine) {
+                processFormQueue();
+            }
+        }
+    } catch (e) {
+        console.log('Could not load form queue');
+    }
+}
+
+// Save queue to localStorage
+function saveFormQueue() {
+    try {
+        localStorage.setItem('formQueue', JSON.stringify(formQueue));
+    } catch (e) {
+        console.log('Could not save form queue');
+    }
+}
+
+// Add submission to queue
+function queueFormSubmission(formData, formType) {
+    const queuedItem = {
+        id: 'queue_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        formData: formData,
+        formType: formType,
+        timestamp: new Date().toISOString(),
+        attempts: 0
+    };
+    
+    formQueue.push(queuedItem);
+    saveFormQueue();
+    
+    console.log(`📥 Queued ${formType} submission (${formQueue.length} total)`);
+    
+    // Show notification to user
+    showNotification('📱 You are offline. Form will be submitted when connection is restored.', 'info');
+    
+    return queuedItem.id;
+}
+
+// Process queued submissions
+async function processFormQueue() {
+    if (formQueue.length === 0) return;
+    
+    console.log(`🔄 Processing ${formQueue.length} queued submissions...`);
+    
+    const queueCopy = [...formQueue];
+    let processed = 0;
+    let failed = 0;
+    
+    for (const item of queueCopy) {
+        try {
+            // Try to submit
+            await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    ...item.formData,
+                    formType: item.formType,
+                    timestamp: new Date().toISOString(),
+                    source: 'liberia-business-awards-website-queued'
+                })
+            });
+            
+            // Remove from queue on success
+            const index = formQueue.findIndex(q => q.id === item.id);
+            if (index !== -1) {
+                formQueue.splice(index, 1);
+                processed++;
+            }
+            
+            console.log(`✅ Processed queued ${item.formType} submission`);
+            
+        } catch (error) {
+            item.attempts++;
+            failed++;
+            console.log(`❌ Failed to process queued submission (attempt ${item.attempts})`);
+            
+            // If failed too many times, keep in queue
+            if (item.attempts > 5) {
+                // Too many failures, might be a bad submission
+                const index = formQueue.findIndex(q => q.id === item.id);
+                if (index !== -1) {
+                    formQueue.splice(index, 1);
+                }
+            }
+        }
+    }
+    
+    saveFormQueue();
+    
+    if (processed > 0) {
+        showNotification(`✅ ${processed} offline form(s) submitted successfully!`, 'success');
+    }
+    
+    console.log(`📊 Queue processed: ${processed} submitted, ${failed} failed, ${formQueue.length} remaining`);
+}
+
+// Override submitFormDual to handle offline
+function enhancedSubmitFormDual(formData, formType) {
+    if (!navigator.onLine) {
+        // We're offline - queue the submission
+        queueFormSubmission(formData, formType);
+        return Promise.resolve({ queued: true });
+    }
+    
+    // We're online - proceed with normal submission
+    return submitFormDual(formData, formType);
+}       
+        
+
+        
 // ============================================
 // ✅ MASTER FORM SUBMISSION FUNCTION
 // ============================================
@@ -5305,6 +5514,41 @@ if (submitBtn) {
     return false;
 }
 
+// ============================================
+// ✅ BUTTON LOADING STATES
+// ============================================
+function showButtonLoading(buttonId) {
+    const btn = document.getElementById(buttonId);
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+    }
+}
+
+function resetButtonLoading(buttonId, originalText) {
+    const btn = document.getElementById(buttonId);
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+// Enhanced submit function with loading state
+async function submitFormWithLoading(formType, formData) {
+    const buttonId = `${formType}-submit-btn`;
+    const originalText = document.getElementById(buttonId)?.innerHTML || 'Submit';
+    
+    try {
+        showButtonLoading(buttonId);
+        await submitFormDual(formData, formType);
+    } catch (error) {
+        console.error('Form submission error:', error);
+        showNotification('⚠️ Submission failed. Please try again.', 'error');
+    } finally {
+        resetButtonLoading(buttonId, originalText);
+    }
+}        
+        
 // ============================================
 // ✅ FORM SUBMISSION HANDLERS
 // ============================================
@@ -5481,7 +5725,85 @@ function setupRealTimeValidation() {
     // Optional: Add real-time validation
     console.log('🔍 Validation ready');
 }
+// ============================================
+// ✅ FORM AUTO-SAVE TO LOCALSTORAGE
+// ============================================
+function autoSaveForm(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    
+    // Load saved data on page load
+    const savedData = localStorage.getItem(`${formId}-draft`);
+    if (savedData) {
+        try {
+            const data = JSON.parse(savedData);
+            Object.keys(data).forEach(key => {
+                const input = form.querySelector(`[id="${key}"], [name="${key}"]`);
+                if (input) {
+                    input.value = data[key];
+                }
+            });
+            console.log(`📝 Loaded saved draft for ${formId}`);
+        } catch (e) {
+            console.log('Could not load saved draft');
+        }
+    }
+    
+    // Save on input with debounce
+    let saveTimeout;
+    form.addEventListener('input', () => {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            localStorage.setItem(`${formId}-draft`, JSON.stringify(data));
+            console.log(`💾 Auto-saved ${formId} draft`);
+        }, 1000); // Save after 1 second of no typing
+    });
+    
+    // Clear saved data on successful submission
+    form.addEventListener('submit', () => {
+        localStorage.removeItem(`${formId}-draft`);
+    });
+}
 
+// Initialize auto-save for all forms
+function initAutoSave() {
+    const forms = [
+        'registerForm',
+        'contactForm', 
+        'partnerForm', 
+        'nominateForm'
+    ];
+    
+    forms.forEach(formId => {
+        if (document.getElementById(formId)) {
+            autoSaveForm(formId);
+        }
+    });
+}
+        
+ // ============================================
+// ✅ IMPORTANT: SERVER-SIDE VALIDATION NOTE
+// ============================================
+// NOTE: Client-side validation is for user experience only.
+// The Google Apps Script MUST perform server-side validation
+// before saving data to the spreadsheet. The script includes:
+// - Field presence validation
+// - Email format validation
+// - Rate limiting
+// - Input sanitization
+// - CORS headers
+// - SQL injection prevention
+// 
+// Your Google Apps Script (v3.3) already implements ALL of these:
+// - validateOrigin() - Origin validation
+// - checkRateLimit() - Rate limiting
+// - sanitizeInput() - Input sanitization  
+// - isValidEmail() - Email validation
+// - prepareRowData() - Field mapping with validation
+// ============================================       
+        
 // ============================================
 // ✅ MODAL FUNCTIONS
 // ============================================
@@ -5508,25 +5830,6 @@ function openModal(modalId) {
     document.body.style.overflow = 'hidden';
 }
 
-function closeModal(modalId) {
-    console.log('🔒 Closing modal:', modalId);
-    
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    
-    // Set aria-hidden when closing
-    modal.setAttribute('aria-hidden', 'true');
-    modal.classList.remove('opacity-100', 'pointer-events-auto');
-    modal.classList.add('opacity-0', 'pointer-events-none');
-    
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-        modalContent.classList.remove('scale-100');
-        modalContent.classList.add('scale-95');
-    }
-    
-    document.body.style.overflow = 'auto';
-}
 
 // ============================================
 // ✅ NOMINATION STATUS FUNCTIONS
@@ -5585,6 +5888,7 @@ function showNominationClosedNotification() {
 // ✅ PAGE INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
+    initAutoSave();  // Initialize auto-save
     console.log('🚀 Initializing page...');
     
     // Initialize AOS
@@ -5603,7 +5907,116 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize sliders
     initImageSlider();
     initPartnersSlider();
+
+
+    // ============================================
+// ✅ SAFE DIRECTORY FUNCTION WRAPPER
+// ============================================
+function safeDirectoryOperation(operation, fallback = null) {
+    try {
+        return operation();
+    } catch (error) {
+        console.error('❌ Directory operation failed:', error);
+        console.error('Error details:', error.stack);
+        
+        // Show user-friendly message
+        const container = document.getElementById('businessDirectoryLimited') || 
+                         document.getElementById('businessDirectoryAll');
+        
+        if (container) {
+            container.innerHTML = `
+                <div class="col-span-3 text-center py-12">
+                    <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Unable to Load Directory</h3>
+                    <p class="text-gray-600 mb-4 max-w-md mx-auto">We're having trouble loading the business directory. Please try again.</p>
+                    <button onclick="location.reload()" class="bg-lba-red text-white px-6 py-3 rounded-lg hover:bg-red-600 transition shadow-lg">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh Page
+                    </button>
+                </div>
+            `;
+        }
+        
+        return fallback;
+    }
+}
+
+// Wrap directory initialization
+function initDirectory() {
+    safeDirectoryOperation(() => {
+        displayLimitedDirectory('all');
+        displayAllDirectory('all');
+        console.log('✅ Directory initialized successfully');
+    });
+}
+
+// Wrap filter functions
+function filterDirectory(category) {
+    safeDirectoryOperation(() => displayLimitedDirectory(category));
+}
+
+function filterAllDirectory(category) {
+    safeDirectoryOperation(() => displayAllDirectory(category));
+}
+
+// Display limited directory (6 businesses)
+function displayLimitedDirectory(category) {
+    const directoryContainer = document.getElementById('businessDirectoryLimited');
+    if (!directoryContainer) return;
     
+    let filteredBusinesses = category === 'all' 
+        ? businessDirectory 
+        : businessDirectory.filter(business => business.category === category);
+    
+    // Only show first 6 businesses
+    const limitedBusinesses = filteredBusinesses.slice(0, 6);
+    
+    // Update active filter button
+    updateFilterButtons(category);
+    
+    let html = '';
+    limitedBusinesses.forEach(business => {
+        html += generateBusinessCard(business);
+    });
+    
+    directoryContainer.innerHTML = html;
+}
+
+// Display all directory for modal with proper filtering
+function displayAllDirectory(category = 'all') {
+    const directoryContainer = document.getElementById('businessDirectoryAll');
+    if (!directoryContainer) return;
+    
+    let filteredBusinesses = category === 'all' 
+        ? businessDirectory 
+        : businessDirectory.filter(business => business.category === category);
+    
+    // Update active filter button in modal - more robust approach
+    updateModalFilterButtons(category);
+    
+    let html = '';
+    filteredBusinesses.forEach(business => {
+        html += generateBusinessCard(business, true);
+    });
+    
+    if (html === '') {
+        html = `
+            <div class="col-span-3 text-center py-12">
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-building text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No Businesses Found</h3>
+                <p class="text-gray-600 mb-4">There are no businesses in this category yet.</p>
+                <button onclick="displayAllDirectory('all')" class="bg-lba-blue text-white px-6 py-2 rounded-lg hover:bg-blue-400 transition">
+                    View All Businesses
+                </button>
+            </div>
+        `;
+    }
+    
+    directoryContainer.innerHTML = html;
+}
     // Initialize directory
     if (typeof initDirectory === 'function') {
         initDirectory();
@@ -7137,8 +7550,8 @@ function displayLimitedDirectory(category) {
     directoryContainer.innerHTML = html;
 }
 
-// Display all directory for modal
-function displayAllDirectory(category) {
+// Display all directory for modal with proper filtering
+function displayAllDirectory(category = 'all') {
     const directoryContainer = document.getElementById('businessDirectoryAll');
     if (!directoryContainer) return;
     
@@ -7146,15 +7559,51 @@ function displayAllDirectory(category) {
         ? businessDirectory 
         : businessDirectory.filter(business => business.category === category);
     
-    // Update modal filter buttons
+    // Update active filter button in modal - more robust approach
     updateModalFilterButtons(category);
     
     let html = '';
     filteredBusinesses.forEach(business => {
-        html += generateBusinessCard(business, true); // true means for modal view
+        html += generateBusinessCard(business, true);
     });
     
+    if (html === '') {
+        html = `
+            <div class="col-span-3 text-center py-8">
+                <i class="fas fa-building text-gray-400 text-4xl mb-4"></i>
+                <p class="text-gray-600">No businesses found in this category</p>
+                <button onclick="displayAllDirectory('all')" class="mt-4 bg-lba-blue text-white px-4 py-2 rounded-lg hover:bg-blue-400 transition">
+                    View All Businesses
+                </button>
+            </div>
+        `;
+    }
+    
     directoryContainer.innerHTML = html;
+}
+
+// Filter directory in modal - simplified
+function filterAllDirectory(category) {
+    displayAllDirectory(category);
+}
+
+// Update filter buttons in modal
+function updateModalFilterButtons(category) {
+    const filterBtns = document.querySelectorAll('.directory-filter-btn');
+    
+    filterBtns.forEach(btn => {
+        // Remove active classes from all buttons
+        btn.classList.remove('active', 'bg-lba-red', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700');
+        
+        // Check if this button matches the category
+        const btnCategory = btn.textContent.toLowerCase().trim();
+        if ((category === 'all' && btnCategory.includes('all')) || 
+            (category !== 'all' && btnCategory.includes(category.replace('-', ' ')))) {
+            btn.classList.add('active', 'bg-lba-red', 'text-white');
+            btn.classList.remove('bg-gray-200', 'text-gray-700');
+        }
+    });
 }
 
 // Generate business card HTML
@@ -7400,12 +7849,6 @@ function viewBusinessDetails(businessId) {
 // Initialize directory when page loads
 document.addEventListener('DOMContentLoaded', function() {
     initDirectory();
-
-    // Initialize business directory
-const directoryContainer = document.getElementById('businessDirectoryLimited');
-if (directoryContainer) {
-    initDirectory();
-}
     
     // Initialize search functionality
     const searchInput = document.getElementById('globalSearch');
@@ -8126,11 +8569,124 @@ console.log('✅ All missing functions added successfully!');
             }
         }
     });
+
+    // ============================================
+// ✅ PERFORMANCE MONITORING
+// ============================================
+if ('performance' in window) {
+    window.addEventListener('load', () => {
+        // Wait a bit for everything to settle
+        setTimeout(() => {
+            try {
+                const perfData = performance.getEntriesByType('navigation')[0];
+                const paintData = performance.getEntriesByType('paint');
+                
+                console.log('📊 Page Load Performance:');
+                console.log(`   - DOM Content Loaded: ${Math.round(perfData.domContentLoadedEventEnd)}ms`);
+                console.log(`   - Page Load Complete: ${Math.round(perfData.loadEventEnd)}ms`);
+                console.log(`   - DOM Interactive: ${Math.round(perfData.domInteractive)}ms`);
+                  // Only send to analytics if user has consented
+const consent = localStorage.getItem('cookieConsent');
+if (consent) {
+    const consentData = JSON.parse(consent);
+    if (consentData.analytics && typeof gtag !== 'undefined') {
+        gtag('event', 'performance', {
+            'event_category': 'performance',
+            'event_label': 'page_load',
+            'value': Math.round(perfData.loadEventEnd)
+        });
+    }
+}
+                const firstPaint = paintData.find(p => p.name === 'first-paint');
+                const firstContentfulPaint = paintData.find(p => p.name === 'first-contentful-paint');
+                
+                if (firstPaint) {
+                    console.log(`   - First Paint: ${Math.round(firstPaint.startTime)}ms`);
+                }
+                
+                if (firstContentfulPaint) {
+                    console.log(`   - First Contentful Paint: ${Math.round(firstContentfulPaint.startTime)}ms`);
+                }
+                
+                // Check for slow loading
+                if (perfData.loadEventEnd > 3000) {
+                    console.warn('⚠️ Page load time exceeds 3 seconds - consider optimizations');
+                }
+                
+                // Send to analytics if consent given
+                if (localStorage.getItem('cookieConsent')) {
+                    const consent = JSON.parse(localStorage.getItem('cookieConsent'));
+                    if (consent.analytics && typeof gtag !== 'undefined') {
+                        gtag('event', 'performance', {
+                            'event_category': 'performance',
+                            'event_label': 'page_load',
+                            'value': Math.round(perfData.loadEventEnd),
+                            'dom_load_time': Math.round(perfData.domContentLoadedEventEnd),
+                            'first_paint': firstPaint ? Math.round(firstPaint.startTime) : 0
+                        });
+                        console.log('📊 Performance data sent to analytics');
+                    }
+                }
+            } catch (e) {
+                console.log('⚠️ Could not calculate performance metrics:', e.message);
+            }
+        }, 0);
+    });
+}
+
+// ============================================
+// ✅ RESOURCE TIMING MONITORING (Optional)
+// ============================================
+if ('performance' in window && 'getEntriesByType' in performance) {
+    // Log slow resources (over 2 seconds)
+    setTimeout(() => {
+        try {
+            const resources = performance.getEntriesByType('resource');
+            const slowResources = resources.filter(r => r.duration > 2000);
+            
+            if (slowResources.length > 0) {
+                console.warn('⚠️ Slow loading resources:');
+                slowResources.forEach(r => {
+                    console.warn(`   - ${r.name.split('/').pop()}: ${Math.round(r.duration)}ms`);
+                });
+            }
+        } catch (e) {
+            // Silently fail - not critical
+        }
+    }, 5000);
+}
+
+// ============================================
+// ✅ CONNECTION SPEED CHECK
+// ============================================
+if ('connection' in navigator) {
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    
+    if (connection) {
+        console.log('📶 Network Information:');
+        console.log(`   - Type: ${connection.effectiveType || 'unknown'}`);
+        console.log(`   - Downlink: ${connection.downlink || 'unknown'} Mbps`);
+        console.log(`   - RTT: ${connection.rtt || 'unknown'} ms`);
+        
+        // Save to localStorage for offline awareness
+        try {
+            localStorage.setItem('lastConnectionInfo', JSON.stringify({
+                type: connection.effectiveType,
+                downlink: connection.downlink,
+                rtt: connection.rtt,
+                timestamp: new Date().toISOString()
+            }));
+        } catch (e) {
+            // Ignore storage errors
+        }
+    }
+}
 </script>
 
 </body>
 
 </html>
+
 
 
 
