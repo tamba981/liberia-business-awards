@@ -3856,52 +3856,63 @@ From selling on the streets of Monrovia</p>
             </div>
             <div class="modal-form-container">
                 <form id="registerForm">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="reg-business-name">Business Name *</label>
-                            <input type="text" id="reg-business-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required aria-required="true">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="reg-business-type">Business Type *</label>
-                            <select id="reg-business-sector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue mb-3" required aria-required="true">
-    <option value="">Select Business Sector *</option>
-    <option value="agriculture">Agriculture</option>
-    <option value="mining">Mining & Extractives</option>
-    <option value="oil-gas">Oil & Gas</option>
-    <option value="manufacturing">Manufacturing & Industrial</option>
-    <option value="construction">Construction & Real Estate</option>
-    <option value="energy">Energy & Utilities</option>
-    <option value="transportation">Transportation & Logistics</option>
-    <option value="ict">Information & Communications Technology</option>
-    <option value="financial">Financial Services</option>
-    <option value="education">Education</option>
-    <option value="health">Health</option>
-    <option value="tourism">Tourism & Hospitality</option>
-    <option value="trade">Trade & Commerce</option>
-    <option value="public-sector">Public Sector & Government</option>
-    <option value="civil-society">Civil Society & Nonprofit</option>
-    <option value="media">Media & Communications</option>
-    <option value="arts">Arts, Culture & Creative</option>
-    <option value="sports">Sports & Recreation</option>
-    <option value="other">Other</option>
-</select>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <!-- Business Name - Left Column -->
+    <div>
+        <label class="block text-gray-700 mb-2" for="reg-business-name">Business Name *</label>
+        <input type="text" id="reg-business-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
+    </div>
+    
+    <!-- Business Sector - Right Column -->
+    <div>
+        <label class="block text-gray-700 mb-2" for="reg-business-sector">Business Sector *</label>
+        <select id="reg-business-sector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
+            <option value="">Select Business Sector</option>
+            <option value="agriculture">Agriculture</option>
+            <option value="mining">Mining & Extractives</option>
+            <option value="oil-gas">Oil & Gas</option>
+            <option value="manufacturing">Manufacturing & Industrial</option>
+            <option value="construction">Construction & Real Estate</option>
+            <option value="energy">Energy & Utilities</option>
+            <option value="transportation">Transportation & Logistics</option>
+            <option value="ict">Information & Communications Technology</option>
+            <option value="financial">Financial Services</option>
+            <option value="education">Education</option>
+            <option value="health">Health</option>
+            <option value="tourism">Tourism & Hospitality</option>
+            <option value="trade">Trade & Commerce</option>
+            <option value="public-sector">Public Sector & Government</option>
+            <option value="civil-society">Civil Society & Nonprofit</option>
+            <option value="media">Media & Communications</option>
+            <option value="arts">Arts, Culture & Creative</option>
+            <option value="sports">Sports & Recreation</option>
+            <option value="other">Other</option>
+        </select>
+    </div>
+</div>
 
-<select id="reg-business-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required aria-required="true">
-    <option value="">Select Business Size/Type *</option>
-    <option value="micro">Micro Enterprise (1-5 employees)</option>
-    <option value="small">Small Business (6-20 employees)</option>
-    <option value="medium">Medium Enterprise (21-100 employees)</option>
-    <option value="large">Large Enterprise (100+ employees)</option>
-    <option value="startup">Startup (under 3 years)</option>
-    <option value="sme">SME (Small/Medium Enterprise)</option>
-    <option value="enterprise">Enterprise</option>
-    <option value="ngo">NGO / Nonprofit</option>
-    <option value="government">Government Agency</option>
-    <option value="social-enterprise">Social Enterprise</option>
-    <option value="cooperative">Cooperative</option>
-    <option value="sole-proprietor">Sole Proprietorship</option>
-</select>
-                        </div>
+<!-- Second Row: Business Size (Full Width) -->
+<div class="mb-4">
+    <label class="block text-gray-700 mb-2" for="reg-business-size">Business Size/Type *</label>
+    <select id="reg-business-size" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
+        <option value="">Select Business Size/Type</option>
+        <option value="micro">Micro Enterprise (1-5 employees)</option>
+        <option value="small">Small Business (6-20 employees)</option>
+        <option value="medium">Medium Enterprise (21-100 employees)</option>
+        <option value="large">Large Enterprise (100+ employees)</option>
+        <option value="startup">Startup (under 3 years)</option>
+        <option value="sme">SME (Small/Medium Enterprise)</option>
+        <option value="enterprise">Enterprise</option>
+        <option value="ngo">NGO / Nonprofit</option>
+        <option value="government">Government Agency</option>
+        <option value="social-enterprise">Social Enterprise</option>
+        <option value="cooperative">Cooperative</option>
+        <option value="sole-proprietor">Sole Proprietorship</option>
+    </select>
+</div>
+
+<!-- Keep the hidden field for backward compatibility -->
+<input type="hidden" id="reg-business-type" name="businessType" value="">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
@@ -5590,8 +5601,10 @@ function submitRegistrationForm() {
     
     const formData = {
         businessName: document.getElementById('reg-business-name')?.value || '',
-        sector: document.getElementById('reg-business-sector')?.value || '',  // NEW
-        businessSize: document.getElementById('reg-business-type')?.value || '', // NEW
+        sector: document.getElementById('reg-business-sector')?.value || '',
+        businessSize: document.getElementById('reg-business-size')?.value || '',
+        // Keep businessType for backward compatibility
+        businessType: document.getElementById('reg-business-size')?.value || '',
         contactName: document.getElementById('reg-contact-name')?.value || '',
         position: document.getElementById('reg-position')?.value || '',
         email: document.getElementById('reg-email')?.value || '',
@@ -5600,12 +5613,12 @@ function submitRegistrationForm() {
         description: document.getElementById('reg-description')?.value || ''
     };
     
-    // Validate
-    for (let [key, value] of Object.entries(formData)) {
-        if (!value && key !== 'businessSize') { // businessSize might be optional
-            showNotification(`⚠️ Please fill in all fields`, 'error');
-            return false;
-        }
+    // Validate all required fields
+    if (!formData.businessName || !formData.sector || !formData.businessSize || 
+        !formData.contactName || !formData.position || !formData.email || 
+        !formData.phone || !formData.address || !formData.description) {
+        showNotification('⚠️ Please fill in all required fields', 'error');
+        return false;
     }
     
     return enhancedSubmitFormDual(formData, 'register');
@@ -8718,6 +8731,7 @@ if ('connection' in navigator) {
 </body>
 
 </html>
+
 
 
 
