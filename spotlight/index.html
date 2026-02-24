@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>Business Spotlight - Liberia Business Awards | Inspiring Stories of Liberian Excellence</title>
+    <meta name="title" content="Business Spotlight - Liberia Business Awards | Inspiring Stories of Liberian Excellence">
+    <meta name="description" content="Discover inspiring stories of Liberian businesses, entrepreneurs, and innovators making an impact across Africa. Interviews, success stories, and business insights.">
+    <meta name="keywords" content="Liberian businesses, entrepreneurship, success stories, business interviews, Liberian entrepreneurs, SME spotlight">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://liberiabusinessawardslr.com/spotlight">
+    <meta property="og:title" content="Business Spotlight - Liberia Business Awards">
+    <meta property="og:description" content="Discover inspiring stories of Liberian businesses, entrepreneurs, and innovators making an impact.">
+    <meta property="og:image" content="https://liberiabusinessawardslr.com/images/spotlight-og.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://liberiabusinessawardslr.com/spotlight">
+    <meta property="twitter:title" content="Business Spotlight - Liberia Business Awards">
+    <meta property="twitter:description" content="Discover inspiring stories of Liberian businesses, entrepreneurs, and innovators making an impact.">
+    <meta property="twitter:image" content="https://liberiabusinessawardslr.com/images/spotlight-twitter.jpg">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/ads.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="https://liberiabusinessawardslr.com/spotlight">
+    
+    <style>
+        /* Additional spotlight-specific styles */
+        .spotlight-hero {
+            background: linear-gradient(135deg, rgba(255,0,0,0.1) 0%, rgba(135,206,235,0.1) 100%);
+            padding: 60px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+        
+        .spotlight-hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #FF0000, #87CEEB);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .spotlight-hero p {
+            font-size: 18px;
+            color: #64748b;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .spotlight-search {
+            max-width: 600px;
+            margin: 30px auto 0;
+            position: relative;
+        }
+        
+        .spotlight-search input {
+            width: 100%;
+            padding: 15px 25px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .spotlight-search input:focus {
+            outline: none;
+            border-color: #FF0000;
+            box-shadow: 0 0 0 3px rgba(255,0,0,0.1);
+        }
+        
+        .spotlight-search button {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            background: #FF0000;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .spotlight-search button:hover {
+            background: #cc0000;
+            transform: scale(1.05);
+        }
+        
+        .spotlight-categories-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+            padding: 0 20px;
+        }
+        
+        .spotlight-category-chip {
+            padding: 8px 20px;
+            border-radius: 30px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .spotlight-category-chip:hover,
+        .spotlight-category-chip.active {
+            background: #FF0000;
+            border-color: #FF0000;
+            color: white;
+        }
+        
+        .spotlight-load-more {
+            text-align: center;
+            margin: 50px 0;
+        }
+        
+        .spotlight-load-more button {
+            background: transparent;
+            border: 2px solid #FF0000;
+            color: #FF0000;
+            padding: 12px 40px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .spotlight-load-more button:hover {
+            background: #FF0000;
+            color: white;
+        }
+        
+        .spotlight-newsletter {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            margin-top: 60px;
+            border-radius: 20px;
+        }
+        
+        .spotlight-newsletter h3 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .spotlight-newsletter p {
+            color: #cbd5e0;
+            margin-bottom: 30px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .spotlight-newsletter-form {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .spotlight-newsletter-form input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .spotlight-newsletter-form button {
+            background: #FF0000;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .spotlight-newsletter-form button:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .spotlight-hero h1 {
+                font-size: 32px;
+            }
+            
+            .spotlight-newsletter-form {
+                flex-direction: column;
+            }
+            
+            .spotlight-categories-bar {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Include your existing header/navigation here -->
+    <header>
+        <!-- Your navigation code -->
+    </header>
+
+    <!-- Spotlight Hero Section -->
+    <div class="spotlight-hero">
+        <div class="container">
+            <h1>Business Spotlight</h1>
+            <p>Inspiring stories of Liberian business excellence — featuring interviews, success stories, and insights from entrepreneurs shaping our nation's future.</p>
+            
+            <!-- Search Bar -->
+            <div class="spotlight-search">
+                <input type="text" id="spotlightSearch" placeholder="Search businesses, entrepreneurs, industries...">
+                <button onclick="searchSpotlight()"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Bar -->
+    <div class="spotlight-categories-bar" id="categoriesBar">
+        <!-- Will be populated by JavaScript -->
+        <span class="spotlight-category-chip active" data-category="all">All Stories</span>
+    </div>
+
+    <!-- Main Spotlight Container -->
+    <div id="lba-spotlight"></div>
+
+    <!-- Newsletter Signup -->
+    <div class="spotlight-newsletter">
+        <div class="container">
+            <h3>Never Miss a Story</h3>
+            <p>Subscribe to our Business Spotlight newsletter and get inspiring stories delivered to your inbox weekly.</p>
+            <form class="spotlight-newsletter-form" id="spotlightNewsletterForm">
+                <input type="email" placeholder="Your email address" required>
+                <button type="submit">Subscribe</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Include your existing footer here -->
+    <footer>
+        <!-- Your footer code -->
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/business-spotlight.js"></script>
+    <script>
+        // Global search function
+        function searchSpotlight() {
+            const query = document.getElementById('spotlightSearch').value;
+            if (query.length >= 3) {
+                window.location.href = `/spotlight/search.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        // Initialize spotlight
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the spotlight with advanced options
+            LBASpotlight.init('lba-spotlight', {
+                debug: false,
+                articlesPerPage: 12,
+                onLoadMore: function(page) {
+                    console.log(`Loading page ${page}...`);
+                },
+                onCategoryChange: function(category) {
+                    // Update active category chip
+                    document.querySelectorAll('.spotlight-category-chip').forEach(chip => {
+                        chip.classList.remove('active');
+                    });
+                    const activeChip = document.querySelector(`.spotlight-category-chip[data-category="${category}"]`);
+                    if (activeChip) activeChip.classList.add('active');
+                }
+            });
+
+            // Load categories and populate chips
+            LBASpotlight.getCategories().then(categories => {
+                const bar = document.getElementById('categoriesBar');
+                bar.innerHTML = '<span class="spotlight-category-chip active" data-category="all">All Stories</span>';
+                
+                categories.forEach(cat => {
+                    const chip = document.createElement('span');
+                    chip.className = 'spotlight-category-chip';
+                    chip.setAttribute('data-category', cat.slug);
+                    chip.textContent = cat.name;
+                    chip.style.borderColor = cat.color;
+                    chip.onclick = () => {
+                        window.location.href = `/spotlight/category/${cat.slug}`;
+                    };
+                    bar.appendChild(chip);
+                });
+            });
+
+            // Newsletter form
+            document.getElementById('spotlightNewsletterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = this.querySelector('input').value;
+                // Submit to your newsletter API
+                fetch('/api/newsletter/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, source: 'spotlight' })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Thank you for subscribing!');
+                    this.reset();
+                })
+                .catch(error => {
+                    alert('Subscription successful! (Demo mode)');
+                    this.reset();
+                });
+            });
+
+            // Enter key on search
+            document.getElementById('spotlightSearch').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchSpotlight();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
