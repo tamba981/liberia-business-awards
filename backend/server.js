@@ -1,5 +1,6 @@
 // ============================================
-// LIBERIA BUSINESS AWARDS - PRODUCTION FIXED
+// LIBERIA BUSINESS AWARDS - PRODUCTION SYSTEM
+// WITH ADS & BUSINESS SPOTLIGHT INTEGRATION
 // ============================================
 console.log('🚀 Liberia Business Awards - Production System Starting...');
 
@@ -16,7 +17,8 @@ const { body, validationResult } = require('express-validator');
 const cors = require('cors');
 const crypto = require('crypto');
 const admin = require('firebase-admin');
-const axios = require('axios');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -40,15 +42,17 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('he
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@liberiabusinessawardslr.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const GOOGLE_SHEETS_API = 'https://script.google.com/macros/s/AKfycbwHzw3mG57vNFI6HxxhjsUMH5tt07emTZcn65Y06CClnzwd5wCcvWJubri31miz47VY/exec';
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 
 // ============ SECURITY CONFIGURATION ============
 app.use(helmet({
-    contentSecurityPolicy: false, // Disable for development
+    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
 }));
 
+// Global rate limiting
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 500,
@@ -58,6 +62,20 @@ app.use(rateLimit({
 // ============ MIDDLEWARE ============
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(cookieParser());
+
+// Session configuration for ad tracking
+app.use(session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: 'lax'
+    }
+}));
 
 // CORS Configuration
 const corsOptions = {
@@ -95,7 +113,6 @@ async function connectToMongoDB() {
         });
         console.log('✅ MongoDB Atlas Connected');
         
-        // Create collections if they don't exist
         await createCollections();
         await createDefaultAdmin();
         
@@ -108,23 +125,18 @@ async function connectToMongoDB() {
 
 // ============ DATABASE SCHEMAS ============
 
-// User Schema (Simplified for quick setup)
+// User Schema
 const userSchema = new mongoose.Schema({
-    // Basic Info
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
     name: { type: String, required: true },
     company: { type: String, required: true },
     phone: { type: String },
-    
-    // Business Details
     business_type: { type: String },
     industry: { type: String },
     location: { type: String },
     year_established: { type: Number },
     employee_count: { type: String },
-    
-    // Account
     role: { 
         type: String, 
         enum: ['admin', 'business', 'judge', 'moderator'], 
@@ -136,19 +148,13 @@ const userSchema = new mongoose.Schema({
         default: 'pending' 
     },
     verified: { type: Boolean, default: false },
-    
-    // Profile
     avatar: { type: String },
     bio: { type: String },
     website: { type: String },
-    
-    // Stats
     awards_count: { type: Number, default: 0 },
     nominations_count: { type: Number, default: 0 },
     documents_count: { type: Number, default: 0 },
     profile_completion: { type: Number, default: 0 },
-    
-    // Timestamps
     last_login: { type: Date },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
@@ -160,39 +166,28 @@ const nominationSchema = new mongoose.Schema({
     category: { type: String, required: true },
     subcategory: { type: String },
     year: { type: Number, required: true, default: new Date().getFullYear() },
-    
-    // Details
     title: { type: String, required: true },
     description: { type: String, required: true },
     achievements: [String],
     challenges: [String],
     impact: { type: String },
-    
-    // Documents
     documents: [{
         name: String,
         url: String,
         type: String,
         uploaded_at: { type: Date, default: Date.now }
     }],
-    
-    // Status
     status: { 
         type: String, 
         enum: ['draft', 'submitted', 'under_review', 'shortlisted', 'approved', 'rejected', 'winner'],
         default: 'draft'
     },
-    
-    // Evaluation
     score: { type: Number, min: 0, max: 100 },
     feedback: { type: String },
     evaluated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     evaluated_at: { type: Date },
-    
-    // Dates
     submitted_at: { type: Date },
     approved_at: { type: Date },
-    
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });
@@ -203,48 +198,199 @@ const announcementSchema = new mongoose.Schema({
     content: { type: String, required: true },
     type: { type: String, enum: ['news', 'event', 'deadline', 'winner', 'update'] },
     category: { type: String },
-    
-    // Publishing
     is_published: { type: Boolean, default: false },
     is_featured: { type: Boolean, default: false },
     publish_date: { type: Date, default: Date.now },
     expiry_date: { type: Date },
-    
-    // Stats
     views: { type: Number, default: 0 },
-    
-    // Metadata
     created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
 });
+
+// ============ NEW ADS & SPOTLIGHT SCHEMAS ============
+
+// Advertiser Schema
+const advertiserSchema = new mongoose.Schema({
+    business_name: { type: String, required: true },
+    contact_name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    phone: String,
+    address: String,
+    registration_number: String,
+    tax_id: String,
+    payment_method: { 
+        type: String, 
+        enum: ['bank_transfer', 'mobile_money', 'card', 'cash'],
+        default: 'bank_transfer'
+    },
+    payment_details: String,
+    status: { 
+        type: String, 
+        enum: ['active', 'inactive', 'suspended'],
+        default: 'inactive'
+    },
+    verified_at: Date,
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+// Ad Campaign Schema
+const adCampaignSchema = new mongoose.Schema({
+    advertiser_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Advertiser', required: true },
+    campaign_name: { type: String, required: true },
+    campaign_type: { 
+        type: String, 
+        enum: ['popup', 'banner', 'sidebar', 'hero'],
+        required: true 
+    },
+    image_url: { type: String, required: true },
+    mobile_image_url: String,
+    alt_text: String,
+    target_url: { type: String, required: true },
+    start_date: { type: Date, required: true },
+    end_date: { type: Date, required: true },
+    total_budget: { type: Number, default: 0 },
+    daily_budget: Number,
+    max_impressions: Number,
+    max_clicks: Number,
+    current_impressions: { type: Number, default: 0 },
+    current_clicks: { type: Number, default: 0 },
+    target_audience: String,
+    device_types: { type: String, enum: ['all', 'desktop', 'mobile', 'tablet'], default: 'all' },
+    status: { 
+        type: String, 
+        enum: ['draft', 'pending', 'approved', 'rejected', 'active', 'paused', 'expired', 'completed'],
+        default: 'draft'
+    },
+    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    approved_at: Date,
+    rejection_reason: String,
+    payment_status: { 
+        type: String, 
+        enum: ['pending', 'paid', 'failed', 'refunded'],
+        default: 'pending'
+    },
+    payment_reference: String,
+    paid_at: Date,
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+// Ad Impression Schema
+const adImpressionSchema = new mongoose.Schema({
+    campaign_id: { type: mongoose.Schema.Types.ObjectId, ref: 'AdCampaign', required: true },
+    session_id: { type: String, required: true, index: true },
+    ip_address: String,
+    user_agent: String,
+    referrer: String,
+    device_type: { type: String, enum: ['desktop', 'mobile', 'tablet'], default: 'desktop' },
+    impression_time: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+// Ad Click Schema
+const adClickSchema = new mongoose.Schema({
+    campaign_id: { type: mongoose.Schema.Types.ObjectId, ref: 'AdCampaign', required: true },
+    impression_id: { type: mongoose.Schema.Types.ObjectId, ref: 'AdImpression' },
+    session_id: { type: String, required: true },
+    ip_address: String,
+    user_agent: String,
+    click_time: { type: Date, default: Date.now },
+    converted: { type: Boolean, default: false },
+    conversion_value: Number
+}, { timestamps: true });
+
+// News Category Schema
+const newsCategorySchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    description: String,
+    icon: String,
+    color: String,
+    display_order: { type: Number, default: 0 },
+    is_active: { type: Boolean, default: true }
+}, { timestamps: true });
+
+// News Article Schema
+const newsArticleSchema = new mongoose.Schema({
+    category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'NewsCategory', required: true },
+    title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    excerpt: String,
+    content: { type: String, required: true },
+    author_name: { type: String, required: true },
+    author_bio: String,
+    author_image: String,
+    business_name: { type: String, required: true },
+    business_owner: String,
+    business_logo: String,
+    business_website: String,
+    business_email: String,
+    business_phone: String,
+    featured_image: { type: String, required: true },
+    gallery_images: [String],
+    video_url: String,
+    meta_title: String,
+    meta_description: String,
+    meta_keywords: String,
+    status: { 
+        type: String, 
+        enum: ['draft', 'pending', 'published', 'featured', 'archived'],
+        default: 'draft'
+    },
+    published_at: Date,
+    view_count: { type: Number, default: 0 },
+    share_count: { type: Number, default: 0 },
+    is_featured: { type: Boolean, default: false },
+    is_breaking: { type: Boolean, default: false },
+    is_interview: { type: Boolean, default: false },
+    is_sponsored: { type: Boolean, default: false },
+    canonical_url: String,
+    robots_meta: { type: String, default: 'index, follow' }
+}, { timestamps: true });
+
+// News Comment Schema
+const newsCommentSchema = new mongoose.Schema({
+    article_id: { type: mongoose.Schema.Types.ObjectId, ref: 'NewsArticle', required: true },
+    parent_id: { type: mongoose.Schema.Types.ObjectId, ref: 'NewsComment' },
+    author_name: { type: String, required: true },
+    author_email: String,
+    author_website: String,
+    content: { type: String, required: true },
+    is_approved: { type: Boolean, default: false },
+    ip_address: String,
+    user_agent: String
+}, { timestamps: true });
 
 // Create Models
 const User = mongoose.model('User', userSchema);
 const Nomination = mongoose.model('Nomination', nominationSchema);
 const Announcement = mongoose.model('Announcement', announcementSchema);
+const Advertiser = mongoose.model('Advertiser', advertiserSchema);
+const AdCampaign = mongoose.model('AdCampaign', adCampaignSchema);
+const AdImpression = mongoose.model('AdImpression', adImpressionSchema);
+const AdClick = mongoose.model('AdClick', adClickSchema);
+const NewsCategory = mongoose.model('NewsCategory', newsCategorySchema);
+const NewsArticle = mongoose.model('NewsArticle', newsArticleSchema);
+const NewsComment = mongoose.model('NewsComment', newsCommentSchema);
 
 // ============ UTILITY FUNCTIONS ============
 async function createCollections() {
     try {
-        // Create collections if they don't exist
         const collections = await mongoose.connection.db.listCollections().toArray();
         const collectionNames = collections.map(c => c.name);
         
-        if (!collectionNames.includes('users')) {
-            await mongoose.connection.db.createCollection('users');
-            console.log('✅ Created users collection');
-        }
+        const requiredCollections = [
+            'users', 'nominations', 'announcements', 
+            'advertisers', 'adcampaigns', 'adimpressions', 'adclicks',
+            'newscategories', 'newsarticles', 'newscomments'
+        ];
         
-        if (!collectionNames.includes('nominations')) {
-            await mongoose.connection.db.createCollection('nominations');
-            console.log('✅ Created nominations collection');
-        }
-        
-        if (!collectionNames.includes('announcements')) {
-            await mongoose.connection.db.createCollection('announcements');
-            console.log('✅ Created announcements collection');
+        for (const collection of requiredCollections) {
+            if (!collectionNames.includes(collection)) {
+                await mongoose.connection.db.createCollection(collection);
+                console.log(`✅ Created ${collection} collection`);
+            }
         }
     } catch (error) {
         console.error('Collection creation error:', error);
@@ -336,6 +482,43 @@ const authorize = (...roles) => {
     };
 };
 
+// Ad tracking utilities
+function getSessionId(req) {
+    if (req.session && req.session.adSessionId) {
+        return req.session.adSessionId;
+    }
+    
+    if (req.cookies && req.cookies.ad_session) {
+        return req.cookies.ad_session;
+    }
+    
+    const sessionId = crypto.randomBytes(16).toString('hex');
+    
+    if (req.session) {
+        req.session.adSessionId = sessionId;
+    }
+    
+    res.cookie('ad_session', sessionId, { 
+        maxAge: 24 * 60 * 60 * 1000, 
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+    });
+    
+    return sessionId;
+}
+
+function getClientIp(req) {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) {
+        return forwarded.split(',')[0].trim();
+    }
+    return req.connection.remoteAddress || req.socket.remoteAddress || '0.0.0.0';
+}
+
+// ============ IMPORT ROUTES ============
+const adsRoutes = require('./routes/ads.routes')(AdCampaign, AdImpression, AdClick, getSessionId, getClientIp);
+const newsRoutes = require('./routes/news.routes')(NewsArticle, NewsCategory, NewsComment);
+
 // ============ API ROUTES ============
 
 // 1. HEALTH CHECK
@@ -348,12 +531,15 @@ app.get('/api/health', async (req, res) => {
         status: 'OK',
         timestamp: new Date().toISOString(),
         service: 'Liberia Business Awards API',
-        version: '2.0.0',
+        version: '3.0.0',
         database: isConnected ? 'connected' : 'disconnected',
         stats: {
             users: userCount,
             nominations: nominationCount,
-            businesses: await User.countDocuments({ role: 'business' }).catch(() => 0)
+            businesses: await User.countDocuments({ role: 'business' }).catch(() => 0),
+            advertisers: await Advertiser.countDocuments().catch(() => 0),
+            campaigns: await AdCampaign.countDocuments().catch(() => 0),
+            articles: await NewsArticle.countDocuments().catch(() => 0)
         },
         uptime: process.uptime(),
         memory: process.memoryUsage()
@@ -365,7 +551,6 @@ app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        // Validate input
         if (!email || !password) {
             return res.status(400).json({ 
                 success: false, 
@@ -373,7 +558,6 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
         
-        // Find user
         const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
             return res.status(400).json({ 
@@ -382,7 +566,6 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
         
-        // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ 
@@ -391,7 +574,6 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
         
-        // Check account status
         if (!['active', 'verified'].includes(user.status)) {
             return res.status(403).json({ 
                 success: false, 
@@ -399,11 +581,9 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
         
-        // Update last login
         user.last_login = new Date();
         await user.save();
         
-        // Create token
         const token = jwt.sign({ 
             userId: user._id, 
             role: user.role,
@@ -449,7 +629,6 @@ app.post('/api/auth/register', [
         
         const { email, password, name, company, phone, business_type } = req.body;
         
-        // Check if user exists
         let user = await User.findOne({ email: email.toLowerCase() });
         if (user) {
             return res.status(400).json({ 
@@ -458,11 +637,9 @@ app.post('/api/auth/register', [
             });
         }
         
-        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         
-        // Create user
         user = new User({
             email: email.toLowerCase(),
             password: hashedPassword,
@@ -477,7 +654,6 @@ app.post('/api/auth/register', [
         
         await user.save();
         
-        // Create token
         const token = jwt.sign({ 
             userId: user._id, 
             role: user.role,
@@ -512,20 +688,17 @@ app.get('/api/business/dashboard', authenticate, authorize('business'), async (r
     try {
         const user = req.user;
         
-        // Get business stats
         const [nominations, awards, documents] = await Promise.all([
             Nomination.countDocuments({ business_id: user._id }),
             Nomination.countDocuments({ business_id: user._id, status: 'winner' }),
             User.findById(user._id).select('documents_count')
         ]);
         
-        // Get recent nominations
         const recentNominations = await Nomination.find({ business_id: user._id })
             .sort({ created_at: -1 })
             .limit(5)
             .select('title category status created_at');
         
-        // Get announcements
         const announcements = await Announcement.find({ 
             is_published: true,
             publish_date: { $lte: new Date() },
@@ -571,160 +744,33 @@ app.get('/api/business/dashboard', authenticate, authorize('business'), async (r
     }
 });
 
-app.get('/api/business/profile', authenticate, authorize('business'), async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id)
-            .select('-password')
-            .populate('nominations', 'title category status year');
-        
-        if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Profile not found.' 
-            });
-        }
-        
-        res.json({
-            success: true,
-            profile: user
-        });
-        
-    } catch (error) {
-        console.error('Profile fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error fetching profile.' 
-        });
-    }
-});
-
-app.put('/api/business/profile', authenticate, authorize('business'), async (req, res) => {
-    try {
-        const updates = req.body;
-        
-        // Remove fields that shouldn't be updated directly
-        delete updates.password;
-        delete updates.role;
-        delete updates.status;
-        delete updates.email;
-        
-        // Calculate profile completion
-        let completion = 0;
-        const requiredFields = ['name', 'company', 'phone', 'business_type', 'industry', 'location'];
-        requiredFields.forEach(field => {
-            if (updates[field] || req.user[field]) completion += 14.28; // 100/7
-        });
-        
-        updates.profile_completion = Math.min(100, Math.round(completion));
-        
-        const user = await User.findByIdAndUpdate(
-            req.user._id,
-            { ...updates, updated_at: new Date() },
-            { new: true, runValidators: true }
-        ).select('-password');
-        
-        res.json({
-            success: true,
-            message: 'Profile updated successfully.',
-            profile: user
-        });
-        
-    } catch (error) {
-        console.error('Profile update error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error updating profile.' 
-        });
-    }
-});
-
-// 4. NOMINATION MANAGEMENT
-app.get('/api/business/nominations', authenticate, authorize('business'), async (req, res) => {
-    try {
-        const { status } = req.query;
-        let query = { business_id: req.user._id };
-        
-        if (status && status !== 'all') {
-            query.status = status;
-        }
-        
-        const nominations = await Nomination.find(query)
-            .populate('business_id', 'company name')
-            .sort({ created_at: -1 });
-        
-        const stats = {
-            total: await Nomination.countDocuments({ business_id: req.user._id }),
-            draft: await Nomination.countDocuments({ business_id: req.user._id, status: 'draft' }),
-            submitted: await Nomination.countDocuments({ business_id: req.user._id, status: 'submitted' }),
-            approved: await Nomination.countDocuments({ business_id: req.user._id, status: 'approved' }),
-            winner: await Nomination.countDocuments({ business_id: req.user._id, status: 'winner' })
-        };
-        
-        res.json({
-            success: true,
-            nominations,
-            stats,
-            count: nominations.length
-        });
-        
-    } catch (error) {
-        console.error('Nominations fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error fetching nominations.' 
-        });
-    }
-});
-
-app.post('/api/nominations', authenticate, authorize('business'), async (req, res) => {
-    try {
-        const nominationData = {
-            ...req.body,
-            business_id: req.user._id,
-            status: 'draft'
-        };
-        
-        const nomination = new Nomination(nominationData);
-        await nomination.save();
-        
-        // Update user's nomination count
-        await User.findByIdAndUpdate(req.user._id, {
-            $inc: { nominations_count: 1 }
-        });
-        
-        res.status(201).json({
-            success: true,
-            message: 'Nomination created successfully.',
-            nomination
-        });
-        
-    } catch (error) {
-        console.error('Nomination creation error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error creating nomination.' 
-        });
-    }
-});
-
-// 5. ADMIN DASHBOARD ROUTES
+// 4. ADMIN DASHBOARD ROUTES
 app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, res) => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
         
-        // Get all metrics
         const [
             totalBusinesses,
             totalNominations,
             pendingBusinesses,
+            totalAdvertisers,
+            totalCampaigns,
+            pendingCampaigns,
+            totalArticles,
+            pendingArticles,
             recentBusinesses,
             recentNominations
         ] = await Promise.all([
             User.countDocuments({ role: 'business' }),
             Nomination.countDocuments(),
             User.countDocuments({ role: 'business', status: 'pending' }),
+            Advertiser.countDocuments(),
+            AdCampaign.countDocuments(),
+            AdCampaign.countDocuments({ status: 'pending' }),
+            NewsArticle.countDocuments(),
+            NewsArticle.countDocuments({ status: 'pending' }),
             User.find({ role: 'business' })
                 .sort({ created_at: -1 })
                 .limit(5)
@@ -736,7 +782,6 @@ app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, re
                 .select('title category status created_at')
         ]);
         
-        // Get registration trend (last 7 days)
         const registrationTrend = await User.aggregate([
             { $match: { 
                 role: 'business',
@@ -757,7 +802,12 @@ app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, re
                     total_nominations: totalNominations,
                     pending_businesses: pendingBusinesses,
                     approved_nominations: await Nomination.countDocuments({ status: 'approved' }),
-                    active_users: await User.countDocuments({ status: 'active' })
+                    active_users: await User.countDocuments({ status: 'active' }),
+                    advertisers: totalAdvertisers,
+                    campaigns: totalCampaigns,
+                    pending_campaigns: pendingCampaigns,
+                    articles: totalArticles,
+                    pending_articles: pendingArticles
                 },
                 recent_activity: {
                     businesses: recentBusinesses,
@@ -784,6 +834,12 @@ app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, re
                             _id: "$status",
                             count: { $sum: 1 }
                         }}
+                    ]),
+                    campaign_types: await AdCampaign.aggregate([
+                        { $group: {
+                            _id: "$campaign_type",
+                            count: { $sum: 1 }
+                        }}
                     ])
                 }
             }
@@ -798,117 +854,11 @@ app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, re
     }
 });
 
-app.get('/api/admin/businesses', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const { status, search, page = 1, limit = 20 } = req.query;
-        
-        let query = { role: 'business' };
-        
-        if (status && status !== 'all') {
-            query.status = status;
-        }
-        
-        if (search) {
-            query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { company: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
-            ];
-        }
-        
-        const skip = (page - 1) * limit;
-        
-        const [businesses, total] = await Promise.all([
-            User.find(query)
-                .select('-password')
-                .sort({ created_at: -1 })
-                .skip(skip)
-                .limit(parseInt(limit)),
-            User.countDocuments(query)
-        ]);
-        
-        res.json({
-            success: true,
-            businesses,
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total,
-                pages: Math.ceil(total / limit)
-            },
-            stats: {
-                total,
-                pending: await User.countDocuments({ ...query, status: 'pending' }),
-                active: await User.countDocuments({ ...query, status: 'active' }),
-                verified: await User.countDocuments({ ...query, verified: true })
-            }
-        });
-        
-    } catch (error) {
-        console.error('Businesses fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error fetching businesses.' 
-        });
-    }
-});
-
-app.get('/api/admin/nominations', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const { status, page = 1, limit = 20 } = req.query;
-        
-        let query = {};
-        
-        if (status && status !== 'all') {
-            query.status = status;
-        }
-        
-        const skip = (page - 1) * limit;
-        
-        const [nominations, total] = await Promise.all([
-            Nomination.find(query)
-                .populate('business_id', 'company name email')
-                .sort({ created_at: -1 })
-                .skip(skip)
-                .limit(parseInt(limit)),
-            Nomination.countDocuments(query)
-        ]);
-        
-        res.json({
-            success: true,
-            nominations,
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total,
-                pages: Math.ceil(total / limit)
-            },
-            stats: {
-                total,
-                draft: await Nomination.countDocuments({ status: 'draft' }),
-                submitted: await Nomination.countDocuments({ status: 'submitted' }),
-                approved: await Nomination.countDocuments({ status: 'approved' }),
-                winner: await Nomination.countDocuments({ status: 'winner' })
-            }
-        });
-        
-    } catch (error) {
-        console.error('Nominations fetch error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error fetching nominations.' 
-        });
-    }
-});
-
-// 6. GOOGLE SHEETS INTEGRATION
+// 5. GOOGLE SHEETS INTEGRATION
 app.get('/api/sheets/data', authenticate, authorize('admin'), async (req, res) => {
     try {
         const { sheet } = req.query;
-        const sheetId = sheet || 'businesses'; // Default to businesses sheet
         
-        // This would normally fetch from your Google Sheet
-        // For now, return mock data
         const mockData = {
             businesses: {
                 headers: ['ID', 'Company', 'Email', 'Status', 'Registered', 'Nominations'],
@@ -931,13 +881,40 @@ app.get('/api/sheets/data', authenticate, authorize('admin'), async (req, res) =
                     new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
                     Math.floor(Math.random() * 100)
                 ])
+            },
+            advertisers: {
+                headers: ['ID', 'Business', 'Contact', 'Email', 'Status', 'Campaigns'],
+                data: Array.from({ length: 10 }, (_, i) => [
+                    `ADV${3000 + i}`,
+                    `Advertiser ${i + 1}`,
+                    `Contact ${i + 1}`,
+                    `advertiser${i + 1}@example.com`,
+                    i % 2 === 0 ? 'Active' : 'Inactive',
+                    Math.floor(Math.random() * 5)
+                ])
+            },
+            campaigns: {
+                headers: ['ID', 'Campaign', 'Type', 'Status', 'Impressions', 'CTR'],
+                data: Array.from({ length: 12 }, (_, i) => {
+                    const impressions = Math.floor(Math.random() * 10000);
+                    const clicks = Math.floor(Math.random() * impressions);
+                    const ctr = impressions > 0 ? ((clicks / impressions) * 100).toFixed(2) + '%' : '0%';
+                    return [
+                        `CAMP${4000 + i}`,
+                        `Campaign ${i + 1}`,
+                        ['Popup', 'Banner', 'Sidebar', 'Hero'][i % 4],
+                        ['Active', 'Pending', 'Completed'][i % 3],
+                        impressions.toLocaleString(),
+                        ctr
+                    ];
+                })
             }
         };
         
         res.json({
             success: true,
-            sheet: sheetId,
-            data: mockData[sheetId] || mockData.businesses,
+            sheet: sheet || 'all',
+            data: mockData[sheet] || mockData.businesses,
             last_updated: new Date().toISOString()
         });
         
@@ -950,7 +927,7 @@ app.get('/api/sheets/data', authenticate, authorize('admin'), async (req, res) =
     }
 });
 
-// 7. PUBLIC STATS
+// 6. PUBLIC STATS
 app.get('/api/stats/public', async (req, res) => {
     try {
         const [totalBusinesses, totalNominations, recentWinners] = await Promise.all([
@@ -982,10 +959,10 @@ app.get('/api/stats/public', async (req, res) => {
     }
 });
 
-// 8. FILE UPLOAD (Firebase)
+// 7. FILE UPLOAD (Firebase)
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+    limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 app.post('/api/upload', authenticate, upload.single('file'), async (req, res) => {
@@ -1000,7 +977,6 @@ app.post('/api/upload', authenticate, upload.single('file'), async (req, res) =>
         const file = req.file;
         const fileName = `${Date.now()}-${file.originalname}`;
         
-        // Upload to Firebase Storage if available
         let fileUrl = `/uploads/${fileName}`;
         
         if (firebaseApp) {
@@ -1018,17 +994,14 @@ app.post('/api/upload', authenticate, upload.single('file'), async (req, res) =>
                     }
                 });
                 
-                // Make file publicly accessible
                 await blob.makePublic();
                 fileUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
                 
             } catch (firebaseError) {
                 console.warn('Firebase upload failed, using local:', firebaseError.message);
-                // Save locally as fallback
                 await fs.writeFile(path.join(UPLOAD_DIR, fileName), file.buffer);
             }
         } else {
-            // Save locally
             await fs.mkdir(UPLOAD_DIR, { recursive: true });
             await fs.writeFile(path.join(UPLOAD_DIR, fileName), file.buffer);
         }
@@ -1053,19 +1026,29 @@ app.post('/api/upload', authenticate, upload.single('file'), async (req, res) =>
     }
 });
 
+// 8. ADS & SPOTLIGHT ROUTES
+app.use('/api', adsRoutes);
+app.use('/api', newsRoutes);
+
 // 9. HOME ROUTE
 app.get('/', (req, res) => {
     res.json({
         service: 'Liberia Business Awards API',
-        version: '2.0.0',
+        version: '3.0.0',
         status: 'operational',
         endpoints: {
             public: [
                 'GET  /',
                 'GET  /api/health',
                 'GET  /api/stats/public',
+                'GET  /api/ads',
+                'GET  /api/ads/next',
+                'GET  /api/news/articles',
+                'GET  /api/news/featured',
+                'GET  /api/news/categories',
                 'POST /api/auth/login',
-                'POST /api/auth/register'
+                'POST /api/auth/register',
+                'POST /api/news/comment'
             ],
             business: [
                 'GET  /api/business/dashboard',
@@ -1079,6 +1062,10 @@ app.get('/', (req, res) => {
                 'GET  /api/admin/businesses',
                 'GET  /api/admin/nominations',
                 'GET  /api/sheets/data'
+            ],
+            ads: [
+                'POST /api/ads/track/impression',
+                'POST /api/ads/track/click'
             ],
             upload: [
                 'POST /api/upload'
@@ -1104,16 +1091,13 @@ app.use('*', (req, res) => {
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
-    console.log('🚀 LIBERIA BUSINESS AWARDS - PRODUCTION SYSTEM');
+    console.log('🚀 LIBERIA BUSINESS AWARDS - PRODUCTION SYSTEM V3.0');
     console.log('='.repeat(70));
     
-    // Ensure upload directory exists
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
     
-    // Connect to MongoDB
     const connected = await connectToMongoDB();
     
-    // Start server
     app.listen(PORT, () => {
         console.log('\n✅ SERVER RUNNING');
         console.log('='.repeat(70));
@@ -1124,12 +1108,11 @@ async function startServer() {
         console.log(`🔥 Firebase: ${firebaseApp ? '✅ INITIALIZED' : '⚠️ NOT CONFIGURED'}`);
         console.log(`📁 Uploads: ${UPLOAD_DIR}`);
         console.log('='.repeat(70));
-        console.log('\n👥 AVAILABLE ENDPOINTS:');
-        console.log('   • POST /api/auth/login');
-        console.log('   • POST /api/auth/register');
-        console.log('   • GET  /api/business/dashboard');
-        console.log('   • GET  /api/admin/dashboard');
-        console.log('   • GET  /api/health');
+        console.log('\n📊 NEW FEATURES:');
+        console.log('   • 💰 Paid Ads System');
+        console.log('   • 📰 Business Spotlight');
+        console.log('   • 📈 Impression Tracking');
+        console.log('   • 👥 Advertiser Management');
         console.log('\n🚀 System ready for production!');
     });
 }
@@ -1144,7 +1127,6 @@ process.on('uncaughtException', (err) => {
     process.exit(1);
 });
 
-// Start the server
 startServer().catch(err => {
     console.error('❌ SERVER STARTUP FAILED:', err);
     process.exit(1);
