@@ -1076,6 +1076,30 @@ app.get('/', (req, res) => {
     });
 });
 
+// 9. Newsletter subscription
+app.post('/api/newsletter/subscribe', async (req, res) => {
+    try {
+        const { email, source } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email required' });
+        }
+        
+        // Here you can save to database or integrate with email service
+        console.log('📧 Newsletter subscription:', email, 'source:', source);
+        
+        // For now, just return success
+        res.json({ 
+            success: true, 
+            message: 'Subscription successful' 
+        });
+        
+    } catch (error) {
+        console.error('Newsletter error:', error);
+        res.status(500).json({ success: false, error: 'Server error' });
+    }
+});
+
 // 404 Handler
 app.use('*', (req, res) => {
     res.status(404).json({
@@ -1131,3 +1155,4 @@ startServer().catch(err => {
     console.error('❌ SERVER STARTUP FAILED:', err);
     process.exit(1);
 });
+
