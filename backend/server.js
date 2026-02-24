@@ -1156,3 +1156,15 @@ startServer().catch(err => {
     process.exit(1);
 });
 
+// TEMPORARY - REMOVE AFTER USE
+app.get('/api/admin/run-seed', async (req, res) => {
+    try {
+        // Copy the seed script logic here
+        const { seedSpotlight } = require('./scripts/seed-spotlight');
+        await seedSpotlight();
+        res.json({ success: true, message: 'Seed completed!' });
+    } catch (error) {
+        res.json({ success: false, error: error.message });
+    }
+});
+
