@@ -3845,114 +3845,118 @@ From selling on the streets of Monrovia</p>
     </footer>
 
     <!-- Modals -->
-        <!-- Register Modal -->
-    <div id="registerModal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300" role="dialog" aria-labelledby="registerModalTitle" aria-hidden="true">
-        <div class="modal-content bg-white rounded-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-2xl p-6 transform scale-95 transition-transform duration-300">
-            <div class="modal-header flex justify-between items-center mb-6">
-                <h3 id="registerModalTitle" class="text-2xl font-bold text-lba-red">Register Your Business</h3>
-                <button onclick="closeModal('registerModal')" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-lba-red rounded" aria-label="Close registration modal">
-                    <i class="fas fa-times text-xl" aria-hidden="true"></i>
-                </button>
-            </div>
-            <div class="modal-form-container">
-                <form id="registerForm">
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-    <!-- Business Name - Left Column -->
-    <div>
-        <label class="block text-gray-700 mb-2" for="reg-business-name">Business Name *</label>
-        <input type="text" id="reg-business-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
-    </div>
-    
-    <!-- Business Sector - Right Column -->
-    <div>
-        <label class="block text-gray-700 mb-2" for="reg-business-sector">Business Sector *</label>
-        <select id="reg-business-sector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
-            <option value="">Select Business Sector</option>
-            <option value="agriculture">Agriculture</option>
-            <option value="mining">Mining & Extractives</option>
-            <option value="oil-gas">Oil & Gas</option>
-            <option value="manufacturing">Manufacturing & Industrial</option>
-            <option value="construction">Construction & Real Estate</option>
-            <option value="energy">Energy & Utilities</option>
-            <option value="transportation">Transportation & Logistics</option>
-            <option value="ict">Information & Communications Technology</option>
-            <option value="financial">Financial Services</option>
-            <option value="education">Education</option>
-            <option value="health">Health</option>
-            <option value="tourism">Tourism & Hospitality</option>
-            <option value="trade">Trade & Commerce</option>
-            <option value="public-sector">Public Sector & Government</option>
-            <option value="civil-society">Civil Society & Nonprofit</option>
-            <option value="media">Media & Communications</option>
-            <option value="arts">Arts, Culture & Creative</option>
-            <option value="sports">Sports & Recreation</option>
-            <option value="other">Other</option>
-        </select>
-    </div>
-</div>
+        <!-- Register Modal (FIXED VERSION) -->
+<div id="registerModal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300" role="dialog" aria-labelledby="registerModalTitle" aria-hidden="true">
+    <div class="modal-content bg-white rounded-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-2xl p-6 transform scale-95 transition-transform duration-300">
+        <div class="modal-header flex justify-between items-center mb-6">
+            <h3 id="registerModalTitle" class="text-2xl font-bold text-lba-red">Register Your Business</h3>
+            <button onclick="closeModal('registerModal')" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-lba-red rounded" aria-label="Close registration modal">
+                <i class="fas fa-times text-xl" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="modal-form-container">
+            <form id="registerForm">
+                <!-- FIRST ROW: Business Name and Business Sector -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="reg-business-name">Business Name *</label>
+                        <input type="text" id="reg-business-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="reg-business-sector">Business Sector *</label>
+                        <select id="reg-business-sector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
+                            <option value="">Select Business Sector</option>
+                            <option value="agriculture">Agriculture</option>
+                            <option value="mining">Mining & Extractives</option>
+                            <option value="oil-gas">Oil & Gas</option>
+                            <option value="manufacturing">Manufacturing & Industrial</option>
+                            <option value="construction">Construction & Real Estate</option>
+                            <option value="energy">Energy & Utilities</option>
+                            <option value="transportation">Transportation & Logistics</option>
+                            <option value="ict">Information & Communications Technology</option>
+                            <option value="financial">Financial Services</option>
+                            <option value="education">Education</option>
+                            <option value="health">Health</option>
+                            <option value="tourism">Tourism & Hospitality</option>
+                            <option value="trade">Trade & Commerce</option>
+                            <option value="public-sector">Public Sector & Government</option>
+                            <option value="civil-society">Civil Society & Nonprofit</option>
+                            <option value="media">Media & Communications</option>
+                            <option value="arts">Arts, Culture & Creative</option>
+                            <option value="sports">Sports & Recreation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
 
-<!-- Second Row: Business Size (Full Width) -->
-<div class="mb-4">
-    <label class="block text-gray-700 mb-2" for="reg-business-size">Business Size/Type *</label>
-    <select id="reg-business-size" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
-        <option value="">Select Business Size/Type</option>
-        <option value="micro">Micro Enterprise (1-5 employees)</option>
-        <option value="small">Small Business (6-20 employees)</option>
-        <option value="medium">Medium Enterprise (21-100 employees)</option>
-        <option value="large">Large Enterprise (100+ employees)</option>
-        <option value="startup">Startup (under 3 years)</option>
-        <option value="sme">SME (Small/Medium Enterprise)</option>
-        <option value="enterprise">Enterprise</option>
-        <option value="ngo">NGO / Nonprofit</option>
-        <option value="government">Government Agency</option>
-        <option value="social-enterprise">Social Enterprise</option>
-        <option value="cooperative">Cooperative</option>
-        <option value="sole-proprietor">Sole Proprietorship</option>
-    </select>
-</div>
+                <!-- SECOND ROW: Business Size (Full Width) -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2" for="reg-business-size">Business Size/Type *</label>
+                    <select id="reg-business-size" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
+                        <option value="">Select Business Size/Type</option>
+                        <option value="micro">Micro Enterprise (1-5 employees)</option>
+                        <option value="small">Small Business (6-20 employees)</option>
+                        <option value="medium">Medium Enterprise (21-100 employees)</option>
+                        <option value="large">Large Enterprise (100+ employees)</option>
+                        <option value="startup">Startup (under 3 years)</option>
+                        <option value="sme">SME (Small/Medium Enterprise)</option>
+                        <option value="enterprise">Enterprise</option>
+                        <option value="ngo">NGO / Nonprofit</option>
+                        <option value="government">Government Agency</option>
+                        <option value="social-enterprise">Social Enterprise</option>
+                        <option value="cooperative">Cooperative</option>
+                        <option value="sole-proprietor">Sole Proprietorship</option>
+                    </select>
+                </div>
 
-<!-- Keep the hidden field for backward compatibility -->
-<input type="hidden" id="reg-business-type" name="businessType" value="">
+                <!-- THIRD ROW: Contact Person Name and Position -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="reg-contact-name">Contact Person Name *</label>
+                        <input type="text" id="reg-contact-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="reg-contact-name">Contact Person Name *</label>
-                            <input type="text" id="reg-contact-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required aria-required="true">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="reg-position">Position *</label>
-                            <input type="text" id="reg-position" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required aria-required="true">
-                        </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="reg-position">Position *</label>
+                        <input type="text" id="reg-position" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="reg-email">Email Address *</label>
-                            <input type="email" id="reg-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required aria-required="true">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="reg-phone">Phone Number *</label>
-                            <input type="tel" id="reg-phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required aria-required="true">
-                        </div>
+                </div>
+
+                <!-- FOURTH ROW: Email Address and Phone Number -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="reg-email">Email Address *</label>
+                        <input type="email" id="reg-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2" for="reg-address">Business Address *</label>
-                        <textarea id="reg-address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required aria-required="true"></textarea>
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="reg-phone">Phone Number *</label>
+                        <input type="tel" id="reg-phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
                     </div>
-                    <div class="mb-6">
-                        <label class="block text-gray-700 mb-2" for="reg-description">Business Description *</label>
-                        <textarea id="reg-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required aria-required="true"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer flex justify-end mt-6">
-                <button type="button" onclick="closeModal('registerModal')" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg mr-4 hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-gray-400">Cancel</button>
-                <button type="button" id="register-submit-btn" onclick="submitRegistrationForm()" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2">
-    <span class="button-text">Submit Registration</span>
-</button>
-            </div>
+                </div>
+
+                <!-- FIFTH ROW: Business Address (Full Width) -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2" for="reg-address">Business Address *</label>
+                    <textarea id="reg-address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required></textarea>
+                </div>
+
+                <!-- SIXTH ROW: Business Description (Full Width) -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2" for="reg-description">Business Description *</label>
+                    <textarea id="reg-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required></textarea>
+                </div>
+
+                <!-- Hidden field for backward compatibility -->
+                <input type="hidden" id="reg-business-type" name="businessType" value="">
+            </form>
+        </div>
+        <div class="modal-footer flex justify-end mt-6">
+            <button type="button" onclick="closeModal('registerModal')" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg mr-4 hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-gray-400">Cancel</button>
+            <button type="button" id="register-submit-btn" onclick="submitRegistrationForm()" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2">
+                <span class="button-text">Submit Registration</span>
+            </button>
         </div>
     </div>
-
+</div>
 
 
     <!-- Partner Modal -->
@@ -8731,6 +8735,7 @@ if ('connection' in navigator) {
 </body>
 
 </html>
+
 
 
 
