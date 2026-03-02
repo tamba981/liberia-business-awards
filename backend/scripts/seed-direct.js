@@ -2,7 +2,7 @@
 const { MongoClient } = require('mongodb');
 
 // Your CORRECT connection string - PASTE THIS EXACTLY
-const MONGODB_URI = 'mongodb+srv://liberia-admin:%40Motiva6060@cluster0.9outgyt.mongodb.net/liberia-business-awards?retryWrites=true&w=majority';
+const MONGODB_URI = 'mongodb+srv://liberia-admin:LiberiaSecure2026@cluster0.9outgyt.mongodb.net/liberia-business-awards?retryWrites=true&w=majority';
 
 async function seedDirect() {
     console.log('🔌 Connecting to MongoDB...');
