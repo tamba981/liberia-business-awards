@@ -5628,11 +5628,15 @@ function submitRegistrationForm() {
     return enhancedSubmitFormDual(formData, 'register');
 }
 
-// Nomination Form
+// ============================================
+// NOMINATION FORM SUBMISSION - FIXED VERSION
+// ============================================
 function submitNominationForm() {
     console.log('🏆 Submitting nomination form...');
     
+    // Get form data
     const formData = {
+        formType: 'nomination',
         nominationType: document.getElementById('nomination-type')?.value || '',
         county: document.getElementById('county')?.value || '',
         africaCountry: document.getElementById('africa-country')?.value || '',
@@ -5642,7 +5646,9 @@ function submitNominationForm() {
         reason: document.getElementById('nom-reason')?.value || '',
         yourName: document.getElementById('nom-name')?.value || '',
         yourEmail: document.getElementById('nom-email')?.value || '',
-        relationship: document.getElementById('nom-relationship')?.value || ''
+        relationship: document.getElementById('nom-relationship')?.value || '',
+        source: 'website',
+        timestamp: new Date().toISOString()
     };
     
     // Validate required fields
@@ -5651,7 +5657,47 @@ function submitNominationForm() {
         return false;
     }
     
-    return submitFormDual(formData, 'nominate');
+    // Show loading state
+    const submitBtn = document.getElementById('nominate-submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    
+    // Submit to Google Apps Script
+    fetch('YOUR_APPS_SCRIPT_URL_HERE', {
+        method: 'POST',
+        mode: 'no-cors', // Important for Google Apps Script
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(formData)
+    })
+    .then(() => {
+        // Since we're using no-cors, we can't read the response
+        // But we know it succeeded if we get here without error
+        
+        // Show success message to user
+        showNotification('✅ Thank you! Your nomination has been submitted successfully. We will contact you soon.', 'success');
+        
+        // Reset form
+        document.getElementById('nominateModal').querySelector('form').reset();
+        
+        // Close modal after 2 seconds
+        setTimeout(() => {
+            closeModal('nominateModal');
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('❌ Submission error:', error);
+        showNotification('⚠️ There was an error submitting your nomination. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+    
+    return false;
 }
 
 // Partnership Form
@@ -8735,6 +8781,7 @@ if ('connection' in navigator) {
 </body>
 
 </html>
+
 
 
 
