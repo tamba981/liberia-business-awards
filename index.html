@@ -5628,11 +5628,14 @@ function submitRegistrationForm() {
     return enhancedSubmitFormDual(formData, 'register');
 }
 
-// ============================================
-// NOMINATION FORM SUBMISSION - FIXED VERSION
+ // ============================================
+// ✅ NOMINATION FORM SUBMISSION - FIXED WITH CORRECT URL
 // ============================================
 function submitNominationForm() {
     console.log('🏆 Submitting nomination form...');
+    
+    // Get the correct URL from your config
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec'; // <-- USE THIS EXACT URL
     
     // Get form data
     const formData = {
@@ -5647,8 +5650,7 @@ function submitNominationForm() {
         yourName: document.getElementById('nom-name')?.value || '',
         yourEmail: document.getElementById('nom-email')?.value || '',
         relationship: document.getElementById('nom-relationship')?.value || '',
-        source: 'website',
-        timestamp: new Date().toISOString()
+        source: 'website'
     };
     
     // Validate required fields
@@ -5661,28 +5663,39 @@ function submitNominationForm() {
     const submitBtn = document.getElementById('nominate-submit-btn');
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+    
+    // Create form data
+    const formBody = new URLSearchParams();
+    Object.keys(formData).forEach(key => {
+        if (formData[key]) {
+            formBody.append(key, formData[key]);
+        }
+    });
     
     // Submit to Google Apps Script
-    fetch('YOUR_APPS_SCRIPT_URL_HERE', {
+    fetch(APPS_SCRIPT_URL, {  // <-- USING THE CORRECT URL VARIABLE
         method: 'POST',
-        mode: 'no-cors', // Important for Google Apps Script
+        mode: 'no-cors',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams(formData)
+        body: formBody
     })
     .then(() => {
-        // Since we're using no-cors, we can't read the response
-        // But we know it succeeded if we get here without error
-        
-        // Show success message to user
+        // Show success message
         showNotification('✅ Thank you! Your nomination has been submitted successfully. We will contact you soon.', 'success');
         
         // Reset form
-        document.getElementById('nominateModal').querySelector('form').reset();
+        const form = document.querySelector('#nominateModal form');
+        if (form) form.reset();
         
-        // Close modal after 2 seconds
+        // Hide conditional fields
+        document.getElementById('liberia-fields')?.classList.add('hidden');
+        document.getElementById('africa-fields')?.classList.add('hidden');
+        document.getElementById('international-fields')?.classList.add('hidden');
+        
+        // Close modal after delay
         setTimeout(() => {
             closeModal('nominateModal');
         }, 2000);
@@ -5692,13 +5705,14 @@ function submitNominationForm() {
         showNotification('⚠️ There was an error submitting your nomination. Please try again.', 'error');
     })
     .finally(() => {
-        // Reset button
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }, 3000);
     });
     
     return false;
-}
+}       
 
 // Partnership Form
 function submitPartnershipForm() {
@@ -8781,6 +8795,7 @@ if ('connection' in navigator) {
 </body>
 
 </html>
+
 
 
 
