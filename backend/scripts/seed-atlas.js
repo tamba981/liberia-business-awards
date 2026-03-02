@@ -1,7 +1,7 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 // EXACT connection string from Atlas with password replaced
-const uri = "mongodb+srv://liberia-admin:%40Motiva6060@cluster0.9outgyt.mongodb.net/liberia-business-awards?retryWrites=true&w=majority&appName=Cluster0";
+const uri = "mongodb+srv://liberia-admin:LiberiaSecure2026@cluster0.9outgyt.mongodb.net/liberia-business-awards?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with the Stable API version
 const client = new MongoClient(uri, {
