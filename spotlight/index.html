@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Primary Meta Tags -->
-    <title>Business Spotlight - Liberia Business Awards | Stories of Excellence</title>
-    <meta name="description" content="Discover inspiring stories of Liberian businesses, entrepreneurs, and innovators making an impact across Liberia and Africa.">
+    <title>Business Spotlight - Liberia Business Awards</title>
+    <meta name="description" content="Discover inspiring stories of Liberian businesses, entrepreneurs, and innovators making an impact.">
     
     <!-- Open Graph -->
     <meta property="og:title" content="Business Spotlight - Liberia Business Awards">
     <meta property="og:description" content="Recognizing Local Excellence, Celebrating National Impact">
-    <meta property="og:image" content="https://liberiabusinessawardslr.com/images/LBA-cover.png">
+    <meta property="og:image" content="/images/LBA-cover.png">
     <meta property="og:url" content="https://liberiabusinessawardslr.com/spotlight">
     
     <!-- Fonts & Icons -->
@@ -29,16 +29,17 @@
             --lba-red: #FF0000;
             --lba-blue: #87CEEB;
             --lba-dark: #1a202c;
+            --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
             --gray-600: #4b5563;
             --gray-800: #1f2937;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f9fafb;
+            background: var(--gray-50);
             color: var(--lba-dark);
-            line-height: 1.5;
         }
 
         h1, h2, h3, h4 {
@@ -51,7 +52,7 @@
             padding: 0 20px;
         }
 
-        /* Header - EXACTLY from your site */
+        /* Header */
         .site-header {
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -70,13 +71,11 @@
         .logo {
             display: flex;
             align-items: center;
-            text-decoration: none;
         }
 
         .logo img {
             height: 60px;
             width: auto;
-            margin-right: 15px;
         }
 
         .nav-links {
@@ -89,25 +88,19 @@
             color: var(--lba-dark);
             text-decoration: none;
             font-weight: 500;
-            font-size: 15px;
         }
 
-        .nav-links a:hover {
-            color: var(--lba-red);
-        }
-
+        .nav-links a:hover,
         .nav-links a.active {
             color: var(--lba-red);
-            font-weight: 600;
         }
 
         .btn {
             padding: 10px 24px;
             border-radius: 50px;
             font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
             border: none;
+            cursor: pointer;
             transition: all 0.3s;
         }
 
@@ -121,15 +114,14 @@
             transform: translateY(-2px);
         }
 
-        /* Hero Section */
-        .spotlight-hero {
-            background: linear-gradient(135deg, rgba(255,0,0,0.05) 0%, rgba(135,206,235,0.05) 100%);
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, rgba(255,0,0,0.05), rgba(135,206,235,0.05));
             padding: 60px 0;
             text-align: center;
-            border-bottom: 1px solid #e5e7eb;
         }
 
-        .spotlight-hero h1 {
+        .hero h1 {
             font-size: 48px;
             font-weight: 800;
             margin-bottom: 20px;
@@ -138,46 +130,18 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .spotlight-hero p {
+        .hero p {
             font-size: 18px;
             color: var(--gray-600);
             max-width: 700px;
-            margin: 0 auto 30px;
-        }
-
-        /* Stats */
-        .stats-grid {
-            display: flex;
-            justify-content: center;
-            gap: 50px;
-            margin: 40px 0 0;
-            padding: 30px 0 0;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 36px;
-            font-weight: 800;
-            color: var(--lba-red);
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: var(--gray-600);
-            font-weight: 500;
-            margin-top: 5px;
+            margin: 0 auto;
         }
 
         /* Categories */
-        .categories-section {
+        .categories {
             background: white;
             padding: 20px 0;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid var(--gray-200);
         }
 
         .categories-list {
@@ -187,42 +151,29 @@
             justify-content: center;
         }
 
-        .category-chip {
+        .category-item {
             padding: 8px 24px;
             border-radius: 50px;
             background: var(--gray-100);
             color: var(--lba-dark);
             font-weight: 600;
             font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .category-chip:hover {
-            background: #e5e7eb;
-        }
-
-        .category-chip.active {
+        .category-count {
             background: var(--lba-red);
             color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 12px;
         }
 
         /* Articles Grid */
         .articles-section {
             padding: 60px 0;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .section-header h2 {
-            font-size: 24px;
-            font-weight: 700;
         }
 
         .articles-grid {
@@ -235,9 +186,9 @@
             background: white;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             transition: all 0.3s;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--gray-200);
         }
 
         .article-card:hover {
@@ -248,53 +199,34 @@
 
         .card-image {
             height: 200px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .card-category {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: var(--lba-red);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
+            background: var(--gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-600);
+            font-size: 48px;
         }
 
         .card-content {
             padding: 20px;
         }
 
-        .card-meta {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-            font-size: 13px;
-            color: var(--gray-600);
+        .card-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--lba-red);
+            color: white;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
         }
 
         .card-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             margin-bottom: 10px;
-        }
-
-        .card-title a {
             color: var(--lba-dark);
-            text-decoration: none;
-        }
-
-        .card-title a:hover {
-            color: var(--lba-red);
         }
 
         .card-excerpt {
@@ -309,54 +241,47 @@
             justify-content: space-between;
             align-items: center;
             padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid var(--gray-200);
         }
 
         .card-business {
-            font-size: 13px;
             font-weight: 600;
             color: var(--lba-red);
+            font-size: 14px;
         }
 
         .read-more {
             color: var(--lba-blue);
             text-decoration: none;
-            font-size: 13px;
             font-weight: 600;
+            font-size: 14px;
         }
 
-        /* Loader */
-        .loader {
-            text-align: center;
-            padding: 60px;
-            grid-column: 1 / -1;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #f3f4f6;
-            border-top-color: var(--lba-red);
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .read-more:hover {
+            color: var(--lba-red);
         }
 
         /* Newsletter */
-        .newsletter-section {
+        .newsletter {
             background: linear-gradient(135deg, var(--lba-dark), #2d3748);
             color: white;
             padding: 60px 0;
             text-align: center;
         }
 
+        .newsletter h2 {
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        .newsletter p {
+            color: #cbd5e0;
+            margin-bottom: 30px;
+        }
+
         .newsletter-form {
             max-width: 500px;
-            margin: 30px auto 0;
+            margin: 0 auto;
             display: flex;
             gap: 10px;
         }
@@ -379,7 +304,7 @@
             cursor: pointer;
         }
 
-        /* Footer - EXACTLY from your site */
+        /* Footer */
         .site-footer {
             background: var(--lba-dark);
             color: white;
@@ -393,16 +318,9 @@
             margin-bottom: 40px;
         }
 
-        .footer-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
         .footer-logo img {
             height: 50px;
-            width: auto;
+            margin-bottom: 15px;
         }
 
         .footer-links h4 {
@@ -445,11 +363,6 @@
                 justify-content: center;
             }
             
-            .stats-grid {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
             .articles-grid {
                 grid-template-columns: 1fr;
             }
@@ -465,7 +378,7 @@
     </style>
 </head>
 <body>
-    <!-- Header - EXACT from your site -->
+    <!-- Header -->
     <header class="site-header">
         <div class="container">
             <div class="header-content">
@@ -489,33 +402,18 @@
     </header>
 
     <!-- Hero -->
-    <section class="spotlight-hero">
+    <section class="hero">
         <div class="container">
             <h1>Business Spotlight</h1>
             <p>Recognizing Local Excellence, Celebrating National Impact — featuring stories of Liberian businesses and entrepreneurs.</p>
-            
-            <div class="stats-grid" id="heroStats">
-                <div class="stat-item">
-                    <div class="stat-number">4</div>
-                    <div class="stat-label">Stories</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">4</div>
-                    <div class="stat-label">Categories</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">18+</div>
-                    <div class="stat-label">Sectors</div>
-                </div>
-            </div>
         </div>
     </section>
 
-    <!-- Categories -->
-    <div class="categories-section">
+    <!-- Categories with Counts -->
+    <div class="categories">
         <div class="container">
-            <div class="categories-list" id="categoriesBar">
-                <span class="category-chip active" data-category="all">All Stories</span>
+            <div class="categories-list" id="categoriesList">
+                <!-- Will be populated by JavaScript -->
             </div>
         </div>
     </div>
@@ -523,24 +421,17 @@
     <!-- Articles -->
     <section class="articles-section">
         <div class="container">
-            <div class="section-header">
-                <h2>Latest Stories</h2>
-            </div>
-            
-            <div id="lba-spotlight" class="articles-grid">
-                <div class="loader">
-                    <div class="spinner"></div>
-                    <p>Loading stories...</p>
-                </div>
+            <div id="articlesGrid" class="articles-grid">
+                <!-- Articles will be inserted here -->
             </div>
         </div>
     </section>
 
     <!-- Newsletter -->
-    <section class="newsletter-section">
+    <section class="newsletter">
         <div class="container">
-            <h2 style="font-size: 32px; margin-bottom: 15px;">Never Miss a Story</h2>
-            <p style="color: #cbd5e0;">Get the latest business stories delivered to your inbox.</p>
+            <h2>Never Miss a Story</h2>
+            <p>Get the latest business stories delivered to your inbox weekly.</p>
             <form class="newsletter-form" id="newsletterForm">
                 <input type="email" placeholder="Your email address" required>
                 <button type="submit">Subscribe</button>
@@ -548,7 +439,7 @@
         </div>
     </section>
 
-    <!-- Footer - EXACT from your site -->
+    <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
             <div class="footer-grid">
@@ -595,8 +486,58 @@
         </div>
     </footer>
 
-    <script src="/js/business-spotlight.js"></script>
     <script>
+        // Your actual data from MongoDB
+        const categories = [
+            { name: "Startup Spotlight", slug: "startup-spotlight", count: 1, color: "#FF0000" },
+            { name: "SME Success", slug: "sme-success", count: 1, color: "#87CEEB" },
+            { name: "Women Entrepreneurs", slug: "women-entrepreneurs", count: 1, color: "#F59E0B" },
+            { name: "Business Interviews", slug: "business-interviews", count: 1, color: "#8B5CF6" }
+        ];
+
+        const articles = [
+            {
+                id: 1,
+                category: "Startup Spotlight",
+                title: "How J-Palm Liberia is Transforming Agriculture",
+                excerpt: "From small beginnings to international recognition, discover how J-Palm Liberia is revolutionizing sustainable palm oil production.",
+                business: "J-Palm Liberia",
+                owner: "Mahmud Johnson",
+                image: "/images/featured/jpalm.jpg",
+                slug: "jpalm-liberia-transforming-agriculture"
+            },
+            {
+                id: 2,
+                category: "SME Success",
+                title: "Annita: Building Africa's Digital Heartbeat",
+                excerpt: "Liberia's first startup showcased at IATF 2025 - a platform integrating e-commerce, fintech, and AI.",
+                business: "Annita",
+                owner: "Christopher O. Fallah",
+                image: "/images/featured/annita.jpg",
+                slug: "annita-building-africa-digital-heartbeat"
+            },
+            {
+                id: 3,
+                category: "Women Entrepreneurs",
+                title: "Liberian Girls Lunchbox: Empowering Through Food",
+                excerpt: "Social enterprise providing nutritious meals while training young women in culinary arts.",
+                business: "Liberian Girls Lunchbox",
+                owner: "Christollie Ade Suah",
+                image: "/images/featured/lunchbox.jpg",
+                slug: "liberian-girls-lunchbox-empowering"
+            },
+            {
+                id: 4,
+                category: "Business Interviews",
+                title: "Gonet Academy: Empowering Minds, Transforming Futures",
+                excerpt: "Professional development academy that has certified 500+ professionals across 12 cohorts.",
+                business: "Gonet Academy",
+                owner: "Mohammed Kerkulah",
+                image: "/images/featured/gonet.jpg",
+                slug: "gonet-academy-empowering-minds"
+            }
+        ];
+
         function openNominateModal() {
             if (typeof window.openModal === 'function') {
                 window.openModal('nominateModal');
@@ -605,34 +546,50 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize spotlight
-            if (typeof LBASpotlight !== 'undefined') {
-                LBASpotlight.init('lba-spotlight', {
-                    debug: false,
-                    articlesPerPage: 12
-                });
+        function displayArticles(filterCategory = 'all') {
+            const grid = document.getElementById('articlesGrid');
+            
+            const filteredArticles = filterCategory === 'all' 
+                ? articles 
+                : articles.filter(a => a.category === filterCategory);
+            
+            grid.innerHTML = filteredArticles.map(article => `
+                <div class="article-card">
+                    <div class="card-image">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-category">${article.category}</span>
+                        <h3 class="card-title">${article.title}</h3>
+                        <p class="card-excerpt">${article.excerpt}</p>
+                        <div class="card-footer">
+                            <span class="card-business">
+                                <i class="fas fa-building"></i> ${article.business}
+                            </span>
+                            <a href="/spotlight/${article.slug}" class="read-more">
+                                Read Full Story <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-                // Load categories
-                LBASpotlight.getCategories().then(categories => {
-                    const bar = document.getElementById('categoriesBar');
-                    categories.forEach(cat => {
-                        const chip = document.createElement('span');
-                        chip.className = 'category-chip';
-                        chip.setAttribute('data-category', cat.slug);
-                        chip.textContent = cat.name;
-                        chip.onclick = () => {
-                            document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
-                            chip.classList.add('active');
-                            // Filter by category
-                            if (typeof LBASpotlight.filterByCategory === 'function') {
-                                LBASpotlight.filterByCategory(cat.slug);
-                            }
-                        };
-                        bar.appendChild(chip);
-                    });
-                });
-            }
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Display categories
+            const categoriesList = document.getElementById('categoriesList');
+            categoriesList.innerHTML = `
+                <span class="category-item active" onclick="displayArticles('all')">All Stories <span class="category-count">${articles.length}</span></span>
+                ${categories.map(cat => `
+                    <span class="category-item" onclick="displayArticles('${cat.name}')">
+                        ${cat.name} <span class="category-count">${cat.count}</span>
+                    </span>
+                `).join('')}
+            `;
+
+            // Display all articles
+            displayArticles('all');
 
             // Newsletter form
             document.getElementById('newsletterForm').addEventListener('submit', function(e) {
