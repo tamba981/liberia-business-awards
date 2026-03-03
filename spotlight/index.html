@@ -161,14 +161,29 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .category-item:hover {
+            background: #e5e7eb;
+        }
+
+        .category-item.active {
+            background: var(--lba-red);
+            color: white;
         }
 
         .category-count {
-            background: var(--lba-red);
-            color: white;
+            background: rgba(255,255,255,0.2);
             padding: 2px 8px;
             border-radius: 20px;
             font-size: 12px;
+        }
+
+        .active .category-count {
+            background: rgba(255,255,255,0.3);
         }
 
         /* Articles Grid */
@@ -198,13 +213,20 @@
         }
 
         .card-image {
-            height: 200px;
+            height: 220px;
+            overflow: hidden;
             background: var(--gray-100);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gray-600);
-            font-size: 48px;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .article-card:hover .card-image img {
+            transform: scale(1.05);
         }
 
         .card-content {
@@ -227,6 +249,7 @@
             font-weight: 700;
             margin-bottom: 10px;
             color: var(--lba-dark);
+            line-height: 1.4;
         }
 
         .card-excerpt {
@@ -248,6 +271,9 @@
             font-weight: 600;
             color: var(--lba-red);
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .read-more {
@@ -255,10 +281,14 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .read-more:hover {
             color: var(--lba-red);
+            gap: 8px;
         }
 
         /* Newsletter */
@@ -409,11 +439,11 @@
         </div>
     </section>
 
-    <!-- Categories with Counts -->
+    <!-- Categories -->
     <div class="categories">
         <div class="container">
             <div class="categories-list" id="categoriesList">
-                <!-- Will be populated by JavaScript -->
+                <!-- Populated by JavaScript -->
             </div>
         </div>
     </div>
@@ -422,7 +452,7 @@
     <section class="articles-section">
         <div class="container">
             <div id="articlesGrid" class="articles-grid">
-                <!-- Articles will be inserted here -->
+                <!-- Populated by JavaScript -->
             </div>
         </div>
     </section>
@@ -489,10 +519,10 @@
     <script>
         // Your actual data from MongoDB
         const categories = [
-            { name: "Startup Spotlight", slug: "startup-spotlight", count: 1, color: "#FF0000" },
-            { name: "SME Success", slug: "sme-success", count: 1, color: "#87CEEB" },
-            { name: "Women Entrepreneurs", slug: "women-entrepreneurs", count: 1, color: "#F59E0B" },
-            { name: "Business Interviews", slug: "business-interviews", count: 1, color: "#8B5CF6" }
+            { name: "Startup Spotlight", slug: "startup-spotlight", count: 1 },
+            { name: "SME Success", slug: "sme-success", count: 1 },
+            { name: "Women Entrepreneurs", slug: "women-entrepreneurs", count: 1 },
+            { name: "Business Interviews", slug: "business-interviews", count: 1 }
         ];
 
         const articles = [
@@ -522,7 +552,7 @@
                 title: "Liberian Girls Lunchbox: Empowering Through Food",
                 excerpt: "Social enterprise providing nutritious meals while training young women in culinary arts.",
                 business: "Liberian Girls Lunchbox",
-                owner: "Christollie Ade Suah",
+                business_owner: "Christollie Ade Suah",
                 image: "/images/featured/lunchbox.jpg",
                 slug: "liberian-girls-lunchbox-empowering"
             },
@@ -532,7 +562,7 @@
                 title: "Gonet Academy: Empowering Minds, Transforming Futures",
                 excerpt: "Professional development academy that has certified 500+ professionals across 12 cohorts.",
                 business: "Gonet Academy",
-                owner: "Mohammed Kerkulah",
+                business_owner: "Mohammed Kerkulah",
                 image: "/images/featured/gonet.jpg",
                 slug: "gonet-academy-empowering-minds"
             }
@@ -553,10 +583,22 @@
                 ? articles 
                 : articles.filter(a => a.category === filterCategory);
             
+            if (filteredArticles.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                        <i class="fas fa-newspaper" style="font-size: 48px; color: #cbd5e0;"></i>
+                        <p style="margin-top: 20px; color: #64748b;">No stories in this category yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
             grid.innerHTML = filteredArticles.map(article => `
                 <div class="article-card">
                     <div class="card-image">
-                        <i class="fas fa-building"></i>
+                        <img src="${article.image}" 
+                             alt="${article.business}"
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/FF0000/ffffff?text=${article.business.replace(/ /g, '+')}';">
                     </div>
                     <div class="card-content">
                         <span class="card-category">${article.category}</span>
@@ -567,7 +609,7 @@
                                 <i class="fas fa-building"></i> ${article.business}
                             </span>
                             <a href="/spotlight/${article.slug}" class="read-more">
-                                Read Full Story <i class="fas fa-arrow-right"></i>
+                                Read Story <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
                     </div>
@@ -580,9 +622,11 @@
             // Display categories
             const categoriesList = document.getElementById('categoriesList');
             categoriesList.innerHTML = `
-                <span class="category-item active" onclick="displayArticles('all')">All Stories <span class="category-count">${articles.length}</span></span>
+                <span class="category-item active" onclick="displayArticles('all'); document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active')); this.classList.add('active');">
+                    All Stories <span class="category-count">${articles.length}</span>
+                </span>
                 ${categories.map(cat => `
-                    <span class="category-item" onclick="displayArticles('${cat.name}')">
+                    <span class="category-item" onclick="displayArticles('${cat.name}'); document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active')); this.classList.add('active');">
                         ${cat.name} <span class="category-count">${cat.count}</span>
                     </span>
                 `).join('')}
@@ -594,7 +638,7 @@
             // Newsletter form
             document.getElementById('newsletterForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                alert('Thank you for subscribing!');
+                alert('Thank you for subscribing! You\'ll receive our weekly spotlight stories.');
                 this.reset();
             });
         });
