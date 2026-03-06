@@ -1244,10 +1244,10 @@
                         <span>Announcements</span>
                     </a>
                     <a href="#" class="menu-item" onclick="showSpotlightModal()">
-        <i class="fas fa-newspaper"></i>
-        <span>Business Spotlight</span>
-        <span class="badge" id="spotlightCount">0</span>
-    </a>
+                        <i class="fas fa-newspaper"></i>
+                        <span>Business Spotlight</span>
+                        <span class="badge" id="spotlightCount">0</span>
+                    </a>
                     
                     <a href="#" class="menu-item" onclick="showCategoriesModal()">
                         <i class="fas fa-list-alt"></i>
@@ -1645,13 +1645,14 @@
         </div>
     </div>
 
-            <!-- Dashboard Script - FIXED VERSION -->
+    <!-- Dashboard Script - FIXED VERSION WITH CORS FIX -->
     <script>
         // ============================================
         // CONFIGURATION - UPDATED
         // ============================================
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
         const GOOGLE_SHEETS_VIEW_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit';
+        const API_BASE = 'https://liberia-business-awards-backend.onrender.com/api';
         const SESSION_TIMEOUT = 60; // minutes
         const REFRESH_INTERVAL = 30000; // 30 seconds
 
@@ -1687,12 +1688,6 @@
                 
                 // Setup UI components
                 setupUserInterface();
-                
-                // Verify API endpoints
-                await verifyApiEndpoints();
-                
-                // Test API connection
-                await testApiConnection();
                 
                 // Load initial data
                 await loadInitialData();
@@ -1815,115 +1810,82 @@
         }
 
         // ============================================
-        // API CONNECTION - FIXED
+        // FIXED: SIMPLIFIED FETCH FUNCTIONS - NO CORS ISSUES
         // ============================================
-        async function fetchWithTimeout(url, options = {}) {
-            const { timeout = 10000, ...fetchOptions } = options;
+        async function fetchFromSheets(action) {
+            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=${action}`;
             
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeout);
+            console.log(`📡 Fetching: ${url}`);
             
             try {
-                // ✅ FIXED: Added the actual fetch call
-                const response = await fetch(url, { 
-                    ...fetchOptions, 
-                    signal: controller.signal 
+                // Simple fetch - no CORS mode, no complex options
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
                 });
                 
-                clearTimeout(id);
-                
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status}`);
                 }
                 
-                return await response.text();
+                const text = await response.text();
                 
-            } catch (error) {
-                clearTimeout(id);
-                if (error.name === 'AbortError') {
-                    throw new Error('Request timeout');
-                }
-                throw error;
-            }
-        }
-
-        async function fetchWithRetry(url, options = {}, retries = 3) {
-            for (let i = 0; i < retries; i++) {
                 try {
-                    return await fetchWithTimeout(url, options);
-                } catch (error) {
-                    console.log(`🔄 Retry ${i + 1}/${retries} for ${url}`);
-                    if (i === retries - 1) throw error;
-                    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                    const data = JSON.parse(text);
+                    return data;
+                } catch (e) {
+                    console.log('📄 Response is not JSON:', text.substring(0, 100));
+                    return { success: false, error: 'Invalid JSON response' };
                 }
-            }
-        }
-
-        async function fetchJson(url, options = {}) {
-            try {
-                const response = await fetchWithRetry(url, {
-                    ...options,
-                    timeout: 15000,
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...options.headers
-                    }
-                }, 3);
-                
-                const data = JSON.parse(response);
-                
-                if (data.status === 'ERROR') {
-                    throw new Error(data.error?.message || 'API error');
-                }
-                
-                return data;
                 
             } catch (error) {
                 console.error('❌ Fetch error:', error);
-                throw error;
+                return { success: false, error: error.message };
             }
         }
 
-        async function verifyApiEndpoints() {
-            console.log('🔍 Verifying API endpoints...');
-            
-            const endpoints = ['ping', 'getStats', 'getAllData', 'getActivity'];
-            
-            for (const endpoint of endpoints) {
-                try {
-                    const response = await fetchWithTimeout(
-                        `${GOOGLE_APPS_SCRIPT_URL}?action=${endpoint}`,
-                        { timeout: 5000 }
-                    );
-                    console.log(`✅ ${endpoint}: OK`);
-                } catch (error) {
-                    console.warn(`⚠️ ${endpoint}: Failed - ${error.message}`);
-                }
-            }
+        // Update your fetchDashboardStats function
+        async function fetchDashboardStats() {
+            const data = await fetchFromSheets('getStats');
+            return data;
+        }
+
+        // Update your fetchRecentActivity function
+        async function fetchRecentActivity() {
+            const data = await fetchFromSheets('getActivity');
+            return data;
+        }
+
+        // Update your fetchAllSheetData function
+        async function fetchAllSheetData() {
+            const data = await fetchFromSheets('getAllData');
+            return data;
         }
 
         async function testApiConnection() {
             console.log('🔌 Testing API connection...');
             
             try {
-                const response = await fetchWithTimeout(`${GOOGLE_APPS_SCRIPT_URL}?action=ping`, {
-                    timeout: 10000
-                });
-                
-                if (response === 'OK' || response.includes('OK')) {
+                const data = await fetchFromSheets('ping');
+                if (data && (data.status === 'OK' || data.success === true)) {
                     dashboardState.isConnected = true;
                     console.log('✅ API Connection: OK');
                     return true;
                 }
-                
                 throw new Error('Invalid response');
-                
             } catch (error) {
                 console.error('❌ API Connection failed:', error);
                 dashboardState.isConnected = false;
                 return false;
             }
+        }
+
+        async function verifyApiEndpoints() {
+            console.log('🔍 Verifying API endpoints...');
+            // Simplified - just test connection
+            await testApiConnection();
         }
 
         async function checkConnection() {
@@ -1959,7 +1921,7 @@
         }
 
         // ============================================
-        // DATA LOADING - FIXED
+        // DATA LOADING
         // ============================================
         async function loadInitialData() {
             console.log('📊 Loading initial data...');
@@ -1970,19 +1932,19 @@
             try {
                 // Load dashboard statistics
                 const stats = await fetchDashboardStats();
-                if (stats) {
+                if (stats && stats.success) {
                     updateDashboardStats(stats);
                 }
                 
                 // Load recent activity
                 const activity = await fetchRecentActivity();
-                if (activity) {
+                if (activity && activity.activity) {
                     updateRecentActivity(activity);
                 }
                 
                 // Load sheet data
                 const allData = await fetchAllSheetData();
-                if (allData) {
+                if (allData && allData.success) {
                     processSheetData(allData);
                     updateSheetStats();
                 }
@@ -2009,8 +1971,8 @@
                     fetchRecentActivity()
                 ]);
                 
-                if (stats) updateDashboardStats(stats);
-                if (activity) updateRecentActivity(activity);
+                if (stats && stats.success) updateDashboardStats(stats);
+                if (activity && activity.activity) updateRecentActivity(activity);
                 
                 dashboardState.lastUpdate = new Date();
                 updateLastUpdateDisplay();
@@ -2021,63 +1983,12 @@
         }
 
         // ============================================
-        // API FETCH FUNCTIONS - FIXED
-        // ============================================
-        async function fetchDashboardStats() {
-            try {
-                const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getStats`);
-                
-                // Check correct response structure
-                if (response && response.success === true) {
-                    return response;
-                }
-                
-                throw new Error('Invalid response format');
-                
-            } catch (error) {
-                console.error('❌ Failed to fetch stats:', error);
-                return null;
-            }
-        }
-
-        async function fetchAllSheetData() {
-            try {
-                const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllData`);
-                
-                if (response && response.success === true && response.data) {
-                    return response.data;
-                }
-                
-                throw new Error('Invalid data format');
-                
-            } catch (error) {
-                console.error('❌ Failed to fetch sheet data:', error);
-                return null;
-            }
-        }
-
-        async function fetchRecentActivity() {
-            try {
-                const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getActivity`);
-                
-                if (response && response.success === true && response.data) {
-                    return response.data.activity || [];
-                }
-                
-                throw new Error('Invalid activity data');
-                
-            } catch (error) {
-                console.error('❌ Failed to fetch activity:', error);
-                return null;
-            }
-        }
-
-        // ============================================
         // DATA PROCESSING
         // ============================================
         function processSheetData(data) {
             if (!data || !data.submissions || !Array.isArray(data.submissions)) {
-                throw new Error('Invalid sheet data structure');
+                console.warn('Invalid sheet data structure');
+                return;
             }
             
             // Reset state
@@ -2137,37 +2048,23 @@
         }
 
         // ============================================
-        // UI UPDATES - FIXED
+        // UI UPDATES
         // ============================================
         function updateDashboardStats(response) {
             if (!response) return;
             
-            // Handle both response formats
-            const stats = response.data || response;
+            const stats = response;
             
             // Update main stats
-            document.getElementById('totalBusinesses').textContent = stats.totalBusinesses || 
-                                                                   stats.businessCount || 
-                                                                   stats.sheetStats?.Registrations?.total || 0;
-            
-            document.getElementById('totalNominations').textContent = stats.totalNominations || 
-                                                                      stats.nominationCount || 
-                                                                      stats.sheetStats?.Nominations?.total || 0;
-            
-            document.getElementById('approvedNominations').textContent = stats.approvedNominations || 
-                                                                        stats.sheetStats?.Nominations?.approved || 0;
-            
-            document.getElementById('totalSubmissions').textContent = stats.totalSubmissions || 
-                                                                      stats.submissionCount || 0;
-            document.getElementById('activeUsers').textContent = stats.totalSubmissions || 
-                                                                 stats.activeUsers || 0;
+            document.getElementById('totalBusinesses').textContent = stats.totalSubmissions || 0;
+            document.getElementById('totalNominations').textContent = stats.summary?.totalNominations || 0;
+            document.getElementById('approvedNominations').textContent = stats.summary?.approvedNominations || 0;
+            document.getElementById('totalSubmissions').textContent = stats.totalSubmissions || 0;
+            document.getElementById('activeUsers').textContent = stats.totalSubmissions || 0;
             
             // Update menu badges
-            document.getElementById('businessCount').textContent = stats.totalBusinesses || 
-                                                                  stats.sheetStats?.Registrations?.total || 0;
-            
-            document.getElementById('nominationCount').textContent = stats.totalNominations || 
-                                                                    stats.sheetStats?.Nominations?.total || 0;
+            document.getElementById('businessCount').textContent = stats.summary?.totalBusinesses || 0;
+            document.getElementById('nominationCount').textContent = stats.summary?.totalNominations || 0;
             
             // Update trend indicators
             updateTrendIndicators(stats);
@@ -2179,18 +2076,18 @@
         function updateTrendIndicators(stats) {
             // Business trend
             const businessTrend = document.getElementById('businessTrend');
-            const businessGrowth = stats.todayBusinesses > 0 ? `+${stats.todayBusinesses} today` : 'No new today';
+            const businessGrowth = stats.todaySubmissions > 0 ? `+${stats.todaySubmissions} today` : 'No new today';
             businessTrend.innerHTML = `<i class="fas fa-chart-line"></i><span>${businessGrowth}</span>`;
             
             // Nomination trend
             const nominationTrend = document.getElementById('nominationTrend');
-            const nominationGrowth = stats.todayNominations > 0 ? `+${stats.todayNominations} today` : 'No new today';
+            const nominationGrowth = stats.todaySubmissions > 0 ? `+${stats.todaySubmissions} today` : 'No new today';
             nominationTrend.innerHTML = `<i class="fas fa-chart-line"></i><span>${nominationGrowth}</span>`;
             
             // Approval trend
             const approvalTrend = document.getElementById('approvalTrend');
-            const totalNoms = stats.totalNominations || 0;
-            const approvedNoms = stats.approvedNominations || 0;
+            const totalNoms = stats.summary?.totalNominations || 0;
+            const approvedNoms = stats.summary?.approvedNominations || 0;
             const approvalRate = totalNoms > 0 ? Math.round((approvedNoms / totalNoms) * 100) + '% rate' : '0% rate';
             approvalTrend.innerHTML = `<i class="fas fa-percentage"></i><span>${approvalRate}</span>`;
             
@@ -2200,8 +2097,9 @@
             userTrend.innerHTML = `<i class="fas fa-users"></i><span>${userGrowth}</span>`;
         }
 
-        function updateRecentActivity(activity) {
+        function updateRecentActivity(activityData) {
             const activityList = document.getElementById('activityList');
+            const activity = activityData.activity || [];
             
             if (!activity || activity.length === 0) {
                 activityList.innerHTML = `
@@ -2393,17 +2291,16 @@
             // Create basic data structure
             const fallbackData = {
                 success: true,
-                data: {
-                    totalSubmissions: 0,
-                    todaySubmissions: 0,
+                totalSubmissions: 0,
+                todaySubmissions: 0,
+                summary: {
                     totalBusinesses: 0,
                     totalNominations: 0,
-                    approvedNominations: 0,
-                    pendingReview: 0,
-                    sheetStats: {
-                        Registrations: { total: 0, active: 0, pending: 0 },
-                        Nominations: { total: 0, approved: 0, pending: 0 }
-                    }
+                    approvedNominations: 0
+                },
+                sheetStats: {
+                    Registrations: { total: 0, active: 0, pending: 0 },
+                    Nominations: { total: 0, approved: 0, pending: 0 }
                 }
             };
             
@@ -2440,7 +2337,7 @@
             
             try {
                 const data = await fetchAllSheetData();
-                if (data) {
+                if (data && data.success) {
                     processSheetData(data);
                     renderSheetData();
                     showNotification('✅ Data loaded successfully', 'success');
@@ -2961,690 +2858,683 @@
         console.log('🎯 Features: Real-time Google Sheets integration with sample data fallback');
 
         // ============================================
-// SPOTLIGHT MANAGEMENT SYSTEM
-// ============================================
+        // SPOTLIGHT MANAGEMENT SYSTEM
+        // ============================================
 
-// API Base URL
-const API_BASE = 'https://liberia-business-awards-backend.onrender.com/api';
+        // Spotlight State
+        let spotlightCategories = [];
+        let spotlightStories = [];
+        let currentStoryFilter = 'all';
+        let spotlightSearchTerm = '';
 
-// Spotlight State
-let spotlightCategories = [];
-let spotlightStories = [];
-let currentStoryFilter = 'all';
-let spotlightSearchTerm = '';
-
-// ============ MODAL OPEN/CLOSE ============
-function showSpotlightModal() {
-    hideAllModals();
-    const modal = document.getElementById('spotlightModal');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Load data
-    loadSpotlightCategories();
-    loadSpotlightStories();
-}
-
-// ============ LOAD CATEGORIES ============
-async function loadSpotlightCategories() {
-    try {
-        const response = await fetch(`${API_BASE}/news/categories`);
-        const data = await response.json();
-        
-        if (data.success) {
-            spotlightCategories = data.categories || [];
+        // ============ MODAL OPEN/CLOSE ============
+        function showSpotlightModal() {
+            hideAllModals();
+            const modal = document.getElementById('spotlightModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
             
-            // Update categories grid
-            const grid = document.getElementById('categoriesGrid');
-            if (grid) {
-                if (spotlightCategories.length === 0) {
-                    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No categories yet</p>';
-                } else {
-                    grid.innerHTML = spotlightCategories.map(cat => `
-                        <div style="background: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${cat.color || '#FF0000'}; display: flex; justify-content: space-between; align-items: center;">
-                            <span><i class="fas ${cat.icon || 'fa-tag'}"></i> ${cat.name}</span>
-                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 12px;">${cat.article_count || 0}</span>
-                        </div>
-                    `).join('');
-                }
-            }
-            
-            // Update category filter dropdown
-            const filter = document.getElementById('categoryFilter');
-            if (filter) {
-                filter.innerHTML = '<option value="all">All Categories</option>' + 
-                    spotlightCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
-            }
-            
-            // Update category select in story modal
-            const select = document.getElementById('storyCategory');
-            if (select) {
-                select.innerHTML = '<option value="">Select Category</option>' + 
-                    spotlightCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
-            }
-            
-            document.getElementById('totalCategories').textContent = spotlightCategories.length;
+            // Load data
+            loadSpotlightCategories();
+            loadSpotlightStories();
         }
-    } catch (error) {
-        console.error('Error loading categories:', error);
-        showNotification('Error loading categories', 'error');
-    }
-}
 
-// ============ LOAD STORIES ============
-async function loadSpotlightStories() {
-    try {
-        const response = await fetch(`${API_BASE}/news/articles?limit=100`);
-        const data = await response.json();
-        
-        if (data.success) {
-            spotlightStories = data.articles || [];
+        // ============ LOAD CATEGORIES ============
+        async function loadSpotlightCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/news/categories`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    spotlightCategories = data.categories || [];
+                    
+                    // Update categories grid
+                    const grid = document.getElementById('categoriesGrid');
+                    if (grid) {
+                        if (spotlightCategories.length === 0) {
+                            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No categories yet</p>';
+                        } else {
+                            grid.innerHTML = spotlightCategories.map(cat => `
+                                <div style="background: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${cat.color || '#FF0000'}; display: flex; justify-content: space-between; align-items: center;">
+                                    <span><i class="fas ${cat.icon || 'fa-tag'}"></i> ${cat.name}</span>
+                                    <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 12px;">${cat.article_count || 0}</span>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                    
+                    // Update category filter dropdown
+                    const filter = document.getElementById('categoryFilter');
+                    if (filter) {
+                        filter.innerHTML = '<option value="all">All Categories</option>' + 
+                            spotlightCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+                    }
+                    
+                    // Update category select in story modal
+                    const select = document.getElementById('storyCategory');
+                    if (select) {
+                        select.innerHTML = '<option value="">Select Category</option>' + 
+                            spotlightCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+                    }
+                    
+                    document.getElementById('totalCategories').textContent = spotlightCategories.length;
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                showNotification('Error loading categories', 'error');
+            }
+        }
+
+        // ============ LOAD STORIES ============
+        async function loadSpotlightStories() {
+            try {
+                const response = await fetch(`${API_BASE}/news/articles?limit=100`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    spotlightStories = data.articles || [];
+                    
+                    // Update stats
+                    document.getElementById('totalStories').textContent = spotlightStories.length;
+                    document.getElementById('publishedStories').textContent = spotlightStories.filter(s => s.status === 'published').length;
+                    document.getElementById('draftStories').textContent = spotlightStories.filter(s => s.status === 'draft').length;
+                    document.getElementById('spotlightCount').textContent = spotlightStories.length;
+                    
+                    displayStories();
+                }
+            } catch (error) {
+                console.error('Error loading stories:', error);
+                showNotification('Error loading stories', 'error');
+            }
+        }
+
+        // ============ DISPLAY STORIES ============
+        function displayStories() {
+            const container = document.getElementById('storiesList');
+            if (!container) return;
             
-            // Update stats
-            document.getElementById('totalStories').textContent = spotlightStories.length;
-            document.getElementById('publishedStories').textContent = spotlightStories.filter(s => s.status === 'published').length;
-            document.getElementById('draftStories').textContent = spotlightStories.filter(s => s.status === 'draft').length;
-            document.getElementById('spotlightCount').textContent = spotlightStories.length;
+            let filtered = spotlightStories;
             
+            // Apply category filter
+            if (currentStoryFilter !== 'all') {
+                filtered = filtered.filter(s => s.category_id === currentStoryFilter);
+            }
+            
+            // Apply search
+            if (spotlightSearchTerm) {
+                const term = spotlightSearchTerm.toLowerCase();
+                filtered = filtered.filter(s => 
+                    s.title.toLowerCase().includes(term) || 
+                    s.business_name.toLowerCase().includes(term)
+                );
+            }
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: #64748b;">
+                        <i class="fas fa-newspaper" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <p>No stories found</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(story => {
+                const category = spotlightCategories.find(c => c._id === story.category_id) || { name: 'Uncategorized' };
+                return `
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
+                            <img src="${story.featured_image || '/images/placeholder.jpg'}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 5px;" onerror="this.src='https://via.placeholder.com/60x40'">
+                            <div>
+                                <h4 style="font-weight: 600; margin-bottom: 5px;">${story.title}</h4>
+                                <div style="display: flex; gap: 15px; font-size: 13px; color: #64748b;">
+                                    <span><i class="fas fa-building"></i> ${story.business_name}</span>
+                                    <span><i class="fas fa-tag"></i> ${category.name}</span>
+                                    <span><i class="fas fa-user"></i> ${story.author_name}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <span class="status-badge status-${story.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${story.status}</span>
+                            <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editStory('${story._id}')"><i class="fas fa-edit"></i></button>
+                            <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteStory('${story._id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============ FILTER STORIES ============
+        function filterStoriesByCategory() {
+            currentStoryFilter = document.getElementById('categoryFilter').value;
             displayStories();
         }
-    } catch (error) {
-        console.error('Error loading stories:', error);
-        showNotification('Error loading stories', 'error');
-    }
-}
 
-// ============ DISPLAY STORIES ============
-function displayStories() {
-    const container = document.getElementById('storiesList');
-    if (!container) return;
-    
-    let filtered = spotlightStories;
-    
-    // Apply category filter
-    if (currentStoryFilter !== 'all') {
-        filtered = filtered.filter(s => s.category_id === currentStoryFilter);
-    }
-    
-    // Apply search
-    if (spotlightSearchTerm) {
-        const term = spotlightSearchTerm.toLowerCase();
-        filtered = filtered.filter(s => 
-            s.title.toLowerCase().includes(term) || 
-            s.business_name.toLowerCase().includes(term)
-        );
-    }
-    
-    if (filtered.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 50px; color: #64748b;">
-                <i class="fas fa-newspaper" style="font-size: 48px; margin-bottom: 20px;"></i>
-                <p>No stories found</p>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = filtered.map(story => {
-        const category = spotlightCategories.find(c => c._id === story.category_id) || { name: 'Uncategorized' };
-        return `
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
-                    <img src="${story.featured_image || '/images/placeholder.jpg'}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 5px;" onerror="this.src='https://via.placeholder.com/60x40'">
+        function searchSpotlight() {
+            spotlightSearchTerm = document.getElementById('spotlightSearch').value;
+            displayStories();
+        }
+
+        // ============ STORY CRUD ============
+        function openAddStoryModal() {
+            document.getElementById('storyModalTitle').textContent = 'Add New Story';
+            document.getElementById('storyForm').reset();
+            document.getElementById('storyId').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            
+            // Set default date to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('storyPublishedDate').value = now.toISOString().slice(0, 16);
+            
+            openModal('storyModal');
+        }
+
+        async function editStory(id) {
+            const story = spotlightStories.find(s => s._id === id);
+            if (!story) return;
+            
+            document.getElementById('storyModalTitle').textContent = 'Edit Story';
+            document.getElementById('storyId').value = story._id;
+            document.getElementById('storyTitle').value = story.title || '';
+            document.getElementById('storySlug').value = story.slug || '';
+            document.getElementById('storyCategory').value = story.category_id || '';
+            document.getElementById('storyStatus').value = story.status || 'draft';
+            document.getElementById('storyBusinessName').value = story.business_name || '';
+            document.getElementById('storyBusinessOwner').value = story.business_owner || '';
+            document.getElementById('storyAuthorName').value = story.author_name || '';
+            document.getElementById('storyAuthorBio').value = story.author_bio || '';
+            document.getElementById('storyExcerpt').value = story.excerpt || '';
+            document.getElementById('storyContent').value = story.content || '';
+            document.getElementById('storyImage').value = story.featured_image || '';
+            document.getElementById('storyFeatured').checked = story.is_featured || false;
+            document.getElementById('storyBreaking').checked = story.is_breaking || false;
+            document.getElementById('storyInterview').checked = story.is_interview || false;
+            
+            if (story.published_at) {
+                const date = new Date(story.published_at);
+                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                document.getElementById('storyPublishedDate').value = date.toISOString().slice(0, 16);
+            }
+            
+            if (story.featured_image) {
+                document.getElementById('imagePreview').src = story.featured_image;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+            
+            openModal('storyModal');
+        }
+
+        async function saveStory() {
+            try {
+                const storyData = {
+                    title: document.getElementById('storyTitle').value,
+                    slug: document.getElementById('storySlug').value,
+                    category_id: document.getElementById('storyCategory').value,
+                    status: document.getElementById('storyStatus').value,
+                    business_name: document.getElementById('storyBusinessName').value,
+                    business_owner: document.getElementById('storyBusinessOwner').value,
+                    author_name: document.getElementById('storyAuthorName').value,
+                    author_bio: document.getElementById('storyAuthorBio').value,
+                    excerpt: document.getElementById('storyExcerpt').value,
+                    content: document.getElementById('storyContent').value,
+                    featured_image: document.getElementById('storyImage').value,
+                    is_featured: document.getElementById('storyFeatured').checked,
+                    is_breaking: document.getElementById('storyBreaking').checked,
+                    is_interview: document.getElementById('storyInterview').checked,
+                    published_at: document.getElementById('storyPublishedDate').value
+                };
+                
+                const storyId = document.getElementById('storyId').value;
+                const url = storyId ? 
+                    `${API_BASE}/admin/articles/${storyId}` : 
+                    `${API_BASE}/admin/articles`;
+                const method = storyId ? 'PUT' : 'POST';
+                
+                const token = localStorage.getItem('lba_auth_token');
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(storyData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(storyId ? 'Story updated!' : 'Story created!', 'success');
+                    closeModal('storyModal');
+                    loadSpotlightStories();
+                } else {
+                    showNotification('Error saving story', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('Error saving story', 'error');
+            }
+        }
+
+        async function deleteStory(id) {
+            if (!confirm('Are you sure you want to delete this story?')) return;
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/admin/articles/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Story deleted!', 'success');
+                    loadSpotlightStories();
+                } else {
+                    showNotification('Error deleting story', 'error');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showNotification('Error deleting story', 'error');
+            }
+        }
+
+        // ============ CATEGORY MANAGEMENT ============
+        function openCategoryManager() {
+            closeModal('spotlightModal');
+            displayCategoryList();
+            openModal('categoryManagerModal');
+        }
+
+        function displayCategoryList() {
+            const container = document.getElementById('categoryList');
+            if (!container) return;
+            
+            if (spotlightCategories.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #64748b;">No categories yet</p>';
+                return;
+            }
+            
+            container.innerHTML = spotlightCategories.map(cat => `
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h4 style="font-weight: 600; margin-bottom: 5px;">${story.title}</h4>
-                        <div style="display: flex; gap: 15px; font-size: 13px; color: #64748b;">
-                            <span><i class="fas fa-building"></i> ${story.business_name}</span>
-                            <span><i class="fas fa-tag"></i> ${category.name}</span>
-                            <span><i class="fas fa-user"></i> ${story.author_name}</span>
-                        </div>
+                        <h4 style="font-weight: 600;"><i class="fas ${cat.icon || 'fa-tag'}" style="color: ${cat.color || '#FF0000'};"></i> ${cat.name}</h4>
+                        <small style="color: #64748b;">${cat.description || ''}</small>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editCategory('${cat._id}')"><i class="fas fa-edit"></i></button>
+                        <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteCategory('${cat._id}')"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <span class="status-badge status-${story.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${story.status}</span>
-                    <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editStory('${story._id}')"><i class="fas fa-edit"></i></button>
-                    <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteStory('${story._id}')"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-// ============ FILTER STORIES ============
-function filterStoriesByCategory() {
-    currentStoryFilter = document.getElementById('categoryFilter').value;
-    displayStories();
-}
-
-function searchSpotlight() {
-    spotlightSearchTerm = document.getElementById('spotlightSearch').value;
-    displayStories();
-}
-
-// ============ STORY CRUD ============
-function openAddStoryModal() {
-    document.getElementById('storyModalTitle').textContent = 'Add New Story';
-    document.getElementById('storyForm').reset();
-    document.getElementById('storyId').value = '';
-    document.getElementById('imagePreview').style.display = 'none';
-    
-    // Set default date to now
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('storyPublishedDate').value = now.toISOString().slice(0, 16);
-    
-    openModal('storyModal');
-}
-
-async function editStory(id) {
-    const story = spotlightStories.find(s => s._id === id);
-    if (!story) return;
-    
-    document.getElementById('storyModalTitle').textContent = 'Edit Story';
-    document.getElementById('storyId').value = story._id;
-    document.getElementById('storyTitle').value = story.title || '';
-    document.getElementById('storySlug').value = story.slug || '';
-    document.getElementById('storyCategory').value = story.category_id || '';
-    document.getElementById('storyStatus').value = story.status || 'draft';
-    document.getElementById('storyBusinessName').value = story.business_name || '';
-    document.getElementById('storyBusinessOwner').value = story.business_owner || '';
-    document.getElementById('storyAuthorName').value = story.author_name || '';
-    document.getElementById('storyAuthorBio').value = story.author_bio || '';
-    document.getElementById('storyExcerpt').value = story.excerpt || '';
-    document.getElementById('storyContent').value = story.content || '';
-    document.getElementById('storyImage').value = story.featured_image || '';
-    document.getElementById('storyFeatured').checked = story.is_featured || false;
-    document.getElementById('storyBreaking').checked = story.is_breaking || false;
-    document.getElementById('storyInterview').checked = story.is_interview || false;
-    
-    if (story.published_at) {
-        const date = new Date(story.published_at);
-        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-        document.getElementById('storyPublishedDate').value = date.toISOString().slice(0, 16);
-    }
-    
-    if (story.featured_image) {
-        document.getElementById('imagePreview').src = story.featured_image;
-        document.getElementById('imagePreview').style.display = 'block';
-    }
-    
-    openModal('storyModal');
-}
-
-async function saveStory() {
-    try {
-        const storyData = {
-            title: document.getElementById('storyTitle').value,
-            slug: document.getElementById('storySlug').value,
-            category_id: document.getElementById('storyCategory').value,
-            status: document.getElementById('storyStatus').value,
-            business_name: document.getElementById('storyBusinessName').value,
-            business_owner: document.getElementById('storyBusinessOwner').value,
-            author_name: document.getElementById('storyAuthorName').value,
-            author_bio: document.getElementById('storyAuthorBio').value,
-            excerpt: document.getElementById('storyExcerpt').value,
-            content: document.getElementById('storyContent').value,
-            featured_image: document.getElementById('storyImage').value,
-            is_featured: document.getElementById('storyFeatured').checked,
-            is_breaking: document.getElementById('storyBreaking').checked,
-            is_interview: document.getElementById('storyInterview').checked,
-            published_at: document.getElementById('storyPublishedDate').value
-        };
-        
-        const storyId = document.getElementById('storyId').value;
-        const url = storyId ? 
-            `${API_BASE}/admin/articles/${storyId}` : 
-            `${API_BASE}/admin/articles`;
-        const method = storyId ? 'PUT' : 'POST';
-        
-        const token = localStorage.getItem('lba_auth_token');
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(storyData)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification(storyId ? 'Story updated!' : 'Story created!', 'success');
-            closeModal('storyModal');
-            loadSpotlightStories();
-        } else {
-            showNotification('Error saving story', 'error');
+            `).join('');
         }
-    } catch (error) {
-        console.error('Save error:', error);
-        showNotification('Error saving story', 'error');
-    }
-}
 
-async function deleteStory(id) {
-    if (!confirm('Are you sure you want to delete this story?')) return;
-    
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/admin/articles/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
+        function openAddCategoryModal() {
+            document.getElementById('categoryModalTitle').textContent = 'Add Category';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryColor').value = '#FF0000';
+            openModal('addCategoryModal');
+        }
+
+        function editCategory(id) {
+            const category = spotlightCategories.find(c => c._id === id);
+            if (!category) return;
+            
+            document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+            document.getElementById('categoryId').value = category._id;
+            document.getElementById('categoryName').value = category.name || '';
+            document.getElementById('categorySlug').value = category.slug || '';
+            document.getElementById('categoryDescription').value = category.description || '';
+            document.getElementById('categoryIcon').value = category.icon || '';
+            document.getElementById('categoryColor').value = category.color || '#FF0000';
+            document.getElementById('categoryOrder').value = category.display_order || 1;
+            
+            openModal('addCategoryModal');
+        }
+
+        async function saveCategory() {
+            try {
+                const categoryData = {
+                    name: document.getElementById('categoryName').value,
+                    slug: document.getElementById('categorySlug').value,
+                    description: document.getElementById('categoryDescription').value,
+                    icon: document.getElementById('categoryIcon').value,
+                    color: document.getElementById('categoryColor').value,
+                    display_order: parseInt(document.getElementById('categoryOrder').value) || 1
+                };
+                
+                const categoryId = document.getElementById('categoryId').value;
+                const url = categoryId ? 
+                    `${API_BASE}/admin/categories/${categoryId}` : 
+                    `${API_BASE}/admin/categories`;
+                const method = categoryId ? 'PUT' : 'POST';
+                
+                const token = localStorage.getItem('lba_auth_token');
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(categoryData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(categoryId ? 'Category updated!' : 'Category created!', 'success');
+                    closeModal('addCategoryModal');
+                    loadSpotlightCategories();
+                    displayCategoryList();
+                } else {
+                    showNotification('Error saving category', 'error');
+                }
+            } catch (error) {
+                console.error('Save category error:', error);
+                showNotification('Error saving category', 'error');
+            }
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('Are you sure? Stories in this category will be uncategorized.')) return;
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Category deleted!', 'success');
+                    loadSpotlightCategories();
+                    displayCategoryList();
+                    loadSpotlightStories();
+                } else {
+                    showNotification('Error deleting category', 'error');
+                }
+            } catch (error) {
+                console.error('Delete category error:', error);
+                showNotification('Error deleting category', 'error');
+            }
+        }
+
+        // ============ AUTO-GENERATE SLUG ============
+        document.getElementById('storyTitle')?.addEventListener('input', function(e) {
+            if (!document.getElementById('storyId').value) {
+                const slug = e.target.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+                document.getElementById('storySlug').value = slug;
             }
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('Story deleted!', 'success');
-            loadSpotlightStories();
-        } else {
-            showNotification('Error deleting story', 'error');
-        }
-    } catch (error) {
-        console.error('Delete error:', error);
-        showNotification('Error deleting story', 'error');
-    }
-}
 
-// ============ CATEGORY MANAGEMENT ============
-function openCategoryManager() {
-    closeModal('spotlightModal');
-    displayCategoryList();
-    openModal('categoryManagerModal');
-}
-
-function displayCategoryList() {
-    const container = document.getElementById('categoryList');
-    if (!container) return;
-    
-    if (spotlightCategories.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #64748b;">No categories yet</p>';
-        return;
-    }
-    
-    container.innerHTML = spotlightCategories.map(cat => `
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h4 style="font-weight: 600;"><i class="fas ${cat.icon || 'fa-tag'}" style="color: ${cat.color || '#FF0000'};"></i> ${cat.name}</h4>
-                <small style="color: #64748b;">${cat.description || ''}</small>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editCategory('${cat._id}')"><i class="fas fa-edit"></i></button>
-                <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteCategory('${cat._id}')"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function openAddCategoryModal() {
-    document.getElementById('categoryModalTitle').textContent = 'Add Category';
-    document.getElementById('categoryForm').reset();
-    document.getElementById('categoryId').value = '';
-    document.getElementById('categoryColor').value = '#FF0000';
-    openModal('addCategoryModal');
-}
-
-function editCategory(id) {
-    const category = spotlightCategories.find(c => c._id === id);
-    if (!category) return;
-    
-    document.getElementById('categoryModalTitle').textContent = 'Edit Category';
-    document.getElementById('categoryId').value = category._id;
-    document.getElementById('categoryName').value = category.name || '';
-    document.getElementById('categorySlug').value = category.slug || '';
-    document.getElementById('categoryDescription').value = category.description || '';
-    document.getElementById('categoryIcon').value = category.icon || '';
-    document.getElementById('categoryColor').value = category.color || '#FF0000';
-    document.getElementById('categoryOrder').value = category.display_order || 1;
-    
-    openModal('addCategoryModal');
-}
-
-async function saveCategory() {
-    try {
-        const categoryData = {
-            name: document.getElementById('categoryName').value,
-            slug: document.getElementById('categorySlug').value,
-            description: document.getElementById('categoryDescription').value,
-            icon: document.getElementById('categoryIcon').value,
-            color: document.getElementById('categoryColor').value,
-            display_order: parseInt(document.getElementById('categoryOrder').value) || 1
-        };
-        
-        const categoryId = document.getElementById('categoryId').value;
-        const url = categoryId ? 
-            `${API_BASE}/admin/categories/${categoryId}` : 
-            `${API_BASE}/admin/categories`;
-        const method = categoryId ? 'PUT' : 'POST';
-        
-        const token = localStorage.getItem('lba_auth_token');
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(categoryData)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification(categoryId ? 'Category updated!' : 'Category created!', 'success');
-            closeModal('addCategoryModal');
-            loadSpotlightCategories();
-            displayCategoryList();
-        } else {
-            showNotification('Error saving category', 'error');
-        }
-    } catch (error) {
-        console.error('Save category error:', error);
-        showNotification('Error saving category', 'error');
-    }
-}
-
-async function deleteCategory(id) {
-    if (!confirm('Are you sure? Stories in this category will be uncategorized.')) return;
-    
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
+        // ============ IMAGE PREVIEW ============
+        document.getElementById('storyImage')?.addEventListener('input', function(e) {
+            const preview = document.getElementById('imagePreview');
+            if (e.target.value) {
+                preview.src = e.target.value;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
             }
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('Category deleted!', 'success');
-            loadSpotlightCategories();
-            displayCategoryList();
-            loadSpotlightStories();
-        } else {
-            showNotification('Error deleting category', 'error');
-        }
-    } catch (error) {
-        console.error('Delete category error:', error);
-        showNotification('Error deleting category', 'error');
-    }
-}
 
-// ============ AUTO-GENERATE SLUG ============
-document.getElementById('storyTitle')?.addEventListener('input', function(e) {
-    if (!document.getElementById('storyId').value) {
-        const slug = e.target.value
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '');
-        document.getElementById('storySlug').value = slug;
-    }
-});
-
-// ============ IMAGE PREVIEW ============
-document.getElementById('storyImage')?.addEventListener('input', function(e) {
-    const preview = document.getElementById('imagePreview');
-    if (e.target.value) {
-        preview.src = e.target.value;
-        preview.style.display = 'block';
-    } else {
-        preview.style.display = 'none';
-    }
-});
-
-// ============ EXPORT FUNCTION ============
-window.showSpotlightModal = showSpotlightModal;
+        // ============ EXPORT FUNCTION ============
+        window.showSpotlightModal = showSpotlightModal;
         
     </script>
+    
     <!-- ============ SPOTLIGHT MANAGEMENT MODAL ============ -->
-<div class="modal" id="spotlightModal">
-    <div class="modal-content" style="max-width: 1400px;">
-        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
-            <h2><i class="fas fa-newspaper"></i> Business Spotlight Management</h2>
-            <button class="modal-close" onclick="closeModal('spotlightModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <!-- Stats Cards -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
-                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #FF0000;">
-                    <h3 style="font-size: 28px; color: #FF0000;" id="totalStories">0</h3>
-                    <p style="color: #64748b; font-size: 14px;">Total Stories</p>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
-                    <h3 style="font-size: 28px; color: #10B981;" id="publishedStories">0</h3>
-                    <p style="color: #64748b; font-size: 14px;">Published</p>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #F59E0B;">
-                    <h3 style="font-size: 28px; color: #F59E0B;" id="draftStories">0</h3>
-                    <p style="color: #64748b; font-size: 14px;">Drafts</p>
-                </div>
-                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #8B5CF6;">
-                    <h3 style="font-size: 28px; color: #8B5CF6;" id="totalCategories">0</h3>
-                    <p style="color: #64748b; font-size: 14px;">Categories</p>
-                </div>
-            </div>
-
-            <!-- Action Bar -->
-            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 10px; flex: 1; max-width: 400px;">
-                    <input type="text" id="spotlightSearch" placeholder="Search stories..." style="flex: 1; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
-                    <button class="sheet-btn" onclick="searchSpotlight()" style="padding: 10px 20px;">Search</button>
-                </div>
-                <div>
-                    <button class="sheet-btn" onclick="openAddStoryModal()" style="margin-right: 10px;">
-                        <i class="fas fa-plus"></i> New Story
-                    </button>
-                    <button class="sheet-btn secondary" onclick="openCategoryManager()">
-                        <i class="fas fa-tags"></i> Categories
-                    </button>
-                </div>
-            </div>
-
-            <!-- Categories Grid -->
-            <div style="margin-bottom: 25px;">
-                <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-tags" style="color: #FF0000;"></i> Categories
-                </h4>
-                <div id="categoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
-            </div>
-
-            <!-- Stories Table -->
-            <div class="sheets-viewer">
-                <div class="sheets-viewer-header">
-                    <h4><i class="fas fa-newspaper"></i> All Stories</h4>
-                    <select id="categoryFilter" onchange="filterStoriesByCategory()" style="padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
-                        <option value="all">All Categories</option>
-                    </select>
-                </div>
-                <div id="storiesList" style="padding: 20px; min-height: 400px; max-height: 500px; overflow-y: auto;"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============ ADD/EDIT STORY MODAL ============ -->
-<div class="modal" id="storyModal">
-    <div class="modal-content" style="max-width: 900px;">
-        <div class="modal-header">
-            <h2 id="storyModalTitle">Add New Story</h2>
-            <button class="modal-close" onclick="closeModal('storyModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form id="storyForm">
-                <input type="hidden" id="storyId">
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label>Title *</label>
-                        <input type="text" id="storyTitle" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Slug *</label>
-                        <input type="text" id="storySlug" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label>Category *</label>
-                        <select id="storyCategory" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                            <option value="">Select Category</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select id="storyStatus" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
-                            <option value="published">Published</option>
-                            <option value="draft">Draft</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label>Business Name *</label>
-                        <input type="text" id="storyBusinessName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Business Owner</label>
-                        <input type="text" id="storyBusinessOwner" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label>Author Name *</label>
-                        <input type="text" id="storyAuthorName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Author Bio</label>
-                        <input type="text" id="storyAuthorBio" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Excerpt *</label>
-                    <textarea id="storyExcerpt" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required></textarea>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Full Content *</label>
-                    <textarea id="storyContent" rows="4" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required></textarea>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Featured Image URL *</label>
-                    <input type="text" id="storyImage" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required placeholder="/images/featured/your-image.jpg">
-                    <img id="imagePreview" style="max-width: 200px; max-height: 100px; margin-top: 10px; display: none; border-radius: 5px;">
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label>Published Date</label>
-                        <input type="datetime-local" id="storyPublishedDate" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
-                    </div>
-                    <div class="form-group">
-                        <label>Flags</label>
-                        <div style="display: flex; gap: 15px; padding: 10px 0;">
-                            <label><input type="checkbox" id="storyFeatured"> Featured</label>
-                            <label><input type="checkbox" id="storyBreaking"> Breaking</label>
-                            <label><input type="checkbox" id="storyInterview"> Interview</label>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="sheet-btn warning" onclick="closeModal('storyModal')">Cancel</button>
-            <button class="sheet-btn" onclick="saveStory()">Save Story</button>
-        </div>
-    </div>
-</div>
-
-<!-- ============ CATEGORY MANAGER MODAL ============ -->
-<div class="modal" id="categoryManagerModal">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h2>Manage Categories</h2>
-            <button class="modal-close" onclick="closeModal('categoryManagerModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div style="margin-bottom: 20px;">
-                <button class="sheet-btn" onclick="openAddCategoryModal()" style="width: 100%;">
-                    <i class="fas fa-plus"></i> Add New Category
+    <div class="modal" id="spotlightModal">
+        <div class="modal-content" style="max-width: 1400px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-newspaper"></i> Business Spotlight Management</h2>
+                <button class="modal-close" onclick="closeModal('spotlightModal')">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div id="categoryList" style="max-height: 400px; overflow-y: auto;"></div>
-        </div>
-    </div>
-</div>
+            <div class="modal-body">
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #FF0000;">
+                        <h3 style="font-size: 28px; color: #FF0000;" id="totalStories">0</h3>
+                        <p style="color: #64748b; font-size: 14px;">Total Stories</p>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
+                        <h3 style="font-size: 28px; color: #10B981;" id="publishedStories">0</h3>
+                        <p style="color: #64748b; font-size: 14px;">Published</p>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #F59E0B;">
+                        <h3 style="font-size: 28px; color: #F59E0B;" id="draftStories">0</h3>
+                        <p style="color: #64748b; font-size: 14px;">Drafts</p>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #8B5CF6;">
+                        <h3 style="font-size: 28px; color: #8B5CF6;" id="totalCategories">0</h3>
+                        <p style="color: #64748b; font-size: 14px;">Categories</p>
+                    </div>
+                </div>
 
-<!-- ============ ADD/EDIT CATEGORY MODAL ============ -->
-<div class="modal" id="addCategoryModal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h2 id="categoryModalTitle">Add Category</h2>
-            <button class="modal-close" onclick="closeModal('addCategoryModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form id="categoryForm">
-                <input type="hidden" id="categoryId">
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Category Name *</label>
-                    <input type="text" id="categoryName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Slug *</label>
-                    <input type="text" id="categorySlug" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Description</label>
-                    <textarea id="categoryDescription" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;"></textarea>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label>Icon</label>
-                        <input type="text" id="categoryIcon" class="sheet-btn secondary" style="width: 100%; padding: 10px;" placeholder="fa-rocket">
+                <!-- Action Bar -->
+                <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 10px; flex: 1; max-width: 400px;">
+                        <input type="text" id="spotlightSearch" placeholder="Search stories..." style="flex: 1; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                        <button class="sheet-btn" onclick="searchSpotlight()" style="padding: 10px 20px;">Search</button>
                     </div>
-                    <div class="form-group">
-                        <label>Color</label>
-                        <input type="color" id="categoryColor" class="sheet-btn secondary" style="width: 100%; height: 42px;" value="#FF0000">
+                    <div>
+                        <button class="sheet-btn" onclick="openAddStoryModal()" style="margin-right: 10px;">
+                            <i class="fas fa-plus"></i> New Story
+                        </button>
+                        <button class="sheet-btn secondary" onclick="openCategoryManager()">
+                            <i class="fas fa-tags"></i> Categories
+                        </button>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label>Display Order</label>
-                    <input type="number" id="categoryOrder" class="sheet-btn secondary" style="width: 100%; padding: 10px;" value="1" min="1">
+
+                <!-- Categories Grid -->
+                <div style="margin-bottom: 25px;">
+                    <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-tags" style="color: #FF0000;"></i> Categories
+                    </h4>
+                    <div id="categoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
                 </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="sheet-btn warning" onclick="closeModal('addCategoryModal')">Cancel</button>
-            <button class="sheet-btn" onclick="saveCategory()">Save Category</button>
+
+                <!-- Stories Table -->
+                <div class="sheets-viewer">
+                    <div class="sheets-viewer-header">
+                        <h4><i class="fas fa-newspaper"></i> All Stories</h4>
+                        <select id="categoryFilter" onchange="filterStoriesByCategory()" style="padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
+                    <div id="storiesList" style="padding: 20px; min-height: 400px; max-height: 500px; overflow-y: auto;"></div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- ============ ADD/EDIT STORY MODAL ============ -->
+    <div class="modal" id="storyModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="storyModalTitle">Add New Story</h2>
+                <button class="modal-close" onclick="closeModal('storyModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="storyForm">
+                    <input type="hidden" id="storyId">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Title *</label>
+                            <input type="text" id="storyTitle" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Slug *</label>
+                            <input type="text" id="storySlug" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="storyCategory" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="storyStatus" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                                <option value="published">Published</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Business Name *</label>
+                            <input type="text" id="storyBusinessName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Business Owner</label>
+                            <input type="text" id="storyBusinessOwner" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Author Name *</label>
+                            <input type="text" id="storyAuthorName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Author Bio</label>
+                            <input type="text" id="storyAuthorBio" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Excerpt *</label>
+                        <textarea id="storyExcerpt" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Full Content *</label>
+                        <textarea id="storyContent" rows="4" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Featured Image URL *</label>
+                        <input type="text" id="storyImage" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required placeholder="/images/featured/your-image.jpg">
+                        <img id="imagePreview" style="max-width: 200px; max-height: 100px; margin-top: 10px; display: none; border-radius: 5px;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Published Date</label>
+                            <input type="datetime-local" id="storyPublishedDate" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Flags</label>
+                            <div style="display: flex; gap: 15px; padding: 10px 0;">
+                                <label><input type="checkbox" id="storyFeatured"> Featured</label>
+                                <label><input type="checkbox" id="storyBreaking"> Breaking</label>
+                                <label><input type="checkbox" id="storyInterview"> Interview</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="sheet-btn warning" onclick="closeModal('storyModal')">Cancel</button>
+                <button class="sheet-btn" onclick="saveStory()">Save Story</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ CATEGORY MANAGER MODAL ============ -->
+    <div class="modal" id="categoryManagerModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Manage Categories</h2>
+                <button class="modal-close" onclick="closeModal('categoryManagerModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <button class="sheet-btn" onclick="openAddCategoryModal()" style="width: 100%;">
+                        <i class="fas fa-plus"></i> Add New Category
+                    </button>
+                </div>
+                <div id="categoryList" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ ADD/EDIT CATEGORY MODAL ============ -->
+    <div class="modal" id="addCategoryModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">Add Category</h2>
+                <button class="modal-close" onclick="closeModal('addCategoryModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId">
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Category Name *</label>
+                        <input type="text" id="categoryName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Slug *</label>
+                        <input type="text" id="categorySlug" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Description</label>
+                        <textarea id="categoryDescription" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;"></textarea>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Icon</label>
+                            <input type="text" id="categoryIcon" class="sheet-btn secondary" style="width: 100%; padding: 10px;" placeholder="fa-rocket">
+                        </div>
+                        <div class="form-group">
+                            <label>Color</label>
+                            <input type="color" id="categoryColor" class="sheet-btn secondary" style="width: 100%; height: 42px;" value="#FF0000">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Display Order</label>
+                        <input type="number" id="categoryOrder" class="sheet-btn secondary" style="width: 100%; padding: 10px;" value="1" min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="sheet-btn warning" onclick="closeModal('addCategoryModal')">Cancel</button>
+                <button class="sheet-btn" onclick="saveCategory()">Save Category</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
-
-
-
-
-
