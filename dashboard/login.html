@@ -321,6 +321,63 @@
             color: #666;
         }
         
+        .demo-credentials {
+            background: #f0f0f0;
+            border: 2px dashed var(--lba-red);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .demo-credentials h4 {
+            color: var(--lba-red);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .credentials-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .credential-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: left;
+        }
+        
+        .credential-item .role {
+            font-size: 12px;
+            color: var(--lba-blue);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .credential-item .email {
+            font-family: monospace;
+            font-size: 13px;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+        
+        .credential-item .password {
+            font-family: monospace;
+            font-size: 13px;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
         .footer-links {
             text-align: center;
             margin-top: 25px;
@@ -385,6 +442,10 @@
             .business-options {
                 grid-template-columns: 1fr;
             }
+            
+            .credentials-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -407,6 +468,26 @@
             <div class="api-status connecting" id="apiStatus">
                 <i class="fas fa-sync fa-spin"></i>
                 <span>Connecting to system...</span>
+            </div>
+            
+            <!-- Demo Credentials Info -->
+            <div class="demo-credentials">
+                <h4><i class="fas fa-key"></i> Demo Credentials</h4>
+                <div class="credentials-grid">
+                    <div class="credential-item">
+                        <div class="role">👑 Administrator</div>
+                        <div class="email">admin@liberiabusinessawardslr.com</div>
+                        <div class="password">🔑 Admin123!</div>
+                    </div>
+                    <div class="credential-item">
+                        <div class="role">🏢 Demo Business</div>
+                        <div class="email">demo@business.com</div>
+                        <div class="password">🔑 demo123</div>
+                    </div>
+                </div>
+                <p style="font-size: 12px; margin-top: 10px; color: #666;">
+                    <i class="fas fa-info-circle"></i> Use these credentials to test the system
+                </p>
             </div>
             
             <!-- Tabs -->
@@ -446,11 +527,6 @@
                 <button type="submit" class="login-btn" id="adminBtn">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Login as Administrator</span>
-                </button>
-                
-                <button type="button" class="secondary-btn" onclick="quickAdminLogin()" style="margin-top: 10px;">
-                    <i class="fas fa-rocket"></i>
-                    <span>Quick Admin Login</span>
                 </button>
             </form>
             
@@ -501,18 +577,13 @@
                         <span>Login to Business Dashboard</span>
                     </button>
                     
-                    <button type="button" class="secondary-btn" onclick="quickBusinessLogin()">
-                        <i class="fas fa-rocket"></i>
-                        <span>Quick Business Demo</span>
-                    </button>
-                    
                     <button type="button" class="secondary-btn" onclick="showBusinessOptions()">
                         <i class="fas fa-arrow-left"></i>
                         <span>Back to Options</span>
                     </button>
                 </div>
                 
-                <!-- Business Registration Form (NEW) -->
+                <!-- Business Registration Form -->
                 <div id="businessRegisterForm" style="display: none;">
                     <div class="info-box">
                         <h4><i class="fas fa-user-plus"></i> Register Your Business</h4>
@@ -575,7 +646,7 @@
                     </button>
                 </div>
                 
-                <!-- Business Registration Info (Legacy - will redirect to new form) -->
+                <!-- Business Registration Info -->
                 <div id="businessRegisterInfo" style="display: none;">
                     <div class="info-box">
                         <h4><i class="fas fa-info-circle"></i> Business Registration</h4>
@@ -923,12 +994,6 @@
                     errorMessage = 'Invalid email or password. Please check your credentials.';
                 } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                     errorMessage = 'Cannot connect to server. Please try again later.';
-                    
-                    // Offer demo login
-                    if (confirm('Server connection failed. Would you like to use the demo business account?')) {
-                        useDemoBusiness();
-                        return;
-                    }
                 } else if (error.message.includes('locked')) {
                     errorMessage = 'Account is locked due to too many failed attempts. Please try again later.';
                 } else if (error.message.includes('pending')) {
@@ -1032,59 +1097,7 @@
         }
 
         // ==================== DEMO FUNCTIONS ====================
-        function quickAdminLogin() {
-            document.getElementById('adminEmail').value = DEFAULT_ADMIN.email;
-            document.getElementById('adminPassword').value = DEFAULT_ADMIN.password;
-            handleAdminLogin();
-        }
-
-        function quickBusinessLogin() {
-            document.getElementById('businessEmail').value = DEMO_BUSINESS.email;
-            document.getElementById('businessPassword').value = DEMO_BUSINESS.password;
-            handleBusinessLogin();
-        }
-
-        function quickBusinessDemo() {
-            useDemoBusiness();
-        }
-
-        function useDemoBusiness() {
-            const errorEl = document.getElementById('businessError');
-            const successEl = document.getElementById('businessSuccess');
-            
-            clearAllMessages();
-            
-            // Create demo session
-            const token = 'demo_' + Date.now();
-            const userData = {
-                id: 'demo-business-001',
-                email: DEMO_BUSINESS.email,
-                name: DEMO_BUSINESS.name,
-                company: DEMO_BUSINESS.company,
-                role: 'business',
-                verified: true,
-                phone: '+231 123 456 789',
-                business_type: 'Technology',
-                location: 'Monrovia',
-                profile_completion: 75,
-                stats: {
-                    total_awards: 2,
-                    active_nominations: 3,
-                    documents_uploaded: 5
-                }
-            };
-            
-            localStorage.setItem('lba_auth_token', token);
-            localStorage.setItem('lba_user_data', JSON.stringify(userData));
-            localStorage.setItem('lba_user_role', 'business');
-            localStorage.setItem('lba_login_time', new Date().toISOString());
-            
-            showSuccess(successEl, '✓ Demo login successful! Redirecting...');
-            
-            setTimeout(() => {
-                window.location.href = 'business/index.html';
-            }, 1500);
-        }
+        // REMOVED: quickAdminLogin(), quickBusinessLogin(), quickBusinessDemo(), useDemoBusiness()
 
         // ==================== UTILITY FUNCTIONS ====================
         function setButtonLoading(button, isLoading, loadingText = 'Loading...', originalState = null) {
@@ -1139,10 +1152,6 @@
         window.handleAdminLogin = handleAdminLogin;
         window.handleBusinessLogin = handleBusinessLogin;
         window.handleBusinessRegistration = handleBusinessRegistration;
-        window.quickAdminLogin = quickAdminLogin;
-        window.quickBusinessLogin = quickBusinessLogin;
-        window.quickBusinessDemo = quickBusinessDemo;
-        window.useDemoBusiness = useDemoBusiness;
 
         console.log('ℹ️ Login page ready');
         console.log('- Admin: admin@liberiabusinessawardslr.com / Admin123!');
