@@ -4,6 +4,7 @@ const Admin = require('../models/Admin');
 const BusinessUser = require('../models/BusinessUser');
 const jwt = require('jsonwebtoken');
 
+// Get JWT_SECRET from environment or use default
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Admin Login
@@ -34,6 +35,7 @@ router.post('/auth/admin/login', async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Admin login error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
@@ -70,23 +72,30 @@ router.post('/auth/business/login', async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Business login error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
 // Create default admin (run once)
 const createDefaultAdmin = async () => {
-    const adminExists = await Admin.findOne({ email: 'admin@liberiabusinessawardslr.com' });
-    if (!adminExists) {
-        const admin = new Admin({
-            email: 'admin@liberiabusinessawardslr.com',
-            password: 'Admin123!',
-            name: 'System Administrator'
-        });
-        await admin.save();
-        console.log('✅ Default admin created');
+    try {
+        const adminExists = await Admin.findOne({ email: 'admin@liberiabusinessawardslr.com' });
+        if (!adminExists) {
+            const admin = new Admin({
+                email: 'admin@liberiabusinessawardslr.com',
+                password: 'Admin123!',
+                name: 'System Administrator'
+            });
+            await admin.save();
+            console.log('✅ Default admin created');
+        }
+    } catch (error) {
+        console.error('Error creating default admin:', error);
     }
 };
-createDefaultAdmin();
+
+// Call this when the app starts
+setTimeout(createDefaultAdmin, 2000);
 
 module.exports = router;
