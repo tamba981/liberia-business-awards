@@ -321,63 +321,6 @@
             color: #666;
         }
         
-        .demo-credentials {
-            background: #f0f0f0;
-            border: 2px dashed var(--lba-red);
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .demo-credentials h4 {
-            color: var(--lba-red);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .credentials-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 10px;
-        }
-        
-        .credential-item {
-            background: white;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: left;
-        }
-        
-        .credential-item .role {
-            font-size: 12px;
-            color: var(--lba-blue);
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .credential-item .email {
-            font-family: monospace;
-            font-size: 13px;
-            background: #f5f5f5;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin-bottom: 5px;
-            word-break: break-all;
-        }
-        
-        .credential-item .password {
-            font-family: monospace;
-            font-size: 13px;
-            background: #f5f5f5;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        
         .footer-links {
             text-align: center;
             margin-top: 25px;
@@ -442,10 +385,6 @@
             .business-options {
                 grid-template-columns: 1fr;
             }
-            
-            .credentials-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
@@ -470,26 +409,6 @@
                 <span>Connecting to system...</span>
             </div>
             
-            <!-- Demo Credentials Info -->
-            <div class="demo-credentials">
-                <h4><i class="fas fa-key"></i> Demo Credentials</h4>
-                <div class="credentials-grid">
-                    <div class="credential-item">
-                        <div class="role">👑 Administrator</div>
-                        <div class="email">admin@liberiabusinessawardslr.com</div>
-                        <div class="password">🔑 Admin123!</div>
-                    </div>
-                    <div class="credential-item">
-                        <div class="role">🏢 Demo Business</div>
-                        <div class="email">demo@business.com</div>
-                        <div class="password">🔑 demo123</div>
-                    </div>
-                </div>
-                <p style="font-size: 12px; margin-top: 10px; color: #666;">
-                    <i class="fas fa-info-circle"></i> Use these credentials to test the system
-                </p>
-            </div>
-            
             <!-- Tabs -->
             <div class="login-tabs">
                 <button class="tab-btn active" data-tab="admin">Admin Login</button>
@@ -506,7 +425,7 @@
                 <div class="form-group">
                     <label for="adminEmail">Admin Email Address</label>
                     <input type="email" id="adminEmail" required 
-                           placeholder="admin@liberiabusinessawardslr.com"
+                           placeholder="Enter admin email address"
                            autocomplete="username">
                 </div>
                 
@@ -556,7 +475,7 @@
                     <div class="form-group">
                         <label for="businessEmail">Business Email</label>
                         <input type="email" id="businessEmail" required 
-                               placeholder="yourbusiness@email.com">
+                               placeholder="Enter business email">
                     </div>
                     
                     <div class="form-group">
@@ -692,23 +611,6 @@
             verify: '/api/auth/verify'
         };
 
-        // Default admin credentials (FALLBACK)
-        const DEFAULT_ADMIN = {
-            email: 'admin@liberiabusinessawardslr.com',
-            password: 'Admin123!',
-            name: 'System Administrator',
-            role: 'admin'
-        };
-
-        // Demo business account (for testing)
-        const DEMO_BUSINESS = {
-            email: 'demo@business.com',
-            password: 'demo123',
-            name: 'Demo Business',
-            company: 'Demo Company Liberia',
-            role: 'business'
-        };
-
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 LBA Dashboard Login Initialized');
@@ -838,7 +740,7 @@
             } catch (error) {
                 console.warn('⚠️ Backend check failed:', error.message);
                 
-                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Using demo mode</span>`;
+                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Please try again later</span>`;
                 apiStatus.className = 'api-status offline';
                 
                 return { success: false, error: error.message };
@@ -894,31 +796,6 @@
                     }, 1500);
                     
                     return;
-                }
-                
-                // Try default admin credentials as fallback
-                if (email === DEFAULT_ADMIN.email && password === DEFAULT_ADMIN.password) {
-                    console.log('🔑 Using default admin credentials');
-                    
-                    const token = 'admin_' + Date.now();
-                    const userData = {
-                        id: 'admin-001',
-                        email: email,
-                        name: DEFAULT_ADMIN.name,
-                        role: 'admin',
-                        verified: true
-                    };
-                    
-                    localStorage.setItem('lba_auth_token', token);
-                    localStorage.setItem('lba_user_data', JSON.stringify(userData));
-                    localStorage.setItem('lba_user_role', 'admin');
-                    
-                    showSuccess(successEl, '✓ Default admin login successful! Redirecting...');
-                    
-                    setTimeout(() => {
-                        window.location.href = 'admin/index.html';
-                    }, 1500);
-                    
                 } else {
                     throw new Error(result.message || 'Invalid admin credentials');
                 }
@@ -1096,9 +973,6 @@
             }
         }
 
-        // ==================== DEMO FUNCTIONS ====================
-        // REMOVED: quickAdminLogin(), quickBusinessLogin(), quickBusinessDemo(), useDemoBusiness()
-
         // ==================== UTILITY FUNCTIONS ====================
         function setButtonLoading(button, isLoading, loadingText = 'Loading...', originalState = null) {
             if (!originalState) {
@@ -1153,9 +1027,7 @@
         window.handleBusinessLogin = handleBusinessLogin;
         window.handleBusinessRegistration = handleBusinessRegistration;
 
-        console.log('ℹ️ Login page ready');
-        console.log('- Admin: admin@liberiabusinessawardslr.com / Admin123!');
-        console.log('- Demo Business: demo@business.com / demo123');
+        console.log('✅ Login page ready - Production Mode');
     </script>
 </body>
 </html>
