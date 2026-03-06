@@ -1100,6 +1100,112 @@ app.post('/api/newsletter/subscribe', async (req, res) => {
     }
 });
 
+// ============ ADMIN SPOTLIGHT ROUTES ============
+// Add these after your other route imports
+
+// Get all articles (admin)
+app.get('/api/admin/articles', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const articles = await NewsArticle.find()
+            .populate('category_id')
+            .sort('-created_at');
+        res.json({ success: true, articles });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Create article
+app.post('/api/admin/articles', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const article = new NewsArticle({
+            ...req.body,
+            published_at: req.body.status === 'published' ? new Date() : null
+        });
+        await article.save();
+        res.json({ success: true, article });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Update article
+app.put('/api/admin/articles/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const article = await NewsArticle.findByIdAndUpdate(
+            req.params.id,
+            {
+                ...req.body,
+                published_at: req.body.status === 'published' ? new Date() : null
+            },
+            { new: true }
+        );
+        res.json({ success: true, article });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Delete article
+app.delete('/api/admin/articles/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        await NewsArticle.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get all categories (admin)
+app.get('/api/admin/categories', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const categories = await NewsCategory.find().sort('display_order');
+        res.json({ success: true, categories });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Create category
+app.post('/api/admin/categories', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const category = new NewsCategory(req.body);
+        await category.save();
+        res.json({ success: true, category });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Update category
+app.put('/api/admin/categories/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const category = await NewsCategory.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        res.json({ success: true, category });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Delete category
+app.delete('/api/admin/categories/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        await NewsCategory.findByIdAndDelete(req.params.id);
+        // Set category_id to null for articles
+        await NewsArticle.updateMany(
+            { category_id: req.params.id },
+            { $unset: { category_id: 1 } }
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});  
+
 // 404 Handler
 app.use('*', (req, res) => {
     res.status(404).json({
@@ -1155,5 +1261,6 @@ startServer().catch(err => {
     console.error('❌ SERVER STARTUP FAILED:', err);
     process.exit(1);
 });
+
 
 
