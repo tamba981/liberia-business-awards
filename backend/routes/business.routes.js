@@ -29,6 +29,7 @@ router.post('/business/register', async (req, res) => {
             message: 'Registration successful! Please wait for admin approval.'
         });
     } catch (error) {
+        console.error('Registration error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
