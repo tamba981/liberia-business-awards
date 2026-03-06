@@ -933,8 +933,8 @@ function getClientIp(req) {
 // ============ IMPORT ROUTES ============
 const adsRoutes = require('./routes/ads.routes')(AdCampaign, AdImpression, AdClick, getSessionId, getClientIp);
 const newsRoutes = require('./routes/news.routes')(NewsArticle, NewsCategory, NewsComment);
-const authRoutes = require('./routes/auth.routes')(Admin, BusinessUser, LoginHistory, generateToken, verifyToken, loginRateLimiter);
-const businessRoutes = require('./routes/business.routes')(BusinessUser);
+const authRoutes = require('./routes/auth.routes');
+const businessRoutes = require('./routes/business.routes');
 
 // ============ API ROUTES ============
 
@@ -1527,3 +1527,4 @@ startServer().catch(err => {
     console.error('❌ SERVER STARTUP FAILED:', err);
     process.exit(1);
 });
+
