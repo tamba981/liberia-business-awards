@@ -82,6 +82,7 @@
             text-decoration: none;
             transition: all 0.3s;
             border-left: 4px solid transparent;
+            cursor: pointer;
         }
         
         .menu-item:hover, .menu-item.active {
@@ -326,6 +327,7 @@
             color: inherit;
             transition: all 0.3s;
             border: 2px solid transparent;
+            cursor: pointer;
         }
         
         .action-card:hover {
@@ -398,8 +400,11 @@
         
         .status-draft { background: #f1f5f9; color: #475569; }
         .status-submitted { background: #dbeafe; color: #1d4ed8; }
+        .status-under_review { background: #fed7aa; color: #9a3412; }
+        .status-shortlisted { background: #c7d2fe; color: #3730a3; }
         .status-approved { background: #dcfce7; color: #15803d; }
         .status-winner { background: #fef3c7; color: #d97706; }
+        .status-rejected { background: #fee2e2; color: #b91c1c; }
         
         /* Responsive */
         @media (max-width: 992px) {
@@ -592,6 +597,32 @@
         .btn-block {
             width: 100%;
         }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 9999;
+            animation: slideIn 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -604,35 +635,35 @@
             </div>
             
             <div class="sidebar-menu">
-                <a href="index.html" class="menu-item active">
+                <a href="#" class="menu-item active" onclick="return false;">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
                 
-                <a href="profile.html" class="menu-item">
+                <a href="#" class="menu-item" onclick="return false;">
                     <i class="fas fa-user"></i>
                     <span>Business Profile</span>
                 </a>
                 
-                <a href="nominations.html" class="menu-item">
+                <a href="#" class="menu-item" onclick="return false;">
                     <i class="fas fa-award"></i>
                     <span>My Nominations</span>
                     <span class="badge" id="nominationsCount">0</span>
                 </a>
                 
-                <a href="documents.html" class="menu-item">
+                <a href="#" class="menu-item" onclick="return false;">
                     <i class="fas fa-file-upload"></i>
                     <span>Documents</span>
                 </a>
                 
-                <a href="notifications.html" class="menu-item">
+                <a href="#" class="menu-item" onclick="return false;">
                     <i class="fas fa-bell"></i>
                     <span>Notifications</span>
                     <span class="badge" id="notificationsCount">0</span>
                 </a>
                 
                 <div style="padding: 25px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
-                    <a href="settings.html" class="menu-item">
+                    <a href="#" class="menu-item" onclick="return false;">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
                     </a>
@@ -704,39 +735,79 @@
                 </div>
             </div>
             
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalAwards">0</h3>
+                        <p>Total Awards Won</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="pendingNominations">0</h3>
+                        <p>Pending Review</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="approvedNominations">0</h3>
+                        <p>Approved</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-file"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalDocuments">0</h3>
+                        <p>Documents</p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Quick Actions -->
             <div class="quick-actions">
-                <a href="#" class="action-card" onclick="showNominationModal()">
+                <div class="action-card" onclick="showNominationModal()">
                     <div class="action-icon">
                         <i class="fas fa-plus-circle"></i>
                     </div>
                     <h3>Submit Nomination</h3>
                     <p>Submit your business for awards consideration</p>
-                </a>
+                </div>
                 
-                <a href="profile.html" class="action-card">
+                <div class="action-card" onclick="showProfileModal()">
                     <div class="action-icon">
                         <i class="fas fa-edit"></i>
                     </div>
                     <h3>Update Profile</h3>
                     <p>Complete your business profile information</p>
-                </a>
+                </div>
                 
-                <a href="documents.html" class="action-card">
+                <div class="action-card" onclick="showDocumentsModal()">
                     <div class="action-icon">
                         <i class="fas fa-upload"></i>
                     </div>
                     <h3>Upload Documents</h3>
                     <p>Submit required business documents</p>
-                </a>
+                </div>
                 
-                <a href="nominations.html" class="action-card">
+                <div class="action-card" onclick="viewAllNominations()">
                     <div class="action-icon">
                         <i class="fas fa-history"></i>
                     </div>
                     <h3>View History</h3>
                     <p>See your nomination history and status</p>
-                </a>
+                </div>
             </div>
             
             <!-- Recent Nominations -->
@@ -754,12 +825,6 @@
                     </div>
                     
                     <div id="nominationsList">
-                        <div class="table-row">
-                            <div class="loading" style="height: 20px;"></div>
-                            <div class="loading" style="height: 20px;"></div>
-                            <div class="loading" style="height: 20px; width: 100px;"></div>
-                            <div class="loading" style="height: 20px; width: 120px;"></div>
-                        </div>
                         <div class="table-row">
                             <div class="loading" style="height: 20px;"></div>
                             <div class="loading" style="height: 20px;"></div>
@@ -793,13 +858,16 @@
                     <label for="nominationCategory">Category *</label>
                     <select id="nominationCategory" required>
                         <option value="">Select Category</option>
-                        <option value="technology">Technology</option>
-                        <option value="agriculture">Agriculture</option>
-                        <option value="manufacturing">Manufacturing</option>
-                        <option value="finance">Finance</option>
-                        <option value="tourism">Tourism</option>
-                        <option value="healthcare">Healthcare</option>
-                        <option value="education">Education</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Agriculture">Agriculture</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Tourism">Tourism</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Education">Education</option>
+                        <option value="Energy">Energy</option>
+                        <option value="Construction">Construction</option>
+                        <option value="Transportation">Transportation</option>
                     </select>
                 </div>
                 
@@ -810,9 +878,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="nominationAchievements">Key Achievements</label>
+                    <label for="nominationAchievements">Key Achievements (one per line)</label>
                     <textarea id="nominationAchievements" rows="3"
-                              placeholder="List your key business achievements (one per line)"></textarea>
+                              placeholder="Achievement 1&#10;Achievement 2&#10;Achievement 3"></textarea>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-block">
@@ -821,82 +889,121 @@
             </form>
         </div>
     </div>
+    
+    <!-- Profile Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Update Business Profile</h2>
+                <button class="modal-close" onclick="hideModal('profileModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="profileForm" onsubmit="updateProfile(event)">
+                <div class="form-group">
+                    <label for="profileBusinessName">Business Name *</label>
+                    <input type="text" id="profileBusinessName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="profileIndustry">Industry</label>
+                    <input type="text" id="profileIndustry" placeholder="e.g., Technology, Agriculture">
+                </div>
+                
+                <div class="form-group">
+                    <label for="profileLocation">Location</label>
+                    <input type="text" id="profileLocation" placeholder="City, County">
+                </div>
+                
+                <div class="form-group">
+                    <label for="profilePhone">Phone Number</label>
+                    <input type="tel" id="profilePhone" placeholder="+231 XXX XXX XXX">
+                </div>
+                
+                <div class="form-group">
+                    <label for="profileWebsite">Website</label>
+                    <input type="url" id="profileWebsite" placeholder="https://">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-save"></i> Update Profile
+                </button>
+            </form>
+        </div>
+    </div>
 
     <script>
-        // Configuration
+        // ============================================
+        // CONFIGURATION
+        // ============================================
         const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
         const SESSION_TIMEOUT = 60; // minutes
-        
-        // Initialize Dashboard
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🏢 Business Dashboard Initialized');
+            console.log('🏢 Business Dashboard Initializing...');
             
             // Check authentication
-            if (!await checkAuth()) {
+            const userData = checkAuth();
+            if (!userData) {
                 window.location.href = '../login.html';
                 return;
             }
             
-            // Setup UI
-            setupUI();
+            // Setup UI with user data
+            setupUI(userData);
             
             // Load dashboard data
             await loadDashboardData();
             
             // Start session timer
             startSessionTimer();
+            
+            console.log('✅ Business Dashboard Ready');
         });
-        
-        // Authentication Check
-        async function checkAuth() {
+
+        // ============================================
+        // AUTHENTICATION
+        // ============================================
+        function checkAuth() {
             const token = localStorage.getItem('lba_auth_token');
             const userRole = localStorage.getItem('lba_user_role');
+            const userDataStr = localStorage.getItem('lba_user_data');
             
-            if (!token || userRole !== 'business') {
+            if (!token || userRole !== 'business' || !userDataStr) {
                 console.warn('⚠️ Not authenticated or not business user');
-                return false;
+                return null;
             }
             
-            // Verify token
             try {
-                const response = await fetch(`${BACKEND_URL}/api/health`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Token invalid');
-                }
-                
-                return true;
-            } catch (error) {
-                console.warn('⚠️ Token verification failed');
-                return false;
+                return JSON.parse(userDataStr);
+            } catch (e) {
+                console.error('❌ Invalid user data');
+                return null;
             }
         }
-        
-        // Setup UI
-        function setupUI() {
-            // Load user data
-            const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
-            
+
+        function setupUI(userData) {
+            // Set user information
             document.getElementById('businessName').textContent = userData.name || 'Business';
             document.getElementById('companyName').textContent = userData.company || 'Your Company';
             document.getElementById('userEmail').textContent = userData.email || '';
             document.getElementById('businessContact').textContent = `Contact: ${userData.phone || 'Not provided'}`;
             document.getElementById('userAvatar').textContent = userData.name?.charAt(0) || 'B';
-            document.getElementById('profileAvatar').textContent = userData.company?.charAt(0) || 'B';
             
             // Mobile menu toggle
             const menuToggle = document.getElementById('menuToggle');
             const sidebar = document.getElementById('sidebar');
             
-            menuToggle.addEventListener('click', () => {
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
                 sidebar.classList.toggle('active');
             });
             
-            // Close sidebar when clicking outside on mobile
+            // Close sidebar when clicking outside
             document.addEventListener('click', (e) => {
                 if (window.innerWidth <= 992 && 
                     !sidebar.contains(e.target) && 
@@ -909,60 +1016,81 @@
             // Logout handler
             document.getElementById('logoutBtn').addEventListener('click', logout);
             
-            // Update menu toggle on resize
+            // Update on resize
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 992) {
                     sidebar.classList.remove('active');
                 }
             });
         }
-        
-        // Load Dashboard Data
+
+        // ============================================
+        // API HELPER FUNCTIONS
+        // ============================================
+        async function fetchWithAuth(endpoint, options = {}) {
+            const token = localStorage.getItem('lba_auth_token');
+            
+            const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (response.status === 401) {
+                // Token expired
+                showNotification('Session expired. Please login again.', 'error');
+                setTimeout(logout, 2000);
+                throw new Error('Unauthorized');
+            }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        // ============================================
+        // DASHBOARD DATA
+        // ============================================
         async function loadDashboardData() {
             try {
-                const token = localStorage.getItem('lba_auth_token');
+                const data = await fetchWithAuth('/api/business/dashboard');
                 
-                // Get dashboard data
-                const response = await fetch(`${BACKEND_URL}/api/business/dashboard`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load dashboard data');
+                if (data.success) {
+                    updateDashboard(data.dashboard);
+                } else {
+                    throw new Error(data.message || 'Failed to load data');
                 }
-                
-                const data = await response.json();
-                
-                // Update stats
-                updateStats(data.dashboard);
-                
-                // Update nominations list
-                updateNominationsList(data.dashboard.recent_nominations);
-                
             } catch (error) {
                 console.error('❌ Dashboard load error:', error);
-                // Use mock data for demo
-                loadMockData();
+                showNotification('Could not load dashboard data. Using demo data.', 'warning');
+                loadDemoData();
             }
         }
-        
-        // Update Statistics
-        function updateStats(data) {
-            const stats = data.stats || {};
-            const profile = data.profile || {};
+
+        function updateDashboard(dashboard) {
+            const stats = dashboard.stats || {};
+            const profile = dashboard.profile || {};
+            const nominations = dashboard.recent_nominations || [];
+            
+            // Update stats cards
+            document.getElementById('totalAwards').textContent = stats.total_awards || 0;
+            document.getElementById('pendingNominations').textContent = 
+                nominations.filter(n => ['submitted', 'under_review'].includes(n.status)).length || 0;
+            document.getElementById('approvedNominations').textContent = 
+                nominations.filter(n => n.status === 'approved' || n.status === 'winner').length || 0;
+            document.getElementById('totalDocuments').textContent = stats.documents_uploaded || 0;
             
             // Update profile stats
-            document.getElementById('profileCompletion').textContent = 
-                `${stats.profile_completion || 0}%`;
-            document.getElementById('awardsWon').textContent = 
-                stats.total_awards || 0;
-            document.getElementById('activeNominations').textContent = 
-                stats.active_nominations || 0;
-            document.getElementById('documentsUploaded').textContent = 
-                stats.documents_uploaded || 0;
+            document.getElementById('profileCompletion').textContent = `${stats.profile_completion || 0}%`;
+            document.getElementById('awardsWon').textContent = stats.total_awards || 0;
+            document.getElementById('activeNominations').textContent = stats.active_nominations || 0;
+            document.getElementById('documentsUploaded').textContent = stats.documents_uploaded || 0;
             
             // Update verification status
             const verificationEl = document.getElementById('verificationStatus');
@@ -978,13 +1106,17 @@
             }
             
             // Update business info
-            document.getElementById('businessIndustry').textContent = 
-                profile.business_type ? `${profile.business_type} • ${profile.location || 'Location'}` : 'Industry • Location';
+            const industryText = profile.business_type ? profile.business_type : 'Industry';
+            const locationText = profile.location ? profile.location : 'Location';
+            document.getElementById('businessIndustry').textContent = `${industryText} • ${locationText}`;
+            
+            // Update nominations list
+            updateNominationsList(nominations);
         }
-        
-        // Update Nominations List
+
         function updateNominationsList(nominations) {
             const nominationsList = document.getElementById('nominationsList');
+            const nominationsCount = document.getElementById('nominationsCount');
             
             if (!nominations || nominations.length === 0) {
                 nominationsList.innerHTML = `
@@ -993,21 +1125,25 @@
                             <i class="fas fa-award" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
                             <p>No nominations yet</p>
                             <button class="btn btn-primary" onclick="showNominationModal()" 
-                                    style="margin-top: 15px;">
+                                    style="margin-top: 15px; padding: 10px 20px;">
                                 <i class="fas fa-plus"></i> Submit Your First Nomination
                             </button>
                         </div>
                     </div>
                 `;
-                document.getElementById('nominationsCount').textContent = '0';
+                nominationsCount.textContent = '0';
                 return;
             }
+            
+            nominationsCount.textContent = nominations.length;
             
             let html = '';
             nominations.forEach(nomination => {
                 const statusClass = `status-${nomination.status || 'draft'}`;
-                const statusText = (nomination.status || 'draft').replace('_', ' ').toUpperCase();
-                const date = new Date(nomination.created_at).toLocaleDateString();
+                const statusText = (nomination.status || 'draft')
+                    .replace(/_/g, ' ')
+                    .toUpperCase();
+                const date = nomination.created_at ? new Date(nomination.created_at).toLocaleDateString() : 'Recent';
                 
                 html += `
                     <div class="table-row">
@@ -1020,30 +1156,60 @@
             });
             
             nominationsList.innerHTML = html;
-            document.getElementById('nominationsCount').textContent = nominations.length;
         }
-        
-        // Show Nomination Modal
+
+        // ============================================
+        // DEMO DATA
+        // ============================================
+        function loadDemoData() {
+            const demoDashboard = {
+                stats: {
+                    total_awards: 2,
+                    active_nominations: 3,
+                    documents_uploaded: 5,
+                    profile_completion: 75
+                },
+                recent_nominations: [
+                    {
+                        title: 'Best Technology Innovation 2025',
+                        category: 'Technology',
+                        status: 'submitted',
+                        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        title: 'Excellence in Customer Service',
+                        category: 'Service',
+                        status: 'approved',
+                        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                    },
+                    {
+                        title: 'Sustainable Business Practices',
+                        category: 'Sustainability',
+                        status: 'draft',
+                        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+                    }
+                ],
+                profile: {
+                    verified: true,
+                    status: 'active',
+                    business_type: 'Technology',
+                    location: 'Monrovia'
+                }
+            };
+            
+            updateDashboard(demoDashboard);
+        }
+
+        // ============================================
+        // NOMINATION FUNCTIONS
+        // ============================================
         function showNominationModal() {
             hideAllModals();
+            document.getElementById('nominationForm').reset();
             document.getElementById('nominationModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
-        // Hide Modal
-        function hideModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-        
-        function hideAllModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('active');
-            });
-            document.body.style.overflow = 'auto';
-        }
-        
-        // Submit Nomination
+
         async function submitNomination(event) {
             event.preventDefault();
             
@@ -1056,73 +1222,151 @@
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
                 submitBtn.disabled = true;
                 
-                const token = localStorage.getItem('lba_auth_token');
+                // Get form data
+                const achievements = document.getElementById('nominationAchievements').value
+                    .split('\n')
+                    .map(a => a.trim())
+                    .filter(a => a.length > 0);
+                
                 const nominationData = {
                     title: document.getElementById('nominationTitle').value,
                     category: document.getElementById('nominationCategory').value,
                     description: document.getElementById('nominationDescription').value,
-                    achievements: document.getElementById('nominationAchievements').value.split('\n').filter(a => a.trim()),
+                    achievements: achievements,
                     year: new Date().getFullYear()
                 };
                 
-                const response = await fetch(`${BACKEND_URL}/api/nominations`, {
+                // Submit to API
+                const response = await fetchWithAuth('/api/nominations', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(nominationData)
                 });
                 
-                if (!response.ok) {
-                    throw new Error('Failed to submit nomination');
+                if (response.success) {
+                    showNotification('Nomination submitted successfully!', 'success');
+                    hideModal('nominationModal');
+                    form.reset();
+                    await loadDashboardData();
+                } else {
+                    throw new Error(response.message || 'Failed to submit nomination');
                 }
                 
-                const result = await response.json();
-                
-                // Show success message
-                showNotification('Nomination submitted successfully!', 'success');
-                
-                // Close modal
-                hideModal('nominationModal');
-                
-                // Reset form
-                form.reset();
-                
-                // Reload dashboard data
-                await loadDashboardData();
-                
             } catch (error) {
-                console.error('❌ Nomination submission error:', error);
+                console.error('❌ Nomination error:', error);
                 showNotification('Failed to submit nomination. Please try again.', 'error');
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         }
-        
-        // Session Timer
+
+        // ============================================
+        // PROFILE FUNCTIONS
+        // ============================================
+        function showProfileModal() {
+            hideAllModals();
+            
+            // Pre-fill form with current data
+            document.getElementById('profileBusinessName').value = 
+                document.getElementById('companyName').textContent;
+            document.getElementById('profileIndustry').value = 
+                document.getElementById('businessIndustry').textContent.split('•')[0].trim();
+            document.getElementById('profileLocation').value = 
+                document.getElementById('businessIndustry').textContent.split('•')[1]?.trim() || '';
+            
+            document.getElementById('profileModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        async function updateProfile(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            try {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                submitBtn.disabled = true;
+                
+                const profileData = {
+                    name: document.getElementById('profileBusinessName').value,
+                    business_type: document.getElementById('profileIndustry').value,
+                    location: document.getElementById('profileLocation').value,
+                    phone: document.getElementById('profilePhone').value,
+                    website: document.getElementById('profileWebsite').value
+                };
+                
+                const response = await fetchWithAuth('/api/business/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify(profileData)
+                });
+                
+                if (response.success) {
+                    showNotification('Profile updated successfully!', 'success');
+                    hideModal('profileModal');
+                    
+                    // Update local storage with new data
+                    const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+                    Object.assign(userData, profileData);
+                    localStorage.setItem('lba_user_data', JSON.stringify(userData));
+                    
+                    // Reload dashboard to show updated data
+                    await loadDashboardData();
+                } else {
+                    throw new Error(response.message || 'Failed to update profile');
+                }
+                
+            } catch (error) {
+                console.error('❌ Profile update error:', error);
+                showNotification('Failed to update profile. Please try again.', 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // ============================================
+        // DOCUMENTS FUNCTIONS
+        // ============================================
+        function showDocumentsModal() {
+            showNotification('Documents management coming soon!', 'info');
+        }
+
+        function viewAllNominations() {
+            showNotification('View all nominations - feature coming soon!', 'info');
+        }
+
+        // ============================================
+        // MODAL FUNCTIONS
+        // ============================================
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function hideAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+        }
+
+        // ============================================
+        // SESSION MANAGEMENT
+        // ============================================
         function startSessionTimer() {
             let timeLeft = SESSION_TIMEOUT * 60;
             
-            const timer = setInterval(() => {
+            setInterval(() => {
                 timeLeft--;
                 
-                if (timeLeft <= 300) { // 5 minutes warning
-                    if (timeLeft === 300) {
-                        showNotification('Session will expire in 5 minutes', 'warning');
-                    }
-                }
-                
-                if (timeLeft <= 60) { // 1 minute warning
-                    if (timeLeft === 60) {
-                        showNotification('Session will expire in 1 minute', 'warning');
-                    }
-                }
-                
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    showNotification('Session expired. Redirecting to login...', 'error');
+                if (timeLeft === 300) { // 5 minutes
+                    showNotification('Session will expire in 5 minutes', 'warning');
+                } else if (timeLeft === 60) { // 1 minute
+                    showNotification('Session will expire in 1 minute', 'warning');
+                } else if (timeLeft <= 0) {
+                    showNotification('Session expired. Redirecting...', 'error');
                     setTimeout(logout, 2000);
                 }
             }, 1000);
@@ -1131,125 +1375,73 @@
             ['click', 'mousemove', 'keypress'].forEach(event => {
                 document.addEventListener(event, () => {
                     timeLeft = SESSION_TIMEOUT * 60;
-                });
+                }, { passive: true });
             });
         }
-        
-        // Mock Data (for demo)
-        function loadMockData() {
-            const mockData = {
-                dashboard: {
-                    stats: {
-                        total_awards: 2,
-                        active_nominations: 3,
-                        documents_uploaded: 5,
-                        profile_completion: 75
-                    },
-                    recent_nominations: [
-                        {
-                            title: 'Best Technology Innovation 2025',
-                            category: 'Technology',
-                            status: 'submitted',
-                            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-                        },
-                        {
-                            title: 'Excellence in Customer Service',
-                            category: 'Service',
-                            status: 'approved',
-                            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                        },
-                        {
-                            title: 'Sustainable Business Practices',
-                            category: 'Sustainability',
-                            status: 'draft',
-                            created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-                        }
-                    ],
-                    profile: {
-                        verified: true,
-                        status: 'active',
-                        business_type: 'Technology',
-                        location: 'Monrovia'
-                    }
-                }
-            };
-            
-            updateStats(mockData.dashboard);
-            updateNominationsList(mockData.dashboard.recent_nominations);
-        }
-        
-        // Show Notification
+
+        // ============================================
+        // NOTIFICATION SYSTEM
+        // ============================================
         function showNotification(message, type = 'success') {
             // Remove existing notifications
-            const existing = document.querySelectorAll('.notification');
-            existing.forEach(n => n.remove());
+            document.querySelectorAll('.notification').forEach(n => n.remove());
             
             const notification = document.createElement('div');
             notification.className = 'notification';
-            notification.style.cssText = `
-                position: fixed;
-                top: 30px;
-                right: 30px;
-                background: ${type === 'success' ? '#10B981' : type === 'warning' ? '#F59E0B' : '#EF4444'};
-                color: white;
-                padding: 15px 25px;
-                border-radius: 10px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                z-index: 9999;
-                animation: slideIn 0.3s;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                font-weight: 600;
-            `;
             
-            const icon = type === 'success' ? 'check-circle' : 
-                         type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle';
+            const colors = {
+                success: '#10B981',
+                error: '#EF4444',
+                warning: '#F59E0B',
+                info: '#3B82F6'
+            };
+            
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                warning: 'exclamation-triangle',
+                info: 'info-circle'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            notification.style.color = 'white';
             
             notification.innerHTML = `
-                <i class="fas fa-${icon}"></i>
+                <i class="fas fa-${icons[type] || icons.info}"></i>
                 <span>${message}</span>
             `;
             
             document.body.appendChild(notification);
             
-            // Add CSS animation
-            if (!document.querySelector('#notification-style')) {
-                const style = document.createElement('style');
-                style.id = 'notification-style';
-                style.textContent = `
-                    @keyframes slideIn {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                    }
-                    @keyframes slideOut {
-                        from { transform: translateX(0); opacity: 1; }
-                        to { transform: translateX(100%); opacity: 0; }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-            
-            // Remove after 4 seconds
+            // Auto-remove after 4 seconds
             setTimeout(() => {
                 notification.style.animation = 'slideOut 0.3s';
                 setTimeout(() => notification.remove(), 300);
             }, 4000);
         }
-        
-        // Logout
+
+        // ============================================
+        // LOGOUT
+        // ============================================
         function logout() {
             localStorage.removeItem('lba_auth_token');
             localStorage.removeItem('lba_user_data');
             localStorage.removeItem('lba_user_role');
             window.location.href = '../login.html';
         }
-        
-        // Export functions to global scope
+
+        // ============================================
+        // EXPORT TO GLOBAL SCOPE
+        // ============================================
         window.showNominationModal = showNominationModal;
+        window.showProfileModal = showProfileModal;
+        window.showDocumentsModal = showDocumentsModal;
+        window.viewAllNominations = viewAllNominations;
         window.hideModal = hideModal;
+        window.submitNomination = submitNomination;
+        window.updateProfile = updateProfile;
         window.logout = logout;
-        
+
         console.log('✅ Business Dashboard Ready');
     </script>
 </body>
