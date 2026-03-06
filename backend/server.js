@@ -125,7 +125,157 @@ async function connectToMongoDB() {
 
 // ============ DATABASE SCHEMAS ============
 
-// User Schema
+// ============ NEW AUTHENTICATION SCHEMAS ============
+
+// Admin Schema (NEW)
+const adminSchema = new mongoose.Schema({
+    email: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        lowercase: true,
+        trim: true
+    },
+    password: { 
+        type: String, 
+        required: true 
+    },
+    name: { 
+        type: String, 
+        required: true 
+    },
+    role: { 
+        type: String, 
+        enum: ['super_admin', 'admin', 'moderator'], 
+        default: 'admin' 
+    },
+    permissions: {
+        manage_businesses: { type: Boolean, default: true },
+        manage_advertisements: { type: Boolean, default: true },
+        manage_news: { type: Boolean, default: true },
+        manage_users: { type: Boolean, default: false },
+        manage_settings: { type: Boolean, default: false }
+    },
+    last_login: { type: Date },
+    login_attempts: { type: Number, default: 0 },
+    lock_until: { type: Date },
+    is_active: { type: Boolean, default: true },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+// Business User Schema (NEW - Separate from User)
+const businessUserSchema = new mongoose.Schema({
+    email: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        lowercase: true,
+        trim: true
+    },
+    password: { 
+        type: String, 
+        required: true 
+    },
+    business_name: { 
+        type: String, 
+        required: true 
+    },
+    contact_name: { 
+        type: String 
+    },
+    phone: { 
+        type: String 
+    },
+    address: { 
+        type: String 
+    },
+    registration_number: { 
+        type: String 
+    },
+    tax_id: { 
+        type: String 
+    },
+    business_type: { 
+        type: String,
+        enum: ['Startup', 'SME', 'Enterprise', 'Nonprofit', 'Other']
+    },
+    industry: { 
+        type: String 
+    },
+    year_established: { 
+        type: Number 
+    },
+    employee_count: { 
+        type: String 
+    },
+    website: { 
+        type: String 
+    },
+    logo_url: { 
+        type: String 
+    },
+    documents: [{
+        name: String,
+        url: String,
+        type: String,
+        uploaded_at: { type: Date, default: Date.now }
+    }],
+    status: { 
+        type: String, 
+        enum: ['pending', 'active', 'suspended', 'rejected'],
+        default: 'pending'
+    },
+    verification_status: {
+        email_verified: { type: Boolean, default: false },
+        phone_verified: { type: Boolean, default: false },
+        documents_verified: { type: Boolean, default: false }
+    },
+    last_login: { type: Date },
+    login_attempts: { type: Number, default: 0 },
+    lock_until: { type: Date },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now },
+    notes: { type: String },
+    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+    approved_at: { type: Date }
+}, { timestamps: true });
+
+// Login History Schema (NEW)
+const loginHistorySchema = new mongoose.Schema({
+    user_id: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        required: true 
+    },
+    user_type: { 
+        type: String, 
+        enum: ['admin', 'business'],
+        required: true 
+    },
+    email: { 
+        type: String, 
+        required: true 
+    },
+    ip_address: { 
+        type: String 
+    },
+    user_agent: { 
+        type: String 
+    },
+    success: { 
+        type: Boolean, 
+        default: false 
+    },
+    login_time: { 
+        type: Date, 
+        default: Date.now 
+    },
+    logout_time: { 
+        type: Date 
+    }
+}, { timestamps: true });
+
+// User Schema (Legacy - kept for backward compatibility)
 const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
@@ -208,7 +358,7 @@ const announcementSchema = new mongoose.Schema({
     updated_at: { type: Date, default: Date.now }
 });
 
-// ============ NEW ADS & SPOTLIGHT SCHEMAS ============
+// ============ ADS & SPOTLIGHT SCHEMAS ============
 
 // Advertiser Schema
 const advertiserSchema = new mongoose.Schema({
@@ -362,7 +512,100 @@ const newsCommentSchema = new mongoose.Schema({
     user_agent: String
 }, { timestamps: true });
 
-// Create Models
+// ============ HASH PASSWORD MIDDLEWARE FOR NEW SCHEMAS ============
+
+// Hash password for Admin schema
+adminSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    
+    try {
+        const salt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Hash password for BusinessUser schema
+businessUserSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    
+    try {
+        const salt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ============ PASSWORD COMPARISON METHODS ============
+
+adminSchema.methods.comparePassword = async function(candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
+};
+
+businessUserSchema.methods.comparePassword = async function(candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// ============ ACCOUNT LOCKING METHODS ============
+
+adminSchema.methods.isLocked = function() {
+    return this.lock_until && this.lock_until > Date.now();
+};
+
+adminSchema.methods.incrementLoginAttempts = async function() {
+    const MAX_ATTEMPTS = 5;
+    const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
+    
+    this.login_attempts += 1;
+    
+    if (this.login_attempts >= MAX_ATTEMPTS) {
+        this.lock_until = Date.now() + LOCK_TIME;
+        this.login_attempts = 0;
+    }
+    
+    await this.save();
+};
+
+adminSchema.methods.resetLoginAttempts = async function() {
+    this.login_attempts = 0;
+    this.lock_until = undefined;
+    this.last_login = new Date();
+    await this.save();
+};
+
+businessUserSchema.methods.isLocked = function() {
+    return this.lock_until && this.lock_until > Date.now();
+};
+
+businessUserSchema.methods.incrementLoginAttempts = async function() {
+    const MAX_ATTEMPTS = 5;
+    const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
+    
+    this.login_attempts += 1;
+    
+    if (this.login_attempts >= MAX_ATTEMPTS) {
+        this.lock_until = Date.now() + LOCK_TIME;
+        this.login_attempts = 0;
+    }
+    
+    await this.save();
+};
+
+businessUserSchema.methods.resetLoginAttempts = async function() {
+    this.login_attempts = 0;
+    this.lock_until = undefined;
+    this.last_login = new Date();
+    await this.save();
+};
+
+// ============ CREATE MODELS ============
+const Admin = mongoose.model('Admin', adminSchema);
+const BusinessUser = mongoose.model('BusinessUser', businessUserSchema);
+const LoginHistory = mongoose.model('LoginHistory', loginHistorySchema);
 const User = mongoose.model('User', userSchema);
 const Nomination = mongoose.model('Nomination', nominationSchema);
 const Announcement = mongoose.model('Announcement', announcementSchema);
@@ -383,7 +626,8 @@ async function createCollections() {
         const requiredCollections = [
             'users', 'nominations', 'announcements', 
             'advertisers', 'adcampaigns', 'adimpressions', 'adclicks',
-            'newscategories', 'newsarticles', 'newscomments'
+            'newscategories', 'newsarticles', 'newscomments',
+            'admins', 'businessusers', 'loginhistories' // NEW collections
         ];
         
         for (const collection of requiredCollections) {
@@ -399,9 +643,37 @@ async function createCollections() {
 
 async function createDefaultAdmin() {
     try {
-        const adminExists = await User.findOne({ email: ADMIN_EMAIL });
+        // Check in Admin collection first
+        let adminExists = await Admin.findOne({ email: ADMIN_EMAIL });
         
         if (!adminExists) {
+            const salt = await bcrypt.genSalt(12);
+            const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
+            
+            const admin = new Admin({
+                email: ADMIN_EMAIL,
+                password: hashedPassword,
+                name: 'System Administrator',
+                role: 'super_admin',
+                permissions: {
+                    manage_businesses: true,
+                    manage_advertisements: true,
+                    manage_news: true,
+                    manage_users: true,
+                    manage_settings: true
+                },
+                is_active: true
+            });
+            
+            await admin.save();
+            console.log('👑 Default admin account created in Admin collection');
+        } else {
+            console.log('👑 Admin account already exists in Admin collection');
+        }
+        
+        // Also check legacy User collection for backward compatibility
+        const legacyAdmin = await User.findOne({ email: ADMIN_EMAIL });
+        if (!legacyAdmin) {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
             
@@ -418,16 +690,107 @@ async function createDefaultAdmin() {
             });
             
             await admin.save();
-            console.log('👑 Default admin account created');
-        } else {
-            console.log('👑 Admin account already exists');
+            console.log('👑 Default admin account created in legacy User collection');
         }
     } catch (error) {
         console.error('Admin creation error:', error);
     }
 }
 
-// Authentication Middleware
+async function createDemoBusiness() {
+    try {
+        const demoExists = await BusinessUser.findOne({ email: 'demo@business.com' });
+        
+        if (!demoExists) {
+            const business = new BusinessUser({
+                email: 'demo@business.com',
+                password: 'demo123',
+                business_name: 'Demo Company Liberia',
+                contact_name: 'John Doe',
+                phone: '+231 123 456 789',
+                address: '123 Main Street, Monrovia',
+                business_type: 'Enterprise',
+                industry: 'Technology',
+                year_established: 2020,
+                employee_count: '11-50',
+                website: 'https://demo-company.com',
+                status: 'active',
+                verification_status: {
+                    email_verified: true,
+                    phone_verified: true,
+                    documents_verified: true
+                }
+            });
+            
+            await business.save();
+            console.log('✅ Demo business account created');
+            console.log('📧 Email: demo@business.com');
+            console.log('🔑 Password: demo123');
+        }
+    } catch (error) {
+        console.error('❌ Error creating demo business:', error);
+    }
+}
+
+// ============ AUTHENTICATION MIDDLEWARE ============
+
+// JWT Token functions
+const generateToken = (userId, userType, email) => {
+    return jwt.sign(
+        { 
+            userId, 
+            userType,
+            email 
+        }, 
+        JWT_SECRET, 
+        { expiresIn: JWT_EXPIRES_IN }
+    );
+};
+
+const verifyToken = (token) => {
+    try {
+        return jwt.verify(token, JWT_SECRET);
+    } catch (error) {
+        return null;
+    }
+};
+
+// Rate limiting for login attempts
+const loginRateLimiter = {
+    attempts: new Map(),
+    
+    check: (email, ip) => {
+        const key = `${email}_${ip}`;
+        const now = Date.now();
+        const windowMs = 15 * 60 * 1000; // 15 minutes
+        const maxAttempts = 10;
+        
+        const record = loginRateLimiter.attempts.get(key) || { count: 0, firstAttempt: now };
+        
+        if (now - record.firstAttempt > windowMs) {
+            // Reset if window expired
+            record.count = 1;
+            record.firstAttempt = now;
+        } else {
+            record.count += 1;
+        }
+        
+        loginRateLimiter.attempts.set(key, record);
+        
+        // Cleanup old entries
+        setTimeout(() => {
+            loginRateLimiter.attempts.delete(key);
+        }, windowMs);
+        
+        return {
+            allowed: record.count <= maxAttempts,
+            remaining: Math.max(0, maxAttempts - record.count),
+            resetTime: record.firstAttempt + windowMs
+        };
+    }
+};
+
+// Updated authenticate middleware
 const authenticate = async (req, res, next) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '') || 
@@ -441,8 +804,24 @@ const authenticate = async (req, res, next) => {
             });
         }
 
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.userId).select('-password');
+        const decoded = verifyToken(token);
+        if (!decoded) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Invalid or expired token.' 
+            });
+        }
+
+        // Get user based on type
+        let user;
+        if (decoded.userType === 'admin') {
+            user = await Admin.findById(decoded.userId).select('-password');
+        } else if (decoded.userType === 'business') {
+            user = await BusinessUser.findById(decoded.userId).select('-password');
+        } else {
+            // Fallback to legacy User model
+            user = await User.findById(decoded.userId).select('-password');
+        }
 
         if (!user) {
             return res.status(401).json({ 
@@ -451,34 +830,70 @@ const authenticate = async (req, res, next) => {
             });
         }
 
-        if (user.status !== 'active' && user.status !== 'verified') {
-            return res.status(403).json({ 
-                success: false, 
-                message: `Account is ${user.status}. Please contact administrator.` 
-            });
+        // Check if user is active
+        if (decoded.userType === 'admin') {
+            if (!user.is_active) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: 'Account is deactivated. Contact administrator.' 
+                });
+            }
+        } else if (decoded.userType === 'business') {
+            if (user.status !== 'active') {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: `Account is ${user.status}. Please contact administrator.` 
+                });
+            }
+        } else {
+            if (user.status !== 'active' && user.status !== 'verified') {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: `Account is ${user.status}. Please contact administrator.` 
+                });
+            }
         }
 
         req.user = user;
+        req.userType = decoded.userType;
         next();
     } catch (error) {
-        console.error('Auth error:', error.message);
-        return res.status(401).json({ 
+        console.error('❌ Auth middleware error:', error);
+        return res.status(500).json({ 
             success: false, 
-            message: 'Invalid or expired token.' 
+            message: 'Authentication error.' 
         });
     }
 };
 
-// Role-based Authorization
+// Role-based authorization middleware
 const authorize = (...roles) => {
     return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({ 
+        if (!req.user) {
+            return res.status(401).json({ 
                 success: false, 
-                message: 'Access denied. Insufficient permissions.' 
+                message: 'Authentication required.' 
             });
         }
-        next();
+
+        // Check if userType matches
+        if (req.userType === 'admin' && roles.includes('admin')) {
+            return next();
+        }
+        
+        if (req.userType === 'business' && roles.includes('business')) {
+            return next();
+        }
+
+        // Legacy role check
+        if (req.user.role && roles.includes(req.user.role)) {
+            return next();
+        }
+
+        return res.status(403).json({ 
+            success: false, 
+            message: 'Access denied. Insufficient permissions.' 
+        });
     };
 };
 
@@ -518,12 +933,16 @@ function getClientIp(req) {
 // ============ IMPORT ROUTES ============
 const adsRoutes = require('./routes/ads.routes')(AdCampaign, AdImpression, AdClick, getSessionId, getClientIp);
 const newsRoutes = require('./routes/news.routes')(NewsArticle, NewsCategory, NewsComment);
+const authRoutes = require('./routes/auth.routes')(Admin, BusinessUser, LoginHistory, generateToken, verifyToken, loginRateLimiter);
+const businessRoutes = require('./routes/business.routes')(BusinessUser);
 
 // ============ API ROUTES ============
 
 // 1. HEALTH CHECK
 app.get('/api/health', async (req, res) => {
     const isConnected = mongoose.connection.readyState === 1;
+    const adminCount = await Admin.countDocuments().catch(() => 0);
+    const businessCount = await BusinessUser.countDocuments().catch(() => 0);
     const userCount = await User.countDocuments().catch(() => 0);
     const nominationCount = await Nomination.countDocuments().catch(() => 0);
     
@@ -531,12 +950,13 @@ app.get('/api/health', async (req, res) => {
         status: 'OK',
         timestamp: new Date().toISOString(),
         service: 'Liberia Business Awards API',
-        version: '3.0.0',
+        version: '4.0.0',
         database: isConnected ? 'connected' : 'disconnected',
         stats: {
-            users: userCount,
+            admins: adminCount,
+            businesses: businessCount,
+            legacy_users: userCount,
             nominations: nominationCount,
-            businesses: await User.countDocuments({ role: 'business' }).catch(() => 0),
             advertisers: await Advertiser.countDocuments().catch(() => 0),
             campaigns: await AdCampaign.countDocuments().catch(() => 0),
             articles: await NewsArticle.countDocuments().catch(() => 0)
@@ -546,144 +966,11 @@ app.get('/api/health', async (req, res) => {
     });
 });
 
-// 2. AUTHENTICATION
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        
-        if (!email || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Email and password are required.' 
-            });
-        }
-        
-        const user = await User.findOne({ email: email.toLowerCase() });
-        if (!user) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Invalid credentials.' 
-            });
-        }
-        
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Invalid credentials.' 
-            });
-        }
-        
-        if (!['active', 'verified'].includes(user.status)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: `Account is ${user.status}. Please contact administrator.` 
-            });
-        }
-        
-        user.last_login = new Date();
-        await user.save();
-        
-        const token = jwt.sign({ 
-            userId: user._id, 
-            role: user.role,
-            email: user.email
-        }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-        
-        res.json({
-            success: true,
-            message: 'Login successful',
-            token,
-            user: {
-                id: user._id,
-                email: user.email,
-                name: user.name,
-                company: user.company,
-                role: user.role,
-                status: user.status,
-                avatar: user.avatar
-            }
-        });
-        
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error during login.' 
-        });
-    }
-});
+// ============ AUTHENTICATION ROUTES ============
+app.use('/api', authRoutes);
+app.use('/api', businessRoutes);
 
-app.post('/api/auth/register', [
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 6 }),
-    body('name').notEmpty().trim(),
-    body('company').notEmpty().trim(),
-    body('phone').notEmpty().trim()
-], async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-        
-        const { email, password, name, company, phone, business_type } = req.body;
-        
-        let user = await User.findOne({ email: email.toLowerCase() });
-        if (user) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Business already registered with this email.' 
-            });
-        }
-        
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        
-        user = new User({
-            email: email.toLowerCase(),
-            password: hashedPassword,
-            name,
-            company,
-            phone,
-            business_type,
-            role: 'business',
-            status: 'pending',
-            verified: false
-        });
-        
-        await user.save();
-        
-        const token = jwt.sign({ 
-            userId: user._id, 
-            role: user.role,
-            email: user.email
-        }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-        
-        res.status(201).json({
-            success: true,
-            message: 'Business registered successfully!',
-            token,
-            user: {
-                id: user._id,
-                email: user.email,
-                name: user.name,
-                company: user.company,
-                role: user.role,
-                status: user.status
-            }
-        });
-        
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error during registration.' 
-        });
-    }
-});
-
-// 3. BUSINESS DASHBOARD ROUTES
+// ============ BUSINESS DASHBOARD ROUTES (Legacy) ============
 app.get('/api/business/dashboard', authenticate, authorize('business'), async (req, res) => {
     try {
         const user = req.user;
@@ -691,7 +978,7 @@ app.get('/api/business/dashboard', authenticate, authorize('business'), async (r
         const [nominations, awards, documents] = await Promise.all([
             Nomination.countDocuments({ business_id: user._id }),
             Nomination.countDocuments({ business_id: user._id, status: 'winner' }),
-            User.findById(user._id).select('documents_count')
+            BusinessUser.findById(user._id).select('documents_count')
         ]);
         
         const recentNominations = await Nomination.find({ business_id: user._id })
@@ -726,11 +1013,11 @@ app.get('/api/business/dashboard', authenticate, authorize('business'), async (r
                 recent_nominations,
                 announcements,
                 profile: {
-                    name: user.name,
-                    company: user.company,
+                    name: user.name || user.business_name,
+                    company: user.company || user.business_name,
                     email: user.email,
                     status: user.status,
-                    verified: user.verified
+                    verified: user.verified || user.verification_status?.email_verified
                 }
             }
         });
@@ -744,7 +1031,7 @@ app.get('/api/business/dashboard', authenticate, authorize('business'), async (r
     }
 });
 
-// 4. ADMIN DASHBOARD ROUTES
+// ============ ADMIN DASHBOARD ROUTES ============
 app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, res) => {
     try {
         const today = new Date();
@@ -753,38 +1040,31 @@ app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, re
         
         const [
             totalBusinesses,
-            totalNominations,
             pendingBusinesses,
+            totalAdmins,
             totalAdvertisers,
             totalCampaigns,
             pendingCampaigns,
             totalArticles,
             pendingArticles,
-            recentBusinesses,
-            recentNominations
+            recentBusinesses
         ] = await Promise.all([
-            User.countDocuments({ role: 'business' }),
-            Nomination.countDocuments(),
-            User.countDocuments({ role: 'business', status: 'pending' }),
+            BusinessUser.countDocuments(),
+            BusinessUser.countDocuments({ status: 'pending' }),
+            Admin.countDocuments(),
             Advertiser.countDocuments(),
             AdCampaign.countDocuments(),
             AdCampaign.countDocuments({ status: 'pending' }),
             NewsArticle.countDocuments(),
             NewsArticle.countDocuments({ status: 'pending' }),
-            User.find({ role: 'business' })
+            BusinessUser.find()
                 .sort({ created_at: -1 })
                 .limit(5)
-                .select('name company email status created_at'),
-            Nomination.find()
-                .populate('business_id', 'company name')
-                .sort({ created_at: -1 })
-                .limit(5)
-                .select('title category status created_at')
+                .select('business_name email status created_at')
         ]);
         
-        const registrationTrend = await User.aggregate([
+        const registrationTrend = await BusinessUser.aggregate([
             { $match: { 
-                role: 'business',
                 created_at: { $gte: weekAgo }
             }},
             { $group: {
@@ -799,10 +1079,8 @@ app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, re
             dashboard: {
                 overview: {
                     total_businesses: totalBusinesses,
-                    total_nominations: totalNominations,
                     pending_businesses: pendingBusinesses,
-                    approved_nominations: await Nomination.countDocuments({ status: 'approved' }),
-                    active_users: await User.countDocuments({ status: 'active' }),
+                    active_admins: totalAdmins,
                     advertisers: totalAdvertisers,
                     campaigns: totalCampaigns,
                     pending_campaigns: pendingCampaigns,
@@ -811,25 +1089,13 @@ app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, re
                 },
                 recent_activity: {
                     businesses: recentBusinesses,
-                    nominations: recentNominations,
-                    registrations_today: await User.countDocuments({ 
-                        role: 'business', 
-                        created_at: { $gte: today } 
-                    }),
-                    submissions_today: await Nomination.countDocuments({ 
+                    registrations_today: await BusinessUser.countDocuments({ 
                         created_at: { $gte: today } 
                     })
                 },
                 analytics: {
                     registration_trend: registrationTrend,
-                    business_types: await User.aggregate([
-                        { $match: { role: 'business' } },
-                        { $group: {
-                            _id: "$business_type",
-                            count: { $sum: 1 }
-                        }}
-                    ]),
-                    nomination_status: await Nomination.aggregate([
+                    business_status: await BusinessUser.aggregate([
                         { $group: {
                             _id: "$status",
                             count: { $sum: 1 }
@@ -854,7 +1120,7 @@ app.get('/api/admin/dashboard', authenticate, authorize('admin'), async (req, re
     }
 });
 
-// 5. GOOGLE SHEETS INTEGRATION
+// ============ GOOGLE SHEETS INTEGRATION ============
 app.get('/api/sheets/data', authenticate, authorize('admin'), async (req, res) => {
     try {
         const { sheet } = req.query;
@@ -927,11 +1193,11 @@ app.get('/api/sheets/data', authenticate, authorize('admin'), async (req, res) =
     }
 });
 
-// 6. PUBLIC STATS
+// ============ PUBLIC STATS ============
 app.get('/api/stats/public', async (req, res) => {
     try {
         const [totalBusinesses, totalNominations, recentWinners] = await Promise.all([
-            User.countDocuments({ role: 'business', status: 'active' }),
+            BusinessUser.countDocuments({ status: 'active' }),
             Nomination.countDocuments({ status: { $in: ['approved', 'winner'] } }),
             Nomination.find({ status: 'winner' })
                 .populate('business_id', 'company name')
@@ -959,7 +1225,7 @@ app.get('/api/stats/public', async (req, res) => {
     }
 });
 
-// 7. FILE UPLOAD (Firebase)
+// ============ FILE UPLOAD (Firebase) ============
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }
@@ -1026,84 +1292,11 @@ app.post('/api/upload', authenticate, upload.single('file'), async (req, res) =>
     }
 });
 
-// 8. ADS & SPOTLIGHT ROUTES
+// ============ ADS & SPOTLIGHT ROUTES ============
 app.use('/api', adsRoutes);
 app.use('/api', newsRoutes);
 
-// 9. HOME ROUTE
-app.get('/', (req, res) => {
-    res.json({
-        service: 'Liberia Business Awards API',
-        version: '3.0.0',
-        status: 'operational',
-        endpoints: {
-            public: [
-                'GET  /',
-                'GET  /api/health',
-                'GET  /api/stats/public',
-                'GET  /api/ads',
-                'GET  /api/ads/next',
-                'GET  /api/news/articles',
-                'GET  /api/news/featured',
-                'GET  /api/news/categories',
-                'POST /api/auth/login',
-                'POST /api/auth/register',
-                'POST /api/news/comment'
-            ],
-            business: [
-                'GET  /api/business/dashboard',
-                'GET  /api/business/profile',
-                'PUT  /api/business/profile',
-                'GET  /api/business/nominations',
-                'POST /api/nominations'
-            ],
-            admin: [
-                'GET  /api/admin/dashboard',
-                'GET  /api/admin/businesses',
-                'GET  /api/admin/nominations',
-                'GET  /api/sheets/data'
-            ],
-            ads: [
-                'POST /api/ads/track/impression',
-                'POST /api/ads/track/click'
-            ],
-            upload: [
-                'POST /api/upload'
-            ]
-        },
-        documentation: 'https://liberiabusinessawardslr.com/docs',
-        support: 'support@liberiabusinessawardslr.com'
-    });
-});
-
-// 9. Newsletter subscription
-app.post('/api/newsletter/subscribe', async (req, res) => {
-    try {
-        const { email, source } = req.body;
-        
-        if (!email) {
-            return res.status(400).json({ success: false, error: 'Email required' });
-        }
-        
-        // Here you can save to database or integrate with email service
-        console.log('📧 Newsletter subscription:', email, 'source:', source);
-        
-        // For now, just return success
-        res.json({ 
-            success: true, 
-            message: 'Subscription successful' 
-        });
-        
-    } catch (error) {
-        console.error('Newsletter error:', error);
-        res.status(500).json({ success: false, error: 'Server error' });
-    }
-});
-
 // ============ ADMIN SPOTLIGHT ROUTES ============
-// Add these after your other route imports
-
-// Get all articles (admin)
 app.get('/api/admin/articles', authenticate, authorize('admin'), async (req, res) => {
     try {
         const articles = await NewsArticle.find()
@@ -1115,7 +1308,6 @@ app.get('/api/admin/articles', authenticate, authorize('admin'), async (req, res
     }
 });
 
-// Create article
 app.post('/api/admin/articles', authenticate, authorize('admin'), async (req, res) => {
     try {
         const article = new NewsArticle({
@@ -1129,7 +1321,6 @@ app.post('/api/admin/articles', authenticate, authorize('admin'), async (req, re
     }
 });
 
-// Update article
 app.put('/api/admin/articles/:id', authenticate, authorize('admin'), async (req, res) => {
     try {
         const article = await NewsArticle.findByIdAndUpdate(
@@ -1146,7 +1337,6 @@ app.put('/api/admin/articles/:id', authenticate, authorize('admin'), async (req,
     }
 });
 
-// Delete article
 app.delete('/api/admin/articles/:id', authenticate, authorize('admin'), async (req, res) => {
     try {
         await NewsArticle.findByIdAndDelete(req.params.id);
@@ -1156,7 +1346,6 @@ app.delete('/api/admin/articles/:id', authenticate, authorize('admin'), async (r
     }
 });
 
-// Get all categories (admin)
 app.get('/api/admin/categories', authenticate, authorize('admin'), async (req, res) => {
     try {
         const categories = await NewsCategory.find().sort('display_order');
@@ -1166,7 +1355,6 @@ app.get('/api/admin/categories', authenticate, authorize('admin'), async (req, r
     }
 });
 
-// Create category
 app.post('/api/admin/categories', authenticate, authorize('admin'), async (req, res) => {
     try {
         const category = new NewsCategory(req.body);
@@ -1177,7 +1365,6 @@ app.post('/api/admin/categories', authenticate, authorize('admin'), async (req, 
     }
 });
 
-// Update category
 app.put('/api/admin/categories/:id', authenticate, authorize('admin'), async (req, res) => {
     try {
         const category = await NewsCategory.findByIdAndUpdate(
@@ -1191,11 +1378,9 @@ app.put('/api/admin/categories/:id', authenticate, authorize('admin'), async (re
     }
 });
 
-// Delete category
 app.delete('/api/admin/categories/:id', authenticate, authorize('admin'), async (req, res) => {
     try {
         await NewsCategory.findByIdAndDelete(req.params.id);
-        // Set category_id to null for articles
         await NewsArticle.updateMany(
             { category_id: req.params.id },
             { $unset: { category_id: 1 } }
@@ -1204,9 +1389,84 @@ app.delete('/api/admin/categories/:id', authenticate, authorize('admin'), async 
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
-});  
+});
 
-// 404 Handler
+// ============ NEWSLETTER SUBSCRIPTION ============
+app.post('/api/newsletter/subscribe', async (req, res) => {
+    try {
+        const { email, source } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email required' });
+        }
+        
+        console.log('📧 Newsletter subscription:', email, 'source:', source);
+        
+        res.json({ 
+            success: true, 
+            message: 'Subscription successful' 
+        });
+        
+    } catch (error) {
+        console.error('Newsletter error:', error);
+        res.status(500).json({ success: false, error: 'Server error' });
+    }
+});
+
+// ============ HOME ROUTE ============
+app.get('/', (req, res) => {
+    res.json({
+        service: 'Liberia Business Awards API',
+        version: '4.0.0',
+        status: 'operational',
+        endpoints: {
+            public: [
+                'GET  /',
+                'GET  /api/health',
+                'GET  /api/stats/public',
+                'GET  /api/ads',
+                'GET  /api/ads/next',
+                'GET  /api/news/articles',
+                'GET  /api/news/featured',
+                'GET  /api/news/categories',
+                'POST /api/business/register',
+                'POST /api/newsletter/subscribe',
+                'POST /api/news/comment'
+            ],
+            auth: [
+                'POST /api/auth/admin/login',
+                'POST /api/auth/business/login',
+                'POST /api/auth/logout',
+                'GET  /api/auth/verify'
+            ],
+            business: [
+                'GET  /api/business/dashboard',
+                'GET  /api/business/profile',
+                'PUT  /api/business/profile',
+                'GET  /api/business/nominations',
+                'POST /api/nominations'
+            ],
+            admin: [
+                'GET  /api/admin/dashboard',
+                'GET  /api/admin/businesses',
+                'GET  /api/admin/nominations',
+                'GET  /api/sheets/data',
+                'POST /api/auth/admin/impersonate/:businessId'
+            ],
+            ads: [
+                'POST /api/ads/track/impression',
+                'POST /api/ads/track/click'
+            ],
+            upload: [
+                'POST /api/upload'
+            ]
+        },
+        documentation: 'https://liberiabusinessawardslr.com/docs',
+        support: 'support@liberiabusinessawardslr.com'
+    });
+});
+
+// ============ 404 HANDLER ============
 app.use('*', (req, res) => {
     res.status(404).json({
         success: false,
@@ -1221,12 +1481,17 @@ app.use('*', (req, res) => {
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
-    console.log('🚀 LIBERIA BUSINESS AWARDS - PRODUCTION SYSTEM V3.0');
+    console.log('🚀 LIBERIA BUSINESS AWARDS - PRODUCTION SYSTEM V4.0');
     console.log('='.repeat(70));
     
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
     
     const connected = await connectToMongoDB();
+    
+    // Create demo business after connection
+    if (connected) {
+        await createDemoBusiness();
+    }
     
     app.listen(PORT, () => {
         console.log('\n✅ SERVER RUNNING');
@@ -1238,11 +1503,12 @@ async function startServer() {
         console.log(`🔥 Firebase: ${firebaseApp ? '✅ INITIALIZED' : '⚠️ NOT CONFIGURED'}`);
         console.log(`📁 Uploads: ${UPLOAD_DIR}`);
         console.log('='.repeat(70));
-        console.log('\n📊 NEW FEATURES:');
-        console.log('   • 💰 Paid Ads System');
-        console.log('   • 📰 Business Spotlight');
-        console.log('   • 📈 Impression Tracking');
-        console.log('   • 👥 Advertiser Management');
+        console.log('\n📊 NEW FEATURES IN V4.0:');
+        console.log('   • 🔐 Separate Admin & Business Authentication');
+        console.log('   • 🚫 Account Locking after 5 failed attempts');
+        console.log('   • 📝 Login History Tracking');
+        console.log('   • 👤 Admin Impersonation');
+        console.log('   • 📧 Business Registration');
         console.log('\n🚀 System ready for production!');
     });
 }
@@ -1261,6 +1527,3 @@ startServer().catch(err => {
     console.error('❌ SERVER STARTUP FAILED:', err);
     process.exit(1);
 });
-
-
-
