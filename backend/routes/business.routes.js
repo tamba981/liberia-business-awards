@@ -2,10 +2,16 @@ const express = require('express');
 const router = express.Router();
 const BusinessUser = require('../models/BusinessUser');
 
+// Simple test route
+router.get('/business/test', (req, res) => {
+    res.json({ message: 'Business routes working!' });
+});
+
 // Business Registration
 router.post('/business/register', async (req, res) => {
     try {
         const { email, password, business_name, contact_name, phone, business_type } = req.body;
+        console.log('Business registration:', email);
         
         const existing = await BusinessUser.findOne({ email });
         if (existing) {
