@@ -4,13 +4,18 @@ const Admin = require('../models/Admin');
 const BusinessUser = require('../models/BusinessUser');
 const jwt = require('jsonwebtoken');
 
-// Get JWT_SECRET from environment or use default
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Simple test route
+router.get('/auth/test', (req, res) => {
+    res.json({ message: 'Auth routes working!' });
+});
 
 // Admin Login
 router.post('/auth/admin/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log('Admin login attempt:', email);
         
         const admin = await Admin.findOne({ email });
         if (!admin) {
@@ -44,6 +49,7 @@ router.post('/auth/admin/login', async (req, res) => {
 router.post('/auth/business/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log('Business login attempt:', email);
         
         const business = await BusinessUser.findOne({ email });
         if (!business) {
@@ -77,7 +83,7 @@ router.post('/auth/business/login', async (req, res) => {
     }
 });
 
-// Create default admin (run once)
+// Create default admin
 const createDefaultAdmin = async () => {
     try {
         const adminExists = await Admin.findOne({ email: 'admin@liberiabusinessawardslr.com' });
@@ -95,7 +101,7 @@ const createDefaultAdmin = async () => {
     }
 };
 
-// Call this when the app starts
-setTimeout(createDefaultAdmin, 2000);
+// Don't call this here - let server.js handle it
+// createDefaultAdmin();
 
 module.exports = router;
