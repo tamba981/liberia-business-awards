@@ -1,4 +1,21 @@
 // ============================================
+// DEBUG: Catch all errors
+// ============================================
+process.on('uncaughtException', (err) => {
+    console.error('💥 UNCAUGHT EXCEPTION:', err);
+    console.error('Stack:', err.stack);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('🔥 UNHANDLED REJECTION:', err);
+    console.error('Stack:', err.stack);
+    process.exit(1);
+});
+
+console.log('🚀 Starting server with error catching...');
+
+// ============================================
 // LIBERIA BUSINESS AWARDS - PRODUCTION SYSTEM
 // WITH ADS & BUSINESS SPOTLIGHT INTEGRATION
 // ============================================
@@ -1527,4 +1544,5 @@ startServer().catch(err => {
     console.error('❌ SERVER STARTUP FAILED:', err);
     process.exit(1);
 });
+
 
