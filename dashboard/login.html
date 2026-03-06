@@ -425,7 +425,7 @@
                 <div class="form-group">
                     <label for="adminEmail">Admin Email Address</label>
                     <input type="email" id="adminEmail" required 
-                           placeholder="Enter admin email address"
+                           placeholder="admin@liberiabusinessawardslr.com"
                            autocomplete="username">
                 </div>
                 
@@ -446,6 +446,11 @@
                 <button type="submit" class="login-btn" id="adminBtn">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Login as Administrator</span>
+                </button>
+                
+                <button type="button" class="secondary-btn" onclick="quickAdminLogin()" style="margin-top: 10px;">
+                    <i class="fas fa-rocket"></i>
+                    <span>Quick Admin Login (Demo)</span>
                 </button>
             </form>
             
@@ -496,6 +501,11 @@
                         <span>Login to Business Dashboard</span>
                     </button>
                     
+                    <button type="button" class="secondary-btn" onclick="quickBusinessLogin()">
+                        <i class="fas fa-rocket"></i>
+                        <span>Quick Business Demo</span>
+                    </button>
+                    
                     <button type="button" class="secondary-btn" onclick="showBusinessOptions()">
                         <i class="fas fa-arrow-left"></i>
                         <span>Back to Options</span>
@@ -511,9 +521,8 @@
                             <li>Visit the main website: <a href="../index.html" style="color: var(--lba-red);">liberiabusinessawardslr.com</a></li>
                             <li>Click "Register Your Business" button</li>
                             <li>Fill out the complete registration form</li>
-                            <li>Submit required business documents</li>
                             <li>Wait for admin verification (1-2 business days)</li>
-                            <li>Receive login credentials via email</li>
+                            <li>You will receive login credentials via email</li>
                         </ol>
                         <p><strong>Need help?</strong> Email: <a href="mailto:admin@liberiabusinessawardslr.com" style="color: var(--lba-red);">admin@liberiabusinessawardslr.com</a></p>
                     </div>
@@ -523,34 +532,14 @@
                         <span>Go to Main Website & Register</span>
                     </button>
                     
+                    <button type="button" class="secondary-btn" onclick="quickBusinessDemo()">
+                        <i class="fas fa-rocket"></i>
+                        <span>Use Demo Business Account</span>
+                    </button>
+                    
                     <button type="button" class="login-btn" onclick="showBusinessOptions()" style="margin-top: 10px;">
                         <i class="fas fa-arrow-left"></i>
                         <span>Back to Options</span>
-                    </button>
-                </div>
-                
-                <!-- Quick Admin Tools (for admin convenience) -->
-                <div id="adminTools" style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc; display: none;">
-                    <div class="info-box">
-                        <h4><i class="fas fa-tools"></i> Admin Quick Tools</h4>
-                        <p>As an admin, you can create business accounts directly:</p>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newBusinessEmail">Business Email (for new account)</label>
-                        <input type="email" id="newBusinessEmail" 
-                               placeholder="newbusiness@example.com">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newBusinessName">Business Name</label>
-                        <input type="text" id="newBusinessName" 
-                               placeholder="ABC Company Liberia">
-                    </div>
-                    
-                    <button type="button" class="secondary-btn" onclick="createBusinessAccount()" id="createBusinessBtn">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Create Business Account</span>
                     </button>
                 </div>
             </div>
@@ -580,12 +569,21 @@
             health: '/api/health'
         };
 
-        // Default admin credentials (FALLBACK - KEPT FOR BACKWARD COMPATIBILITY)
+        // Default admin credentials (FALLBACK)
         const DEFAULT_ADMIN = {
             email: 'admin@liberiabusinessawardslr.com',
             password: 'Admin123!',
             name: 'System Administrator',
             role: 'admin'
+        };
+
+        // Demo business account (for testing)
+        const DEMO_BUSINESS = {
+            email: 'demo@business.com',
+            password: 'demo123',
+            name: 'Demo Business',
+            company: 'Demo Company Liberia',
+            role: 'business'
         };
 
         // ==================== INITIALIZATION ====================
@@ -597,14 +595,6 @@
             
             // Check backend status
             await checkBackendStatus();
-            
-            // Check if admin is already logged in (show admin tools)
-            const authToken = localStorage.getItem('lba_auth_token');
-            const userRole = localStorage.getItem('lba_user_role');
-            
-            if (authToken && userRole === 'admin') {
-                document.getElementById('adminTools').style.display = 'block';
-            }
             
             // Focus on admin email
             document.getElementById('adminEmail').focus();
@@ -649,7 +639,6 @@
         function showBusinessOptions() {
             document.getElementById('businessLoginForm').style.display = 'none';
             document.getElementById('businessRegisterInfo').style.display = 'none';
-            document.getElementById('adminTools').style.display = 'none';
             
             // Show the option cards
             document.querySelector('.business-options').style.display = 'grid';
@@ -682,7 +671,94 @@
             }
         }
 
-        // ==================== AUTH FUNCTIONS ====================
+        // ==================== BACKEND FUNCTIONS ====================
+        async function checkBackendStatus() {
+            const apiStatus = document.getElementById('apiStatus');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.health}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Backend Status:', data);
+                    
+                    let statusText = 'Backend Online - Ready for Login';
+                    if (data.stats) {
+                        statusText += ` | Businesses: ${data.stats.businesses || 0}`;
+                    }
+                    
+                    apiStatus.innerHTML = `<i class="fas fa-check-circle"></i><span>${statusText}</span>`;
+                    apiStatus.className = 'api-status online';
+                    
+                    return { success: true, data: data };
+                    
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.warn('⚠️ Backend check failed:', error.message);
+                
+                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Using demo mode</span>`;
+                apiStatus.className = 'api-status offline';
+                
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function loginToBackend(email, password) {
+            try {
+                console.log('🌐 Attempting login for:', email);
+                
+                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.login}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                console.log('📥 Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    return {
+                        success: false,
+                        error: errorData.message || `Login failed (${response.status})`,
+                        status: response.status
+                    };
+                }
+                
+                const data = await response.json();
+                console.log('✅ Login successful:', data);
+                
+                return {
+                    success: true,
+                    token: data.token,
+                    user: data.user,
+                    message: data.message || 'Login successful'
+                };
+                
+            } catch (error) {
+                console.error('❌ Network error:', error);
+                return {
+                    success: false,
+                    error: error.message || 'Network error'
+                };
+            }
+        }
+
+        // ==================== ADMIN LOGIN ====================
         async function handleAdminLogin() {
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
@@ -703,78 +779,72 @@
             const originalBtnState = setButtonLoading(btn, true, 'Authenticating...');
             
             try {
-                console.log('🔐 Attempting admin login...');
+                // Try backend login first
+                const result = await loginToBackend(email, password);
                 
-                // FIRST: Try backend login with simplified request
-                const backendResult = await loginToBackend(email, password);
-                
-                if (backendResult.success) {
+                if (result.success) {
+                    // Check if user has admin role
+                    const userRole = result.user?.role || 'admin';
+                    
                     // Store authentication
-                    localStorage.setItem('lba_auth_token', backendResult.token);
-                    localStorage.setItem('lba_user_data', JSON.stringify(backendResult.user));
-                    localStorage.setItem('lba_user_role', backendResult.user.role);
+                    localStorage.setItem('lba_auth_token', result.token);
+                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+                    localStorage.setItem('lba_user_role', userRole);
                     localStorage.setItem('lba_login_time', new Date().toISOString());
                     
                     showSuccess(successEl, '✓ Login successful! Redirecting...');
-                    console.log('✅ Admin login successful via backend');
+                    console.log('✅ Admin login successful');
                     
-                    // Show admin tools in business tab
-                    document.getElementById('adminTools').style.display = 'block';
-                    
-                    // Redirect after delay
+                    // Redirect
                     setTimeout(() => {
-                        window.location.href = 'admin/index.html';
+                        if (userRole === 'admin') {
+                            window.location.href = 'admin/index.html';
+                        } else {
+                            window.location.href = 'business/index.html';
+                        }
                     }, 1500);
                     
                     return;
                 }
                 
-                // SECOND: If backend fails, try default admin credentials
-                console.log('⚠️ Backend login failed, trying default admin...');
-                
+                // Try default admin credentials
                 if (email === DEFAULT_ADMIN.email && password === DEFAULT_ADMIN.password) {
                     console.log('🔑 Using default admin credentials');
                     
-                    // Create local session
-                    const token = btoa(Date.now() + '|' + email + '|admin');
+                    const token = 'admin_' + Date.now();
                     const userData = {
                         id: 'admin-001',
                         email: email,
                         name: DEFAULT_ADMIN.name,
-                        role: DEFAULT_ADMIN.role,
-                        verified: true,
-                        source: 'local'
+                        role: 'admin',
+                        verified: true
                     };
                     
                     localStorage.setItem('lba_auth_token', token);
                     localStorage.setItem('lba_user_data', JSON.stringify(userData));
-                    localStorage.setItem('lba_user_role', userData.role);
-                    localStorage.setItem('lba_login_time', new Date().toISOString());
+                    localStorage.setItem('lba_user_role', 'admin');
                     
-                    showSuccess(successEl, '✓ Login successful (local admin)! Redirecting...');
-                    console.log('✅ Default admin login successful');
-                    
-                    // Show admin tools
-                    document.getElementById('adminTools').style.display = 'block';
+                    showSuccess(successEl, '✓ Default admin login successful! Redirecting...');
                     
                     setTimeout(() => {
                         window.location.href = 'admin/index.html';
                     }, 1500);
                     
                 } else {
-                    throw new Error('Invalid admin credentials');
+                    throw new Error(result.error || 'Invalid admin credentials');
                 }
                 
             } catch (error) {
                 console.error('❌ Admin login error:', error);
-                showError(errorEl, 'Login failed. Please check your credentials and try again.');
+                showError(errorEl, error.message || 'Login failed. Please check your credentials.');
             } finally {
                 setTimeout(() => {
-                    setButtonLoading(btn, false, 'Login as Admin', originalBtnState);
+                    setButtonLoading(btn, false, 'Login as Administrator', originalBtnState);
                 }, 1000);
             }
         }
 
+        // ==================== BUSINESS LOGIN ====================
         async function handleBusinessLogin() {
             const email = document.getElementById('businessEmail').value.trim();
             const password = document.getElementById('businessPassword').value;
@@ -795,21 +865,14 @@
             const originalBtnState = setButtonLoading(btn, true, 'Authenticating...');
             
             try {
-                console.log('🏢 Attempting business login...');
-                
-                // Try business login
+                // Try backend login
                 const result = await loginToBackend(email, password);
                 
                 if (result.success) {
-                    // Check if user has business role (optional check)
-                    if (result.user.role && result.user.role !== 'business') {
-                        console.warn('⚠️ User role is not business:', result.user.role);
-                    }
-                    
                     // Store authentication
                     localStorage.setItem('lba_auth_token', result.token);
                     localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-                    localStorage.setItem('lba_user_role', result.user.role || 'business');
+                    localStorage.setItem('lba_user_role', result.user?.role || 'business');
                     localStorage.setItem('lba_login_time', new Date().toISOString());
                     
                     showSuccess(successEl, '✓ Login successful! Redirecting...');
@@ -827,31 +890,30 @@
             } catch (error) {
                 console.error('❌ Business login error:', error);
                 
-                // User-friendly error messages
                 let errorMessage = error.message;
                 
-                if (error.message.includes('Invalid') || error.message.includes('credentials')) {
+                if (error.message.includes('Invalid') || error.message.includes('401')) {
                     errorMessage = 'Invalid email or password. Please check your credentials.';
-                } else if (error.message.includes('not a business account')) {
-                    errorMessage = 'This email is not registered as a business account.';
                 } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    errorMessage = 'Cannot connect to server. Please try again later.';
-                } else if (error.message.includes('timeout')) {
-                    errorMessage = 'Connection timeout. Please try again.';
-                } else if (error.message.includes('400')) {
-                    errorMessage = 'Login failed. Please check your credentials.';
+                    errorMessage = 'Cannot connect to server. Using demo mode.';
+                    
+                    // Offer demo login
+                    if (confirm('Server connection failed. Would you like to use the demo business account?')) {
+                        useDemoBusiness();
+                        return;
+                    }
                 }
                 
                 showError(errorEl, errorMessage);
                 
-                // Suggest registration
-                if (error.message.includes('Invalid') || error.message.includes('credentials') || error.message.includes('400')) {
-                    setTimeout(() => {
-                        if (confirm('Login failed. Would you like to register your business instead?')) {
-                            showBusinessRegister();
-                        }
-                    }, 500);
-                }
+                // Show demo option
+                setTimeout(() => {
+                    const demoBtn = document.createElement('div');
+                    demoBtn.style.marginTop = '10px';
+                    demoBtn.style.textAlign = 'center';
+                    demoBtn.innerHTML = '<button onclick="useDemoBusiness()" class="secondary-btn" style="padding: 10px;"><i class="fas fa-rocket"></i> Use Demo Account</button>';
+                    errorEl.parentNode.insertBefore(demoBtn, errorEl.nextSibling);
+                }, 500);
                 
             } finally {
                 setTimeout(() => {
@@ -860,205 +922,57 @@
             }
         }
 
-        // ==================== BACKEND FUNCTIONS ====================
-        async function checkBackendStatus() {
-            const apiStatus = document.getElementById('apiStatus');
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.health}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    signal: AbortSignal.timeout(5000)
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('✅ Backend Status:', data);
-                    
-                    let statusText = 'Backend Online - Ready for Login';
-                    if (data.database) {
-                        statusText += `<br><small>Database: ${data.database}</small>`;
-                    }
-                    if (data.businesses) {
-                        statusText += `<br><small>Registered Businesses: ${data.businesses}</small>`;
-                    }
-                    
-                    apiStatus.innerHTML = `<i class="fas fa-check-circle"></i><span>${statusText}</span>`;
-                    apiStatus.className = 'api-status online';
-                    
-                    return { success: true, data: data };
-                    
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-            } catch (error) {
-                console.warn('⚠️ Backend check failed:', error.message);
-                
-                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Using fallback authentication</span>`;
-                apiStatus.className = 'api-status offline';
-                
-                return { success: false, error: error.message };
-            }
+        // ==================== DEMO FUNCTIONS ====================
+        function quickAdminLogin() {
+            document.getElementById('adminEmail').value = DEFAULT_ADMIN.email;
+            document.getElementById('adminPassword').value = DEFAULT_ADMIN.password;
+            handleAdminLogin();
         }
 
-        async function loginToBackend(email, password) {
-            try {
-                console.log('🌐 Calling backend login API...');
-                
-                // SIMPLIFIED REQUEST - Remove the 'role' parameter which might be causing 400 error
-                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.login}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password
-                        // REMOVED: role parameter to avoid 400 error
-                    })
-                });
-                
-                console.log('📥 Response status:', response.status);
-                
-                if (!response.ok) {
-                    let errorMessage = `Login failed (${response.status})`;
-                    
-                    try {
-                        const errorData = await response.json();
-                        errorMessage = errorData.message || errorMessage;
-                        console.log('📄 Error response:', errorData);
-                    } catch (e) {
-                        // Not JSON, try text
-                        const errorText = await response.text();
-                        console.log('📄 Error text:', errorText);
-                        errorMessage = errorText || errorMessage;
-                    }
-                    
-                    return {
-                        success: false,
-                        error: errorMessage,
-                        status: response.status
-                    };
-                }
-                
-                const data = await response.json();
-                console.log('✅ Login response:', data);
-                
-                return {
-                    success: true,
-                    token: data.token || data.accessToken || btoa(Date.now() + email),
-                    user: data.user || {
-                        email: email,
-                        name: email.split('@')[0],
-                        role: email.includes('admin') ? 'admin' : 'business',
-                        id: 'user-' + Date.now()
-                    },
-                    message: data.message || 'Login successful'
-                };
-                
-            } catch (error) {
-                console.error('❌ Network error:', error);
-                return {
-                    success: false,
-                    error: error.message || 'Network error'
-                };
-            }
+        function quickBusinessLogin() {
+            useDemoBusiness();
         }
 
-        async function createBusinessAccount() {
-            const email = document.getElementById('newBusinessEmail').value.trim();
-            const businessName = document.getElementById('newBusinessName').value.trim();
-            const btn = document.getElementById('createBusinessBtn');
+        function quickBusinessDemo() {
+            useDemoBusiness();
+        }
+
+        function useDemoBusiness() {
+            const errorEl = document.getElementById('businessError');
+            const successEl = document.getElementById('businessSuccess');
             
-            if (!email || !businessName) {
-                alert('Please fill in both email and business name');
-                return;
-            }
+            clearAllMessages();
             
-            // Show loading
-            const originalBtnState = setButtonLoading(btn, true, 'Creating account...');
-            
-            try {
-                console.log('Creating business account:', email);
-                
-                // Generate a temporary password
-                const tempPassword = 'Business' + Math.floor(1000 + Math.random() * 9000) + '!';
-                
-                // Check if admin is logged in
-                const authToken = localStorage.getItem('lba_auth_token');
-                
-                const headers = {
-                    'Content-Type': 'application/json'
-                };
-                
-                if (authToken) {
-                    headers['Authorization'] = `Bearer ${authToken}`;
+            // Create demo session
+            const token = 'demo_' + Date.now();
+            const userData = {
+                id: 'demo-business-001',
+                email: DEMO_BUSINESS.email,
+                name: DEMO_BUSINESS.name,
+                company: DEMO_BUSINESS.company,
+                role: 'business',
+                verified: true,
+                phone: '+231 123 456 789',
+                business_type: 'Technology',
+                location: 'Monrovia',
+                profile_completion: 75,
+                stats: {
+                    total_awards: 2,
+                    active_nominations: 3,
+                    documents_uploaded: 5
                 }
-                
-                const response = await fetch(`${BACKEND_URL}${API_ENDPOINTS.register}`, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({
-                        email: email,
-                        password: tempPassword,
-                        name: businessName,
-                        businessName: businessName,
-                        phone: '+231 000 000 000'
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    alert(`✅ Business account created successfully!\n\nEmail: ${email}\nTemporary Password: ${tempPassword}\n\nPlease share these credentials with the business owner and ask them to change their password after first login.`);
-                    
-                    // Clear form
-                    document.getElementById('newBusinessEmail').value = '';
-                    document.getElementById('newBusinessName').value = '';
-                    
-                    console.log('Business account created:', data);
-                    
-                } else {
-                    const errorText = await response.text();
-                    console.error('Registration error:', errorText);
-                    
-                    // Try alternative registration format
-                    console.log('Trying alternative registration...');
-                    
-                    const altResponse = await fetch(`${BACKEND_URL}${API_ENDPOINTS.register}`, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify({
-                            email: email,
-                            password: tempPassword,
-                            username: businessName.replace(/\s+/g, '_'),
-                            businessName: businessName
-                        })
-                    });
-                    
-                    if (altResponse.ok) {
-                        const altData = await altResponse.json();
-                        alert(`✅ Business account created successfully!\n\nEmail: ${email}\nTemporary Password: ${tempPassword}`);
-                        
-                        // Clear form
-                        document.getElementById('newBusinessEmail').value = '';
-                        document.getElementById('newBusinessName').value = '';
-                        
-                    } else {
-                        throw new Error(`Failed to create account. Please try manual registration.`);
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Account creation error:', error);
-                alert(`❌ Failed to create business account: ${error.message}\n\nYou can manually register businesses through the main website registration form.`);
-            } finally {
-                setButtonLoading(btn, false, 'Create Business Account', originalBtnState);
-            }
+            };
+            
+            localStorage.setItem('lba_auth_token', token);
+            localStorage.setItem('lba_user_data', JSON.stringify(userData));
+            localStorage.setItem('lba_user_role', 'business');
+            localStorage.setItem('lba_login_time', new Date().toISOString());
+            
+            showSuccess(successEl, '✓ Demo login successful! Redirecting...');
+            
+            setTimeout(() => {
+                window.location.href = 'business/index.html';
+            }, 1500);
         }
 
         // ==================== UTILITY FUNCTIONS ====================
@@ -1101,24 +1015,22 @@
             });
         }
 
-        // ==================== TESTING FUNCTIONS ====================
-        // For quick testing in browser console
-        window.testAdminLogin = function() {
-            document.getElementById('adminEmail').value = 'admin@liberiabusinessawardslr.com';
-            document.getElementById('adminPassword').value = 'Admin123!';
-            console.log('Test credentials loaded. Click login button.');
-        };
+        // ==================== EXPORT FUNCTIONS ====================
+        window.showBusinessOptions = showBusinessOptions;
+        window.showBusinessLogin = showBusinessLogin;
+        window.showBusinessRegister = showBusinessRegister;
+        window.togglePasswordVisibility = togglePasswordVisibility;
+        window.handleAdminLogin = handleAdminLogin;
+        window.handleBusinessLogin = handleBusinessLogin;
+        window.quickAdminLogin = quickAdminLogin;
+        window.quickBusinessLogin = quickBusinessLogin;
+        window.quickBusinessDemo = quickBusinessDemo;
+        window.useDemoBusiness = useDemoBusiness;
 
-        window.testBusinessLogin = function() {
-            document.getElementById('businessEmail').value = 'test@example.com';
-            document.getElementById('businessPassword').value = 'test123';
-            console.log('Test business credentials loaded. Click login button.');
-        };
-
-        console.log('ℹ️  Testing helpers available:');
-        console.log('- testAdminLogin() - Load admin test credentials');
-        console.log('- testBusinessLogin() - Load business test credentials');
-        console.log('- createTestBusiness() - Create test business account');
+        console.log('ℹ️ Login page ready');
+        console.log('- Use default admin: admin@liberiabusinessawardslr.com / Admin123!');
+        console.log('- Use demo business: demo@business.com / demo123');
+        console.log('- Or click "Quick Admin Login" or "Quick Business Demo" buttons');
     </script>
 </body>
 </html>
