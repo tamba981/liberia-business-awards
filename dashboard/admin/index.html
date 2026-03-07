@@ -1259,6 +1259,548 @@
                         <span>Judges Panel</span>
                     </a>
                 </div>
+
+                <!-- Add to admin dashboard sidebar -->
+<div class="menu-section">
+    <h4>Business Management</h4>
+    <a href="#" class="menu-item" onclick="showBusinessApprovalModal()">
+        <i class="fas fa-building"></i>
+        <span>Pending Businesses</span>
+        <span class="badge" id="pendingBusinessesCount">0</span>
+    </a>
+</div>
+
+<!-- Business Approval Modal -->
+<div class="modal" id="businessApprovalModal">
+    <div class="modal-content" style="max-width: 1200px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-building"></i> Pending Business Approvals</h2>
+            <button class="modal-close" onclick="closeModal('businessApprovalModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card" style="padding: 20px;">
+                    <h3 id="totalPending">0</h3>
+                    <p>Pending</p>
+                </div>
+                <div class="stat-card" style="padding: 20px;">
+                    <h3 id="totalApproved">0</h3>
+                    <p>Approved</p>
+                </div>
+                <div class="stat-card" style="padding: 20px;">
+                    <h3 id="totalRejected">0</h3>
+                    <p>Rejected</p>
+                </div>
+            </div>
+            
+            <div class="filter-controls">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Filter by Status</label>
+                        <select id="businessFilter" onchange="loadBusinesses()">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="businessSearch" placeholder="Search businesses...">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Business Name</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                            <th>Phone</th>
+                            <th>Type</th>
+                            <th>Registered</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="businessesTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 50px;">
+                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                <p>Loading businesses...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add to admin dashboard JavaScript
+const API_BASE = 'https://liberia-business-awards-backend.onrender.com';
+
+// Load pending businesses
+async function loadBusinesses() {
+    const filter = document.getElementById('businessFilter')?.value || 'pending';
+    const tableBody = document.getElementById('businessesTableBody');
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/api/admin/businesses?status=${filter}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            displayBusinesses(data.businesses);
+            updateBusinessStats();
+        }
+    } catch (error) {
+        console.error('Error loading businesses:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle"></i> Error loading businesses
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Display businesses in table
+function displayBusinesses(businesses) {
+    const tableBody = document.getElementById('businessesTableBody');
+    
+    if (businesses.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 50px;">
+                    <i class="fas fa-building" style="font-size: 48px; color: #cbd5e0;"></i>
+                    <p>No businesses found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = businesses.map(business => {
+        const date = new Date(business.created_at).toLocaleDateString();
+        const statusClass = business.status === 'pending' ? 'warning' :
+                           business.status === 'approved' ? 'active' : 'danger';
+        
+        return `
+            <tr>
+                <td><strong>${business.business_name}</strong></td>
+                <td>${business.email}</td>
+                <td>${business.contact_name || '-'}</td>
+                <td>${business.phone || '-'}</td>
+                <td>${business.business_type || '-'}</td>
+                <td>${date}</td>
+                <td>
+                    <span class="status-badge status-${statusClass}">${business.status}</span>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 5px;">
+                        ${business.status === 'pending' ? `
+                            <button class="sheet-btn" style="background: #10B981;" onclick="approveBusiness('${business._id}')">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="sheet-btn" style="background: #EF4444;" onclick="rejectBusiness('${business._id}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : business.status === 'rejected' ? `
+                            <button class="sheet-btn" style="background: #10B981;" onclick="approveBusiness('${business._id}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                        ` : business.status === 'approved' ? `
+                            <span class="status-badge status-active">Approved</span>
+                        ` : ''}
+                        <button class="sheet-btn secondary" onclick="viewBusinessDetails('${business._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Approve business
+async function approveBusiness(id) {
+    if (!confirm('Approve this business?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/api/admin/businesses/${id}/approve`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Business approved successfully!', 'success');
+            loadBusinesses();
+            updateBusinessStats();
+        }
+    } catch (error) {
+        console.error('Error approving business:', error);
+        showNotification('Error approving business', 'error');
+    }
+}
+
+// Reject business with reason
+async function rejectBusiness(id) {
+    const reason = prompt('Enter rejection reason:');
+    if (!reason) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/api/admin/businesses/${id}/reject`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Business rejected', 'warning');
+            loadBusinesses();
+            updateBusinessStats();
+        }
+    } catch (error) {
+        console.error('Error rejecting business:', error);
+        showNotification('Error rejecting business', 'error');
+    }
+}
+
+// Update business stats
+async function updateBusinessStats() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/api/admin/businesses/stats`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('totalPending').textContent = data.stats.pending;
+            document.getElementById('totalApproved').textContent = data.stats.approved;
+            document.getElementById('totalRejected').textContent = data.stats.rejected;
+            document.getElementById('pendingBusinessesCount').textContent = data.stats.pending;
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+// Show business approval modal
+function showBusinessApprovalModal() {
+    hideAllModals();
+    document.getElementById('businessApprovalModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadBusinesses();
+}
+
+// Search businesses
+document.getElementById('businessSearch')?.addEventListener('keyup', function(e) {
+    const search = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#businessesTableBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(search) ? '' : 'none';
+    });
+});
+
+    // ============================================
+// BUSINESS MANAGEMENT SYSTEM
+// ============================================
+
+// Show business approval modal
+function showBusinessApprovalModal() {
+    hideAllModals();
+    const modal = document.getElementById('businessApprovalModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        loadBusinesses();
+        updateBusinessStats();
+    } else {
+        console.error('Business approval modal not found');
+    }
+}
+
+// Load businesses from API
+async function loadBusinesses() {
+    const filter = document.getElementById('businessFilter')?.value || 'pending';
+    const tableBody = document.getElementById('businessesTableBody');
+    
+    if (!tableBody) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            showNotification('Authentication required', 'error');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?status=${filter}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            displayBusinesses(data.businesses);
+        } else {
+            throw new Error(data.message || 'Failed to load businesses');
+        }
+    } catch (error) {
+        console.error('Error loading businesses:', error);
+        if (tableBody) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; color: #EF4444; padding: 30px;">
+                        <i class="fas fa-exclamation-circle"></i> Error loading businesses
+                        <br>
+                        <small>${error.message}</small>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+// Display businesses in table
+function displayBusinesses(businesses) {
+    const tableBody = document.getElementById('businessesTableBody');
+    if (!tableBody) return;
+    
+    if (!businesses || businesses.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 50px;">
+                    <i class="fas fa-building" style="font-size: 48px; color: #cbd5e0;"></i>
+                    <p style="margin-top: 20px;">No businesses found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = businesses.map(business => {
+        const date = business.created_at ? new Date(business.created_at).toLocaleDateString() : 'N/A';
+        let statusClass = '';
+        let statusText = business.status || 'unknown';
+        
+        switch(business.status) {
+            case 'pending':
+                statusClass = 'warning';
+                break;
+            case 'approved':
+                statusClass = 'active';
+                break;
+            case 'rejected':
+                statusClass = 'danger';
+                break;
+            default:
+                statusClass = 'info';
+        }
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(business.business_name || 'N/A')}</strong></td>
+                <td>${escapeHtml(business.email || 'N/A')}</td>
+                <td>${escapeHtml(business.contact_name || '-')}</td>
+                <td>${escapeHtml(business.phone || '-')}</td>
+                <td>${escapeHtml(business.business_type || '-')}</td>
+                <td>${date}</td>
+                <td>
+                    <span class="status-badge status-${statusClass}">${statusText}</span>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 5px;">
+                        ${business.status === 'pending' ? `
+                            <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approveBusiness('${business._id}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="sheet-btn" style="background: #EF4444; padding: 6px 12px;" onclick="rejectBusiness('${business._id}')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        ` : business.status === 'rejected' ? `
+                            <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approveBusiness('${business._id}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                        ` : business.status === 'approved' ? `
+                            <span class="status-badge status-active">✓ Approved</span>
+                        ` : ''}
+                        <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="viewBusinessDetails('${business._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Approve business
+async function approveBusiness(id) {
+    if (!confirm('Are you sure you want to approve this business?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            showNotification('Authentication required', 'error');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${id}/approve`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Business approved successfully!', 'success');
+            loadBusinesses();
+            updateBusinessStats();
+        } else {
+            throw new Error(data.message || 'Failed to approve business');
+        }
+    } catch (error) {
+        console.error('Error approving business:', error);
+        showNotification('Error approving business: ' + error.message, 'error');
+    }
+}
+
+// Reject business
+async function rejectBusiness(id) {
+    const reason = prompt('Enter rejection reason:');
+    if (reason === null) return;
+    if (!reason.trim()) {
+        showNotification('Rejection reason is required', 'warning');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            showNotification('Authentication required', 'error');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${id}/reject`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Business rejected', 'warning');
+            loadBusinesses();
+            updateBusinessStats();
+        } else {
+            throw new Error(data.message || 'Failed to reject business');
+        }
+    } catch (error) {
+        console.error('Error rejecting business:', error);
+        showNotification('Error rejecting business: ' + error.message, 'error');
+    }
+}
+
+// Update business statistics
+async function updateBusinessStats() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) return;
+        
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/stats`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('totalPending').textContent = data.stats.pending || 0;
+            document.getElementById('totalApproved').textContent = data.stats.approved || 0;
+            document.getElementById('totalRejected').textContent = data.stats.rejected || 0;
+            document.getElementById('pendingBusinessesCount').textContent = data.stats.pending || 0;
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+// Search businesses in table
+function searchBusinesses() {
+    const search = document.getElementById('businessSearch')?.value.toLowerCase() || '';
+    const rows = document.querySelectorAll('#businessesTableBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(search)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+    // Escape HTML helper (add this if missing)
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// View business details
+function viewBusinessDetails(id) {
+    showNotification('Business details view coming soon', 'info');
+}
+
+// Make functions globally available
+window.showBusinessApprovalModal = showBusinessApprovalModal;
+window.loadBusinesses = loadBusinesses;
+window.approveBusiness = approveBusiness;
+window.rejectBusiness = rejectBusiness;
+window.searchBusinesses = searchBusinesses;
+window.viewBusinessDetails = viewBusinessDetails;
+</script>
                 
                 <div class="menu-section">
                     <h4>System</h4>
@@ -3536,5 +4078,85 @@
             </div>
         </div>
     </div>
+    <!-- ============ BUSINESS APPROVAL MODAL ============ -->
+<div class="modal" id="businessApprovalModal">
+    <div class="modal-content" style="max-width: 1200px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-building"></i> Business Approvals</h2>
+            <button class="modal-close" onclick="closeModal('businessApprovalModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Stats Cards -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #FF0000;">
+                    <h3 style="font-size: 28px; color: #FF0000;" id="totalPending">0</h3>
+                    <p style="color: #64748b; font-size: 14px;">Pending</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
+                    <h3 style="font-size: 28px; color: #10B981;" id="totalApproved">0</h3>
+                    <p style="color: #64748b; font-size: 14px;">Approved</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #EF4444;">
+                    <h3 style="font-size: 28px; color: #EF4444;" id="totalRejected">0</h3>
+                    <p style="color: #64748b; font-size: 14px;">Rejected</p>
+                </div>
+            </div>
+            
+            <!-- Filter Controls -->
+            <div class="filter-controls">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Filter by Status</label>
+                        <select id="businessFilter" onchange="loadBusinesses()">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="businessSearch" placeholder="Search businesses..." onkeyup="searchBusinesses()">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Businesses Table -->
+            <div class="sheets-viewer">
+                <div class="sheets-viewer-header">
+                    <h4><i class="fas fa-building"></i> Registered Businesses</h4>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Email</th>
+                                <th>Contact</th>
+                                <th>Phone</th>
+                                <th>Type</th>
+                                <th>Registered</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="businessesTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 50px;">
+                                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                    <p>Loading businesses...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
 </body>
 </html>
+
