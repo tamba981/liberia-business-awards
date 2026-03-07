@@ -8,64 +8,99 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* LBA Brand Colors - Modern Gradient */
             --lba-primary: #FF0000;
             --lba-secondary: #87CEEB;
             --lba-dark: #1a202c;
             --lba-light: #f8f9fa;
             --lba-gradient: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
             --lba-gradient-dark: linear-gradient(135deg, #cc0000 0%, #6bb9e2 100%);
+           
+            /* Dashboard Variables */
             --sidebar-width: 280px;
+            --header-height: 80px;
             --success-color: #10B981;
             --warning-color: #F59E0B;
             --danger-color: #EF4444;
             --info-color: #3B82F6;
             --purple: #8B5CF6;
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+       
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f5f7fb;
             color: var(--lba-dark);
             min-height: 100vh;
             overflow-x: hidden;
         }
-        
-        .dashboard-container { display: flex; min-height: 100vh; }
-        
-        /* Sidebar - unchanged */
+       
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+       
+        /* Modern Sidebar */
         .sidebar {
             width: var(--sidebar-width);
             background: var(--lba-dark);
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            transition: all 0.4s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
             z-index: 1000;
-            border-right: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
-        
+       
         .sidebar-header {
             padding: 30px 25px;
-            background: rgba(0,0,0,0.2);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
         }
-        
+       
         .sidebar-header::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 4px;
             background: var(--lba-gradient);
         }
-        
-        .sidebar-header h3 { color: white; font-size: 24px; font-weight: 700; }
-        .sidebar-header p { color: var(--lba-secondary); font-size: 13px; opacity: 0.8; }
-        
-        .sidebar-menu { padding: 25px 0; }
-        .menu-section { padding: 0 20px; margin-bottom: 30px; }
-        
+       
+        .sidebar-header h3 {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+       
+        .sidebar-header p {
+            color: var(--lba-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+       
+        .sidebar-menu {
+            padding: 25px 0;
+        }
+       
+        .menu-section {
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
+       
         .menu-section h4 {
             color: var(--lba-secondary);
             font-size: 11px;
@@ -76,7 +111,7 @@
             opacity: 0.6;
             font-weight: 600;
         }
-        
+       
         .menu-item {
             padding: 14px 20px;
             margin: 6px 15px;
@@ -85,27 +120,50 @@
             color: #cbd5e0;
             text-decoration: none;
             border-radius: 12px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
             border: 1px solid transparent;
         }
-        
-        .menu-item:hover, .menu-item.active {
-            background: rgba(255,0,0,0.15);
+       
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
             color: white;
-            border-color: rgba(255,0,0,0.3);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
         }
-        
+       
+        .menu-item.active {
+            background: rgba(255, 0, 0, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.15);
+        }
+       
         .menu-item.active::before {
             content: '';
             position: absolute;
-            left: 0; top: 0; bottom: 0;
+            left: 0;
+            top: 0;
+            bottom: 0;
             width: 4px;
             background: var(--lba-primary);
+            border-radius: 0 4px 4px 0;
         }
-        
-        .menu-item i { margin-right: 15px; width: 20px; font-size: 18px; }
-        .menu-item span { flex: 1; font-weight: 500; }
-        
+       
+        .menu-item i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+       
+        .menu-item span {
+            flex: 1;
+            font-weight: 500;
+            font-size: 15px;
+        }
+       
         .menu-item .badge {
             background: var(--lba-secondary);
             color: var(--lba-dark);
@@ -113,53 +171,92 @@
             border-radius: 20px;
             font-size: 11px;
             font-weight: 700;
+            min-width: 25px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(135, 206, 235, 0.3);
         }
-        
-        .menu-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 25px; }
-        
+       
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 25px;
+        }
+       
         /* Main Content */
         .main-content {
             flex: 1;
             margin-left: var(--sidebar-width);
             padding: 30px;
             min-height: 100vh;
+            transition: all 0.3s;
         }
-        
+       
+        /* Modern Header */
         .header {
             background: white;
             padding: 25px 30px;
             border-radius: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-left: 5px solid var(--lba-primary);
+            position: relative;
+            overflow: hidden;
         }
-        
+       
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,0,0,0.05) 0%, transparent 70%);
+            opacity: 0.5;
+        }
+       
         .header h1 {
             color: var(--lba-dark);
             font-size: 32px;
             font-weight: 700;
+            margin-bottom: 8px;
             background: var(--lba-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
         }
-        
-        .header p { color: #64748b; font-size: 15px; }
-        
+       
+        .header p {
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 500;
+        }
+       
         .user-info {
             display: flex;
             align-items: center;
             gap: 15px;
-            background: linear-gradient(135deg,#f8fafc,#f1f5f9);
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             padding: 12px 25px;
             border-radius: 15px;
+            transition: all 0.3s;
             cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            z-index: 1;
         }
-        
+       
+        .user-info:hover {
+            border-color: var(--lba-secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(135, 206, 235, 0.2);
+        }
+       
         .user-avatar {
-            width: 50px; height: 50px;
+            width: 50px;
+            height: 50px;
             background: var(--lba-gradient);
             border-radius: 50%;
             display: flex;
@@ -168,69 +265,149 @@
             color: white;
             font-weight: bold;
             font-size: 20px;
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
         }
-        
+       
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+       
+        .user-details strong {
+            color: var(--lba-dark);
+            font-weight: 600;
+            font-size: 16px;
+        }
+       
+        .user-details small {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+        }
+       
+        /* Modern Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
-        
+       
         .stat-card {
             background: white;
             padding: 30px;
             border-radius: 20px;
-            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
             display: flex;
             align-items: center;
             gap: 25px;
-            transition: all 0.4s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.12); }
-        
+       
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--lba-gradient);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+       
+        .stat-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 0, 0, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+       
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+       
+        .stat-card.businesses .stat-icon {
+            background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+            color: var(--lba-primary);
+        }
+       
+        .stat-card.nominations .stat-icon {
+            background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+            color: var(--lba-secondary);
+        }
+       
+        .stat-card.approved .stat-icon {
+            background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+            color: var(--success-color);
+        }
+       
+        .stat-card.users .stat-icon {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            color: var(--warning-color);
+        }
+       
         .stat-icon {
-            width: 80px; height: 80px;
+            width: 80px;
+            height: 80px;
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 34px;
             flex-shrink: 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
-        
-        .stat-card.businesses .stat-icon {
-            background: linear-gradient(135deg,#FEE2E2,#FECACA);
-            color: var(--lba-primary);
+       
+        .stat-content {
+            flex: 1;
         }
-        
-        .stat-card.nominations .stat-icon {
-            background: linear-gradient(135deg,#DBEAFE,#BFDBFE);
-            color: var(--lba-secondary);
+       
+        .stat-content h3 {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--lba-dark);
+            margin-bottom: 5px;
+            line-height: 1;
+            letter-spacing: -1px;
         }
-        
-        .stat-card.approved .stat-icon {
-            background: linear-gradient(135deg,#D1FAE5,#A7F3D0);
+       
+        .stat-content p {
+            color: #64748b;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+       
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.1);
             color: var(--success-color);
+            width: fit-content;
         }
-        
-        .stat-card.pending .stat-icon {
-            background: linear-gradient(135deg,#FEF3C7,#FDE68A);
-            color: var(--warning-color);
+       
+        .stat-trend.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
         }
-        
-        .stat-content h3 { font-size: 42px; font-weight: 800; color: var(--lba-dark); }
-        .stat-content p { color: #64748b; font-size: 16px; font-weight: 600; }
-        
+       
+        /* Recent Activity Modern */
         .recent-activity {
             background: white;
             padding: 35px;
             border-radius: 20px;
-            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
             margin-bottom: 30px;
         }
-        
+       
         .recent-activity h2 {
             color: var(--lba-dark);
             margin-bottom: 30px;
@@ -238,61 +415,124 @@
             border-bottom: 2px solid #f1f5f9;
             font-size: 24px;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
         }
-        
-        .activity-list { list-style: none; }
-        
+       
+        .activity-list {
+            list-style: none;
+        }
+       
         .activity-item {
             padding: 22px 0;
             border-bottom: 1px solid #f1f5f9;
             display: flex;
             align-items: center;
             gap: 20px;
+            transition: all 0.3s;
         }
-        
+       
+        .activity-item:hover {
+            background: linear-gradient(90deg, #f8fafc 0%, transparent 100%);
+            margin: 0 -35px;
+            padding: 22px 35px;
+        }
+       
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+       
         .activity-icon {
-            width: 55px; height: 55px;
+            width: 55px;
+            height: 55px;
             border-radius: 15px;
-            background: linear-gradient(135deg,#f1f5f9,#e2e8f0);
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 22px;
+            color: var(--lba-dark);
             flex-shrink: 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         }
-        
-        .quick-actions { margin-top: 30px; }
+       
+        .activity-content {
+            flex: 1;
+        }
+       
+        .activity-content h4 {
+            margin-bottom: 8px;
+            color: var(--lba-dark);
+            font-weight: 600;
+            font-size: 17px;
+        }
+       
+        .activity-content p {
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+       
+        .activity-time {
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            background: #f8fafc;
+            padding: 6px 15px;
+            border-radius: 20px;
+        }
+       
+        /* Modern Quick Actions */
+        .quick-actions {
+            margin-top: 30px;
+        }
+       
         .quick-actions h2 {
             color: var(--lba-dark);
             margin-bottom: 25px;
             font-size: 24px;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
         }
-        
+       
         .action-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
             gap: 25px;
         }
-        
+       
         .action-card {
             background: white;
             padding: 30px;
             border-radius: 20px;
-            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
-            cursor: pointer;
-            transition: all 0.4s;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
             border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
         }
-        
+       
         .action-card:hover {
+            transform: translateY(-8px);
             border-color: var(--lba-secondary);
-            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(135, 206, 235, 0.15);
         }
-        
+       
         .action-icon {
-            width: 80px; height: 80px;
+            width: 80px;
+            height: 80px;
             border-radius: 25px;
             background: var(--lba-gradient);
             display: flex;
@@ -300,54 +540,120 @@
             justify-content: center;
             font-size: 34px;
             color: white;
-            margin: 0 auto 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(255, 0, 0, 0.2);
         }
-        
+       
+        .action-card:nth-child(2) .action-icon {
+            background: linear-gradient(135deg, var(--lba-secondary), #6bb9e2);
+        }
+       
+        .action-card:nth-child(3) .action-icon {
+            background: linear-gradient(135deg, var(--success-color), #34d399);
+        }
+       
+        .action-card:nth-child(4) .action-icon {
+            background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+        }
+       
+        .action-content h3 {
+            color: var(--lba-dark);
+            margin-bottom: 12px;
+            font-weight: 700;
+            font-size: 20px;
+        }
+       
+        .action-content p {
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+       
+        /* System Status */
         .system-status {
             margin-top: 40px;
             padding: 30px;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
         }
-        
+       
+        .system-status h3 {
+            color: var(--lba-dark);
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+       
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 25px;
         }
-        
+       
         .status-item {
-            background: linear-gradient(135deg,#f8fafc,#f1f5f9);
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             padding: 20px;
             border-radius: 15px;
             border-left: 4px solid var(--lba-primary);
         }
-        
+       
+        .status-item p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+       
+        .status-item strong {
+            color: var(--lba-dark);
+            font-weight: 700;
+            font-size: 18px;
+        }
+       
+        .status-item .online {
+            color: var(--success-color);
+        }
+       
+        .status-item .warning {
+            color: var(--warning-color);
+        }
+       
         /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
             z-index: 2000;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            animation: fadeIn 0.3s ease;
         }
-        
-        .modal.active { display: flex; }
-        
+       
+        .modal.active {
+            display: flex;
+        }
+       
         .modal-content {
             background: white;
             border-radius: 25px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 1200px;
             max-height: 90vh;
             overflow: hidden;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
-        
+       
         .modal-header {
             padding: 30px;
             background: var(--lba-gradient);
@@ -356,19 +662,70 @@
             justify-content: space-between;
             align-items: center;
         }
-        
-        .modal-header h2 { font-size: 28px; font-weight: 700; }
+       
+        .modal-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+       
         .modal-close {
-            background: rgba(255,255,255,0.2);
-            border: none; color: white;
-            width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             font-size: 18px;
+            transition: all 0.3s;
         }
-        
-        .modal-body { padding: 30px; max-height: 70vh; overflow-y: auto; }
-        
+       
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+       
+        .modal-body {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+       
+        /* Google Sheets Integration Styles */
+        .sheets-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 2px solid #e2e8f0;
+        }
+       
+        .sheets-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+       
+        .sheets-header h3 {
+            color: var(--lba-dark);
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+       
+        .sheets-actions {
+            display: flex;
+            gap: 15px;
+        }
+       
         .sheet-btn {
             background: var(--lba-gradient);
             color: white;
@@ -377,49 +734,272 @@
             border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 10px;
             transition: all 0.3s;
             font-size: 14px;
         }
-        
-        .sheet-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,0,0,0.3); }
-        .sheet-btn.secondary { background: linear-gradient(135deg, var(--lba-secondary), #6bb9e2); }
-        .sheet-btn.warning { background: linear-gradient(135deg, var(--warning-color), #fbbf24); }
-        .sheet-btn.danger { background: linear-gradient(135deg, var(--danger-color), #f87171); }
-        .sheet-btn.success { background: linear-gradient(135deg, var(--success-color), #34d399); }
-        
-        .data-table-container { overflow-x: auto; background: white; border-radius: 8px; }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        
+       
+        .sheet-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 0, 0, 0.3);
+        }
+       
+        .sheet-btn.secondary {
+            background: linear-gradient(135deg, var(--lba-secondary), #6bb9e2);
+        }
+       
+        .sheet-btn.warning {
+            background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+        }
+       
+        .sheet-btn.danger {
+            background: linear-gradient(135deg, var(--danger-color), #f87171);
+        }
+       
+        .sheets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+       
+        .sheet-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+       
+        .sheet-card:hover {
+            border-color: var(--lba-primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 0, 0, 0.1);
+        }
+       
+        .sheet-card h4 {
+            color: var(--lba-dark);
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+       
+        .sheet-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+       
+        .sheet-stat {
+            text-align: center;
+            flex: 1;
+        }
+       
+        .sheet-stat strong {
+            display: block;
+            font-size: 28px;
+            color: var(--lba-primary);
+            font-weight: 800;
+        }
+       
+        .sheet-stat span {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+       
+        .sheets-viewer {
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+            margin: 30px 0;
+            position: relative;
+        }
+       
+        .sheets-viewer-header {
+            background: #f1f5f9;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+       
+        .sheets-viewer-header h4 {
+            color: var(--lba-dark);
+            font-size: 16px;
+            font-weight: 600;
+        }
+       
+        .quick-actions-panel {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            border: 2px solid #e2e8f0;
+        }
+       
+        .quick-actions-panel h4 {
+            color: var(--lba-dark);
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+       
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+       
+        .action-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 18px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+       
+        .action-btn:hover {
+            border-color: var(--lba-secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.2);
+        }
+       
+        .action-btn i {
+            font-size: 24px;
+            color: var(--lba-primary);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+       
+        .action-btn.approve:hover i {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+       
+        .action-btn.reject:hover i {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+       
+        .action-btn.export:hover i {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--info-color);
+        }
+       
+        .action-btn.notify:hover i {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--purple);
+        }
+       
+        /* Data Table Styles */
+        .data-table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            border-radius: 8px;
+            background: white;
+        }
+       
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+       
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            background: #f1f5f9;
+            z-index: 10;
+        }
+       
         .data-table th {
             padding: 12px 15px;
             text-align: left;
             font-weight: 700;
             color: var(--lba-dark);
             border-bottom: 2px solid #e2e8f0;
-            background: #f1f5f9;
-            position: sticky;
-            top: 0;
+            white-space: nowrap;
         }
-        
-        .data-table td { padding: 10px 15px; border-bottom: 1px solid #e2e8f0; }
-        .data-table tbody tr:hover { background: #f8fafc; }
-        
-        .status-badge {
+       
+        .data-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+       
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+       
+        .data-table .status-badge {
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
             display: inline-block;
         }
-        
-        .status-active { background: rgba(16,185,129,0.1); color: var(--success-color); }
-        .status-pending { background: rgba(245,158,11,0.1); color: var(--warning-color); }
-        .status-approved { background: rgba(16,185,129,0.1); color: var(--success-color); }
-        .status-rejected { background: rgba(239,68,68,0.1); color: var(--danger-color); }
-        
+       
+        .data-table .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+       
+        .data-table .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+       
+        .data-table .status-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+       
+        .data-table .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+       
+        /* Loading States */
+        .loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+       
+        .loading-text {
+            height: 20px;
+            margin: 10px 0;
+        }
+       
+        /* Filter Controls */
         .filter-controls {
             background: #f8fafc;
             padding: 20px;
@@ -427,42 +1007,204 @@
             margin-bottom: 20px;
             border: 2px solid #e2e8f0;
         }
-        
+       
         .filter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
-        
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 12px 15px;
-            border: 2px solid #e2e8f0; border-radius: 8px;
+       
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+       
+        .filter-group label {
             font-size: 14px;
+            font-weight: 600;
+            color: var(--lba-dark);
         }
-        
-        .action-buttons { display: flex; gap: 8px; }
-        .action-btn {
-            padding: 6px 12px; border-radius: 5px;
-            border: none; cursor: pointer; font-size: 12px;
+       
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            color: var(--lba-dark);
         }
-        
-        .action-btn.approve { background: var(--success-color); color: white; }
-        .action-btn.reject { background: var(--danger-color); color: white; }
-        .action-btn.view { background: var(--info-color); color: white; }
-        
-        .menu-toggle { display: none; }
-        
+       
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--lba-secondary);
+        }
+       
+        /* Real-time indicator */
+        .real-time-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+       
+        .real-time-indicator .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+       
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+           
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+       
         @media (max-width: 992px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .menu-toggle { display: flex; background: var(--lba-gradient); color: white; border: none; width: 50px; height: 50px; border-radius: 10px; cursor: pointer; font-size: 20px; align-items: center; justify-content: center; }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+           
+            .sidebar.active {
+                transform: translateX(0);
+            }
+           
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+           
+            .header {
+                padding: 20px;
+            }
+           
+            .stat-card {
+                padding: 25px;
+            }
         }
-        
-        .loading { background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; height: 20px; }
-        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+       
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+           
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+           
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+           
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+           
+            .user-info {
+                width: 100%;
+                justify-content: center;
+            }
+           
+            .sheets-actions {
+                flex-direction: column;
+            }
+           
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+           
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+       
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 15px;
+            }
+           
+            .modal-content {
+                margin: 10px;
+            }
+           
+            .modal-header, .modal-body {
+                padding: 20px;
+            }
+           
+            .sheet-btn {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+        }
+       
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+       
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+       
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+       
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+       
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+       
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: var(--lba-gradient);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+       
+        .menu-toggle:hover {
+            transform: scale(1.05);
+        }
+       
+        @media (max-width: 992px) {
+            .menu-toggle {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body>
@@ -473,90 +1215,96 @@
                 <h3>Liberia Business Awards</h3>
                 <p>Admin Dashboard</p>
             </div>
-            
+           
             <div class="sidebar-menu">
                 <div class="menu-section">
                     <h4>Main Navigation</h4>
-                    <a href="#" class="menu-item active" onclick="showDashboard()">
+                    <a href="index.html" class="menu-item active">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                     </a>
-                    
-                    <a href="#" class="menu-item" onclick="showBusinessesModal()">
+                   
+                    <a href="#" class="menu-item" onclick="showNominationsModal()">
                         <i class="fas fa-building"></i>
                         <span>Businesses</span>
                         <span class="badge" id="businessCount">0</span>
                     </a>
-                    
+                   
                     <a href="#" class="menu-item" onclick="showNominationsModal()">
                         <i class="fas fa-award"></i>
                         <span>Nominations</span>
                         <span class="badge" id="nominationCount">0</span>
                     </a>
                 </div>
-                
+               
                 <div class="menu-section">
                     <h4>Content Management</h4>
-                    <a href="#" class="menu-item" onclick="showAnnouncementsModal()">
+                    <a href="#" class="menu-item" onclick="showSheetsModal()">
                         <i class="fas fa-bullhorn"></i>
                         <span>Announcements</span>
-                        <span class="badge" id="announcementCount">0</span>
                     </a>
-                    
                     <a href="#" class="menu-item" onclick="showSpotlightModal()">
                         <i class="fas fa-newspaper"></i>
                         <span>Business Spotlight</span>
-                        <span class="badge" id="spotlightCount">4</span>
+                        <span class="badge" id="spotlightCount">0</span>
                     </a>
-                    
+                   
                     <a href="#" class="menu-item" onclick="showCategoriesModal()">
                         <i class="fas fa-list-alt"></i>
                         <span>Categories</span>
-                        <span class="badge" id="categoryCount">4</span>
                     </a>
-                    
+                   
                     <a href="#" class="menu-item" onclick="showJudgesModal()">
                         <i class="fas fa-gavel"></i>
                         <span>Judges Panel</span>
-                        <span class="badge" id="judgesCount">0</span>
                     </a>
                 </div>
-                
+               
                 <div class="menu-section">
                     <h4>System</h4>
                     <a href="#" class="menu-item" onclick="showUsersModal()">
                         <i class="fas fa-users"></i>
                         <span>Users</span>
-                        <span class="badge" id="usersCount">1</span>
                     </a>
-                    
+                   
                     <a href="#" class="menu-item" onclick="showAnalyticsModal()">
                         <i class="fas fa-chart-bar"></i>
                         <span>Analytics</span>
                     </a>
-                    
+                   
                     <a href="#" class="menu-item" onclick="showReportsModal()">
                         <i class="fas fa-file-alt"></i>
                         <span>Reports</span>
                     </a>
                 </div>
-                
+               
                 <div class="menu-divider"></div>
-                
+               
                 <div class="menu-section">
                     <a href="#" class="menu-item" onclick="showSettingsModal()">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
                     </a>
-                    
+                   
                     <a href="#" id="logoutBtn" class="menu-item">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Logout</span>
                     </a>
                 </div>
+               
+                <div class="menu-section" style="margin-top: 30px;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
+                        <p style="font-size: 12px; color: var(--lba-secondary); margin-bottom: 8px; font-weight: 600;">System Status</p>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                            <div id="systemStatus" style="width: 12px; height: 12px; background: #10B981; border-radius: 50%; box-shadow: 0 0 10px #10B981;"></div>
+                            <span style="font-size: 14px; color: #90ee90; font-weight: 700;">Online</span>
+                        </div>
+                        <p style="font-size: 11px; color: rgba(255,255,255,0.5);">Updated: <span id="statusTime">Just now</span></p>
+                    </div>
+                </div>
             </div>
         </div>
-        
+       
         <!-- Main Content -->
         <div class="main-content">
             <!-- Header -->
@@ -566,60 +1314,366 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div>
-                        <h1 id="dashboardTitle">Dashboard Overview</h1>
-                        <p>Welcome back, <span id="adminName">System Administrator</span></p>
+                        <h1>Dashboard Overview</h1>
+                        <p>Welcome back, <span id="adminName" style="color: var(--lba-primary); font-weight: 700;">System Administrator</span></p>
                     </div>
                 </div>
-                
-                <div class="user-info" id="userProfile">
+               
+                <div class="user-info" id="userProfile" onclick="showUserMenu()">
                     <div class="user-avatar" id="userAvatar">SA</div>
-                    <div>
-                        <div id="userEmail">admin@liberiabusinessawardslr.com</div>
-                        <div style="font-size: 12px; color: #64748b;">Administrator</div>
+                    <div class="user-details">
+                        <strong id="userName">System Administrator</strong>
+                        <small id="userEmail">admin@liberiabusinessawardslr.com</small>
+                        <small style="color: var(--lba-secondary); font-weight: 600;">Administrator</small>
+                    </div>
+                    <i class="fas fa-chevron-down" style="color: #64748b;"></i>
+                </div>
+            </div>
+           
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card businesses">
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalBusinesses">0</h3>
+                        <p>Total Registered Businesses</p>
+                        <div class="stat-trend" id="businessTrend">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+               
+                <div class="stat-card nominations">
+                    <div class="stat-icon">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalNominations">0</h3>
+                        <p>Total Nominations</p>
+                        <div class="stat-trend" id="nominationTrend">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+               
+                <div class="stat-card approved">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="approvedNominations">0</h3>
+                        <p>Approved Nominations</p>
+                        <div class="stat-trend" id="approvalTrend">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+               
+                <div class="stat-card users">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="activeUsers">0</h3>
+                        <p>Active Users</p>
+                        <div class="stat-trend" id="userTrend">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Dynamic Content Area -->
-            <div id="contentArea"></div>
+           
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h2>
+                    <i class="fas fa-history"></i>
+                    Recent Activity
+                    <span style="margin-left: auto; font-size: 14px; color: var(--lba-secondary); cursor: pointer; font-weight: 600; background: #f1f5f9; padding: 8px 16px; border-radius: 20px;" onclick="refreshActivities()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </span>
+                </h2>
+               
+                <ul class="activity-list" id="activityList">
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>Loading recent activity...</h4>
+                            <p>Fetching latest submissions from Google Sheets</p>
+                        </div>
+                        <div class="activity-time">Just now</div>
+                    </li>
+                </ul>
+            </div>
+           
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+               
+                <div class="action-grid">
+                    <a href="#" class="action-card" onclick="showBusinessModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Add Business</h3>
+                            <p>Register new business account manually</p>
+                        </div>
+                    </a>
+                   
+                    <a href="#" class="action-card" onclick="showNominationsModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Review Nominations</h3>
+                            <p>Approve or reject pending nominations</p>
+                        </div>
+                    </a>
+                   
+                    <a href="#" class="action-card" onclick="showAnnouncementModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Create Announcement</h3>
+                            <p>Post news and updates to all users</p>
+                        </div>
+                    </a>
+                   
+                    <a href="#" class="action-card" onclick="showAnalyticsModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>View Analytics</h3>
+                            <p>See detailed reports and statistics</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+           
+            <!-- System Status -->
+            <div class="system-status">
+                <h3><i class="fas fa-server"></i> System Information</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <p>Last Updated</p>
+                        <strong id="lastUpdated">Loading...</strong>
+                    </div>
+                    <div class="status-item">
+                        <p>Google Sheets Status</p>
+                        <strong class="online" id="sheetsStatus">Connected</strong>
+                    </div>
+                    <div class="status-item">
+                        <p>Session Expires</p>
+                        <strong id="sessionTimer">60:00</strong>
+                    </div>
+                    <div class="status-item">
+                        <p>Total Submissions</p>
+                        <strong id="totalSubmissions">0</strong>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Business Details Modal -->
-    <div class="modal" id="businessDetailModal">
-        <div class="modal-content" style="max-width: 800px;">
+    <!-- Nominations Modal (Google Sheets Integration) -->
+    <div class="modal" id="nominationsModal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-building"></i> Business Details</h2>
-                <button class="modal-close" onclick="closeModal('businessDetailModal')">
+                <h2><i class="fas fa-award"></i> Nominations Management</h2>
+                <button class="modal-close" onclick="hideModal('nominationsModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" id="businessDetailContent">
-                Loading...
+            <div class="modal-body">
+                <div class="sheets-container">
+                    <div class="sheets-header">
+                        <h3><i class="fas fa-table"></i> Google Sheets Integration</h3>
+                        <div class="sheets-actions">
+                            <button class="sheet-btn" onclick="refreshSheetsData()">
+                                <i class="fas fa-sync-alt"></i> Refresh Data
+                            </button>
+                            <button class="sheet-btn secondary" onclick="openGoogleSheets()">
+                                <i class="fab fa-google"></i> Open Google Sheets
+                            </button>
+                            <button class="sheet-btn warning" onclick="startAutoRefresh()" id="autoRefreshBtn">
+                                <i class="fas fa-sync"></i> Auto Refresh
+                            </button>
+                        </div>
+                    </div>
+                   
+                    <div class="sheets-grid">
+                        <div class="sheet-card" onclick="switchSheet('businesses')">
+                            <h4><i class="fas fa-building"></i> Businesses Sheet</h4>
+                            <p>View all registered businesses and their details</p>
+                            <div class="sheet-stats">
+                                <div class="sheet-stat">
+                                    <strong id="sheetBusinessesTotal">0</strong>
+                                    <span>Total</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <strong id="sheetBusinessesActive">0</strong>
+                                    <span>Active</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <strong id="sheetBusinessesPending">0</strong>
+                                    <span>Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                       
+                        <div class="sheet-card" onclick="switchSheet('nominations')">
+                            <h4><i class="fas fa-award"></i> Nominations Sheet</h4>
+                            <p>Review and manage all award nominations</p>
+                            <div class="sheet-stats">
+                                <div class="sheet-stat">
+                                    <strong id="sheetNominationsTotal">0</strong>
+                                    <span>Total</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <strong id="sheetNominationsApproved">0</strong>
+                                    <span>Approved</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <strong id="sheetNominationsPending">0</strong>
+                                    <span>Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <!-- Filter Controls -->
+                    <div class="filter-controls">
+                        <h4><i class="fas fa-filter"></i> Filter Data</h4>
+                        <div class="filter-grid">
+                            <div class="filter-group">
+                                <label for="filterSheet">Select Sheet</label>
+                                <select id="filterSheet" onchange="switchSheet(this.value)">
+                                    <option value="businesses">Businesses Sheet</option>
+                                    <option value="nominations">Nominations Sheet</option>
+                                    <option value="all">All Submissions</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filterStatus">Status Filter</label>
+                                <select id="filterStatus" onchange="applyFilters()">
+                                    <option value="all">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filterSearch">Search</label>
+                                <input type="text" id="filterSearch" placeholder="Search submissions..." onkeyup="applyFilters()">
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <!-- Live Data View -->
+                    <div class="sheets-viewer">
+                        <div class="sheets-viewer-header">
+                            <h4>
+                                <i class="fas fa-eye"></i> Live Data View
+                                <span class="real-time-indicator" id="realtimeIndicator">
+                                    <span class="pulse-dot"></span>
+                                    Live
+                                </span>
+                            </h4>
+                            <div style="display: flex; gap: 10px;">
+                                <span id="dataCount" style="color: #64748b; font-size: 14px; font-weight: 600;">0 submissions</span>
+                            </div>
+                        </div>
+                        <div id="sheetsData" style="padding: 20px; min-height: 400px; max-height: 400px; overflow-y: auto;">
+                            <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                                <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
+                                <p>Connecting to Google Sheets...</p>
+                                <p style="font-size: 12px; margin-top: 10px;">Fetching live submission data</p>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <!-- Quick Actions -->
+                    <div class="quick-actions-panel">
+                        <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+                        <div class="actions-grid">
+                            <a href="#" class="action-btn approve" onclick="approveSelected()">
+                                <i class="fas fa-check"></i>
+                                <div>
+                                    <strong>Approve Selected</strong>
+                                    <small>Approve pending nominations</small>
+                                </div>
+                            </a>
+                           
+                            <a href="#" class="action-btn reject" onclick="rejectSelected()">
+                                <i class="fas fa-times"></i>
+                                <div>
+                                    <strong>Reject Selected</strong>
+                                    <small>Reject pending nominations</small>
+                                </div>
+                            </a>
+                           
+                            <a href="#" class="action-btn export" onclick="exportToExcel()">
+                                <i class="fas fa-download"></i>
+                                <div>
+                                    <strong>Export to Excel</strong>
+                                    <small>Download data as Excel file</small>
+                                </div>
+                            </a>
+                           
+                            <a href="#" class="action-btn notify" onclick="sendNotifications()">
+                                <i class="fas fa-bell"></i>
+                                <div>
+                                    <strong>Send Notifications</strong>
+                                    <small>Notify selected users</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Dashboard Script - FIXED VERSION WITH CORS FIX -->
     <script>
         // ============================================
-        // CONFIGURATION
+        // CONFIGURATION - UPDATED
         // ============================================
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+        const GOOGLE_SHEETS_VIEW_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit';
         const API_BASE = 'https://liberia-business-awards-backend.onrender.com/api';
-        const SESSION_TIMEOUT = 60;
-        const REFRESH_INTERVAL = 30000;
+        const SESSION_TIMEOUT = 60; // minutes
+        const REFRESH_INTERVAL = 30000; // 30 seconds
 
         // ============================================
         // GLOBAL STATE
         // ============================================
         let dashboardState = {
-            businesses: [],
-            pendingBusinesses: [],
-            activeBusinesses: [],
-            nominations: [],
-            announcements: [],
-            judges: [],
-            user: null,
-            lastUpdate: null
+            isConnected: false,
+            lastUpdate: null,
+            autoRefresh: null,
+            currentSheet: 'businesses',
+            sheetData: {
+                businesses: [],
+                nominations: [],
+                all: []
+            },
+            user: {
+                name: 'System Administrator',
+                role: 'admin',
+                email: 'admin@liberiabusinessawardslr.com'
+            }
         };
 
         // ============================================
@@ -627,14 +1681,30 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Admin Dashboard Initializing...');
-            
-            await checkAuthentication();
-            setupUserInterface();
-            await loadDashboardData();
-            showDashboard(); // Show dashboard by default
-            setupPeriodicUpdates();
-            
-            console.log('✅ Dashboard Ready');
+           
+            try {
+                // Check authentication
+                await checkAuthentication();
+               
+                // Setup UI components
+                setupUserInterface();
+               
+                // Load initial data
+                await loadInitialData();
+               
+                // Setup periodic updates
+                setupPeriodicUpdates();
+               
+                // Update UI state
+                updateConnectionStatus(true);
+               
+                console.log('✅ Dashboard Ready');
+               
+            } catch (error) {
+                console.error('❌ Dashboard initialization failed:', error);
+                showNotification('Failed to initialize dashboard. Using limited functionality.', 'danger');
+                useFallbackData();
+            }
         });
 
         // ============================================
@@ -643,864 +1713,1828 @@
         async function checkAuthentication() {
             const token = localStorage.getItem('lba_auth_token');
             const userData = localStorage.getItem('lba_user_data');
-            
+           
             if (!token || !userData) {
+                console.warn('⚠️ Authentication required');
                 redirectToLogin();
                 return;
             }
-            
+           
             try {
                 dashboardState.user = JSON.parse(userData);
                 updateUserDisplay();
             } catch (error) {
+                console.error('❌ Invalid user data:', error);
                 redirectToLogin();
             }
         }
 
         function redirectToLogin() {
+            // Clear auth data
+            localStorage.removeItem('lba_auth_token');
+            localStorage.removeItem('lba_user_data');
+            localStorage.removeItem('lba_user_role');
+           
+            // Redirect
             window.location.href = '../login.html';
-        }
-
-        function updateUserDisplay() {
-            const user = dashboardState.user;
-            document.getElementById('adminName').textContent = user.name || 'Administrator';
-            document.getElementById('userEmail').textContent = user.email || 'admin@liberiabusinessawardslr.com';
-            
-            const initials = (user.name || 'SA').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-            document.getElementById('userAvatar').textContent = initials;
         }
 
         // ============================================
         // UI SETUP
         // ============================================
         function setupUserInterface() {
+            // Mobile menu toggle
             const menuToggle = document.getElementById('menuToggle');
             const sidebar = document.getElementById('sidebar');
-            
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-            });
-            
+           
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                    menuToggle.style.transform = sidebar.classList.contains('active') ? 'rotate(90deg)' : 'rotate(0)';
+                });
+            }
+           
+            // Close sidebar on outside click (mobile)
             document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !menuToggle.contains(e.target) && sidebar.classList.contains('active')) {
+                if (window.innerWidth <= 992 &&
+                    !sidebar.contains(e.target) &&
+                    !menuToggle.contains(e.target) &&
+                    sidebar.classList.contains('active')) {
                     sidebar.classList.remove('active');
+                    menuToggle.style.transform = 'rotate(0)';
                 }
             });
-            
-            document.getElementById('logoutBtn').addEventListener('click', logout);
+           
+            // Logout handler
+            document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
+           
+            // Window resize handler
+            window.addEventListener('resize', handleWindowResize);
+           
+            // Setup session timer
+            startSessionTimer();
         }
 
-        function logout() {
+        function updateUserDisplay() {
+            const user = dashboardState.user;
+           
+            document.getElementById('adminName').textContent = user.name;
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userEmail').textContent = user.email;
+           
+            // Generate avatar initials
+            const initials = user.name
+                .split(' ')
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+           
+            document.getElementById('userAvatar').textContent = initials;
+        }
+
+        function handleWindowResize() {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+           
+            if (window.innerWidth > 992 && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                menuToggle.style.transform = 'rotate(0)';
+            }
+        }
+
+        function handleLogout() {
             if (confirm('Are you sure you want to logout?')) {
-                localStorage.clear();
                 redirectToLogin();
             }
         }
 
         // ============================================
-        // API FUNCTIONS
+        // FIXED: SIMPLIFIED FETCH FUNCTIONS - NO CORS ISSUES
         // ============================================
-        async function apiRequest(endpoint, options = {}) {
-            const token = localStorage.getItem('lba_auth_token');
-            
+        async function fetchFromSheets(action) {
+            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=${action}`;
+           
+            console.log(`📡 Fetching: ${url}`);
+           
             try {
-                const response = await fetch(`${API_BASE}${endpoint}`, {
-                    ...options,
+                // Simple fetch - no CORS mode, no complex options
+                const response = await fetch(url, {
+                    method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        ...options.headers
+                        'Accept': 'application/json',
                     }
                 });
-                
-                if (response.status === 401) {
-                    redirectToLogin();
-                    throw new Error('Unauthorized');
+               
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
-                
-                return await response.json();
+               
+                const text = await response.text();
+               
+                try {
+                    const data = JSON.parse(text);
+                    return data;
+                } catch (e) {
+                    console.log('📄 Response is not JSON:', text.substring(0, 100));
+                    return { success: false, error: 'Invalid JSON response' };
+                }
+               
             } catch (error) {
-                console.error('API Error:', error);
-                showNotification(error.message, 'error');
+                console.error('❌ Fetch error:', error);
                 return { success: false, error: error.message };
             }
         }
 
-        // ============================================
-        // BUSINESS MANAGEMENT
-        // ============================================
-        async function loadBusinesses() {
+        // Update your fetchDashboardStats function
+        async function fetchDashboardStats() {
+            const data = await fetchFromSheets('getStats');
+            return data;
+        }
+
+        // Update your fetchRecentActivity function
+        async function fetchRecentActivity() {
+            const data = await fetchFromSheets('getActivity');
+            return data;
+        }
+
+        // Update your fetchAllSheetData function
+        async function fetchAllSheetData() {
+            const data = await fetchFromSheets('getAllData');
+            return data;
+        }
+
+        async function testApiConnection() {
+            console.log('🔌 Testing API connection...');
+           
             try {
-                // Since we don't have a dedicated endpoint yet, we'll use admin dashboard
-                const data = await apiRequest('/admin/dashboard');
-                if (data.success) {
-                    // For now, we'll create mock data based on your MongoDB
-                    // In production, you'd have a real endpoint
-                    dashboardState.businesses = [
-                        {
-                            _id: '1',
-                            business_name: 'Motiva Cooperation',
-                            email: 'motivacooperation4@gmail.com',
-                            phone: '+231 XXX XXX XXX',
-                            status: 'pending',
-                            created_at: new Date().toISOString()
-                        }
-                    ];
-                    dashboardState.pendingBusinesses = dashboardState.businesses.filter(b => b.status === 'pending');
-                    dashboardState.activeBusinesses = dashboardState.businesses.filter(b => b.status === 'active');
-                    
-                    document.getElementById('businessCount').textContent = dashboardState.businesses.length;
+                const data = await fetchFromSheets('ping');
+                if (data && (data.status === 'OK' || data.success === true)) {
+                    dashboardState.isConnected = true;
+                    console.log('✅ API Connection: OK');
+                    return true;
                 }
+                throw new Error('Invalid response');
             } catch (error) {
-                console.error('Error loading businesses:', error);
+                console.error('❌ API Connection failed:', error);
+                dashboardState.isConnected = false;
+                return false;
             }
         }
 
-        async function approveBusiness(businessId) {
-            try {
-                // You'll need to create this endpoint in your server.js
-                const result = await apiRequest(`/admin/businesses/${businessId}/approve`, {
-                    method: 'POST'
-                });
-                
-                if (result.success) {
-                    showNotification('Business approved successfully!', 'success');
-                    await loadBusinesses();
-                    if (document.getElementById('businessesModal')?.classList.contains('active')) {
-                        showBusinessesModal();
-                    }
-                }
-            } catch (error) {
-                showNotification('Error approving business', 'error');
+        async function verifyApiEndpoints() {
+            console.log('🔍 Verifying API endpoints...');
+            // Simplified - just test connection
+            await testApiConnection();
+        }
+
+        async function checkConnection() {
+            const wasConnected = dashboardState.isConnected;
+            dashboardState.isConnected = await testApiConnection();
+           
+            if (wasConnected !== dashboardState.isConnected) {
+                updateConnectionStatus(dashboardState.isConnected);
+                showNotification(
+                    dashboardState.isConnected
+                        ? '✅ Reconnected to Google Sheets'
+                        : '⚠️ Lost connection to Google Sheets',
+                    dashboardState.isConnected ? 'success' : 'warning'
+                );
             }
         }
 
-        async function rejectBusiness(businessId) {
-            const reason = prompt('Please enter reason for rejection:');
-            if (!reason) return;
-            
-            try {
-                const result = await apiRequest(`/admin/businesses/${businessId}/reject`, {
-                    method: 'POST',
-                    body: JSON.stringify({ reason })
-                });
-                
-                if (result.success) {
-                    showNotification('Business rejected', 'warning');
-                    await loadBusinesses();
-                    if (document.getElementById('businessesModal')?.classList.contains('active')) {
-                        showBusinessesModal();
-                    }
-                }
-            } catch (error) {
-                showNotification('Error rejecting business', 'error');
+        function updateConnectionStatus(isConnected) {
+            const statusElement = document.getElementById('sheetsStatus');
+            const systemStatus = document.getElementById('systemStatus');
+           
+            if (isConnected) {
+                statusElement.textContent = 'Connected';
+                statusElement.className = 'online';
+                systemStatus.style.background = '#10B981';
+                systemStatus.style.boxShadow = '0 0 10px #10B981';
+            } else {
+                statusElement.textContent = 'Disconnected';
+                statusElement.className = 'warning';
+                systemStatus.style.background = '#F59E0B';
+                systemStatus.style.boxShadow = '0 0 10px #F59E0B';
             }
         }
 
         // ============================================
-        // DASHBOARD VIEW
+        // DATA LOADING
         // ============================================
-        async function showDashboard() {
-            document.getElementById('dashboardTitle').textContent = 'Dashboard Overview';
-            await loadDashboardData();
-            renderDashboard();
-            setActiveMenuItem('Dashboard');
+        async function loadInitialData() {
+            console.log('📊 Loading initial data...');
+           
+            // Show loading states
+            showLoadingStates();
+           
+            try {
+                // Load dashboard statistics
+                const stats = await fetchDashboardStats();
+                if (stats && stats.success) {
+                    updateDashboardStats(stats);
+                }
+               
+                // Load recent activity
+                const activity = await fetchRecentActivity();
+                if (activity && activity.activity) {
+                    updateRecentActivity(activity);
+                }
+               
+                // Load sheet data
+                const allData = await fetchAllSheetData();
+                if (allData && allData.success) {
+                    processSheetData(allData);
+                    updateSheetStats();
+                }
+               
+                // Update last update time
+                dashboardState.lastUpdate = new Date();
+                updateLastUpdateDisplay();
+               
+                console.log('✅ Data loaded successfully');
+               
+            } catch (error) {
+                console.error('❌ Failed to load data:', error);
+                showNotification('Could not load live data. Using cached information.', 'warning');
+            } finally {
+                // Hide loading states
+                hideLoadingStates();
+            }
         }
 
-        async function loadDashboardData() {
-            await loadBusinesses();
-            dashboardState.lastUpdate = new Date();
-        }
-
-        function renderDashboard() {
-            const content = document.getElementById('contentArea');
-            
-            content.innerHTML = `
-                <!-- Stats Grid -->
-                <div class="stats-grid">
-                    <div class="stat-card businesses">
-                        <div class="stat-icon"><i class="fas fa-building"></i></div>
-                        <div class="stat-content">
-                            <h3>${dashboardState.businesses.length}</h3>
-                            <p>Total Businesses</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card nominations">
-                        <div class="stat-icon"><i class="fas fa-award"></i></div>
-                        <div class="stat-content">
-                            <h3>${dashboardState.pendingBusinesses.length}</h3>
-                            <p>Pending Approval</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card approved">
-                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-content">
-                            <h3>${dashboardState.activeBusinesses.length}</h3>
-                            <p>Active Businesses</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card pending">
-                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                        <div class="stat-content">
-                            <h3>${dashboardState.nominations.length || 0}</h3>
-                            <p>Nominations</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Recent Activity -->
-                <div class="recent-activity">
-                    <h2><i class="fas fa-history"></i> Pending Approvals</h2>
-                    
-                    ${dashboardState.pendingBusinesses.length > 0 ? `
-                        <div class="data-table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Business Name</th>
-                                        <th>Email</th>
-                                        <th>Phone</th>
-                                        <th>Registered</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${dashboardState.pendingBusinesses.map(business => `
-                                        <tr>
-                                            <td><strong>${business.business_name || 'Unknown'}</strong></td>
-                                            <td>${business.email || 'N/A'}</td>
-                                            <td>${business.phone || 'N/A'}</td>
-                                            <td>${new Date(business.created_at || Date.now()).toLocaleDateString()}</td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <button class="action-btn approve" onclick="approveBusiness('${business._id}')">
-                                                        <i class="fas fa-check"></i> Approve
-                                                    </button>
-                                                    <button class="action-btn reject" onclick="rejectBusiness('${business._id}')">
-                                                        <i class="fas fa-times"></i> Reject
-                                                    </button>
-                                                    <button class="action-btn view" onclick="viewBusinessDetails('${business._id}')">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    ` : `
-                        <p style="text-align: center; color: #64748b; padding: 40px;">
-                            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i><br>
-                            No pending approvals
-                        </p>
-                    `}
-                </div>
-                
-                <!-- Quick Actions -->
-                <div class="quick-actions">
-                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
-                    
-                    <div class="action-grid">
-                        <div class="action-card" onclick="showBusinessesModal()">
-                            <div class="action-icon"><i class="fas fa-building"></i></div>
-                            <h3>Manage Businesses</h3>
-                            <p>Approve or review business registrations</p>
-                        </div>
-                        
-                        <div class="action-card" onclick="showNominationsModal()">
-                            <div class="action-icon"><i class="fas fa-award"></i></div>
-                            <h3>Review Nominations</h3>
-                            <p>Approve or reject award nominations</p>
-                        </div>
-                        
-                        <div class="action-card" onclick="showAnnouncementsModal()">
-                            <div class="action-icon"><i class="fas fa-bullhorn"></i></div>
-                            <h3>Post Announcement</h3>
-                            <p>Create news and updates</p>
-                        </div>
-                        
-                        <div class="action-card" onclick="showSpotlightModal()">
-                            <div class="action-icon"><i class="fas fa-newspaper"></i></div>
-                            <h3>Business Spotlight</h3>
-                            <p>Manage featured stories</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- System Status -->
-                <div class="system-status">
-                    <h3><i class="fas fa-server"></i> System Information</h3>
-                    <div class="status-grid">
-                        <div class="status-item">
-                            <p>Last Updated</p>
-                            <strong>${dashboardState.lastUpdate?.toLocaleTimeString() || 'Just now'}</strong>
-                        </div>
-                        <div class="status-item">
-                            <p>Database Status</p>
-                            <strong class="online">Connected</strong>
-                        </div>
-                        <div class="status-item">
-                            <p>Session Expires</p>
-                            <strong id="sessionTimer">60:00</strong>
-                        </div>
-                        <div class="status-item">
-                            <p>API Version</p>
-                            <strong>v4.0.0</strong>
-                        </div>
-                    </div>
-                </div>
-            `;
+        async function refreshData() {
+            try {
+                const [stats, activity] = await Promise.all([
+                    fetchDashboardStats(),
+                    fetchRecentActivity()
+                ]);
+               
+                if (stats && stats.success) updateDashboardStats(stats);
+                if (activity && activity.activity) updateRecentActivity(activity);
+               
+                dashboardState.lastUpdate = new Date();
+                updateLastUpdateDisplay();
+               
+            } catch (error) {
+                console.warn('⚠️ Data refresh failed:', error);
+            }
         }
 
         // ============================================
-        // BUSINESSES MODAL
+        // DATA PROCESSING
         // ============================================
-        async function showBusinessesModal() {
-            document.getElementById('dashboardTitle').textContent = 'Business Management';
-            await loadBusinesses();
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-building"></i> Business Management</h2>
-                        <div>
-                            <button class="sheet-btn" onclick="showDashboard()">
-                                <i class="fas fa-arrow-left"></i> Back to Dashboard
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Tabs -->
-                    <div style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">
-                        <button class="sheet-btn" onclick="showBusinessTab('all')" id="tabAll">All (${dashboardState.businesses.length})</button>
-                        <button class="sheet-btn secondary" onclick="showBusinessTab('pending')" id="tabPending">Pending (${dashboardState.pendingBusinesses.length})</button>
-                        <button class="sheet-btn success" onclick="showBusinessTab('active')" id="tabActive">Active (${dashboardState.activeBusinesses.length})</button>
-                    </div>
-                    
-                    <!-- Search -->
-                    <div style="margin-bottom: 20px;">
-                        <input type="text" id="businessSearch" placeholder="Search businesses..." 
-                               style="width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px;"
-                               onkeyup="filterBusinesses()">
-                    </div>
-                    
-                    <!-- Businesses Table -->
-                    <div class="data-table-container" id="businessesTableContainer">
-                        ${renderBusinessTable(dashboardState.businesses)}
-                    </div>
-                </div>
-            `;
-            
-            setActiveMenuItem('Businesses');
+        function processSheetData(data) {
+            if (!data || !data.submissions || !Array.isArray(data.submissions)) {
+                console.warn('Invalid sheet data structure');
+                return;
+            }
+           
+            // Reset state
+            dashboardState.sheetData = {
+                businesses: [],
+                nominations: [],
+                all: data.submissions
+            };
+           
+            // Categorize submissions
+            data.submissions.forEach(submission => {
+                if (submission.formType === 'business' || submission.formType === 'register') {
+                    dashboardState.sheetData.businesses.push(enhanceBusinessData(submission));
+                } else if (submission.formType === 'nomination' || submission.formType === 'nominate') {
+                    dashboardState.sheetData.nominations.push(enhanceNominationData(submission));
+                }
+            });
+           
+            console.log('📊 Data processed:', {
+                total: dashboardState.sheetData.all.length,
+                businesses: dashboardState.sheetData.businesses.length,
+                nominations: dashboardState.sheetData.nominations.length
+            });
         }
 
-        function renderBusinessTable(businesses) {
-            if (businesses.length === 0) {
-                return `
-                    <p style="text-align: center; padding: 50px; color: #64748b;">
-                        <i class="fas fa-building" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i><br>
-                        No businesses found
-                    </p>
+        function enhanceBusinessData(submission) {
+            return {
+                id: submission.id || generateId('business'),
+                name: submission.business_name || submission.displayName || 'Unknown Business',
+                email: submission.email || submission.displayEmail || 'No email',
+                phone: submission.phone || 'No phone',
+                category: submission.business_category || 'General',
+                status: submission.status || 'pending',
+                statusClass: submission.statusClass || 'warning',
+                nominations: parseInt(submission.nominations) || 0,
+                timestamp: submission.timestamp || new Date().toISOString(),
+                displayDate: formatDisplayDate(submission.timestamp),
+                source: submission.source || 'website'
+            };
+        }
+
+        function enhanceNominationData(submission) {
+            return {
+                id: submission.id || generateId('nomination'),
+                businessName: submission.business_name || submission.displayName || 'Unknown Business',
+                category: submission.nominated_category || submission.category || 'General',
+                submittedDate: submission.timestamp || new Date().toISOString(),
+                status: submission.status || 'pending',
+                statusClass: submission.statusClass || 'warning',
+                reviewer: submission.reviewer || '',
+                score: parseFloat(submission.score) || 0,
+                scoreColor: getScoreColor(parseFloat(submission.score) || 0),
+                timestamp: submission.timestamp || new Date().toISOString(),
+                displayDate: formatDisplayDate(submission.timestamp),
+                source: submission.source || 'website'
+            };
+        }
+
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateDashboardStats(response) {
+            if (!response) return;
+           
+            const stats = response;
+           
+            // Update main stats
+            document.getElementById('totalBusinesses').textContent = stats.totalSubmissions || 0;
+            document.getElementById('totalNominations').textContent = stats.summary?.totalNominations || 0;
+            document.getElementById('approvedNominations').textContent = stats.summary?.approvedNominations || 0;
+            document.getElementById('totalSubmissions').textContent = stats.totalSubmissions || 0;
+            document.getElementById('activeUsers').textContent = stats.totalSubmissions || 0;
+           
+            // Update menu badges
+            document.getElementById('businessCount').textContent = stats.summary?.totalBusinesses || 0;
+            document.getElementById('nominationCount').textContent = stats.summary?.totalNominations || 0;
+           
+            // Update trend indicators
+            updateTrendIndicators(stats);
+           
+            // Update sheet stats in modal
+            updateSheetStatsDisplay(stats);
+        }
+
+        function updateTrendIndicators(stats) {
+            // Business trend
+            const businessTrend = document.getElementById('businessTrend');
+            const businessGrowth = stats.todaySubmissions > 0 ? `+${stats.todaySubmissions} today` : 'No new today';
+            businessTrend.innerHTML = `<i class="fas fa-chart-line"></i><span>${businessGrowth}</span>`;
+           
+            // Nomination trend
+            const nominationTrend = document.getElementById('nominationTrend');
+            const nominationGrowth = stats.todaySubmissions > 0 ? `+${stats.todaySubmissions} today` : 'No new today';
+            nominationTrend.innerHTML = `<i class="fas fa-chart-line"></i><span>${nominationGrowth}</span>`;
+           
+            // Approval trend
+            const approvalTrend = document.getElementById('approvalTrend');
+            const totalNoms = stats.summary?.totalNominations || 0;
+            const approvedNoms = stats.summary?.approvedNominations || 0;
+            const approvalRate = totalNoms > 0 ? Math.round((approvedNoms / totalNoms) * 100) + '% rate' : '0% rate';
+            approvalTrend.innerHTML = `<i class="fas fa-percentage"></i><span>${approvalRate}</span>`;
+           
+            // User trend
+            const userTrend = document.getElementById('userTrend');
+            const userGrowth = stats.todaySubmissions > 0 ? `+${stats.todaySubmissions} today` : 'No activity today';
+            userTrend.innerHTML = `<i class="fas fa-users"></i><span>${userGrowth}</span>`;
+        }
+
+        function updateRecentActivity(activityData) {
+            const activityList = document.getElementById('activityList');
+            const activity = activityData.activity || [];
+           
+            if (!activity || activity.length === 0) {
+                activityList.innerHTML = `
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>No recent activity</h4>
+                            <p>Form submissions will appear here</p>
+                        </div>
+                        <div class="activity-time">Just now</div>
+                    </li>
                 `;
+                return;
             }
-            
-            return `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Business Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Status</th>
-                            <th>Registered</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${businesses.map(business => `
-                            <tr>
-                                <td><strong>${business.business_name || 'Unknown'}</strong></td>
-                                <td>${business.email || 'N/A'}</td>
-                                <td>${business.phone || 'N/A'}</td>
-                                <td>
-                                    <span class="status-badge status-${business.status}">
-                                        ${business.status || 'pending'}
-                                    </span>
-                                </td>
-                                <td>${new Date(business.created_at || Date.now()).toLocaleDateString()}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        ${business.status === 'pending' ? `
-                                            <button class="action-btn approve" onclick="approveBusiness('${business._id}')">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button class="action-btn reject" onclick="rejectBusiness('${business._id}')">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        ` : ''}
-                                        <button class="action-btn view" onclick="viewBusinessDetails('${business._id}')">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+           
+            activityList.innerHTML = activity.map(item => `
+                <li class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-${item.icon || 'file-alt'}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>${escapeHtml(item.title || 'New Activity')}</h4>
+                        <p>${escapeHtml(item.description || 'Activity recorded')}</p>
+                    </div>
+                    <div class="activity-time">${formatTimeAgo(item.timestamp)}</div>
+                </li>
+            `).join('');
+        }
+
+        function updateSheetStatsDisplay(stats) {
+            if (!stats.sheetStats) return;
+           
+            // Businesses sheet
+            const businessStats = stats.sheetStats.Registrations || stats.sheetStats.Businesses || {};
+            document.getElementById('sheetBusinessesTotal').textContent = businessStats.total || 0;
+            document.getElementById('sheetBusinessesActive').textContent = businessStats.active || businessStats.approved || 0;
+            document.getElementById('sheetBusinessesPending').textContent = businessStats.pending || 0;
+           
+            // Nominations sheet
+            const nominationStats = stats.sheetStats.Nominations || {};
+            document.getElementById('sheetNominationsTotal').textContent = nominationStats.total || 0;
+            document.getElementById('sheetNominationsApproved').textContent = nominationStats.approved || 0;
+            document.getElementById('sheetNominationsPending').textContent = nominationStats.pending || 0;
+        }
+
+        // ============================================
+        // LOADING STATES
+        // ============================================
+        function showLoadingStates() {
+            // Stats cards
+            const statCards = document.querySelectorAll('.stat-card .stat-content h3');
+            statCards.forEach(card => {
+                card.innerHTML = '<span class="loading loading-text" style="width: 60px; display: inline-block;"></span>';
+            });
+           
+            // Activity list
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = `
+                <li class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4><span class="loading loading-text" style="width: 200px;"></span></h4>
+                        <p><span class="loading loading-text" style="width: 150px;"></span></p>
+                    </div>
+                    <div class="activity-time"><span class="loading loading-text" style="width: 60px;"></span></div>
+                </li>
             `;
         }
 
-        function showBusinessTab(tab) {
-            const tabs = document.querySelectorAll('#tabAll, #tabPending, #tabActive');
-            tabs.forEach(t => t.classList.remove('active'));
-            
-            if (tab === 'all') {
-                document.getElementById('tabAll').classList.add('active');
-                document.getElementById('businessesTableContainer').innerHTML = renderBusinessTable(dashboardState.businesses);
-            } else if (tab === 'pending') {
-                document.getElementById('tabPending').classList.add('active');
-                document.getElementById('businessesTableContainer').innerHTML = renderBusinessTable(dashboardState.pendingBusinesses);
-            } else if (tab === 'active') {
-                document.getElementById('tabActive').classList.add('active');
-                document.getElementById('businessesTableContainer').innerHTML = renderBusinessTable(dashboardState.activeBusinesses);
+        function hideLoadingStates() {
+            // Remove loading classes
+            document.querySelectorAll('.loading').forEach(el => {
+                el.classList.remove('loading');
+            });
+        }
+
+        // ============================================
+        // PERIODIC UPDATES
+        // ============================================
+        function setupPeriodicUpdates() {
+            // Data refresh every 30 seconds
+            setInterval(async () => {
+                if (dashboardState.isConnected) {
+                    await refreshData();
+                }
+            }, REFRESH_INTERVAL);
+           
+            // Connection check every minute
+            setInterval(async () => {
+                await checkConnection();
+            }, 60000);
+           
+            // UI updates every 10 seconds
+            setInterval(() => {
+                updateRealTimeIndicator();
+            }, 10000);
+        }
+
+        function updateRealTimeIndicator() {
+            const indicator = document.getElementById('realtimeIndicator');
+           
+            if (!dashboardState.lastUpdate) {
+                indicator.style.display = 'none';
+                return;
+            }
+           
+            const secondsAgo = Math.floor((new Date() - dashboardState.lastUpdate) / 1000);
+           
+            if (secondsAgo < 10) {
+                indicator.innerHTML = '<span class="pulse-dot"></span> Live';
+                indicator.style.display = 'inline-flex';
+            } else if (secondsAgo < 60) {
+                indicator.innerHTML = `<i class="fas fa-clock"></i> ${secondsAgo}s ago`;
+                indicator.style.display = 'inline-flex';
+            } else {
+                indicator.style.display = 'none';
             }
         }
 
-        function filterBusinesses() {
-            const search = document.getElementById('businessSearch').value.toLowerCase();
-            const filtered = dashboardState.businesses.filter(b => 
-                (b.business_name?.toLowerCase().includes(search) || 
-                 b.email?.toLowerCase().includes(search))
-            );
-            document.getElementById('businessesTableContainer').innerHTML = renderBusinessTable(filtered);
-        }
-
-        function viewBusinessDetails(id) {
-            const business = dashboardState.businesses.find(b => b._id === id);
-            if (!business) return;
-            
-            document.getElementById('businessDetailContent').innerHTML = `
-                <div style="display: grid; gap: 20px;">
-                    <div><strong>Business Name:</strong> ${business.business_name || 'N/A'}</div>
-                    <div><strong>Email:</strong> ${business.email || 'N/A'}</div>
-                    <div><strong>Phone:</strong> ${business.phone || 'N/A'}</div>
-                    <div><strong>Contact Person:</strong> ${business.contact_name || 'N/A'}</div>
-                    <div><strong>Business Type:</strong> ${business.business_type || 'N/A'}</div>
-                    <div><strong>Status:</strong> <span class="status-badge status-${business.status}">${business.status}</span></div>
-                    <div><strong>Registered:</strong> ${new Date(business.created_at || Date.now()).toLocaleString()}</div>
-                </div>
-            `;
-            
-            openModal('businessDetailModal');
+        function updateLastUpdateDisplay() {
+            if (!dashboardState.lastUpdate) return;
+           
+            const timeString = dashboardState.lastUpdate.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+           
+            document.getElementById('lastUpdated').textContent = timeString;
+            document.getElementById('statusTime').textContent = timeString;
         }
 
         // ============================================
-        // ANNOUNCEMENTS MODAL
+        // SESSION MANAGEMENT
         // ============================================
-        function showAnnouncementsModal() {
-            document.getElementById('dashboardTitle').textContent = 'Announcements';
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-bullhorn"></i> Announcements</h2>
-                        <div>
-                            <button class="sheet-btn" onclick="showCreateAnnouncement()">
-                                <i class="fas fa-plus"></i> New Announcement
-                            </button>
-                            <button class="sheet-btn secondary" onclick="showDashboard()" style="margin-left: 10px;">
-                                <i class="fas fa-arrow-left"></i> Back
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; padding: 60px; color: #64748b;">
-                        <i class="fas fa-bullhorn" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-                        <h3 style="margin-bottom: 10px;">Announcements Coming Soon</h3>
-                        <p>This feature is under development. Check back later.</p>
-                        <p style="margin-top: 20px; font-size: 14px;">You'll be able to post news, deadlines, and updates here.</p>
-                    </div>
-                </div>
-            `;
-            
-            setActiveMenuItem('Announcements');
+        function startSessionTimer() {
+            let timeLeft = SESSION_TIMEOUT * 60;
+            const timerElement = document.getElementById('sessionTimer');
+           
+            const timer = setInterval(() => {
+                timeLeft--;
+               
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+               
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+               
+                // Warning states
+                if (timeLeft <= 300) {
+                    timerElement.style.color = 'var(--warning-color)';
+                }
+               
+                if (timeLeft <= 60) {
+                    timerElement.style.color = 'var(--danger-color)';
+                    if (timeLeft === 60) {
+                        showNotification('Session will expire in 1 minute', 'warning');
+                    }
+                }
+               
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showNotification('Session expired. Redirecting to login...', 'danger');
+                    setTimeout(handleLogout, 2000);
+                }
+            }, 1000);
+           
+            // Reset on user activity
+            const resetTimer = () => {
+                if (timeLeft <= 300) {
+                    timeLeft = SESSION_TIMEOUT * 60;
+                    timerElement.style.color = 'var(--lba-dark)';
+                }
+            };
+           
+            ['click', 'mousemove', 'keypress'].forEach(event => {
+                document.addEventListener(event, resetTimer);
+            });
         }
 
-        function showCreateAnnouncement() {
-            alert('Announcement creation feature coming soon!');
+        // ============================================
+        // FALLBACK DATA
+        // ============================================
+        function useFallbackData() {
+            console.log('🔄 Using fallback data');
+           
+            // Create basic data structure
+            const fallbackData = {
+                success: true,
+                totalSubmissions: 0,
+                todaySubmissions: 0,
+                summary: {
+                    totalBusinesses: 0,
+                    totalNominations: 0,
+                    approvedNominations: 0
+                },
+                sheetStats: {
+                    Registrations: { total: 0, active: 0, pending: 0 },
+                    Nominations: { total: 0, approved: 0, pending: 0 }
+                }
+            };
+           
+            updateDashboardStats(fallbackData);
+            updateConnectionStatus(false);
         }
 
         // ============================================
-        // NOMINATIONS MODAL
+        // SHEETS MODAL FUNCTIONS
         // ============================================
         function showNominationsModal() {
-            document.getElementById('dashboardTitle').textContent = 'Nominations';
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-award"></i> Nominations</h2>
-                        <button class="sheet-btn secondary" onclick="showDashboard()">
-                            <i class="fas fa-arrow-left"></i> Back
+            hideAllModals();
+           
+            const modal = document.getElementById('nominationsModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+           
+            // Load data if needed
+            if (dashboardState.sheetData.all.length === 0) {
+                loadSheetsDataForModal();
+            } else {
+                renderSheetData();
+            }
+        }
+
+        async function loadSheetsDataForModal() {
+            const sheetsData = document.getElementById('sheetsData');
+            sheetsData.innerHTML = `
+                <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
+                    <p>Loading Google Sheets data...</p>
+                </div>
+            `;
+           
+            try {
+                const data = await fetchAllSheetData();
+                if (data && data.success) {
+                    processSheetData(data);
+                    renderSheetData();
+                    showNotification('✅ Data loaded successfully', 'success');
+                }
+            } catch (error) {
+                sheetsData.innerHTML = `
+                    <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fas fa-exclamation-triangle fa-2x" style="color: var(--warning-color); margin-bottom: 20px;"></i>
+                        <p>Could not load data</p>
+                        <p style="font-size: 12px; margin-top: 10px;">${escapeHtml(error.message)}</p>
+                        <button class="sheet-btn secondary" onclick="loadSheetsDataForModal()" style="margin-top: 20px;">
+                            <i class="fas fa-sync-alt"></i> Try Again
                         </button>
                     </div>
-                    
-                    <div style="text-align: center; padding: 60px; color: #64748b;">
-                        <i class="fas fa-award" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-                        <h3 style="margin-bottom: 10px;">No Nominations Yet</h3>
-                        <p>Nominations will appear here once businesses submit them.</p>
-                    </div>
-                </div>
-            `;
-            
-            setActiveMenuItem('Nominations');
+                `;
+            }
         }
 
-        // ============================================
-        // CATEGORIES MODAL
-        // ============================================
-        function showCategoriesModal() {
-            document.getElementById('dashboardTitle').textContent = 'Categories';
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-list-alt"></i> Award Categories</h2>
-                        <div>
-                            <button class="sheet-btn" onclick="showAddCategory()">
-                                <i class="fas fa-plus"></i> Add Category
-                            </button>
-                            <button class="sheet-btn secondary" onclick="showDashboard()" style="margin-left: 10px;">
-                                <i class="fas fa-arrow-left"></i> Back
-                            </button>
-                        </div>
+        function renderSheetData() {
+            const sheetsData = document.getElementById('sheetsData');
+            const sheet = dashboardState.currentSheet;
+            const data = dashboardState.sheetData[sheet] || [];
+           
+            // Apply filters
+            const filteredData = applyFiltersToData(data);
+           
+            if (filteredData.length === 0) {
+                sheetsData.innerHTML = `
+                    <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fas fa-database fa-2x" style="margin-bottom: 20px;"></i>
+                        <p>No data found</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Try refreshing or check your Google Sheets</p>
                     </div>
-                    
-                    <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
+                `;
+                document.getElementById('dataCount').textContent = '0 submissions';
+                return;
+            }
+           
+            // Update count
+            document.getElementById('dataCount').textContent = `${filteredData.length} submissions`;
+           
+            // Render appropriate table
+            let tableHtml;
+           
+            switch (sheet) {
+                case 'businesses':
+                    tableHtml = renderBusinessTable(filteredData);
+                    break;
+                case 'nominations':
+                    tableHtml = renderNominationsTable(filteredData);
+                    break;
+                default:
+                    tableHtml = renderAllTable(filteredData);
+            }
+           
+            sheetsData.innerHTML = tableHtml;
+        }
+
+        function applyFiltersToData(data) {
+            const statusFilter = document.getElementById('filterStatus')?.value || 'all';
+            const searchFilter = document.getElementById('filterSearch')?.value?.toLowerCase() || '';
+           
+            return data.filter(item => {
+                // Status filter
+                if (statusFilter !== 'all' && item.status !== statusFilter) {
+                    return false;
+                }
+               
+                // Search filter
+                if (searchFilter) {
+                    const searchable = [
+                        item.name,
+                        item.businessName,
+                        item.email,
+                        item.category,
+                        item.phone
+                    ].filter(Boolean).map(f => f.toLowerCase());
+                   
+                    return searchable.some(field => field.includes(searchFilter));
+                }
+               
+                return true;
+            });
+        }
+
+        function renderBusinessTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
                                 <tr>
-                                    <th>Category Name</th>
-                                    <th>Description</th>
-                                    <th>Nominations</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
+                                    <td><strong>${escapeHtml(item.name)}</strong></td>
+                                    <td>${escapeHtml(item.email)}</td>
+                                    <td>${escapeHtml(item.phone)}</td>
+                                    <td>${escapeHtml(item.category)}</td>
+                                    <td>
+                                        <span class="status-badge status-${item.statusClass || 'warning'}">
+                                            ${item.status}
+                                        </span>
+                                    </td>
+                                    <td>${item.displayDate}</td>
+                                    <td>
+                                        <button class="sheet-btn secondary" onclick="viewItem('${item.id}')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderNominationsTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
                                 <tr>
-                                    <td>Technology</td>
-                                    <td>Innovation in technology</td>
-                                    <td>0</td>
-                                    <td><span class="status-badge status-active">Active</span></td>
-                                    <td><button class="action-btn view"><i class="fas fa-edit"></i></button></td>
+                                    <td><strong>${escapeHtml(item.businessName)}</strong></td>
+                                    <td>${escapeHtml(item.category)}</td>
+                                    <td>
+                                        <span class="status-badge status-${item.statusClass || 'warning'}">
+                                            ${item.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="
+                                            display: inline-block;
+                                            padding: 4px 12px;
+                                            border-radius: 20px;
+                                            font-weight: bold;
+                                            background: ${item.scoreColor};
+                                            color: white;
+                                        ">
+                                            ${item.score}
+                                        </span>
+                                    </td>
+                                    <td>${item.displayDate}</td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            ${item.status === 'pending' ? `
+                                                <button class="sheet-btn" style="background: var(--success-color); padding: 6px 12px;"
+                                                        onclick="approveItem('${item.id}')">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="sheet-btn" style="background: var(--danger-color); padding: 6px 12px;"
+                                                        onclick="rejectItem('${item.id}')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            ` : ''}
+                                            <button class="sheet-btn secondary" style="padding: 6px 12px;"
+                                                    onclick="viewItem('${item.id}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderAllTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
                                 <tr>
-                                    <td>Agriculture</td>
-                                    <td>Sustainable farming</td>
-                                    <td>0</td>
-                                    <td><span class="status-badge status-active">Active</span></td>
-                                    <td><button class="action-btn view"><i class="fas fa-edit"></i></button></td>
+                                    <td>
+                                        <span class="status-badge" style="background: rgba(255,0,0,0.1); color: var(--lba-primary);">
+                                            ${item.formType || 'submission'}
+                                        </span>
+                                    </td>
+                                    <td><strong>${escapeHtml(item.name || item.businessName || 'N/A')}</strong></td>
+                                    <td>${escapeHtml(item.email || 'N/A')}</td>
+                                    <td>
+                                        <span class="status-badge status-${item.statusClass || 'info'}">
+                                            ${item.status}
+                                        </span>
+                                    </td>
+                                    <td>${item.displayDate}</td>
+                                    <td>
+                                        <button class="sheet-btn secondary" onclick="viewItem('${item.id}')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
                                 </tr>
-                                <tr>
-                                    <td>Manufacturing</td>
-                                    <td>Industrial excellence</td>
-                                    <td>0</td>
-                                    <td><span class="status-badge status-active">Active</span></td>
-                                    <td><button class="action-btn view"><i class="fas fa-edit"></i></button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             `;
-            
-            setActiveMenuItem('Categories');
-        }
-
-        function showAddCategory() {
-            alert('Add category feature coming soon!');
         }
 
         // ============================================
-        // JUDGES MODAL
+        // MODAL CONTROLS
         // ============================================
-        function showJudgesModal() {
-            document.getElementById('dashboardTitle').textContent = 'Judges Panel';
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-gavel"></i> Judges Panel</h2>
-                        <div>
-                            <button class="sheet-btn" onclick="showAddJudge()">
-                                <i class="fas fa-plus"></i> Add Judge
-                            </button>
-                            <button class="sheet-btn secondary" onclick="showDashboard()" style="margin-left: 10px;">
-                                <i class="fas fa-arrow-left"></i> Back
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; padding: 60px; color: #64748b;">
-                        <i class="fas fa-gavel" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-                        <h3 style="margin-bottom: 10px;">Judges Panel Coming Soon</h3>
-                        <p>This feature will allow you to manage award judges.</p>
-                    </div>
-                </div>
-            `;
-            
-            setActiveMenuItem('Judges Panel');
+        function switchSheet(sheet) {
+            dashboardState.currentSheet = sheet;
+            document.getElementById('filterSheet').value = sheet;
+            renderSheetData();
         }
 
-        function showAddJudge() {
-            alert('Add judge feature coming soon!');
+        function applyFilters() {
+            renderSheetData();
         }
 
-        // ============================================
-        // USERS MODAL
-        // ============================================
-        function showUsersModal() {
-            document.getElementById('dashboardTitle').textContent = 'Users';
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-users"></i> Users</h2>
-                        <button class="sheet-btn secondary" onclick="showDashboard()">
-                            <i class="fas fa-arrow-left"></i> Back
-                        </button>
-                    </div>
-                    
-                    <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>System Administrator</strong></td>
-                                    <td>admin@liberiabusinessawardslr.com</td>
-                                    <td>Super Admin</td>
-                                    <td><span class="status-badge status-active">Active</span></td>
-                                    <td><button class="action-btn view"><i class="fas fa-edit"></i></button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            setActiveMenuItem('Users');
+        function refreshSheetsData() {
+            showNotification('Refreshing data...', 'info');
+            loadSheetsDataForModal();
         }
 
-        // ============================================
-        // ANALYTICS MODAL
-        // ============================================
-        function showAnalyticsModal() {
-            document.getElementById('dashboardTitle').textContent = 'Analytics';
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-chart-bar"></i> Analytics</h2>
-                        <button class="sheet-btn secondary" onclick="showDashboard()">
-                            <i class="fas fa-arrow-left"></i> Back
-                        </button>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center;">
-                            <h3 style="font-size: 48px; color: var(--lba-primary);">${dashboardState.businesses.length}</h3>
-                            <p>Total Businesses</p>
-                        </div>
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center;">
-                            <h3 style="font-size: 48px; color: var(--lba-secondary);">${dashboardState.pendingBusinesses.length}</h3>
-                            <p>Pending Approvals</p>
-                        </div>
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center;">
-                            <h3 style="font-size: 48px; color: var(--success-color);">${dashboardState.activeBusinesses.length}</h3>
-                            <p>Active Businesses</p>
-                        </div>
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center;">
-                            <h3 style="font-size: 48px; color: var(--warning-color);">0</h3>
-                            <p>Nominations</p>
-                        </div>
-                    </div>
-                    
-                    <p style="text-align: center; margin-top: 30px; color: #64748b;">
-                        Detailed analytics coming soon with charts and graphs.
-                    </p>
-                </div>
-            `;
-            
-            setActiveMenuItem('Analytics');
+        function openGoogleSheets() {
+            window.open(GOOGLE_SHEETS_VIEW_URL, '_blank');
         }
 
-        // ============================================
-        // REPORTS MODAL
-        // ============================================
-        function showReportsModal() {
-            document.getElementById('dashboardTitle').textContent = 'Reports';
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-file-alt"></i> Reports</h2>
-                        <button class="sheet-btn secondary" onclick="showDashboard()">
-                            <i class="fas fa-arrow-left"></i> Back
-                        </button>
-                    </div>
-                    
-                    <div style="text-align: center; padding: 60px; color: #64748b;">
-                        <i class="fas fa-file-alt" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-                        <h3 style="margin-bottom: 10px;">Reports Coming Soon</h3>
-                        <p>Generate and download reports on businesses, nominations, and activities.</p>
-                    </div>
-                </div>
-            `;
-            
-            setActiveMenuItem('Reports');
+        function startAutoRefresh() {
+            const btn = document.getElementById('autoRefreshBtn');
+           
+            if (dashboardState.autoRefresh) {
+                clearInterval(dashboardState.autoRefresh);
+                dashboardState.autoRefresh = null;
+                btn.innerHTML = '<i class="fas fa-sync"></i> Auto Refresh';
+                btn.classList.remove('danger');
+                showNotification('Auto-refresh stopped', 'warning');
+            } else {
+                dashboardState.autoRefresh = setInterval(refreshSheetsData, 30000);
+                btn.innerHTML = '<i class="fas fa-stop"></i> Stop Auto Refresh';
+                btn.classList.add('danger');
+                showNotification('Auto-refresh started (every 30 seconds)', 'success');
+            }
         }
 
-        // ============================================
-        // SETTINGS MODAL
-        // ============================================
-        function showSettingsModal() {
-            document.getElementById('dashboardTitle').textContent = 'Settings';
-            
-            const content = document.getElementById('contentArea');
-            content.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2 style="color: var(--lba-dark);"><i class="fas fa-cog"></i> Settings</h2>
-                        <button class="sheet-btn secondary" onclick="showDashboard()">
-                            <i class="fas fa-arrow-left"></i> Back
-                        </button>
-                    </div>
-                    
-                    <div style="text-align: center; padding: 60px; color: #64748b;">
-                        <i class="fas fa-cog" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-                        <h3 style="margin-bottom: 10px;">Settings Coming Soon</h3>
-                        <p>Configure system preferences, email templates, and more.</p>
-                    </div>
-                </div>
-            `;
-            
-            setActiveMenuItem('Settings');
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+           
+            // Stop auto-refresh
+            if (dashboardState.autoRefresh) {
+                clearInterval(dashboardState.autoRefresh);
+                dashboardState.autoRefresh = null;
+                const btn = document.getElementById('autoRefreshBtn');
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-sync"></i> Auto Refresh';
+                    btn.classList.remove('danger');
+                }
+            }
+        }
+
+        function hideAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
         }
 
         // ============================================
         // UTILITY FUNCTIONS
         // ============================================
-        function setActiveMenuItem(itemName) {
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.querySelector('span')?.textContent === itemName) {
-                    item.classList.add('active');
-                }
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Just now';
+           
+            const now = new Date();
+            const date = new Date(timestamp);
+            const diff = now - date;
+           
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+           
+            if (seconds < 60) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function formatDisplayDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
             });
         }
 
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-            document.body.style.overflow = 'hidden';
+        function getScoreColor(score) {
+            if (score >= 90) return '#10B981';
+            if (score >= 80) return '#F59E0B';
+            return '#EF4444';
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-            document.body.style.overflow = 'auto';
+        function generateId(prefix = 'id') {
+            return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function showNotification(message, type = 'info') {
-            const colors = { success: '#10B981', warning: '#F59E0B', danger: '#EF4444', info: '#3B82F6' };
-            const icons = { success: 'check-circle', warning: 'exclamation-triangle', danger: 'exclamation-circle', info: 'info-circle' };
-            
+            const colors = {
+                success: '#10B981',
+                warning: '#F59E0B',
+                danger: '#EF4444',
+                info: '#3B82F6'
+            };
+           
+            const icons = {
+                success: 'check-circle',
+                warning: 'exclamation-triangle',
+                danger: 'exclamation-circle',
+                info: 'info-circle'
+            };
+           
+            // Remove existing notifications
+            document.querySelectorAll('.notification').forEach(n => n.remove());
+           
             const notification = document.createElement('div');
+            notification.className = 'notification';
             notification.style.cssText = `
-                position: fixed; top: 30px; right: 30px; background: white; color: ${colors[type]};
-                padding: 15px 20px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-                z-index: 9999; display: flex; align-items: center; gap: 12px; border-left: 4px solid ${colors[type]};
-                max-width: 350px; font-weight: 600; font-size: 14px;
+                position: fixed;
+                top: 30px;
+                right: 30px;
+                background: white;
+                color: ${colors[type]};
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+                z-index: 9999;
+                animation: slideUp 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-left: 4px solid ${colors[type]};
+                max-width: 350px;
+                font-weight: 600;
+                font-size: 14px;
             `;
-            notification.innerHTML = `<i class="fas fa-${icons[type]}" style="font-size: 18px;"></i><span>${message}</span>`;
+           
+            notification.innerHTML = `
+                <i class="fas fa-${icons[type]}" style="font-size: 18px;"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+           
             document.body.appendChild(notification);
-            
+           
+            // Auto-remove after 4 seconds
             setTimeout(() => {
                 notification.style.animation = 'slideUp 0.3s reverse';
                 setTimeout(() => notification.remove(), 300);
             }, 4000);
-        }
-
-        function setupPeriodicUpdates() {
-            setInterval(async () => {
-                await loadDashboardData();
-            }, REFRESH_INTERVAL);
-            
-            startSessionTimer();
-        }
-
-        function startSessionTimer() {
-            let timeLeft = SESSION_TIMEOUT * 60;
-            const timerElement = document.getElementById('sessionTimer');
-            
-            setInterval(() => {
-                timeLeft--;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                if (timerElement) timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                if (timeLeft <= 0) {
-                    showNotification('Session expired. Redirecting...', 'danger');
-                    setTimeout(logout, 2000);
-                }
-            }, 1000);
+           
+            // Click to dismiss
+            notification.addEventListener('click', () => notification.remove());
         }
 
         // ============================================
-        // EXPORT FUNCTIONS
+        // ACTION FUNCTIONS (Stubs for now)
         // ============================================
-        window.showDashboard = showDashboard;
-        window.showBusinessesModal = showBusinessesModal;
+        function approveSelected() {
+            showNotification('This feature requires backend implementation', 'info');
+        }
+
+        function rejectSelected() {
+            showNotification('This feature requires backend implementation', 'info');
+        }
+
+        function exportToExcel() {
+            showNotification('Export feature coming soon', 'info');
+        }
+
+        function sendNotifications() {
+            showNotification('Notification feature coming soon', 'info');
+        }
+
+        function viewItem(id) {
+            showNotification(`Viewing item ${id} - Detail view coming soon`, 'info');
+        }
+
+        function approveItem(id) {
+            showNotification(`Approving item ${id} - Backend integration required`, 'success');
+        }
+
+        function rejectItem(id) {
+            showNotification(`Rejecting item ${id} - Backend integration required`, 'warning');
+        }
+
+        function refreshActivities() {
+            loadInitialData();
+            showNotification('Refreshing dashboard data...', 'info');
+        }
+
+        // ============================================
+        // MODAL SHORTCUT FUNCTIONS
+        // ============================================
+        function showBusinessModal() {
+            showNominationsModal();
+            switchSheet('businesses');
+        }
+
+        function showSheetsModal() {
+            showNominationsModal();
+        }
+
+        function showAnnouncementModal() {
+            showNotification('Announcements module coming soon', 'info');
+        }
+
+        function showAnalyticsModal() {
+            showNotification('Analytics module coming soon', 'info');
+        }
+
+        function showCategoriesModal() {
+            showNotification('Categories module coming soon', 'info');
+        }
+
+        function showJudgesModal() {
+            showNotification('Judges panel module coming soon', 'info');
+        }
+
+        function showUsersModal() {
+            showNotification('Users module coming soon', 'info');
+        }
+
+        function showReportsModal() {
+            showNotification('Reports module coming soon', 'info');
+        }
+
+        function showSettingsModal() {
+            showNotification('Settings module coming soon', 'info');
+        }
+
+        function showTroubleshootingGuide() {
+            showNotification('See console for troubleshooting information', 'info');
+            console.log('🔧 Troubleshooting Guide:');
+            console.log('1. Check Apps Script deployment: ' + GOOGLE_APPS_SCRIPT_URL);
+            console.log('2. Verify Web App deployment settings');
+            console.log('3. Check Google Sheets permissions');
+            console.log('4. Test API endpoint: ' + GOOGLE_APPS_SCRIPT_URL + '?action=ping');
+        }
+
+        // ============================================
+        // EXPORT TO GLOBAL SCOPE
+        // ============================================
         window.showNominationsModal = showNominationsModal;
-        window.showAnnouncementsModal = showAnnouncementsModal;
-        window.showSpotlightModal = showSpotlightModal;
+        window.refreshActivities = refreshActivities;
+        window.logout = handleLogout;
+        window.refreshSheetsData = refreshSheetsData;
+        window.openGoogleSheets = openGoogleSheets;
+        window.switchSheet = switchSheet;
+        window.applyFilters = applyFilters;
+        window.startAutoRefresh = startAutoRefresh;
+        window.approveSelected = approveSelected;
+        window.rejectSelected = rejectSelected;
+        window.exportToExcel = exportToExcel;
+        window.sendNotifications = sendNotifications;
+        window.showBusinessModal = showBusinessModal;
+        window.hideModal = hideModal;
+        window.showTroubleshootingGuide = showTroubleshootingGuide;
+        window.showAnnouncementModal = showAnnouncementModal;
+        window.showAnalyticsModal = showAnalyticsModal;
         window.showCategoriesModal = showCategoriesModal;
         window.showJudgesModal = showJudgesModal;
         window.showUsersModal = showUsersModal;
-        window.showAnalyticsModal = showAnalyticsModal;
         window.showReportsModal = showReportsModal;
         window.showSettingsModal = showSettingsModal;
-        window.approveBusiness = approveBusiness;
-        window.rejectBusiness = rejectBusiness;
-        window.viewBusinessDetails = viewBusinessDetails;
-        window.filterBusinesses = filterBusinesses;
-        window.showBusinessTab = showBusinessTab;
-        window.showCreateAnnouncement = showCreateAnnouncement;
-        window.showAddCategory = showAddCategory;
-        window.showAddJudge = showAddJudge;
-        window.openModal = openModal;
-        window.closeModal = closeModal;
+        window.showSheetsModal = showSheetsModal;
 
-        console.log('✅ Admin Dashboard Ready - All Sections Working');
+        console.log('✅ Admin Dashboard Ready');
+        console.log('📊 Google Sheets Integration: ACTIVE');
+        console.log('🔗 Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
+        console.log('🎯 Features: Real-time Google Sheets integration with sample data fallback');
+
+        // ============================================
+        // SPOTLIGHT MANAGEMENT SYSTEM
+        // ============================================
+
+        // Spotlight State
+        let spotlightCategories = [];
+        let spotlightStories = [];
+        let currentStoryFilter = 'all';
+        let spotlightSearchTerm = '';
+
+        // ============ MODAL OPEN/CLOSE ============
+        function showSpotlightModal() {
+            hideAllModals();
+            const modal = document.getElementById('spotlightModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+           
+            // Load data
+            loadSpotlightCategories();
+            loadSpotlightStories();
+        }
+
+        // ============ LOAD CATEGORIES ============
+        async function loadSpotlightCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/news/categories`);
+                const data = await response.json();
+               
+                if (data.success) {
+                    spotlightCategories = data.categories || [];
+                   
+                    // Update categories grid
+                    const grid = document.getElementById('categoriesGrid');
+                    if (grid) {
+                        if (spotlightCategories.length === 0) {
+                            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No categories yet</p>';
+                        } else {
+                            grid.innerHTML = spotlightCategories.map(cat => `
+                                <div style="background: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${cat.color || '#FF0000'}; display: flex; justify-content: space-between; align-items: center;">
+                                    <span><i class="fas ${cat.icon || 'fa-tag'}"></i> ${cat.name}</span>
+                                    <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 12px;">${cat.article_count || 0}</span>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                   
+                    // Update category filter dropdown
+                    const filter = document.getElementById('categoryFilter');
+                    if (filter) {
+                        filter.innerHTML = '<option value="all">All Categories</option>' +
+                            spotlightCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+                    }
+                   
+                    // Update category select in story modal
+                    const select = document.getElementById('storyCategory');
+                    if (select) {
+                        select.innerHTML = '<option value="">Select Category</option>' +
+                            spotlightCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+                    }
+                   
+                    document.getElementById('totalCategories').textContent = spotlightCategories.length;
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                showNotification('Error loading categories', 'error');
+            }
+        }
+
+        // ============ LOAD STORIES ============
+        async function loadSpotlightStories() {
+            try {
+                const response = await fetch(`${API_BASE}/news/articles?limit=100`);
+                const data = await response.json();
+               
+                if (data.success) {
+                    spotlightStories = data.articles || [];
+                   
+                    // Update stats
+                    document.getElementById('totalStories').textContent = spotlightStories.length;
+                    document.getElementById('publishedStories').textContent = spotlightStories.filter(s => s.status === 'published').length;
+                    document.getElementById('draftStories').textContent = spotlightStories.filter(s => s.status === 'draft').length;
+                    document.getElementById('spotlightCount').textContent = spotlightStories.length;
+                   
+                    displayStories();
+                }
+            } catch (error) {
+                console.error('Error loading stories:', error);
+                showNotification('Error loading stories', 'error');
+            }
+        }
+
+        // ============ DISPLAY STORIES ============
+        function displayStories() {
+            const container = document.getElementById('storiesList');
+            if (!container) return;
+           
+            let filtered = spotlightStories;
+           
+            // Apply category filter
+            if (currentStoryFilter !== 'all') {
+                filtered = filtered.filter(s => s.category_id === currentStoryFilter);
+            }
+           
+            // Apply search
+            if (spotlightSearchTerm) {
+                const term = spotlightSearchTerm.toLowerCase();
+                filtered = filtered.filter(s =>
+                    s.title.toLowerCase().includes(term) ||
+                    s.business_name.toLowerCase().includes(term)
+                );
+            }
+           
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: #64748b;">
+                        <i class="fas fa-newspaper" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <p>No stories found</p>
+                    </div>
+                `;
+                return;
+            }
+           
+            container.innerHTML = filtered.map(story => {
+                const category = spotlightCategories.find(c => c._id === story.category_id) || { name: 'Uncategorized' };
+                return `
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
+                            <img src="${story.featured_image || '/images/placeholder.jpg'}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 5px;" onerror="this.src='https://via.placeholder.com/60x40'">
+                            <div>
+                                <h4 style="font-weight: 600; margin-bottom: 5px;">${story.title}</h4>
+                                <div style="display: flex; gap: 15px; font-size: 13px; color: #64748b;">
+                                    <span><i class="fas fa-building"></i> ${story.business_name}</span>
+                                    <span><i class="fas fa-tag"></i> ${category.name}</span>
+                                    <span><i class="fas fa-user"></i> ${story.author_name}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <span class="status-badge status-${story.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${story.status}</span>
+                            <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editStory('${story._id}')"><i class="fas fa-edit"></i></button>
+                            <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteStory('${story._id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============ FILTER STORIES ============
+        function filterStoriesByCategory() {
+            currentStoryFilter = document.getElementById('categoryFilter').value;
+            displayStories();
+        }
+
+        function searchSpotlight() {
+            spotlightSearchTerm = document.getElementById('spotlightSearch').value;
+            displayStories();
+        }
+
+        // ============ STORY CRUD ============
+        function openAddStoryModal() {
+            document.getElementById('storyModalTitle').textContent = 'Add New Story';
+            document.getElementById('storyForm').reset();
+            document.getElementById('storyId').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+           
+            // Set default date to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('storyPublishedDate').value = now.toISOString().slice(0, 16);
+           
+            openModal('storyModal');
+        }
+
+        async function editStory(id) {
+            const story = spotlightStories.find(s => s._id === id);
+            if (!story) return;
+           
+            document.getElementById('storyModalTitle').textContent = 'Edit Story';
+            document.getElementById('storyId').value = story._id;
+            document.getElementById('storyTitle').value = story.title || '';
+            document.getElementById('storySlug').value = story.slug || '';
+            document.getElementById('storyCategory').value = story.category_id || '';
+            document.getElementById('storyStatus').value = story.status || 'draft';
+            document.getElementById('storyBusinessName').value = story.business_name || '';
+            document.getElementById('storyBusinessOwner').value = story.business_owner || '';
+            document.getElementById('storyAuthorName').value = story.author_name || '';
+            document.getElementById('storyAuthorBio').value = story.author_bio || '';
+            document.getElementById('storyExcerpt').value = story.excerpt || '';
+            document.getElementById('storyContent').value = story.content || '';
+            document.getElementById('storyImage').value = story.featured_image || '';
+            document.getElementById('storyFeatured').checked = story.is_featured || false;
+            document.getElementById('storyBreaking').checked = story.is_breaking || false;
+            document.getElementById('storyInterview').checked = story.is_interview || false;
+           
+            if (story.published_at) {
+                const date = new Date(story.published_at);
+                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                document.getElementById('storyPublishedDate').value = date.toISOString().slice(0, 16);
+            }
+           
+            if (story.featured_image) {
+                document.getElementById('imagePreview').src = story.featured_image;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+           
+            openModal('storyModal');
+        }
+
+        async function saveStory() {
+            try {
+                const storyData = {
+                    title: document.getElementById('storyTitle').value,
+                    slug: document.getElementById('storySlug').value,
+                    category_id: document.getElementById('storyCategory').value,
+                    status: document.getElementById('storyStatus').value,
+                    business_name: document.getElementById('storyBusinessName').value,
+                    business_owner: document.getElementById('storyBusinessOwner').value,
+                    author_name: document.getElementById('storyAuthorName').value,
+                    author_bio: document.getElementById('storyAuthorBio').value,
+                    excerpt: document.getElementById('storyExcerpt').value,
+                    content: document.getElementById('storyContent').value,
+                    featured_image: document.getElementById('storyImage').value,
+                    is_featured: document.getElementById('storyFeatured').checked,
+                    is_breaking: document.getElementById('storyBreaking').checked,
+                    is_interview: document.getElementById('storyInterview').checked,
+                    published_at: document.getElementById('storyPublishedDate').value
+                };
+               
+                const storyId = document.getElementById('storyId').value;
+                const url = storyId ?
+                    `${API_BASE}/admin/articles/${storyId}` :
+                    `${API_BASE}/admin/articles`;
+                const method = storyId ? 'PUT' : 'POST';
+               
+                const token = localStorage.getItem('lba_auth_token');
+               
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(storyData)
+                });
+               
+                const data = await response.json();
+               
+                if (data.success) {
+                    showNotification(storyId ? 'Story updated!' : 'Story created!', 'success');
+                    closeModal('storyModal');
+                    loadSpotlightStories();
+                } else {
+                    showNotification('Error saving story', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('Error saving story', 'error');
+            }
+        }
+
+        async function deleteStory(id) {
+            if (!confirm('Are you sure you want to delete this story?')) return;
+           
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/admin/articles/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+               
+                const data = await response.json();
+               
+                if (data.success) {
+                    showNotification('Story deleted!', 'success');
+                    loadSpotlightStories();
+                } else {
+                    showNotification('Error deleting story', 'error');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showNotification('Error deleting story', 'error');
+            }
+        }
+
+        // ============ CATEGORY MANAGEMENT ============
+        function openCategoryManager() {
+            closeModal('spotlightModal');
+            displayCategoryList();
+            openModal('categoryManagerModal');
+        }
+
+        function displayCategoryList() {
+            const container = document.getElementById('categoryList');
+            if (!container) return;
+           
+            if (spotlightCategories.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #64748b;">No categories yet</p>';
+                return;
+            }
+           
+            container.innerHTML = spotlightCategories.map(cat => `
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="font-weight: 600;"><i class="fas ${cat.icon || 'fa-tag'}" style="color: ${cat.color || '#FF0000'};"></i> ${cat.name}</h4>
+                        <small style="color: #64748b;">${cat.description || ''}</small>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editCategory('${cat._id}')"><i class="fas fa-edit"></i></button>
+                        <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteCategory('${cat._id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openAddCategoryModal() {
+            document.getElementById('categoryModalTitle').textContent = 'Add Category';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryColor').value = '#FF0000';
+            openModal('addCategoryModal');
+        }
+
+        function editCategory(id) {
+            const category = spotlightCategories.find(c => c._id === id);
+            if (!category) return;
+           
+            document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+            document.getElementById('categoryId').value = category._id;
+            document.getElementById('categoryName').value = category.name || '';
+            document.getElementById('categorySlug').value = category.slug || '';
+            document.getElementById('categoryDescription').value = category.description || '';
+            document.getElementById('categoryIcon').value = category.icon || '';
+            document.getElementById('categoryColor').value = category.color || '#FF0000';
+            document.getElementById('categoryOrder').value = category.display_order || 1;
+           
+            openModal('addCategoryModal');
+        }
+
+        async function saveCategory() {
+            try {
+                const categoryData = {
+                    name: document.getElementById('categoryName').value,
+                    slug: document.getElementById('categorySlug').value,
+                    description: document.getElementById('categoryDescription').value,
+                    icon: document.getElementById('categoryIcon').value,
+                    color: document.getElementById('categoryColor').value,
+                    display_order: parseInt(document.getElementById('categoryOrder').value) || 1
+                };
+               
+                const categoryId = document.getElementById('categoryId').value;
+                const url = categoryId ?
+                    `${API_BASE}/admin/categories/${categoryId}` :
+                    `${API_BASE}/admin/categories`;
+                const method = categoryId ? 'PUT' : 'POST';
+               
+                const token = localStorage.getItem('lba_auth_token');
+               
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(categoryData)
+                });
+               
+                const data = await response.json();
+               
+                if (data.success) {
+                    showNotification(categoryId ? 'Category updated!' : 'Category created!', 'success');
+                    closeModal('addCategoryModal');
+                    loadSpotlightCategories();
+                    displayCategoryList();
+                } else {
+                    showNotification('Error saving category', 'error');
+                }
+            } catch (error) {
+                console.error('Save category error:', error);
+                showNotification('Error saving category', 'error');
+            }
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('Are you sure? Stories in this category will be uncategorized.')) return;
+           
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+               
+                const data = await response.json();
+               
+                if (data.success) {
+                    showNotification('Category deleted!', 'success');
+                    loadSpotlightCategories();
+                    displayCategoryList();
+                    loadSpotlightStories();
+                } else {
+                    showNotification('Error deleting category', 'error');
+                }
+            } catch (error) {
+                console.error('Delete category error:', error);
+                showNotification('Error deleting category', 'error');
+            }
+        }
+
+        // ============ AUTO-GENERATE SLUG ============
+        document.getElementById('storyTitle')?.addEventListener('input', function(e) {
+            if (!document.getElementById('storyId').value) {
+                const slug = e.target.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+                document.getElementById('storySlug').value = slug;
+            }
+        });
+
+        // ============ IMAGE PREVIEW ============
+        document.getElementById('storyImage')?.addEventListener('input', function(e) {
+            const preview = document.getElementById('imagePreview');
+            if (e.target.value) {
+                preview.src = e.target.value;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
+        // ============ EXPORT FUNCTION ============
+        window.showSpotlightModal = showSpotlightModal;
+       
     </script>
+   
+    <!-- ============ SPOTLIGHT MANAGEMENT MODAL ============ -->
+    <div class="modal" id="spotlightModal">
+        <div class="modal-content" style="max-width: 1400px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-newspaper"></i> Business Spotlight Management</h2>
+                <button class="modal-close" onclick="closeModal('spotlightModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #FF0000;">
+                        <h3 style="font-size: 28px; color: #FF0000;" id="totalStories">0</h3>
+                        <p style="color: #64748b; font-size: 14px;">Total Stories</p>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
+                        <h3 style="font-size: 28px; color: #10B981;" id="publishedStories">0</h3>
+                        <p style="color: #64748b; font-size: 14px;">Published</p>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #F59E0B;">
+                        <h3 style="font-size: 28px; color: #F59E0B;" id="draftStories">0</h3>
+                        <p style="color: #64748b; font-size: 14px;">Drafts</p>
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #8B5CF6;">
+                        <h3 style="font-size: 28px; color: #8B5CF6;" id="totalCategories">0</h3>
+                        <p style="color: #64748b; font-size: 14px;">Categories</p>
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 10px; flex: 1; max-width: 400px;">
+                        <input type="text" id="spotlightSearch" placeholder="Search stories..." style="flex: 1; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                        <button class="sheet-btn" onclick="searchSpotlight()" style="padding: 10px 20px;">Search</button>
+                    </div>
+                    <div>
+                        <button class="sheet-btn" onclick="openAddStoryModal()" style="margin-right: 10px;">
+                            <i class="fas fa-plus"></i> New Story
+                        </button>
+                        <button class="sheet-btn secondary" onclick="openCategoryManager()">
+                            <i class="fas fa-tags"></i> Categories
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Categories Grid -->
+                <div style="margin-bottom: 25px;">
+                    <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-tags" style="color: #FF0000;"></i> Categories
+                    </h4>
+                    <div id="categoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
+                </div>
+
+                <!-- Stories Table -->
+                <div class="sheets-viewer">
+                    <div class="sheets-viewer-header">
+                        <h4><i class="fas fa-newspaper"></i> All Stories</h4>
+                        <select id="categoryFilter" onchange="filterStoriesByCategory()" style="padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
+                    <div id="storiesList" style="padding: 20px; min-height: 400px; max-height: 500px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ ADD/EDIT STORY MODAL ============ -->
+    <div class="modal" id="storyModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="storyModalTitle">Add New Story</h2>
+                <button class="modal-close" onclick="closeModal('storyModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="storyForm">
+                    <input type="hidden" id="storyId">
+                   
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Title *</label>
+                            <input type="text" id="storyTitle" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Slug *</label>
+                            <input type="text" id="storySlug" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="storyCategory" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="storyStatus" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                                <option value="published">Published</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Business Name *</label>
+                            <input type="text" id="storyBusinessName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Business Owner</label>
+                            <input type="text" id="storyBusinessOwner" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Author Name *</label>
+                            <input type="text" id="storyAuthorName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Author Bio</label>
+                            <input type="text" id="storyAuthorBio" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Excerpt *</label>
+                        <textarea id="storyExcerpt" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Full Content *</label>
+                        <textarea id="storyContent" rows="4" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Featured Image URL *</label>
+                        <input type="text" id="storyImage" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required placeholder="/images/featured/your-image.jpg">
+                        <img id="imagePreview" style="max-width: 200px; max-height: 100px; margin-top: 10px; display: none; border-radius: 5px;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Published Date</label>
+                            <input type="datetime-local" id="storyPublishedDate" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Flags</label>
+                            <div style="display: flex; gap: 15px; padding: 10px 0;">
+                                <label><input type="checkbox" id="storyFeatured"> Featured</label>
+                                <label><input type="checkbox" id="storyBreaking"> Breaking</label>
+                                <label><input type="checkbox" id="storyInterview"> Interview</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="sheet-btn warning" onclick="closeModal('storyModal')">Cancel</button>
+                <button class="sheet-btn" onclick="saveStory()">Save Story</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ CATEGORY MANAGER MODAL ============ -->
+    <div class="modal" id="categoryManagerModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Manage Categories</h2>
+                <button class="modal-close" onclick="closeModal('categoryManagerModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <button class="sheet-btn" onclick="openAddCategoryModal()" style="width: 100%;">
+                        <i class="fas fa-plus"></i> Add New Category
+                    </button>
+                </div>
+                <div id="categoryList" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ ADD/EDIT CATEGORY MODAL ============ -->
+    <div class="modal" id="addCategoryModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">Add Category</h2>
+                <button class="modal-close" onclick="closeModal('addCategoryModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId">
+                   
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Category Name *</label>
+                        <input type="text" id="categoryName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                    </div>
+                   
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Slug *</label>
+                        <input type="text" id="categorySlug" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
+                    </div>
+                   
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Description</label>
+                        <textarea id="categoryDescription" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;"></textarea>
+                    </div>
+                   
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div class="form-group">
+                            <label>Icon</label>
+                            <input type="text" id="categoryIcon" class="sheet-btn secondary" style="width: 100%; padding: 10px;" placeholder="fa-rocket">
+                        </div>
+                        <div class="form-group">
+                            <label>Color</label>
+                            <input type="color" id="categoryColor" class="sheet-btn secondary" style="width: 100%; height: 42px;" value="#FF0000">
+                        </div>
+                    </div>
+                   
+                    <div class="form-group">
+                        <label>Display Order</label>
+                        <input type="number" id="categoryOrder" class="sheet-btn secondary" style="width: 100%; padding: 10px;" value="1" min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="sheet-btn warning" onclick="closeModal('addCategoryModal')">Cancel</button>
+                <button class="sheet-btn" onclick="saveCategory()">Save Category</button>
+            </div>
+        </div>
+    </div>
 </body>
-</html>
+</html> 
