@@ -138,6 +138,106 @@ async function connectToMongoDB() {
     }
 }
 
+// ============ ADMIN BUSINESS MANAGEMENT ============
+
+// Get all businesses with optional status filter
+app.get('/api/admin/businesses', async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        const businesses = await BusinessUser.find(query).select('-password').sort('-created_at');
+        
+        // Get counts
+        const pending = await BusinessUser.countDocuments({ status: 'pending' });
+        const active = await BusinessUser.countDocuments({ status: 'active' });
+        const total = await BusinessUser.countDocuments();
+        
+        res.json({
+            success: true,
+            businesses,
+            counts: { total, pending, active }
+        });
+    } catch (error) {
+        console.error('Error fetching businesses:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Approve business
+app.post('/api/admin/businesses/:id/approve', async (req, res) => {
+    try {
+        const business = await BusinessUser.findByIdAndUpdate(
+            req.params.id,
+            { status: 'active' },
+            { new: true }
+        ).select('-password');
+        
+        if (!business) {
+            return res.status(404).json({ success: false, message: 'Business not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Business approved successfully',
+            business
+        });
+    } catch (error) {
+        console.error('Error approving business:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Reject business
+app.post('/api/admin/businesses/:id/reject', async (req, res) => {
+    try {
+        const business = await BusinessUser.findByIdAndUpdate(
+            req.params.id,
+            { status: 'rejected' },
+            { new: true }
+        ).select('-password');
+        
+        if (!business) {
+            return res.status(404).json({ success: false, message: 'Business not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Business rejected',
+            business
+        });
+    } catch (error) {
+        console.error('Error rejecting business:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Get recent activity
+app.get('/api/admin/activity', async (req, res) => {
+    try {
+        // Get recent registrations
+        const recentBusinesses = await BusinessUser.find()
+            .select('business_name email status created_at')
+            .sort('-created_at')
+            .limit(10);
+        
+        const activities = recentBusinesses.map(b => ({
+            description: `New business registered: ${b.business_name}`,
+            created_at: b.created_at,
+            user: 'System'
+        }));
+        
+        res.json({ success: true, activities });
+    } catch (error) {
+        console.error('Error fetching activity:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 // ============ AUTH ROUTES ============
 
 // Admin Login
@@ -323,4 +423,5 @@ process.on('unhandledRejection', (err) => {
 
 // Start the server
 startServer();
+
 
