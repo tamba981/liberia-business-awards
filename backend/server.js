@@ -138,103 +138,56 @@ async function connectToMongoDB() {
     }
 }
 
-// ============ ADMIN BUSINESS MANAGEMENT ============
+// ============ ADMIN BUSINESS MANAGEMENT ENDPOINTS ============
 
-// Get all businesses with optional status filter
-app.get('/api/admin/businesses', async (req, res) => {
+// Get all businesses
+app.get('/api/admin/businesses', authenticate, authorize('admin'), async (req, res) => {
     try {
-        const { status } = req.query;
-        let query = {};
-        
-        if (status && status !== 'all') {
-            query.status = status;
-        }
-        
-        const businesses = await BusinessUser.find(query).select('-password').sort('-created_at');
-        
-        // Get counts
-        const pending = await BusinessUser.countDocuments({ status: 'pending' });
-        const active = await BusinessUser.countDocuments({ status: 'active' });
-        const total = await BusinessUser.countDocuments();
-        
+        const businesses = await BusinessUser.find().sort({ created_at: -1 });
         res.json({
             success: true,
-            businesses,
-            counts: { total, pending, active }
+            businesses: businesses.map(b => ({
+                _id: b._id,
+                business_name: b.business_name,
+                email: b.email,
+                contact_name: b.contact_name,
+                phone: b.phone,
+                business_type: b.business_type,
+                status: b.status,
+                created_at: b.created_at
+            }))
         });
     } catch (error) {
-        console.error('Error fetching businesses:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // Approve business
-app.post('/api/admin/businesses/:id/approve', async (req, res) => {
+app.post('/api/admin/businesses/:id/approve', authenticate, authorize('admin'), async (req, res) => {
     try {
         const business = await BusinessUser.findByIdAndUpdate(
             req.params.id,
             { status: 'active' },
             { new: true }
-        ).select('-password');
-        
-        if (!business) {
-            return res.status(404).json({ success: false, message: 'Business not found' });
-        }
-        
-        res.json({
-            success: true,
-            message: 'Business approved successfully',
-            business
-        });
+        );
+        res.json({ success: true, business });
     } catch (error) {
-        console.error('Error approving business:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // Reject business
-app.post('/api/admin/businesses/:id/reject', async (req, res) => {
+app.post('/api/admin/businesses/:id/reject', authenticate, authorize('admin'), async (req, res) => {
     try {
+        const { reason } = req.body;
         const business = await BusinessUser.findByIdAndUpdate(
             req.params.id,
-            { status: 'rejected' },
+            { status: 'rejected', notes: reason },
             { new: true }
-        ).select('-password');
-        
-        if (!business) {
-            return res.status(404).json({ success: false, message: 'Business not found' });
-        }
-        
-        res.json({
-            success: true,
-            message: 'Business rejected',
-            business
-        });
+        );
+        res.json({ success: true, business });
     } catch (error) {
-        console.error('Error rejecting business:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// Get recent activity
-app.get('/api/admin/activity', async (req, res) => {
-    try {
-        // Get recent registrations
-        const recentBusinesses = await BusinessUser.find()
-            .select('business_name email status created_at')
-            .sort('-created_at')
-            .limit(10);
-        
-        const activities = recentBusinesses.map(b => ({
-            description: `New business registered: ${b.business_name}`,
-            created_at: b.created_at,
-            user: 'System'
-        }));
-        
-        res.json({ success: true, activities });
-    } catch (error) {
-        console.error('Error fetching activity:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -423,5 +376,6 @@ process.on('unhandledRejection', (err) => {
 
 // Start the server
 startServer();
+
 
 
