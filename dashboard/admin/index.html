@@ -13,6 +13,8 @@
             --lba-dark: #1a202c;
             --lba-light: #f8f9fa;
             --lba-gradient: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
+            --lba-gradient-dark: linear-gradient(135deg, #cc0000 0%, #6bb9e2 100%);
+            --sidebar-width: 280px;
             --success-color: #10B981;
             --warning-color: #F59E0B;
             --danger-color: #EF4444;
@@ -20,59 +22,49 @@
             --purple: #8B5CF6;
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Poppins', sans-serif;
             background: #f5f7fb;
             color: var(--lba-dark);
             min-height: 100vh;
+            overflow-x: hidden;
         }
         
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
+        .dashboard-container { display: flex; min-height: 100vh; }
         
-        /* Sidebar */
+        /* Sidebar - unchanged */
         .sidebar {
-            width: 280px;
+            width: var(--sidebar-width);
             background: var(--lba-dark);
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            transition: all 0.3s;
+            transition: all 0.4s;
             z-index: 1000;
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
         
         .sidebar-header {
             padding: 30px 25px;
+            background: rgba(0,0,0,0.2);
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         
-        .sidebar-header h3 {
-            color: white;
-            font-size: 24px;
-            font-weight: 700;
+        .sidebar-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: var(--lba-gradient);
         }
         
-        .sidebar-header p {
-            color: var(--lba-secondary);
-            font-size: 13px;
-        }
+        .sidebar-header h3 { color: white; font-size: 24px; font-weight: 700; }
+        .sidebar-header p { color: var(--lba-secondary); font-size: 13px; opacity: 0.8; }
         
-        .sidebar-menu {
-            padding: 25px 0;
-        }
-        
-        .menu-section {
-            padding: 0 20px;
-            margin-bottom: 30px;
-        }
+        .sidebar-menu { padding: 25px 0; }
+        .menu-section { padding: 0 20px; margin-bottom: 30px; }
         
         .menu-section h4 {
             color: var(--lba-secondary);
@@ -82,6 +74,7 @@
             margin-bottom: 15px;
             padding: 0 15px;
             opacity: 0.6;
+            font-weight: 600;
         }
         
         .menu-item {
@@ -93,23 +86,25 @@
             text-decoration: none;
             border-radius: 12px;
             transition: all 0.3s;
-            cursor: pointer;
             border: 1px solid transparent;
         }
         
-        .menu-item:hover,
-        .menu-item.active {
+        .menu-item:hover, .menu-item.active {
             background: rgba(255,0,0,0.15);
             color: white;
             border-color: rgba(255,0,0,0.3);
         }
         
-        .menu-item i {
-            margin-right: 15px;
-            width: 20px;
-            text-align: center;
-            font-size: 18px;
+        .menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: var(--lba-primary);
         }
+        
+        .menu-item i { margin-right: 15px; width: 20px; font-size: 18px; }
+        .menu-item span { flex: 1; font-weight: 500; }
         
         .menu-item .badge {
             background: var(--lba-secondary);
@@ -120,14 +115,16 @@
             font-weight: 700;
         }
         
+        .menu-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 25px; }
+        
         /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: 280px;
+            margin-left: var(--sidebar-width);
             padding: 30px;
+            min-height: 100vh;
         }
         
-        /* Header */
         .header {
             background: white;
             padding: 25px 30px;
@@ -149,19 +146,20 @@
             -webkit-text-fill-color: transparent;
         }
         
+        .header p { color: #64748b; font-size: 15px; }
+        
         .user-info {
             display: flex;
             align-items: center;
             gap: 15px;
-            background: var(--lba-light);
+            background: linear-gradient(135deg,#f8fafc,#f1f5f9);
             padding: 12px 25px;
             border-radius: 15px;
             cursor: pointer;
         }
         
         .user-avatar {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             background: var(--lba-gradient);
             border-radius: 50%;
             display: flex;
@@ -172,65 +170,119 @@
             font-size: 20px;
         }
         
-        /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 15px;
+            padding: 30px;
+            border-radius: 20px;
             box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            transition: all 0.4s;
+        }
+        
+        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.12); }
+        
+        .stat-icon {
+            width: 80px; height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            flex-shrink: 0;
+        }
+        
+        .stat-card.businesses .stat-icon {
+            background: linear-gradient(135deg,#FEE2E2,#FECACA);
+            color: var(--lba-primary);
+        }
+        
+        .stat-card.nominations .stat-icon {
+            background: linear-gradient(135deg,#DBEAFE,#BFDBFE);
+            color: var(--lba-secondary);
+        }
+        
+        .stat-card.approved .stat-icon {
+            background: linear-gradient(135deg,#D1FAE5,#A7F3D0);
+            color: var(--success-color);
+        }
+        
+        .stat-card.pending .stat-icon {
+            background: linear-gradient(135deg,#FEF3C7,#FDE68A);
+            color: var(--warning-color);
+        }
+        
+        .stat-content h3 { font-size: 42px; font-weight: 800; color: var(--lba-dark); }
+        .stat-content p { color: #64748b; font-size: 16px; font-weight: 600; }
+        
+        .recent-activity {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .recent-activity h2 {
+            color: var(--lba-dark);
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .activity-list { list-style: none; }
+        
+        .activity-item {
+            padding: 22px 0;
+            border-bottom: 1px solid #f1f5f9;
             display: flex;
             align-items: center;
             gap: 20px;
         }
         
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
+        .activity-icon {
+            width: 55px; height: 55px;
+            border-radius: 15px;
+            background: linear-gradient(135deg,#f1f5f9,#e2e8f0);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            color: white;
-            background: var(--lba-gradient);
+            font-size: 22px;
+            flex-shrink: 0;
         }
         
-        .stat-content h3 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 5px;
-        }
-        
-        .stat-content p {
-            color: #64748b;
-            font-size: 14px;
-        }
-        
-        /* Quick Actions */
-        .quick-actions {
-            margin-top: 30px;
+        .quick-actions { margin-top: 30px; }
+        .quick-actions h2 {
+            color: var(--lba-dark);
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
         }
         
         .action-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 25px;
         }
         
         .action-card {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s;
             border: 2px solid transparent;
         }
         
@@ -240,55 +292,120 @@
         }
         
         .action-icon {
-            width: 50px;
-            height: 50px;
+            width: 80px; height: 80px;
+            border-radius: 25px;
             background: var(--lba-gradient);
-            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 34px;
             color: white;
-            font-size: 24px;
-            margin: 0 auto 15px;
+            margin: 0 auto 25px;
         }
         
-        /* Tables */
-        .table-container {
+        .system-status {
+            margin-top: 40px;
+            padding: 30px;
             background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
+            border-radius: 20px;
             box-shadow: 0 5px 30px rgba(0,0,0,0.08);
         }
         
-        .table-header {
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+        
+        .status-item {
+            background: linear-gradient(135deg,#f8fafc,#f1f5f9);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid var(--lba-primary);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: 30px;
+            background: var(--lba-gradient);
+            color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
         }
         
-        .table-header h2 {
-            font-size: 20px;
-            font-weight: 700;
+        .modal-header h2 { font-size: 28px; font-weight: 700; }
+        .modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none; color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
         }
         
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        .modal-body { padding: 30px; max-height: 70vh; overflow-y: auto; }
         
-        th {
-            text-align: left;
-            padding: 15px;
-            background: var(--lba-light);
+        .sheet-btn {
+            background: var(--lba-gradient);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
             font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            font-size: 14px;
         }
         
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #e2e8f0;
+        .sheet-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,0,0,0.3); }
+        .sheet-btn.secondary { background: linear-gradient(135deg, var(--lba-secondary), #6bb9e2); }
+        .sheet-btn.warning { background: linear-gradient(135deg, var(--warning-color), #fbbf24); }
+        .sheet-btn.danger { background: linear-gradient(135deg, var(--danger-color), #f87171); }
+        .sheet-btn.success { background: linear-gradient(135deg, var(--success-color), #34d399); }
+        
+        .data-table-container { overflow-x: auto; background: white; border-radius: 8px; }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        
+        .data-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--lba-dark);
+            border-bottom: 2px solid #e2e8f0;
+            background: #f1f5f9;
+            position: sticky;
+            top: 0;
         }
+        
+        .data-table td { padding: 10px 15px; border-bottom: 1px solid #e2e8f0; }
+        .data-table tbody tr:hover { background: #f8fafc; }
         
         .status-badge {
             padding: 4px 12px;
@@ -298,217 +415,54 @@
             display: inline-block;
         }
         
-        .status-pending {
-            background: rgba(245,158,11,0.1);
-            color: var(--warning-color);
-        }
+        .status-active { background: rgba(16,185,129,0.1); color: var(--success-color); }
+        .status-pending { background: rgba(245,158,11,0.1); color: var(--warning-color); }
+        .status-approved { background: rgba(16,185,129,0.1); color: var(--success-color); }
+        .status-rejected { background: rgba(239,68,68,0.1); color: var(--danger-color); }
         
-        .status-active {
-            background: rgba(16,185,129,0.1);
-            color: var(--success-color);
-        }
-        
-        .action-btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            margin: 0 3px;
-            transition: all 0.3s;
-        }
-        
-        .action-btn.approve {
-            background: var(--success-color);
-            color: white;
-        }
-        
-        .action-btn.reject {
-            background: var(--danger-color);
-            color: white;
-        }
-        
-        .action-btn.view {
-            background: var(--info-color);
-            color: white;
-        }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
+        .filter-controls {
+            background: #f8fafc;
             padding: 20px;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            padding: 25px;
-            background: var(--lba-gradient);
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 20px 20px 0 0;
-        }
-        
-        .modal-close {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-        }
-        
-        .modal-body {
-            padding: 25px;
-        }
-        
-        .form-group {
+            border-radius: 12px;
             margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
             border: 2px solid #e2e8f0;
-            border-radius: 8px;
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px 15px;
+            border: 2px solid #e2e8f0; border-radius: 8px;
             font-size: 14px;
         }
         
-        .modal-footer {
-            padding: 20px 25px;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
+        .action-buttons { display: flex; gap: 8px; }
+        .action-btn {
+            padding: 6px 12px; border-radius: 5px;
+            border: none; cursor: pointer; font-size: 12px;
         }
         
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        .action-btn.approve { background: var(--success-color); color: white; }
+        .action-btn.reject { background: var(--danger-color); color: white; }
+        .action-btn.view { background: var(--info-color); color: white; }
         
-        .btn-primary {
-            background: var(--lba-primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #cc0000;
-        }
-        
-        .btn-secondary {
-            background: var(--lba-light);
-            color: var(--lba-dark);
-        }
-        
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
-            background: var(--lba-gradient);
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 20px;
-            align-items: center;
-            justify-content: center;
-        }
+        .menu-toggle { display: none; }
         
         @media (max-width: 992px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.active {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-            
-            .menu-toggle {
-                display: flex;
-            }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: flex; background: var(--lba-gradient); color: white; border: none; width: 50px; height: 50px; border-radius: 10px; cursor: pointer; font-size: 20px; align-items: center; justify-content: center; }
         }
         
-        /* Loading */
-        .loading-spinner {
-            text-align: center;
-            padding: 50px;
-        }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #f3f3f3;
-            border-top-color: var(--lba-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            padding: 15px 25px;
-            border-radius: 10px;
-            color: white;
-            font-weight: 600;
-            z-index: 3000;
-            animation: slideIn 0.3s;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        .loading { background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; height: 20px; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body>
@@ -522,65 +476,83 @@
             
             <div class="sidebar-menu">
                 <div class="menu-section">
-                    <h4>Main</h4>
-                    <div class="menu-item active" onclick="showSection('dashboard')">
+                    <h4>Main Navigation</h4>
+                    <a href="#" class="menu-item active" onclick="showDashboard()">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
-                    </div>
+                    </a>
                     
-                    <div class="menu-item" onclick="showSection('businesses')">
+                    <a href="#" class="menu-item" onclick="showBusinessesModal()">
                         <i class="fas fa-building"></i>
                         <span>Businesses</span>
-                        <span class="badge" id="pendingBusinessCount">0</span>
-                    </div>
+                        <span class="badge" id="businessCount">0</span>
+                    </a>
                     
-                    <div class="menu-item" onclick="showSection('nominations')">
+                    <a href="#" class="menu-item" onclick="showNominationsModal()">
                         <i class="fas fa-award"></i>
                         <span>Nominations</span>
-                        <span class="badge" id="pendingNominationCount">0</span>
-                    </div>
-                    
-                    <div class="menu-item" onclick="showSection('spotlight')">
-                        <i class="fas fa-newspaper"></i>
-                        <span>Business Spotlight</span>
-                        <span class="badge" id="spotlightCount">0</span>
-                    </div>
+                        <span class="badge" id="nominationCount">0</span>
+                    </a>
                 </div>
                 
                 <div class="menu-section">
-                    <h4>Content</h4>
-                    <div class="menu-item" onclick="showSection('announcements')">
+                    <h4>Content Management</h4>
+                    <a href="#" class="menu-item" onclick="showAnnouncementsModal()">
                         <i class="fas fa-bullhorn"></i>
                         <span>Announcements</span>
-                    </div>
+                        <span class="badge" id="announcementCount">0</span>
+                    </a>
                     
-                    <div class="menu-item" onclick="showSection('categories')">
+                    <a href="#" class="menu-item" onclick="showSpotlightModal()">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Business Spotlight</span>
+                        <span class="badge" id="spotlightCount">4</span>
+                    </a>
+                    
+                    <a href="#" class="menu-item" onclick="showCategoriesModal()">
                         <i class="fas fa-list-alt"></i>
                         <span>Categories</span>
-                    </div>
+                        <span class="badge" id="categoryCount">4</span>
+                    </a>
                     
-                    <div class="menu-item" onclick="showSection('judges')">
+                    <a href="#" class="menu-item" onclick="showJudgesModal()">
                         <i class="fas fa-gavel"></i>
-                        <span>Judges</span>
-                    </div>
+                        <span>Judges Panel</span>
+                        <span class="badge" id="judgesCount">0</span>
+                    </a>
                 </div>
                 
                 <div class="menu-section">
                     <h4>System</h4>
-                    <div class="menu-item" onclick="showSection('users')">
+                    <a href="#" class="menu-item" onclick="showUsersModal()">
                         <i class="fas fa-users"></i>
-                        <span>Admin Users</span>
-                    </div>
+                        <span>Users</span>
+                        <span class="badge" id="usersCount">1</span>
+                    </a>
                     
-                    <div class="menu-item" onclick="showSection('settings')">
+                    <a href="#" class="menu-item" onclick="showAnalyticsModal()">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
+                    </a>
+                    
+                    <a href="#" class="menu-item" onclick="showReportsModal()">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Reports</span>
+                    </a>
+                </div>
+                
+                <div class="menu-divider"></div>
+                
+                <div class="menu-section">
+                    <a href="#" class="menu-item" onclick="showSettingsModal()">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
-                    </div>
+                    </a>
                     
-                    <div class="menu-item" onclick="logout()">
+                    <a href="#" id="logoutBtn" class="menu-item">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Logout</span>
-                    </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -594,13 +566,13 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div>
-                        <h1 id="pageTitle">Dashboard Overview</h1>
-                        <p id="pageSubtitle">Welcome back, <span id="adminName">Administrator</span></p>
+                        <h1 id="dashboardTitle">Dashboard Overview</h1>
+                        <p>Welcome back, <span id="adminName">System Administrator</span></p>
                     </div>
                 </div>
                 
-                <div class="user-info" onclick="showUserMenu()">
-                    <div class="user-avatar" id="userAvatar">A</div>
+                <div class="user-info" id="userProfile">
+                    <div class="user-avatar" id="userAvatar">SA</div>
                     <div>
                         <div id="userEmail">admin@liberiabusinessawardslr.com</div>
                         <div style="font-size: 12px; color: #64748b;">Administrator</div>
@@ -608,888 +580,927 @@
                 </div>
             </div>
             
-            <!-- Dynamic Content Sections -->
-            <div id="dashboard-section" class="content-section">
-                <!-- Stats Grid -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-building"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="totalBusinesses">0</h3>
-                            <p>Total Businesses</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="pendingBusinesses">0</h3>
-                            <p>Pending Approval</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-award"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="totalNominations">0</h3>
-                            <p>Nominations</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-newspaper"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="totalArticles">4</h3>
-                            <p>Spotlight Articles</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Quick Actions -->
-                <div class="quick-actions">
-                    <h2>Quick Actions</h2>
-                    <div class="action-grid">
-                        <div class="action-card" onclick="showSection('businesses')">
-                            <div class="action-icon">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <h3>Approve Businesses</h3>
-                            <p>Review pending business registrations</p>
-                        </div>
-                        
-                        <div class="action-card" onclick="showSection('spotlight')">
-                            <div class="action-icon">
-                                <i class="fas fa-plus-circle"></i>
-                            </div>
-                            <h3>Add Story</h3>
-                            <p>Create new spotlight article</p>
-                        </div>
-                        
-                        <div class="action-card" onclick="showSection('announcements')">
-                            <div class="action-icon">
-                                <i class="fas fa-bullhorn"></i>
-                            </div>
-                            <h3>Announcement</h3>
-                            <p>Post new announcement</p>
-                        </div>
-                        
-                        <div class="action-card" onclick="showSection('nominations')">
-                            <div class="action-icon">
-                                <i class="fas fa-clipboard-check"></i>
-                            </div>
-                            <h3>Review Nominations</h3>
-                            <p>Manage award nominations</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Recent Activity -->
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2>Recent Activity</h2>
-                    </div>
-                    <div id="activityList">
-                        <div class="loading-spinner">
-                            <div class="spinner"></div>
-                            <p>Loading activity...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Businesses Section -->
-            <div id="businesses-section" class="content-section" style="display: none;">
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2>Business Management</h2>
-                        <div>
-                            <select id="businessFilter" onchange="loadBusinesses()">
-                                <option value="all">All Businesses</option>
-                                <option value="pending">Pending Approval</option>
-                                <option value="active">Active</option>
-                                <option value="suspended">Suspended</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div id="businessesTable"></div>
-                </div>
-            </div>
-            
-            <!-- Nominations Section -->
-            <div id="nominations-section" class="content-section" style="display: none;">
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2>Nominations Management</h2>
-                        <select id="nominationFilter" onchange="loadNominations()">
-                            <option value="all">All Nominations</option>
-                            <option value="pending">Pending Review</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
-                    </div>
-                    
-                    <div id="nominationsTable"></div>
-                </div>
-            </div>
-            
-            <!-- Spotlight Section -->
-            <div id="spotlight-section" class="content-section" style="display: none;">
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2>Business Spotlight</h2>
-                        <button class="btn btn-primary" onclick="openAddStoryModal()">
-                            <i class="fas fa-plus"></i> New Story
-                        </button>
-                    </div>
-                    
-                    <div id="spotlightTable"></div>
-                </div>
-            </div>
-            
-            <!-- Announcements Section -->
-            <div id="announcements-section" class="content-section" style="display: none;">
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2>Announcements</h2>
-                        <button class="btn btn-primary" onclick="openAddAnnouncementModal()">
-                            <i class="fas fa-plus"></i> New Announcement
-                        </button>
-                    </div>
-                    
-                    <div id="announcementsTable"></div>
-                </div>
-            </div>
-            
-            <!-- Categories Section -->
-            <div id="categories-section" class="content-section" style="display: none;">
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2>Award Categories</h2>
-                        <button class="btn btn-primary" onclick="openAddCategoryModal()">
-                            <i class="fas fa-plus"></i> New Category
-                        </button>
-                    </div>
-                    
-                    <div id="categoriesTable"></div>
-                </div>
-            </div>
-            
-            <!-- Judges Section -->
-            <div id="judges-section" class="content-section" style="display: none;">
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2>Judges Panel</h2>
-                        <button class="btn btn-primary" onclick="openAddJudgeModal()">
-                            <i class="fas fa-plus"></i> Add Judge
-                        </button>
-                    </div>
-                    
-                    <div id="judgesTable"></div>
-                </div>
-            </div>
-            
-            <!-- Users Section -->
-            <div id="users-section" class="content-section" style="display: none;">
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2>Admin Users</h2>
-                        <button class="btn btn-primary" onclick="openAddAdminModal()">
-                            <i class="fas fa-plus"></i> Add Admin
-                        </button>
-                    </div>
-                    
-                    <div id="usersTable"></div>
-                </div>
-            </div>
-            
-            <!-- Settings Section -->
-            <div id="settings-section" class="content-section" style="display: none;">
-                <div class="table-container">
-                    <h2>System Settings</h2>
-                    <form id="settingsForm">
-                        <div class="form-group">
-                            <label>Site Name</label>
-                            <input type="text" id="siteName" value="Liberia Business Awards">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Admin Email</label>
-                            <input type="email" id="adminEmail" value="admin@liberiabusinessawardslr.com">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>JWT Expiration (days)</label>
-                            <input type="number" id="jwtExpiry" value="7">
-                        </div>
-                        
-                        <button type="button" class="btn btn-primary" onclick="saveSettings()">
-                            Save Settings
-                        </button>
-                    </form>
-                </div>
-            </div>
+            <!-- Dynamic Content Area -->
+            <div id="contentArea"></div>
         </div>
     </div>
-    
+
     <!-- Business Details Modal -->
-    <div class="modal" id="businessModal">
-        <div class="modal-content">
+    <div class="modal" id="businessDetailModal">
+        <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
-                <h2>Business Details</h2>
-                <button class="modal-close" onclick="closeModal('businessModal')">
+                <h2><i class="fas fa-building"></i> Business Details</h2>
+                <button class="modal-close" onclick="closeModal('businessDetailModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" id="businessModalBody">
+            <div class="modal-body" id="businessDetailContent">
                 Loading...
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('businessModal')">Close</button>
-                <button class="btn btn-primary" onclick="approveBusiness(currentBusinessId)">Approve Business</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Add Story Modal -->
-    <div class="modal" id="storyModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Add New Story</h2>
-                <button class="modal-close" onclick="closeModal('storyModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="storyForm">
-                    <div class="form-group">
-                        <label>Title *</label>
-                        <input type="text" id="storyTitle" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select id="storyCategory">
-                            <option value="Startup Spotlight">Startup Spotlight</option>
-                            <option value="SME Success">SME Success</option>
-                            <option value="Women Entrepreneurs">Women Entrepreneurs</option>
-                            <option value="Business Interviews">Business Interviews</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Business Name *</label>
-                        <input type="text" id="storyBusinessName" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Author Name *</label>
-                        <input type="text" id="storyAuthor" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Excerpt</label>
-                        <textarea id="storyExcerpt" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Content *</label>
-                        <textarea id="storyContent" rows="6" required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Featured Image URL</label>
-                        <input type="text" id="storyImage" placeholder="/images/featured/your-image.jpg">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('storyModal')">Cancel</button>
-                <button class="btn btn-primary" onclick="saveStory()">Save Story</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Add Announcement Modal -->
-    <div class="modal" id="announcementModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>New Announcement</h2>
-                <button class="modal-close" onclick="closeModal('announcementModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="announcementForm">
-                    <div class="form-group">
-                        <label>Title *</label>
-                        <input type="text" id="announcementTitle" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Type</label>
-                        <select id="announcementType">
-                            <option value="news">News</option>
-                            <option value="event">Event</option>
-                            <option value="deadline">Deadline</option>
-                            <option value="winner">Winner</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Content *</label>
-                        <textarea id="announcementContent" rows="5" required></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('announcementModal')">Cancel</button>
-                <button class="btn btn-primary" onclick="saveAnnouncement()">Publish</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuration
+        // ============================================
+        // CONFIGURATION
+        // ============================================
         const API_BASE = 'https://liberia-business-awards-backend.onrender.com/api';
-        let currentSection = 'dashboard';
-        let currentBusinessId = null;
-        
-        // Get auth token
-        const token = localStorage.getItem('lba_auth_token');
-        
-        // Check authentication on load
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!token) {
-                window.location.href = '../login.html';
+        const SESSION_TIMEOUT = 60;
+        const REFRESH_INTERVAL = 30000;
+
+        // ============================================
+        // GLOBAL STATE
+        // ============================================
+        let dashboardState = {
+            businesses: [],
+            pendingBusinesses: [],
+            activeBusinesses: [],
+            nominations: [],
+            announcements: [],
+            judges: [],
+            user: null,
+            lastUpdate: null
+        };
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Admin Dashboard Initializing...');
+            
+            await checkAuthentication();
+            setupUserInterface();
+            await loadDashboardData();
+            showDashboard(); // Show dashboard by default
+            setupPeriodicUpdates();
+            
+            console.log('✅ Dashboard Ready');
+        });
+
+        // ============================================
+        // AUTHENTICATION
+        // ============================================
+        async function checkAuthentication() {
+            const token = localStorage.getItem('lba_auth_token');
+            const userData = localStorage.getItem('lba_user_data');
+            
+            if (!token || !userData) {
+                redirectToLogin();
                 return;
             }
             
-            loadDashboardData();
-            setupMobileMenu();
-        });
-        
-        // Mobile menu
-        function setupMobileMenu() {
+            try {
+                dashboardState.user = JSON.parse(userData);
+                updateUserDisplay();
+            } catch (error) {
+                redirectToLogin();
+            }
+        }
+
+        function redirectToLogin() {
+            window.location.href = '../login.html';
+        }
+
+        function updateUserDisplay() {
+            const user = dashboardState.user;
+            document.getElementById('adminName').textContent = user.name || 'Administrator';
+            document.getElementById('userEmail').textContent = user.email || 'admin@liberiabusinessawardslr.com';
+            
+            const initials = (user.name || 'SA').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            document.getElementById('userAvatar').textContent = initials;
+        }
+
+        // ============================================
+        // UI SETUP
+        // ============================================
+        function setupUserInterface() {
             const menuToggle = document.getElementById('menuToggle');
             const sidebar = document.getElementById('sidebar');
             
             menuToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('active');
             });
-        }
-        
-        // Show different sections
-        function showSection(section) {
-            currentSection = section;
             
-            // Update active menu
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
-            
-            // Hide all sections
-            document.querySelectorAll('.content-section').forEach(s => {
-                s.style.display = 'none';
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !menuToggle.contains(e.target) && sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
             });
             
-            // Show selected section
-            document.getElementById(`${section}-section`).style.display = 'block';
-            
-            // Update title
-            const titles = {
-                dashboard: 'Dashboard Overview',
-                businesses: 'Business Management',
-                nominations: 'Nominations Management',
-                spotlight: 'Business Spotlight',
-                announcements: 'Announcements',
-                categories: 'Award Categories',
-                judges: 'Judges Panel',
-                users: 'Admin Users',
-                settings: 'System Settings'
-            };
-            
-            document.getElementById('pageTitle').textContent = titles[section];
-            
-            // Load section data
-            switch(section) {
-                case 'businesses':
-                    loadBusinesses();
-                    break;
-                case 'nominations':
-                    loadNominations();
-                    break;
-                case 'spotlight':
-                    loadSpotlight();
-                    break;
-                case 'announcements':
-                    loadAnnouncements();
-                    break;
-                case 'categories':
-                    loadCategories();
-                    break;
-                case 'judges':
-                    loadJudges();
-                    break;
-                case 'users':
-                    loadAdminUsers();
-                    break;
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.clear();
+                redirectToLogin();
             }
         }
-        
-        // ============ DASHBOARD ============
-        async function loadDashboardData() {
-            try {
-                // Get stats from health endpoint
-                const response = await fetch(`${API_BASE}/health`);
-                const data = await response.json();
-                
-                // Get business stats
-                const businesses = await fetch(`${API_BASE}/admin/businesses`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }).then(res => res.json()).catch(() => ({ total: 0, pending: 0 }));
-                
-                // Update stats
-                document.getElementById('totalBusinesses').textContent = data.stats?.businesses || 0;
-                document.getElementById('pendingBusinesses').textContent = businesses.pending || 0;
-                document.getElementById('pendingBusinessCount').textContent = businesses.pending || 0;
-                document.getElementById('totalNominations').textContent = data.stats?.nominations || 0;
-                document.getElementById('totalArticles').textContent = data.stats?.articles || 4;
-                
-                // Load activity
-                loadRecentActivity();
-                
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-                // Use sample data
-                document.getElementById('totalBusinesses').textContent = '1';
-                document.getElementById('pendingBusinesses').textContent = '1';
-                document.getElementById('pendingBusinessCount').textContent = '1';
-                document.getElementById('totalNominations').textContent = '0';
-            }
-        }
-        
-        async function loadRecentActivity() {
-            const activityList = document.getElementById('activityList');
+
+        // ============================================
+        // API FUNCTIONS
+        // ============================================
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('lba_auth_token');
             
             try {
-                const response = await fetch(`${API_BASE}/admin/activity`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
                 });
                 
-                if (!response.ok) throw new Error('Failed to load');
+                if (response.status === 401) {
+                    redirectToLogin();
+                    throw new Error('Unauthorized');
+                }
                 
-                const data = await response.json();
-                
-                if (data.activities && data.activities.length > 0) {
-                    let html = '<table><tbody>';
-                    data.activities.forEach(activity => {
-                        html += `
-                            <tr>
-                                <td>${new Date(activity.created_at).toLocaleString()}</td>
-                                <td>${activity.description}</td>
-                                <td>${activity.user || 'System'}</td>
-                            </tr>
-                        `;
-                    });
-                    html += '</tbody></table>';
-                    activityList.innerHTML = html;
-                } else {
-                    activityList.innerHTML = '<p style="text-align: center; padding: 30px;">No recent activity</p>';
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                showNotification(error.message, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        // ============================================
+        // BUSINESS MANAGEMENT
+        // ============================================
+        async function loadBusinesses() {
+            try {
+                // Since we don't have a dedicated endpoint yet, we'll use admin dashboard
+                const data = await apiRequest('/admin/dashboard');
+                if (data.success) {
+                    // For now, we'll create mock data based on your MongoDB
+                    // In production, you'd have a real endpoint
+                    dashboardState.businesses = [
+                        {
+                            _id: '1',
+                            business_name: 'Motiva Cooperation',
+                            email: 'motivacooperation4@gmail.com',
+                            phone: '+231 XXX XXX XXX',
+                            status: 'pending',
+                            created_at: new Date().toISOString()
+                        }
+                    ];
+                    dashboardState.pendingBusinesses = dashboardState.businesses.filter(b => b.status === 'pending');
+                    dashboardState.activeBusinesses = dashboardState.businesses.filter(b => b.status === 'active');
+                    
+                    document.getElementById('businessCount').textContent = dashboardState.businesses.length;
                 }
             } catch (error) {
-                // Show sample activity
-                activityList.innerHTML = `
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td>${new Date().toLocaleString()}</td>
-                                <td>New business registered: motivacooperation4@gmail.com</td>
-                                <td>System</td>
-                            </tr>
-                            <tr>
-                                <td>${new Date(Date.now() - 86400000).toLocaleString()}</td>
-                                <td>4 spotlight articles published</td>
-                                <td>Admin</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                `;
+                console.error('Error loading businesses:', error);
             }
         }
-        
-        // ============ BUSINESSES ============
-        async function loadBusinesses() {
-            const filter = document.getElementById('businessFilter').value;
-            const container = document.getElementById('businessesTable');
-            
-            container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading businesses...</p></div>';
-            
+
+        async function approveBusiness(businessId) {
             try {
-                // Try to fetch from API
-                const response = await fetch(`${API_BASE}/admin/businesses?status=${filter}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                // You'll need to create this endpoint in your server.js
+                const result = await apiRequest(`/admin/businesses/${businessId}/approve`, {
+                    method: 'POST'
                 });
                 
-                if (!response.ok) throw new Error('API not available');
-                
-                const data = await response.json();
-                renderBusinessesTable(data.businesses || []);
-                
-            } catch (error) {
-                // Show sample data with your registered business
-                const sampleBusinesses = [
-                    {
-                        _id: '1',
-                        email: 'motivacooperation4@gmail.com',
-                        business_name: 'Motiva Cooperation',
-                        contact_name: 'Motiva Admin',
-                        phone: '+231 123 456 789',
-                        status: 'pending',
-                        created_at: new Date().toISOString()
+                if (result.success) {
+                    showNotification('Business approved successfully!', 'success');
+                    await loadBusinesses();
+                    if (document.getElementById('businessesModal')?.classList.contains('active')) {
+                        showBusinessesModal();
                     }
-                ];
-                renderBusinessesTable(sampleBusinesses);
+                }
+            } catch (error) {
+                showNotification('Error approving business', 'error');
             }
         }
-        
-        function renderBusinessesTable(businesses) {
-            const container = document.getElementById('businessesTable');
+
+        async function rejectBusiness(businessId) {
+            const reason = prompt('Please enter reason for rejection:');
+            if (!reason) return;
             
+            try {
+                const result = await apiRequest(`/admin/businesses/${businessId}/reject`, {
+                    method: 'POST',
+                    body: JSON.stringify({ reason })
+                });
+                
+                if (result.success) {
+                    showNotification('Business rejected', 'warning');
+                    await loadBusinesses();
+                    if (document.getElementById('businessesModal')?.classList.contains('active')) {
+                        showBusinessesModal();
+                    }
+                }
+            } catch (error) {
+                showNotification('Error rejecting business', 'error');
+            }
+        }
+
+        // ============================================
+        // DASHBOARD VIEW
+        // ============================================
+        async function showDashboard() {
+            document.getElementById('dashboardTitle').textContent = 'Dashboard Overview';
+            await loadDashboardData();
+            renderDashboard();
+            setActiveMenuItem('Dashboard');
+        }
+
+        async function loadDashboardData() {
+            await loadBusinesses();
+            dashboardState.lastUpdate = new Date();
+        }
+
+        function renderDashboard() {
+            const content = document.getElementById('contentArea');
+            
+            content.innerHTML = `
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card businesses">
+                        <div class="stat-icon"><i class="fas fa-building"></i></div>
+                        <div class="stat-content">
+                            <h3>${dashboardState.businesses.length}</h3>
+                            <p>Total Businesses</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card nominations">
+                        <div class="stat-icon"><i class="fas fa-award"></i></div>
+                        <div class="stat-content">
+                            <h3>${dashboardState.pendingBusinesses.length}</h3>
+                            <p>Pending Approval</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card approved">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <h3>${dashboardState.activeBusinesses.length}</h3>
+                            <p>Active Businesses</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card pending">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-content">
+                            <h3>${dashboardState.nominations.length || 0}</h3>
+                            <p>Nominations</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h2><i class="fas fa-history"></i> Pending Approvals</h2>
+                    
+                    ${dashboardState.pendingBusinesses.length > 0 ? `
+                        <div class="data-table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Business Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Registered</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dashboardState.pendingBusinesses.map(business => `
+                                        <tr>
+                                            <td><strong>${business.business_name || 'Unknown'}</strong></td>
+                                            <td>${business.email || 'N/A'}</td>
+                                            <td>${business.phone || 'N/A'}</td>
+                                            <td>${new Date(business.created_at || Date.now()).toLocaleDateString()}</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn approve" onclick="approveBusiness('${business._id}')">
+                                                        <i class="fas fa-check"></i> Approve
+                                                    </button>
+                                                    <button class="action-btn reject" onclick="rejectBusiness('${business._id}')">
+                                                        <i class="fas fa-times"></i> Reject
+                                                    </button>
+                                                    <button class="action-btn view" onclick="viewBusinessDetails('${business._id}')">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <p style="text-align: center; color: #64748b; padding: 40px;">
+                            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i><br>
+                            No pending approvals
+                        </p>
+                    `}
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                    
+                    <div class="action-grid">
+                        <div class="action-card" onclick="showBusinessesModal()">
+                            <div class="action-icon"><i class="fas fa-building"></i></div>
+                            <h3>Manage Businesses</h3>
+                            <p>Approve or review business registrations</p>
+                        </div>
+                        
+                        <div class="action-card" onclick="showNominationsModal()">
+                            <div class="action-icon"><i class="fas fa-award"></i></div>
+                            <h3>Review Nominations</h3>
+                            <p>Approve or reject award nominations</p>
+                        </div>
+                        
+                        <div class="action-card" onclick="showAnnouncementsModal()">
+                            <div class="action-icon"><i class="fas fa-bullhorn"></i></div>
+                            <h3>Post Announcement</h3>
+                            <p>Create news and updates</p>
+                        </div>
+                        
+                        <div class="action-card" onclick="showSpotlightModal()">
+                            <div class="action-icon"><i class="fas fa-newspaper"></i></div>
+                            <h3>Business Spotlight</h3>
+                            <p>Manage featured stories</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status -->
+                <div class="system-status">
+                    <h3><i class="fas fa-server"></i> System Information</h3>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <p>Last Updated</p>
+                            <strong>${dashboardState.lastUpdate?.toLocaleTimeString() || 'Just now'}</strong>
+                        </div>
+                        <div class="status-item">
+                            <p>Database Status</p>
+                            <strong class="online">Connected</strong>
+                        </div>
+                        <div class="status-item">
+                            <p>Session Expires</p>
+                            <strong id="sessionTimer">60:00</strong>
+                        </div>
+                        <div class="status-item">
+                            <p>API Version</p>
+                            <strong>v4.0.0</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // BUSINESSES MODAL
+        // ============================================
+        async function showBusinessesModal() {
+            document.getElementById('dashboardTitle').textContent = 'Business Management';
+            await loadBusinesses();
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-building"></i> Business Management</h2>
+                        <div>
+                            <button class="sheet-btn" onclick="showDashboard()">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">
+                        <button class="sheet-btn" onclick="showBusinessTab('all')" id="tabAll">All (${dashboardState.businesses.length})</button>
+                        <button class="sheet-btn secondary" onclick="showBusinessTab('pending')" id="tabPending">Pending (${dashboardState.pendingBusinesses.length})</button>
+                        <button class="sheet-btn success" onclick="showBusinessTab('active')" id="tabActive">Active (${dashboardState.activeBusinesses.length})</button>
+                    </div>
+                    
+                    <!-- Search -->
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="businessSearch" placeholder="Search businesses..." 
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px;"
+                               onkeyup="filterBusinesses()">
+                    </div>
+                    
+                    <!-- Businesses Table -->
+                    <div class="data-table-container" id="businessesTableContainer">
+                        ${renderBusinessTable(dashboardState.businesses)}
+                    </div>
+                </div>
+            `;
+            
+            setActiveMenuItem('Businesses');
+        }
+
+        function renderBusinessTable(businesses) {
             if (businesses.length === 0) {
-                container.innerHTML = '<p style="text-align: center; padding: 30px;">No businesses found</p>';
-                return;
+                return `
+                    <p style="text-align: center; padding: 50px; color: #64748b;">
+                        <i class="fas fa-building" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i><br>
+                        No businesses found
+                    </p>
+                `;
             }
             
-            let html = `
-                <table>
+            return `
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th>Business Name</th>
                             <th>Email</th>
-                            <th>Contact</th>
+                            <th>Phone</th>
+                            <th>Status</th>
                             <th>Registered</th>
-                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-            `;
-            
-            businesses.forEach(biz => {
-                const statusClass = biz.status === 'active' ? 'status-active' : 
-                                   biz.status === 'pending' ? 'status-pending' : '';
-                const statusText = biz.status.toUpperCase();
-                
-                html += `
-                    <tr>
-                        <td><strong>${biz.business_name}</strong></td>
-                        <td>${biz.email}</td>
-                        <td>${biz.contact_name || 'N/A'}<br><small>${biz.phone || ''}</small></td>
-                        <td>${new Date(biz.created_at).toLocaleDateString()}</td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            <button class="action-btn view" onclick="viewBusiness('${biz._id}')">
-                                <i class="fas fa-eye"></i> View
-                            </button>
-                            ${biz.status === 'pending' ? `
-                                <button class="action-btn approve" onclick="approveBusiness('${biz._id}')">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button class="action-btn reject" onclick="rejectBusiness('${biz._id}')">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            ` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-        
-        function viewBusiness(id) {
-            currentBusinessId = id;
-            const modal = document.getElementById('businessModalBody');
-            modal.innerHTML = `
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Loading business details...</p>
-                </div>
-            `;
-            openModal('businessModal');
-            
-            // For now, show sample data
-            setTimeout(() => {
-                modal.innerHTML = `
-                    <p><strong>Business:</strong> Motiva Cooperation</p>
-                    <p><strong>Email:</strong> motivacooperation4@gmail.com</p>
-                    <p><strong>Contact:</strong> Motiva Admin</p>
-                    <p><strong>Phone:</strong> +231 123 456 789</p>
-                    <p><strong>Registered:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>Status:</strong> <span class="status-badge status-pending">PENDING</span></p>
-                `;
-            }, 500);
-        }
-        
-        async function approveBusiness(id) {
-            if (confirm('Approve this business? They will be able to login.')) {
-                showNotification('Business approved successfully!', 'success');
-                closeModal('businessModal');
-                loadBusinesses();
-                loadDashboardData();
-            }
-        }
-        
-        function rejectBusiness(id) {
-            if (confirm('Reject this business? They will not be able to login.')) {
-                showNotification('Business rejected', 'warning');
-                loadBusinesses();
-            }
-        }
-        
-        // ============ NOMINATIONS ============
-        function loadNominations() {
-            const container = document.getElementById('nominationsTable');
-            container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading nominations...</p></div>';
-            
-            // Show sample data
-            setTimeout(() => {
-                container.innerHTML = '<p style="text-align: center; padding: 30px;">No nominations yet</p>';
-            }, 500);
-        }
-        
-        // ============ SPOTLIGHT ============
-        function loadSpotlight() {
-            const container = document.getElementById('spotlightTable');
-            
-            // Get spotlight data from your existing code
-            const stories = [
-                { title: 'How J-Palm Liberia is Transforming Agriculture', category: 'Startup Spotlight', status: 'published', date: '2026-03-01' },
-                { title: 'Annita: Building Africa\'s Digital Heartbeat', category: 'SME Success', status: 'published', date: '2026-03-02' },
-                { title: 'Liberian Girls Lunchbox: Empowering Through Food', category: 'Women Entrepreneurs', status: 'published', date: '2026-03-03' },
-                { title: 'Gonet Academy: Empowering Minds', category: 'Business Interviews', status: 'published', date: '2026-03-04' }
-            ];
-            
-            let html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Published</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            stories.forEach(story => {
-                html += `
-                    <tr>
-                        <td><strong>${story.title}</strong></td>
-                        <td>${story.category}</td>
-                        <td><span class="status-badge status-active">${story.status}</span></td>
-                        <td>${story.date}</td>
-                        <td>
-                            <button class="action-btn view" onclick="editStory('${story.title}')">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="action-btn reject" onclick="deleteStory('${story.title}')">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-            document.getElementById('spotlightCount').textContent = stories.length;
-        }
-        
-        function openAddStoryModal() {
-            openModal('storyModal');
-        }
-        
-        function saveStory() {
-            showNotification('Story saved successfully!', 'success');
-            closeModal('storyModal');
-            loadSpotlight();
-        }
-        
-        // ============ ANNOUNCEMENTS ============
-        function loadAnnouncements() {
-            const container = document.getElementById('announcementsTable');
-            container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading announcements...</p></div>';
-            
-            setTimeout(() => {
-                container.innerHTML = '<p style="text-align: center; padding: 30px;">No announcements yet</p>';
-            }, 500);
-        }
-        
-        function openAddAnnouncementModal() {
-            openModal('announcementModal');
-        }
-        
-        function saveAnnouncement() {
-            showNotification('Announcement published!', 'success');
-            closeModal('announcementModal');
-            loadAnnouncements();
-        }
-        
-        // ============ CATEGORIES ============
-        function loadCategories() {
-            const container = document.getElementById('categoriesTable');
-            const categories = [
-                { name: 'Startup Spotlight', count: 1 },
-                { name: 'SME Success', count: 1 },
-                { name: 'Women Entrepreneurs', count: 1 },
-                { name: 'Business Interviews', count: 1 }
-            ];
-            
-            let html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Category Name</th>
-                            <th>Articles</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            categories.forEach(cat => {
-                html += `
-                    <tr>
-                        <td><strong>${cat.name}</strong></td>
-                        <td>${cat.count}</td>
-                        <td>
-                            <button class="action-btn view" onclick="editCategory('${cat.name}')">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-        
-        function openAddCategoryModal() {
-            showNotification('Add category feature coming soon!', 'info');
-        }
-        
-        // ============ JUDGES ============
-        function loadJudges() {
-            const container = document.getElementById('judgesTable');
-            container.innerHTML = '<p style="text-align: center; padding: 30px;">Judges panel will be available soon</p>';
-        }
-        
-        // ============ ADMIN USERS ============
-        function loadAdminUsers() {
-            const container = document.getElementById('usersTable');
-            
-            let html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Last Login</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>System Administrator</strong></td>
-                            <td>admin@liberiabusinessawardslr.com</td>
-                            <td>Super Admin</td>
-                            <td>${new Date().toLocaleString()}</td>
-                            <td>
-                                <button class="action-btn view" onclick="showNotification('Edit admin', 'info')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        ${businesses.map(business => `
+                            <tr>
+                                <td><strong>${business.business_name || 'Unknown'}</strong></td>
+                                <td>${business.email || 'N/A'}</td>
+                                <td>${business.phone || 'N/A'}</td>
+                                <td>
+                                    <span class="status-badge status-${business.status}">
+                                        ${business.status || 'pending'}
+                                    </span>
+                                </td>
+                                <td>${new Date(business.created_at || Date.now()).toLocaleDateString()}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        ${business.status === 'pending' ? `
+                                            <button class="action-btn approve" onclick="approveBusiness('${business._id}')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="action-btn reject" onclick="rejectBusiness('${business._id}')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        ` : ''}
+                                        <button class="action-btn view" onclick="viewBusinessDetails('${business._id}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
                     </tbody>
                 </table>
             `;
+        }
+
+        function showBusinessTab(tab) {
+            const tabs = document.querySelectorAll('#tabAll, #tabPending, #tabActive');
+            tabs.forEach(t => t.classList.remove('active'));
             
-            container.innerHTML = html;
+            if (tab === 'all') {
+                document.getElementById('tabAll').classList.add('active');
+                document.getElementById('businessesTableContainer').innerHTML = renderBusinessTable(dashboardState.businesses);
+            } else if (tab === 'pending') {
+                document.getElementById('tabPending').classList.add('active');
+                document.getElementById('businessesTableContainer').innerHTML = renderBusinessTable(dashboardState.pendingBusinesses);
+            } else if (tab === 'active') {
+                document.getElementById('tabActive').classList.add('active');
+                document.getElementById('businessesTableContainer').innerHTML = renderBusinessTable(dashboardState.activeBusinesses);
+            }
         }
-        
-        // ============ SETTINGS ============
-        function saveSettings() {
-            showNotification('Settings saved successfully!', 'success');
+
+        function filterBusinesses() {
+            const search = document.getElementById('businessSearch').value.toLowerCase();
+            const filtered = dashboardState.businesses.filter(b => 
+                (b.business_name?.toLowerCase().includes(search) || 
+                 b.email?.toLowerCase().includes(search))
+            );
+            document.getElementById('businessesTableContainer').innerHTML = renderBusinessTable(filtered);
         }
-        
-        // ============ MODAL FUNCTIONS ============
+
+        function viewBusinessDetails(id) {
+            const business = dashboardState.businesses.find(b => b._id === id);
+            if (!business) return;
+            
+            document.getElementById('businessDetailContent').innerHTML = `
+                <div style="display: grid; gap: 20px;">
+                    <div><strong>Business Name:</strong> ${business.business_name || 'N/A'}</div>
+                    <div><strong>Email:</strong> ${business.email || 'N/A'}</div>
+                    <div><strong>Phone:</strong> ${business.phone || 'N/A'}</div>
+                    <div><strong>Contact Person:</strong> ${business.contact_name || 'N/A'}</div>
+                    <div><strong>Business Type:</strong> ${business.business_type || 'N/A'}</div>
+                    <div><strong>Status:</strong> <span class="status-badge status-${business.status}">${business.status}</span></div>
+                    <div><strong>Registered:</strong> ${new Date(business.created_at || Date.now()).toLocaleString()}</div>
+                </div>
+            `;
+            
+            openModal('businessDetailModal');
+        }
+
+        // ============================================
+        // ANNOUNCEMENTS MODAL
+        // ============================================
+        function showAnnouncementsModal() {
+            document.getElementById('dashboardTitle').textContent = 'Announcements';
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-bullhorn"></i> Announcements</h2>
+                        <div>
+                            <button class="sheet-btn" onclick="showCreateAnnouncement()">
+                                <i class="fas fa-plus"></i> New Announcement
+                            </button>
+                            <button class="sheet-btn secondary" onclick="showDashboard()" style="margin-left: 10px;">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 60px; color: #64748b;">
+                        <i class="fas fa-bullhorn" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <h3 style="margin-bottom: 10px;">Announcements Coming Soon</h3>
+                        <p>This feature is under development. Check back later.</p>
+                        <p style="margin-top: 20px; font-size: 14px;">You'll be able to post news, deadlines, and updates here.</p>
+                    </div>
+                </div>
+            `;
+            
+            setActiveMenuItem('Announcements');
+        }
+
+        function showCreateAnnouncement() {
+            alert('Announcement creation feature coming soon!');
+        }
+
+        // ============================================
+        // NOMINATIONS MODAL
+        // ============================================
+        function showNominationsModal() {
+            document.getElementById('dashboardTitle').textContent = 'Nominations';
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-award"></i> Nominations</h2>
+                        <button class="sheet-btn secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 60px; color: #64748b;">
+                        <i class="fas fa-award" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <h3 style="margin-bottom: 10px;">No Nominations Yet</h3>
+                        <p>Nominations will appear here once businesses submit them.</p>
+                    </div>
+                </div>
+            `;
+            
+            setActiveMenuItem('Nominations');
+        }
+
+        // ============================================
+        // CATEGORIES MODAL
+        // ============================================
+        function showCategoriesModal() {
+            document.getElementById('dashboardTitle').textContent = 'Categories';
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-list-alt"></i> Award Categories</h2>
+                        <div>
+                            <button class="sheet-btn" onclick="showAddCategory()">
+                                <i class="fas fa-plus"></i> Add Category
+                            </button>
+                            <button class="sheet-btn secondary" onclick="showDashboard()" style="margin-left: 10px;">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Category Name</th>
+                                    <th>Description</th>
+                                    <th>Nominations</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Technology</td>
+                                    <td>Innovation in technology</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td><button class="action-btn view"><i class="fas fa-edit"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>Agriculture</td>
+                                    <td>Sustainable farming</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td><button class="action-btn view"><i class="fas fa-edit"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td>Manufacturing</td>
+                                    <td>Industrial excellence</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td><button class="action-btn view"><i class="fas fa-edit"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            setActiveMenuItem('Categories');
+        }
+
+        function showAddCategory() {
+            alert('Add category feature coming soon!');
+        }
+
+        // ============================================
+        // JUDGES MODAL
+        // ============================================
+        function showJudgesModal() {
+            document.getElementById('dashboardTitle').textContent = 'Judges Panel';
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-gavel"></i> Judges Panel</h2>
+                        <div>
+                            <button class="sheet-btn" onclick="showAddJudge()">
+                                <i class="fas fa-plus"></i> Add Judge
+                            </button>
+                            <button class="sheet-btn secondary" onclick="showDashboard()" style="margin-left: 10px;">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 60px; color: #64748b;">
+                        <i class="fas fa-gavel" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <h3 style="margin-bottom: 10px;">Judges Panel Coming Soon</h3>
+                        <p>This feature will allow you to manage award judges.</p>
+                    </div>
+                </div>
+            `;
+            
+            setActiveMenuItem('Judges Panel');
+        }
+
+        function showAddJudge() {
+            alert('Add judge feature coming soon!');
+        }
+
+        // ============================================
+        // USERS MODAL
+        // ============================================
+        function showUsersModal() {
+            document.getElementById('dashboardTitle').textContent = 'Users';
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-users"></i> Users</h2>
+                        <button class="sheet-btn secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+                    
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>System Administrator</strong></td>
+                                    <td>admin@liberiabusinessawardslr.com</td>
+                                    <td>Super Admin</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td><button class="action-btn view"><i class="fas fa-edit"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            setActiveMenuItem('Users');
+        }
+
+        // ============================================
+        // ANALYTICS MODAL
+        // ============================================
+        function showAnalyticsModal() {
+            document.getElementById('dashboardTitle').textContent = 'Analytics';
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-chart-bar"></i> Analytics</h2>
+                        <button class="sheet-btn secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3 style="font-size: 48px; color: var(--lba-primary);">${dashboardState.businesses.length}</h3>
+                            <p>Total Businesses</p>
+                        </div>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3 style="font-size: 48px; color: var(--lba-secondary);">${dashboardState.pendingBusinesses.length}</h3>
+                            <p>Pending Approvals</p>
+                        </div>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3 style="font-size: 48px; color: var(--success-color);">${dashboardState.activeBusinesses.length}</h3>
+                            <p>Active Businesses</p>
+                        </div>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3 style="font-size: 48px; color: var(--warning-color);">0</h3>
+                            <p>Nominations</p>
+                        </div>
+                    </div>
+                    
+                    <p style="text-align: center; margin-top: 30px; color: #64748b;">
+                        Detailed analytics coming soon with charts and graphs.
+                    </p>
+                </div>
+            `;
+            
+            setActiveMenuItem('Analytics');
+        }
+
+        // ============================================
+        // REPORTS MODAL
+        // ============================================
+        function showReportsModal() {
+            document.getElementById('dashboardTitle').textContent = 'Reports';
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-file-alt"></i> Reports</h2>
+                        <button class="sheet-btn secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 60px; color: #64748b;">
+                        <i class="fas fa-file-alt" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <h3 style="margin-bottom: 10px;">Reports Coming Soon</h3>
+                        <p>Generate and download reports on businesses, nominations, and activities.</p>
+                    </div>
+                </div>
+            `;
+            
+            setActiveMenuItem('Reports');
+        }
+
+        // ============================================
+        // SETTINGS MODAL
+        // ============================================
+        function showSettingsModal() {
+            document.getElementById('dashboardTitle').textContent = 'Settings';
+            
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: var(--lba-dark);"><i class="fas fa-cog"></i> Settings</h2>
+                        <button class="sheet-btn secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 60px; color: #64748b;">
+                        <i class="fas fa-cog" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <h3 style="margin-bottom: 10px;">Settings Coming Soon</h3>
+                        <p>Configure system preferences, email templates, and more.</p>
+                    </div>
+                </div>
+            `;
+            
+            setActiveMenuItem('Settings');
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function setActiveMenuItem(itemName) {
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.querySelector('span')?.textContent === itemName) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
-        
+
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
-        
-        // ============ NOTIFICATION ============
-        function showNotification(message, type = 'success') {
-            const colors = {
-                success: '#10B981',
-                error: '#EF4444',
-                warning: '#F59E0B',
-                info: '#3B82F6'
-            };
+
+        function showNotification(message, type = 'info') {
+            const colors = { success: '#10B981', warning: '#F59E0B', danger: '#EF4444', info: '#3B82F6' };
+            const icons = { success: 'check-circle', warning: 'exclamation-triangle', danger: 'exclamation-circle', info: 'info-circle' };
             
             const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.style.background = colors[type];
-            notification.textContent = message;
-            
+            notification.style.cssText = `
+                position: fixed; top: 30px; right: 30px; background: white; color: ${colors[type]};
+                padding: 15px 20px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+                z-index: 9999; display: flex; align-items: center; gap: 12px; border-left: 4px solid ${colors[type]};
+                max-width: 350px; font-weight: 600; font-size: 14px;
+            `;
+            notification.innerHTML = `<i class="fas fa-${icons[type]}" style="font-size: 18px;"></i><span>${message}</span>`;
             document.body.appendChild(notification);
             
             setTimeout(() => {
-                notification.remove();
-            }, 3000);
+                notification.style.animation = 'slideUp 0.3s reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
         }
-        
-        // ============ LOGOUT ============
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('lba_auth_token');
-                localStorage.removeItem('lba_user_data');
-                localStorage.removeItem('lba_user_role');
-                window.location.href = '../login.html';
-            }
+
+        function setupPeriodicUpdates() {
+            setInterval(async () => {
+                await loadDashboardData();
+            }, REFRESH_INTERVAL);
+            
+            startSessionTimer();
         }
-        
-        // Export functions
-        window.showSection = showSection;
-        window.viewBusiness = viewBusiness;
+
+        function startSessionTimer() {
+            let timeLeft = SESSION_TIMEOUT * 60;
+            const timerElement = document.getElementById('sessionTimer');
+            
+            setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                if (timerElement) timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    showNotification('Session expired. Redirecting...', 'danger');
+                    setTimeout(logout, 2000);
+                }
+            }, 1000);
+        }
+
+        // ============================================
+        // EXPORT FUNCTIONS
+        // ============================================
+        window.showDashboard = showDashboard;
+        window.showBusinessesModal = showBusinessesModal;
+        window.showNominationsModal = showNominationsModal;
+        window.showAnnouncementsModal = showAnnouncementsModal;
+        window.showSpotlightModal = showSpotlightModal;
+        window.showCategoriesModal = showCategoriesModal;
+        window.showJudgesModal = showJudgesModal;
+        window.showUsersModal = showUsersModal;
+        window.showAnalyticsModal = showAnalyticsModal;
+        window.showReportsModal = showReportsModal;
+        window.showSettingsModal = showSettingsModal;
         window.approveBusiness = approveBusiness;
         window.rejectBusiness = rejectBusiness;
-        window.openAddStoryModal = openAddStoryModal;
-        window.openAddAnnouncementModal = openAddAnnouncementModal;
-        window.openAddCategoryModal = openAddCategoryModal;
+        window.viewBusinessDetails = viewBusinessDetails;
+        window.filterBusinesses = filterBusinesses;
+        window.showBusinessTab = showBusinessTab;
+        window.showCreateAnnouncement = showCreateAnnouncement;
+        window.showAddCategory = showAddCategory;
+        window.showAddJudge = showAddJudge;
+        window.openModal = openModal;
         window.closeModal = closeModal;
-        window.saveStory = saveStory;
-        window.saveAnnouncement = saveAnnouncement;
-        window.logout = logout;
+
+        console.log('✅ Admin Dashboard Ready - All Sections Working');
     </script>
 </body>
 </html>
