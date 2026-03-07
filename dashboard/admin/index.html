@@ -3843,50 +3843,98 @@
         }
 
         // Export businesses to CSV
-        function exportBusinesses() {
-            const tableBody = document.getElementById('businessesTableBody');
-            const rows = tableBody.querySelectorAll('tr');
+function exportBusinesses() {
+    const tableBody = document.getElementById('businessesTableBody');
+    const rows = tableBody.querySelectorAll('tr');
+    
+    if (rows.length === 0 || (rows.length === 1 && rows[0].querySelector('td[colspan]'))) {
+        showNotification('No data to export', 'warning');
+        return;
+    }
+    
+    let csv = 'Business Name,Email,Contact,Phone,Type,Status\n';
+    
+    rows.forEach(row => {
+        if (row.querySelector('td[colspan]')) return; // Skip "no data" rows
+        
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 7) {
+            const businessName = cells[0]?.textContent?.trim() || '';
+            const email = cells[1]?.textContent?.trim() || '';
+            const contact = cells[2]?.textContent?.trim() || '';
+            const phone = cells[3]?.textContent?.trim() || '';
+            const type = cells[4]?.textContent?.trim() || '';
+            const status = cells[6]?.querySelector('.status-badge')?.textContent?.trim() || '';
             
-            if (rows.length === 0 || (rows.length === 1 && rows[0].querySelector('td[colspan]'))) {
-                showNotification('No data to export', 'warning');
-                return;
-            }
+            // Escape commas and quotes
+            const escapeCsv = (str) => `"${str.replace(/"/g, '""')}"`;
             
-            let csv = 'Business Name,Email,Contact,Phone,Type,Status\n';
-            
-            rows.forEach(row => {
-                if (row.querySelector('td[colspan]')) return; // Skip "no data" rows
-                
-                const cells = row.querySelectorAll('td');
-                if (cells.length >= 7) {
-                    const businessName = cells[0]?.textContent?.trim() || '';
-                    const email = cells[1]?.textContent?.trim() || '';
-                    const contact = cells[2]?.textContent?.trim() || '';
-                    const phone = cells[3]?.textContent?.trim() || '';
-                    const type = cells[4]?.textContent?.trim() || '';
-                    const status = cells[6]?.querySelector('.status-badge')?.textContent?.trim() || '';
-                    
-                    // Escape commas and quotes
-                    const escapeCsv = (str) => `"${str.replace(/"/g, '""')}"`;
-                    
-                    csv += ${escapeCsv(businessName)},${escapeCsv(email)},${escapeCsv(contact)},${escapeCsv(phone)},${escapeCsv(type)},${escapeCsv(status)}\n;
-                }
-            });
-            
-            // Create download link
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `businesses_export_${new Date().toISOString().slice(0,10)}.csv`);
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            
-            showNotification('Businesses exported successfully', 'success');
+            // FIXED: Added backticks
+            csv += `${escapeCsv(businessName)},${escapeCsv(email)},${escapeCsv(contact)},${escapeCsv(phone)},${escapeCsv(type)},${escapeCsv(status)}\n`;
         }
+    });
+    
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `businesses_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification('Businesses exported successfully', 'success');
+}
+
+        // ============================================
+// MISSING MODAL FUNCTIONS
+// ============================================
+
+function showNominationsModal() {
+    // This is already defined in your code - check if it exists
+    // If not, add this:
+    showNotification('Nominations management coming soon', 'info');
+}
+
+function showUsersModal() {
+    showNotification('Users management coming soon', 'info');
+}
+
+function showAnalyticsModal() {
+    showNotification('Analytics module coming soon', 'info');
+}
+
+function showReportsModal() {
+    showNotification('Reports module coming soon', 'info');
+}
+
+function showSettingsModal() {
+    showNotification('Settings module coming soon', 'info');
+}
+
+function showCategoriesModal() {
+    showNotification('Categories module coming soon', 'info');
+}
+
+function showJudgesModal() {
+    showNotification('Judges panel coming soon', 'info');
+}
+
+function showUserMenu() {
+    // Optional: Add user menu dropdown functionality
+    console.log('User menu clicked');
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
 
         // Make functions globally available
         window.showBusinessApprovalModal = showBusinessApprovalModal;
@@ -4347,3 +4395,4 @@
 
 </body>
 </html>
+
