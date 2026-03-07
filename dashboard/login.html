@@ -370,37 +370,6 @@
             cursor: pointer;
         }
         
-        /* Demo Credentials Box */
-        .demo-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        
-        .demo-box h4 {
-            color: #856404;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .demo-box p {
-            font-size: 13px;
-            margin-bottom: 5px;
-            color: #856404;
-        }
-        
-        .demo-box code {
-            background: #fff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            display: inline-block;
-            margin: 2px 0;
-        }
-        
         /* Responsive */
         @media (max-width: 480px) {
             .login-container {
@@ -457,21 +426,13 @@
             <form class="login-form active" id="adminForm">
                 <div class="info-box">
                     <h4><i class="fas fa-user-shield"></i> Administrator Access</h4>
-                    <p>Restricted access for system administrators only.</p>
-                </div>
-                
-                <!-- Demo Credentials -->
-                <div class="demo-box">
-                    <h4><i class="fas fa-info-circle"></i> Demo Credentials</h4>
-                    <p>Admin Email: <code>admin@liberiabusinessawardslr.com</code></p>
-                    <p>Admin Password: <code>Admin123!</code></p>
+                    <p>Restricted access for system administrators only. Use your official credentials.</p>
                 </div>
                 
                 <div class="form-group">
                     <label for="adminEmail">Admin Email Address</label>
                     <input type="email" id="adminEmail" required 
-                           placeholder="admin@liberiabusinessawardslr.com"
-                           value="admin@liberiabusinessawardslr.com"
+                           placeholder="Enter admin email address"
                            autocomplete="username">
                 </div>
                 
@@ -479,7 +440,6 @@
                     <label for="adminPassword">Admin Password</label>
                     <input type="password" id="adminPassword" required 
                            placeholder="Enter admin password"
-                           value="Admin123!"
                            autocomplete="current-password">
                     <div class="password-checkbox">
                         <input type="checkbox" id="showAdminPassword" onchange="togglePasswordVisibility('adminPassword')">
@@ -500,15 +460,7 @@
             <div class="login-form" id="businessForm">
                 <div class="info-box">
                     <h4><i class="fas fa-building"></i> Business Portal Access</h4>
-                    <p>Login or register your business to access the portal.</p>
-                </div>
-                
-                <!-- Demo Credentials -->
-                <div class="demo-box">
-                    <h4><i class="fas fa-info-circle"></i> Demo Business Account</h4>
-                    <p>Email: <code>business@example.com</code></p>
-                    <p>Password: <code>Business123!</code></p>
-                    <p style="margin-top: 8px; font-style: italic;">Or register your own business below.</p>
+                    <p>Login with your business credentials or register a new account.</p>
                 </div>
                 
                 <!-- Business Options -->
@@ -531,15 +483,13 @@
                     <div class="form-group">
                         <label for="businessEmail">Business Email</label>
                         <input type="email" id="businessEmail" required 
-                               placeholder="business@example.com"
-                               value="business@example.com">
+                               placeholder="Enter business email">
                     </div>
                     
                     <div class="form-group">
                         <label for="businessPassword">Password</label>
                         <input type="password" id="businessPassword" required 
-                               placeholder="Enter your password"
-                               value="Business123!">
+                               placeholder="Enter your password">
                         <div class="password-checkbox">
                             <input type="checkbox" id="showBusinessPassword" onchange="togglePasswordVisibility('businessPassword')">
                             <label for="showBusinessPassword">Show password</label>
@@ -564,7 +514,7 @@
                 <div id="businessRegisterForm" style="display: none;">
                     <div class="info-box">
                         <h4><i class="fas fa-user-plus"></i> Register Your Business</h4>
-                        <p>Fill out the form below to create your business account. You'll receive admin approval within 1-2 business days.</p>
+                        <p>Complete the form below to create your business account. You'll receive admin approval before accessing the portal.</p>
                     </div>
                     
                     <div class="form-group">
@@ -775,7 +725,7 @@
                 
             } catch (error) {
                 console.warn('⚠️ Backend check failed:', error.message);
-                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Using Demo Mode</span>`;
+                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Please try again later</span>`;
                 apiStatus.className = 'api-status offline';
             }
         }
@@ -800,7 +750,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
             
             try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+                const response = await fetch(`${BACKEND_URL}/api/auth/admin/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -826,12 +776,12 @@
                     }, 1500);
                     
                 } else {
-                    throw new Error(result.message || 'Invalid credentials');
+                    throw new Error(result.message || 'Invalid admin credentials');
                 }
                 
             } catch (error) {
                 console.error('❌ Admin login error:', error);
-                showError(errorEl, error.message || 'Login failed. Please try again.');
+                showError(errorEl, error.message || 'Login failed. Please check your credentials.');
                 
             } finally {
                 setTimeout(() => {
@@ -861,7 +811,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
             
             try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+                const response = await fetch(`${BACKEND_URL}/api/auth/business/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -873,26 +823,28 @@
                 const result = await response.json();
                 
                 if (response.ok && result.success) {
-                    // Check if user is business (not admin)
-                    if (result.user.role === 'business') {
-                        // Store authentication
-                        localStorage.setItem('lba_auth_token', result.token);
-                        localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-                        localStorage.setItem('lba_user_role', result.user.role);
-                        
-                        showSuccess(successEl, '✓ Login successful! Redirecting...');
-                        console.log('✅ Business login successful');
-                        
-                        // Redirect to business dashboard
-                        setTimeout(() => {
-                            window.location.href = 'business/index.html';
-                        }, 1500);
-                    } else {
-                        throw new Error('This account is not registered as a business. Please use the admin login.');
-                    }
+                    // Store authentication
+                    localStorage.setItem('lba_auth_token', result.token);
+                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+                    localStorage.setItem('lba_user_role', result.user.role);
+                    
+                    showSuccess(successEl, '✓ Login successful! Redirecting...');
+                    console.log('✅ Business login successful');
+                    
+                    // Redirect to business dashboard
+                    setTimeout(() => {
+                        window.location.href = 'business/index.html';
+                    }, 1500);
                     
                 } else {
-                    throw new Error(result.message || 'Invalid business credentials');
+                    // Handle specific status messages
+                    if (result.message.includes('pending')) {
+                        throw new Error('Your account is pending admin approval. You will be able to login once approved.');
+                    } else if (result.message.includes('rejected')) {
+                        throw new Error(result.message || 'Your business registration was rejected.');
+                    } else {
+                        throw new Error(result.message || 'Invalid business credentials');
+                    }
                 }
                 
             } catch (error) {
@@ -901,10 +853,6 @@
                 let errorMessage = error.message;
                 if (error.message.includes('Failed to fetch')) {
                     errorMessage = 'Cannot connect to server. Please try again later.';
-                } else if (error.message.includes('pending')) {
-                    errorMessage = 'Your account is pending approval. Please wait for admin verification.';
-                } else if (error.message.includes('suspended')) {
-                    errorMessage = 'Your account has been suspended. Please contact administrator.';
                 }
                 
                 showError(errorEl, errorMessage);
@@ -954,7 +902,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
             
             try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+                const response = await fetch(`${BACKEND_URL}/api/business/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -963,9 +911,9 @@
                     body: JSON.stringify({
                         email,
                         password,
-                        name: contactName || businessName,
-                        company: businessName,
-                        phone: phone,
+                        business_name: businessName,
+                        contact_name: contactName,
+                        phone,
                         business_type: businessType
                     })
                 });
@@ -973,7 +921,7 @@
                 const result = await response.json();
                 
                 if (response.ok && result.success) {
-                    showSuccess(successEl, '✓ Registration successful! You can now login.');
+                    showSuccess(successEl, '✓ Registration successful! Your account is pending admin approval. You will be notified once approved.');
                     
                     // Clear form
                     document.getElementById('regBusinessName').value = '';
@@ -984,10 +932,10 @@
                     document.getElementById('regPhone').value = '';
                     document.getElementById('regBusinessType').value = '';
                     
-                    // Show login form after 2 seconds
+                    // Show login form after 3 seconds
                     setTimeout(() => {
                         showBusinessLogin();
-                    }, 2000);
+                    }, 3000);
                     
                 } else {
                     throw new Error(result.message || 'Registration failed');
@@ -1033,7 +981,7 @@
         window.handleBusinessLogin = handleBusinessLogin;
         window.handleBusinessRegistration = handleBusinessRegistration;
 
-        console.log('✅ Login page ready');
+        console.log('✅ Login page ready - Production Mode');
     </script>
 </body>
 </html>
