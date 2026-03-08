@@ -3941,6 +3941,625 @@ function exportBusinesses() {
     showNotification('Businesses exported successfully', 'success');
 }
 
+// ============================================
+// ANNOUNCEMENTS MANAGEMENT
+// ============================================
+function showAnnouncementsModal() {
+    hideAllModals();
+    document.getElementById('announcementsModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadAnnouncements();
+}
+
+async function loadAnnouncements() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAnnouncements(data.announcements);
+            updateAnnouncementCount();
+        }
+    } catch (error) {
+        console.error('Error loading announcements:', error);
+    }
+}
+
+function displayAnnouncements(announcements) {
+    const tbody = document.getElementById('announcementsTableBody');
+    if (!announcements || announcements.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No announcements found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = announcements.map(a => `
+        <tr>
+            <td><strong>${escapeHtml(a.title)}</strong></td>
+            <td>${escapeHtml(a.description.substring(0, 100))}...</td>
+            <td><span class="status-badge status-${a.status === 'published' ? 'active' : 'pending'}">${a.status}</span></td>
+            <td>${new Date(a.created_at).toLocaleDateString()}</td>
+            <td>
+                <button class="sheet-btn secondary" onclick="editAnnouncement('${a._id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" onclick="deleteAnnouncement('${a._id}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showAddAnnouncementModal() {
+    document.getElementById('announcementModalTitle').textContent = 'Add Announcement';
+    document.getElementById('announcementForm').reset();
+    document.getElementById('announcementId').value = '';
+    document.getElementById('addAnnouncementModal').classList.add('active');
+}
+
+async function editAnnouncement(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        const announcement = data.announcements.find(a => a._id === id);
+        
+        if (announcement) {
+            document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+            document.getElementById('announcementId').value = announcement._id;
+            document.getElementById('announcementTitle').value = announcement.title;
+            document.getElementById('announcementDescription').value = announcement.description;
+            document.getElementById('announcementImage').value = announcement.image || '';
+            document.getElementById('announcementStatus').value = announcement.status;
+            document.getElementById('addAnnouncementModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error editing announcement:', error);
+    }
+}
+
+async function saveAnnouncement() {
+    const id = document.getElementById('announcementId').value;
+    const data = {
+        title: document.getElementById('announcementTitle').value,
+        description: document.getElementById('announcementDescription').value,
+        image: document.getElementById('announcementImage').value,
+        status: document.getElementById('announcementStatus').value
+    };
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const url = id 
+            ? `${API_BASE.replace('/api', '')}/api/admin/announcements/${id}`
+            : `${API_BASE.replace('/api', '')}/api/admin/announcements`;
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(id ? 'Announcement updated!' : 'Announcement created!', 'success');
+            hideModal('addAnnouncementModal');
+            loadAnnouncements();
+        }
+    } catch (error) {
+        showNotification('Error saving announcement', 'error');
+    }
+}
+
+async function deleteAnnouncement(id) {
+    if (!confirm('Delete this announcement?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            showNotification('Announcement deleted', 'success');
+            loadAnnouncements();
+        }
+    } catch (error) {
+        showNotification('Error deleting announcement', 'error');
+    }
+}
+
+async function updateAnnouncementCount() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        document.getElementById('announcementCount').textContent = data.announcements?.length || 0;
+    } catch (error) {}
+}
+
+// ============================================
+// JUDGES MANAGEMENT
+// ============================================
+function showJudgesModal() {
+    hideAllModals();
+    document.getElementById('judgesModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadJudges();
+}
+
+async function loadJudges() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/judges`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayJudges(data.judges);
+        }
+    } catch (error) {
+        console.error('Error loading judges:', error);
+    }
+}
+
+function displayJudges(judges) {
+    const tbody = document.getElementById('judgesTableBody');
+    if (!judges || judges.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No judges found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = judges.map(j => `
+        <tr>
+            <td><strong>${escapeHtml(j.name)}</strong></td>
+            <td>${escapeHtml(j.profession)}</td>
+            <td>${escapeHtml(j.organization || '-')}</td>
+            <td><span class="status-badge status-${j.status === 'active' ? 'active' : 'pending'}">${j.status}</span></td>
+            <td>
+                <button class="sheet-btn secondary" onclick="editJudge('${j._id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" onclick="deleteJudge('${j._id}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showAddJudgeModal() {
+    document.getElementById('judgeModalTitle').textContent = 'Add Judge';
+    document.getElementById('judgeForm').reset();
+    document.getElementById('judgeId').value = '';
+    document.getElementById('addJudgeModal').classList.add('active');
+}
+
+async function editJudge(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/judges`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        const judge = data.judges.find(j => j._id === id);
+        
+        if (judge) {
+            document.getElementById('judgeModalTitle').textContent = 'Edit Judge';
+            document.getElementById('judgeId').value = judge._id;
+            document.getElementById('judgeName').value = judge.name;
+            document.getElementById('judgeProfession').value = judge.profession;
+            document.getElementById('judgeOrganization').value = judge.organization || '';
+            document.getElementById('judgePhoto').value = judge.photo || '';
+            document.getElementById('judgeBio').value = judge.bio || '';
+            document.getElementById('judgeStatus').value = judge.status;
+            document.getElementById('addJudgeModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error editing judge:', error);
+    }
+}
+
+async function saveJudge() {
+    const id = document.getElementById('judgeId').value;
+    const data = {
+        name: document.getElementById('judgeName').value,
+        profession: document.getElementById('judgeProfession').value,
+        organization: document.getElementById('judgeOrganization').value,
+        photo: document.getElementById('judgePhoto').value,
+        bio: document.getElementById('judgeBio').value,
+        status: document.getElementById('judgeStatus').value
+    };
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const url = id 
+            ? `${API_BASE.replace('/api', '')}/api/admin/judges/${id}`
+            : `${API_BASE.replace('/api', '')}/api/admin/judges`;
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(id ? 'Judge updated!' : 'Judge added!', 'success');
+            hideModal('addJudgeModal');
+            loadJudges();
+        }
+    } catch (error) {
+        showNotification('Error saving judge', 'error');
+    }
+}
+
+async function deleteJudge(id) {
+    if (!confirm('Delete this judge?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/judges/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            showNotification('Judge deleted', 'success');
+            loadJudges();
+        }
+    } catch (error) {
+        showNotification('Error deleting judge', 'error');
+    }
+}
+
+// ============================================
+// USERS MANAGEMENT
+// ============================================
+function showUsersModal() {
+    hideAllModals();
+    document.getElementById('usersModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadUsers();
+}
+
+async function loadUsers() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayUsers(data.users);
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+}
+
+function displayUsers(users) {
+    const tbody = document.getElementById('usersTableBody');
+    if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No users found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = users.map(u => `
+        <tr>
+            <td><strong>${escapeHtml(u.fullName)}</strong></td>
+            <td>${escapeHtml(u.email)}</td>
+            <td><span class="status-badge" style="background: ${u.role === 'admin' ? '#8B5CF6' : '#3B82F6'}20; color: ${u.role === 'admin' ? '#8B5CF6' : '#3B82F6'}">${u.role}</span></td>
+            <td><span class="status-badge status-${u.status === 'active' ? 'active' : 'pending'}">${u.status}</span></td>
+            <td>${new Date(u.created_at).toLocaleDateString()}</td>
+            <td>
+                <button class="sheet-btn secondary" onclick="editUser('${u._id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn ${u.status === 'active' ? 'warning' : 'success'}" onclick="toggleUserStatus('${u._id}')">
+                    ${u.status === 'active' ? 'Deactivate' : 'Activate'}
+                </button>
+                <button class="sheet-btn danger" onclick="deleteUser('${u._id}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showAddUserModal() {
+    document.getElementById('userModalTitle').textContent = 'Add User';
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    document.getElementById('passwordField').style.display = 'block';
+    document.getElementById('userPassword').required = true;
+    document.getElementById('addUserModal').classList.add('active');
+}
+
+async function editUser(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        const user = data.users.find(u => u._id === id);
+        
+        if (user) {
+            document.getElementById('userModalTitle').textContent = 'Edit User';
+            document.getElementById('userId').value = user._id;
+            document.getElementById('userFullName').value = user.fullName;
+            document.getElementById('userEmail').value = user.email;
+            document.getElementById('userRole').value = user.role;
+            document.getElementById('userStatus').value = user.status;
+            document.getElementById('passwordField').style.display = 'none';
+            document.getElementById('userPassword').required = false;
+            document.getElementById('addUserModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error editing user:', error);
+    }
+}
+
+async function saveUser() {
+    const id = document.getElementById('userId').value;
+    const data = {
+        fullName: document.getElementById('userFullName').value,
+        email: document.getElementById('userEmail').value,
+        role: document.getElementById('userRole').value,
+        status: document.getElementById('userStatus').value
+    };
+    
+    const password = document.getElementById('userPassword').value;
+    if (password) data.password = password;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const url = id 
+            ? `${API_BASE.replace('/api', '')}/api/admin/system-users/${id}`
+            : `${API_BASE.replace('/api', '')}/api/admin/system-users`;
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(id ? 'User updated!' : 'User created!', 'success');
+            hideModal('addUserModal');
+            loadUsers();
+        } else {
+            showNotification(result.error || 'Error saving user', 'error');
+        }
+    } catch (error) {
+        showNotification('Error saving user', 'error');
+    }
+}
+
+async function toggleUserStatus(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users/${id}/toggle-status`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            showNotification('User status updated', 'success');
+            loadUsers();
+        }
+    } catch (error) {
+        showNotification('Error updating user status', 'error');
+    }
+}
+
+async function deleteUser(id) {
+    if (!confirm('Delete this user? This cannot be undone.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            showNotification('User deleted', 'success');
+            loadUsers();
+        } else {
+            const data = await response.json();
+            showNotification(data.error || 'Error deleting user', 'error');
+        }
+    } catch (error) {
+        showNotification('Error deleting user', 'error');
+    }
+}
+
+// ============================================
+// ANALYTICS
+// ============================================
+async function showAnalyticsModal() {
+    hideAllModals();
+    document.getElementById('analyticsModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/analytics`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAnalytics(data.analytics);
+        }
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+    }
+}
+
+function displayAnalytics(analytics) {
+    const content = document.getElementById('analyticsContent');
+    const o = analytics.overview;
+    
+    content.innerHTML = `
+        <div class="stats-grid" style="margin-bottom: 30px;">
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalBusinesses}</h3>
+                <p>Total Businesses</p>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalNominations}</h3>
+                <p>Nominations</p>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.pendingBusinesses}</h3>
+                <p>Pending</p>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalUsers}</h3>
+                <p>System Users</p>
+            </div>
+        </div>
+        
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.featuredBusinesses}</h3>
+                <p>Featured</p>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalAnnouncements}</h3>
+                <p>Announcements</p>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalJudges}</h3>
+                <p>Judges</p>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================
+// REPORTS
+// ============================================
+function showReportsModal() {
+    hideAllModals();
+    document.getElementById('reportsModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+async function generateReport(type, format) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/reports/generate`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ type, format })
+        });
+        
+        if (format === 'csv') {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${type}-report.csv`;
+            a.click();
+        } else {
+            const data = await response.json();
+            console.log(data);
+        }
+        
+        showNotification(`${type} report generated`, 'success');
+    } catch (error) {
+        showNotification('Error generating report', 'error');
+    }
+}
+
+// ============================================
+// SETTINGS
+// ============================================
+async function showSettingsModal() {
+    hideAllModals();
+    document.getElementById('settingsModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/settings`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            const s = data.settings;
+            document.getElementById('settingsPlatformName').value = s.platformName;
+            document.getElementById('settingsAdminEmail').value = s.adminEmail;
+            document.getElementById('settingsLogo').value = s.logo || '';
+            document.getElementById('settingsSystemStatus').value = s.systemStatus;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+async function saveSettings() {
+    const data = {
+        platformName: document.getElementById('settingsPlatformName').value,
+        adminEmail: document.getElementById('settingsAdminEmail').value,
+        logo: document.getElementById('settingsLogo').value,
+        systemStatus: document.getElementById('settingsSystemStatus').value
+    };
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/settings`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showNotification('Settings saved!', 'success');
+            hideModal('settingsModal');
+        }
+    } catch (error) {
+        showNotification('Error saving settings', 'error');
+    }
+}
+
+// Override the existing placeholder functions
+window.showAnnouncementsModal = showAnnouncementsModal;
+window.showJudgesModal = showJudgesModal;
+window.showUsersModal = showUsersModal;
+window.showAnalyticsModal = showAnalyticsModal;
+window.showReportsModal = showReportsModal;
+window.showSettingsModal = showSettingsModal;
+
+// Also add category functions
+function showCategoriesModal() {
+    showNotification('Categories module will be available soon!', 'info');
+}      
+
 // Make functions globally available
 window.showBusinessApprovalModal = showBusinessApprovalModal;
 window.loadBusinesses = loadBusinesses;
@@ -3951,6 +4570,8 @@ window.viewBusinessDetails = viewBusinessDetails;
 window.showCreateBusinessModal = showCreateBusinessModal;
 window.createBusinessAccount = createBusinessAccount;
 window.exportBusinesses = exportBusinesses;  
+
+
 </script>
     
     <!-- ============ SPOTLIGHT MANAGEMENT MODAL ============ -->
@@ -4395,9 +5016,368 @@ window.exportBusinesses = exportBusinesses;
         </div>
     </div>
 </div>
-    
+
+<!-- ============ ANNOUNCEMENTS MODAL ============ -->
+<div class="modal" id="announcementsModal">
+    <div class="modal-content" style="max-width: 1000px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-bullhorn"></i> Announcements Management</h2>
+            <button class="modal-close" onclick="hideModal('announcementsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px; text-align: right;">
+                <button class="sheet-btn" onclick="showAddAnnouncementModal()">
+                    <i class="fas fa-plus"></i> New Announcement
+                </button>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="announcementsTableBody">
+                        <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ADD/EDIT ANNOUNCEMENT MODAL ============ -->
+<div class="modal" id="addAnnouncementModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="announcementModalTitle">Add Announcement</h2>
+            <button class="modal-close" onclick="hideModal('addAnnouncementModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="announcementForm">
+                <input type="hidden" id="announcementId">
+                
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="announcementTitle" class="sheet-btn secondary" style="width: 100%;" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea id="announcementDescription" rows="4" class="sheet-btn secondary" style="width: 100%;" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Image URL (optional)</label>
+                    <input type="url" id="announcementImage" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="announcementStatus" class="sheet-btn secondary" style="width: 100%;">
+                        <option value="published">Published</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+                
+                <div class="error-message" id="announcementError" style="display: none;"></div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('addAnnouncementModal')" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="saveAnnouncement()" style="flex: 2;">Save Announcement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============ JUDGES MODAL ============ -->
+<div class="modal" id="judgesModal">
+    <div class="modal-content" style="max-width: 1200px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-gavel"></i> Judges Panel</h2>
+            <button class="modal-close" onclick="hideModal('judgesModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px; text-align: right;">
+                <button class="sheet-btn" onclick="showAddJudgeModal()">
+                    <i class="fas fa-plus"></i> Add Judge
+                </button>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Profession</th>
+                            <th>Organization</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="judgesTableBody">
+                        <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ADD/EDIT JUDGE MODAL ============ -->
+<div class="modal" id="addJudgeModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="judgeModalTitle">Add Judge</h2>
+            <button class="modal-close" onclick="hideModal('addJudgeModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="judgeForm">
+                <input type="hidden" id="judgeId">
+                
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" id="judgeName" class="sheet-btn secondary" style="width: 100%;" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Profession *</label>
+                    <input type="text" id="judgeProfession" class="sheet-btn secondary" style="width: 100%;" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Organization</label>
+                    <input type="text" id="judgeOrganization" class="sheet-btn secondary" style="width: 100%;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Photo URL</label>
+                    <input type="url" id="judgePhoto" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Bio</label>
+                    <textarea id="judgeBio" rows="4" class="sheet-btn secondary" style="width: 100%;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="judgeStatus" class="sheet-btn secondary" style="width: 100%;">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('addJudgeModal')" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="saveJudge()" style="flex: 2;">Save Judge</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============ USERS MODAL ============ -->
+<div class="modal" id="usersModal">
+    <div class="modal-content" style="max-width: 1200px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-users"></i> System Users Management</h2>
+            <button class="modal-close" onclick="hideModal('usersModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px; text-align: right;">
+                <button class="sheet-btn" onclick="showAddUserModal()">
+                    <i class="fas fa-user-plus"></i> Add User
+                </button>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ADD/EDIT USER MODAL ============ -->
+<div class="modal" id="addUserModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="userModalTitle">Add User</h2>
+            <button class="modal-close" onclick="hideModal('addUserModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="userFullName" class="sheet-btn secondary" style="width: 100%;" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="userEmail" class="sheet-btn secondary" style="width: 100%;" required>
+                </div>
+                
+                <div class="form-group" id="passwordField">
+                    <label>Password *</label>
+                    <input type="password" id="userPassword" class="sheet-btn secondary" style="width: 100%;" minlength="6">
+                    <small style="color: #64748b;">Minimum 6 characters</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="userRole" class="sheet-btn secondary" style="width: 100%;">
+                        <option value="staff">Staff</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="userStatus" class="sheet-btn secondary" style="width: 100%;">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                
+                <div class="error-message" id="userError" style="display: none;"></div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('addUserModal')" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="saveUser()" style="flex: 2;">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ANALYTICS MODAL ============ -->
+<div class="modal" id="analyticsModal">
+    <div class="modal-content" style="max-width: 1200px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-chart-bar"></i> Analytics Dashboard</h2>
+            <button class="modal-close" onclick="hideModal('analyticsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="analyticsContent">
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading analytics...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ REPORTS MODAL ============ -->
+<div class="modal" id="reportsModal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-file-alt"></i> Reports</h2>
+            <button class="modal-close" onclick="hideModal('reportsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('businesses', 'csv')">
+                    <h3>Businesses Report</h3>
+                    <p>Export all businesses to CSV</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('nominations', 'csv')">
+                    <h3>Nominations Report</h3>
+                    <p>Export all nominations to CSV</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('judges', 'csv')">
+                    <h3>Judges Report</h3>
+                    <p>Export all judges to CSV</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ SETTINGS MODAL ============ -->
+<div class="modal" id="settingsModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-cog"></i> System Settings</h2>
+            <button class="modal-close" onclick="hideModal('settingsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label>Platform Name</label>
+                    <input type="text" id="settingsPlatformName" class="sheet-btn secondary" style="width: 100%;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Admin Email</label>
+                    <input type="email" id="settingsAdminEmail" class="sheet-btn secondary" style="width: 100%;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Logo URL</label>
+                    <input type="url" id="settingsLogo" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>System Status</label>
+                    <select id="settingsSystemStatus" class="sheet-btn secondary" style="width: 100%;">
+                        <option value="online">Online</option>
+                        <option value="maintenance">Maintenance</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('settingsModal')" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="saveSettings()" style="flex: 2;">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 </body>
 </html>
+
 
 
 
