@@ -409,6 +409,376 @@ app.get('/api/admin/businesses/stats', authenticate, authorize('admin'), async (
     }
 });
 
+// ============ ANNOUNCEMENTS MANAGEMENT ============
+// Get all announcements
+app.get('/api/admin/announcements', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const announcements = await Announcement.find().sort({ created_at: -1 });
+        res.json({ success: true, announcements });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Create announcement
+app.post('/api/admin/announcements', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const announcement = new Announcement({
+            ...req.body,
+            created_by: req.user._id
+        });
+        await announcement.save();
+        res.json({ success: true, announcement });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Update announcement
+app.put('/api/admin/announcements/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const announcement = await Announcement.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        res.json({ success: true, announcement });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Delete announcement
+app.delete('/api/admin/announcements/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        await Announcement.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ JUDGES MANAGEMENT ============
+app.get('/api/admin/judges', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const judges = await Judge.find().sort({ created_at: -1 });
+        res.json({ success: true, judges });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/admin/judges', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const judge = new Judge(req.body);
+        await judge.save();
+        res.json({ success: true, judge });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.put('/api/admin/judges/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const judge = await Judge.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ success: true, judge });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.delete('/api/admin/judges/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        await Judge.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ CATEGORIES MANAGEMENT ============
+app.get('/api/admin/categories', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const categories = await Category.find().sort({ name: 1 });
+        res.json({ success: true, categories });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/admin/categories', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const category = new Category(req.body);
+        await category.save();
+        res.json({ success: true, category });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.put('/api/admin/categories/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ success: true, category });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.delete('/api/admin/categories/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        await Category.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ SYSTEM USERS MANAGEMENT ============
+app.get('/api/admin/system-users', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const users = await SystemUser.find().select('-password').sort({ created_at: -1 });
+        res.json({ success: true, users });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/admin/system-users', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { fullName, email, password, role } = req.body;
+        
+        // Check if user exists
+        const existing = await SystemUser.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ success: false, error: 'Email already exists' });
+        }
+        
+        const user = new SystemUser({
+            fullName,
+            email,
+            password,
+            role,
+            status: 'active'
+        });
+        await user.save();
+        
+        res.json({ 
+            success: true, 
+            user: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                created_at: user.created_at
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.put('/api/admin/system-users/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { fullName, email, role, status } = req.body;
+        const user = await SystemUser.findById(req.params.id);
+        
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        
+        user.fullName = fullName || user.fullName;
+        user.email = email || user.email;
+        user.role = role || user.role;
+        user.status = status || user.status;
+        
+        await user.save();
+        
+        res.json({ 
+            success: true, 
+            user: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                role: user.role,
+                status: user.status
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.delete('/api/admin/system-users/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        // Prevent deleting yourself
+        if (req.params.id === req.user._id.toString()) {
+            return res.status(400).json({ success: false, error: 'Cannot delete your own account' });
+        }
+        
+        await SystemUser.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/admin/system-users/:id/toggle-status', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const user = await SystemUser.findById(req.params.id);
+        user.status = user.status === 'active' ? 'inactive' : 'active';
+        await user.save();
+        res.json({ success: true, status: user.status });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ SYSTEM SETTINGS ============
+app.get('/api/admin/settings', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const settings = await SystemSettings.getSettings();
+        res.json({ success: true, settings });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.put('/api/admin/settings', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        let settings = await SystemSettings.findOne();
+        if (!settings) {
+            settings = new SystemSettings();
+        }
+        
+        Object.assign(settings, req.body, { updated_by: req.user._id });
+        await settings.save();
+        
+        res.json({ success: true, settings });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ ANALYTICS ============
+app.get('/api/admin/analytics', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const [
+            totalBusinesses,
+            totalNominations,
+            pendingBusinesses,
+            featuredBusinesses,
+            totalUsers,
+            totalAnnouncements,
+            totalJudges,
+            totalCategories
+        ] = await Promise.all([
+            BusinessUser.countDocuments(),
+            require('./models/Nomination')?.countDocuments?.() || 0,
+            BusinessUser.countDocuments({ status: 'pending' }),
+            require('./models/BusinessSpotlight')?.countDocuments?.({ status: 'featured' }) || 0,
+            SystemUser.countDocuments(),
+            Announcement.countDocuments(),
+            Judge.countDocuments(),
+            Category.countDocuments()
+        ]);
+
+        // Get monthly registration data (last 6 months)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        
+        const monthlyRegistrations = await BusinessUser.aggregate([
+            { $match: { created_at: { $gte: sixMonthsAgo } } },
+            { $group: {
+                _id: { $month: "$created_at" },
+                count: { $sum: 1 }
+            }},
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json({
+            success: true,
+            analytics: {
+                overview: {
+                    totalBusinesses,
+                    totalNominations,
+                    pendingBusinesses,
+                    featuredBusinesses,
+                    totalUsers,
+                    totalAnnouncements,
+                    totalJudges,
+                    totalCategories
+                },
+                charts: {
+                    monthlyRegistrations
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ REPORTS ============
+app.post('/api/admin/reports/generate', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { type, format } = req.body;
+        let data = [];
+        
+        switch(type) {
+            case 'businesses':
+                data = await BusinessUser.find().sort({ created_at: -1 });
+                break;
+            case 'nominations':
+                data = await require('./models/Nomination')?.find().populate('business_id') || [];
+                break;
+            case 'judges':
+                data = await Judge.find().sort({ created_at: -1 });
+                break;
+            default:
+                return res.status(400).json({ success: false, error: 'Invalid report type' });
+        }
+
+        if (format === 'csv') {
+            // Return as CSV
+            const csv = convertToCSV(data);
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename=${type}-report.csv`);
+            res.send(csv);
+        } else {
+            // Return as JSON
+            res.json({ success: true, data });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Helper function for CSV conversion
+function convertToCSV(data) {
+    if (!data || data.length === 0) return '';
+    
+    const headers = Object.keys(data[0]).filter(key => 
+        !key.includes('password') && !key.includes('__v')
+    );
+    
+    let csv = headers.join(',') + '\n';
+    
+    data.forEach(item => {
+        const row = headers.map(header => {
+            let value = item[header];
+            if (value instanceof Date) value = value.toISOString().split('T')[0];
+            if (typeof value === 'object') value = JSON.stringify(value);
+            return `"${value || ''}"`;
+        }).join(',');
+        csv += row + '\n';
+    });
+    
+    return csv;
+}
+
+
 // ============ AUTH ROUTES ============
 
 // Admin Login
@@ -854,3 +1224,4 @@ process.on('unhandledRejection', (err) => {
 
 // Start the server
 startServer();
+
