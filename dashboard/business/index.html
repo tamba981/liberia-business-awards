@@ -8,19 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* LBA Brand Colors */
             --lba-red: #FF0000;
             --lba-blue: #87CEEB;
             --lba-dark: #1a202c;
             --lba-light: #f8f9fa;
-            
-            /* Dashboard Variables */
-            --sidebar-width: 280px;
-            --header-height: 80px;
             --success-color: #10B981;
             --warning-color: #F59E0B;
             --danger-color: #EF4444;
             --info-color: #3B82F6;
+            --sidebar-width: 280px;
         }
         
         * {
@@ -30,7 +26,7 @@
         }
         
         body {
-            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
             background: #f5f7fb;
             color: var(--lba-dark);
             min-height: 100vh;
@@ -86,7 +82,8 @@
             cursor: pointer;
         }
         
-        .menu-item:hover, .menu-item.active {
+        .menu-item:hover,
+        .menu-item.active {
             background: rgba(255, 255, 255, 0.05);
             color: white;
             border-left-color: var(--lba-red);
@@ -153,6 +150,7 @@
             padding: 10px 20px;
             border-radius: 12px;
             cursor: pointer;
+            transition: all 0.3s;
         }
         
         .user-info:hover {
@@ -236,7 +234,7 @@
             font-weight: 500;
         }
         
-        /* Business Profile */
+        /* Business Profile Card */
         .business-profile-card {
             background: white;
             padding: 30px;
@@ -366,31 +364,55 @@
             line-height: 1.5;
         }
         
+        /* Content Sections */
+        .content-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            margin-top: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-header h2 {
+            font-size: 22px;
+            color: var(--lba-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
         /* Tables */
         .data-table-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            margin-top: 20px;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
         }
         
         .data-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 800px;
         }
         
         .data-table th {
-            text-align: left;
-            padding: 20px 25px;
-            background: var(--lba-light);
+            padding: 15px 20px;
+            background: #f8fafc;
             font-weight: 600;
             color: var(--lba-dark);
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
         }
         
         .data-table td {
-            padding: 15px 25px;
-            border-bottom: 1px solid var(--lba-light);
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
         }
         
         .data-table tr:last-child td {
@@ -410,6 +432,7 @@
         }
         
         .status-draft { background: #f1f5f9; color: #475569; }
+        .status-pending { background: #dbeafe; color: #1d4ed8; }
         .status-submitted { background: #dbeafe; color: #1d4ed8; }
         .status-under_review { background: #fed7aa; color: #9a3412; }
         .status-shortlisted { background: #c7d2fe; color: #3730a3; }
@@ -454,34 +477,10 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
         
-        /* Content Sections */
-        .content-section {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
-            margin-top: 30px;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-        
-        .section-header h2 {
-            font-size: 22px;
-            color: var(--lba-dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
         /* Documents Grid */
         .documents-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
         
@@ -493,11 +492,13 @@
             align-items: center;
             gap: 15px;
             transition: all 0.3s;
+            border: 1px solid #e2e8f0;
         }
         
         .document-card:hover {
             background: #e2e8f0;
             transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         .document-icon {
@@ -510,37 +511,48 @@
             justify-content: center;
             font-size: 24px;
             color: var(--lba-red);
+            flex-shrink: 0;
         }
         
         .document-info {
             flex: 1;
+            min-width: 0;
         }
         
         .document-name {
             font-weight: 600;
             margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .document-date {
-            font-size: 12px;
+            font-size: 11px;
             color: #64748b;
         }
         
         .document-actions {
             display: flex;
-            gap: 5px;
+            gap: 8px;
+            flex-shrink: 0;
         }
         
         .document-actions button {
-            background: none;
-            border: none;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            width: 32px;
+            height: 32px;
             cursor: pointer;
             color: #64748b;
-            padding: 5px;
+            transition: all 0.3s;
         }
         
         .document-actions button:hover {
-            color: var(--lba-red);
+            background: var(--lba-red);
+            color: white;
+            border-color: var(--lba-red);
         }
         
         /* Notifications List */
@@ -554,7 +566,7 @@
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             gap: 15px;
-            align-items: center;
+            align-items: flex-start;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -599,89 +611,32 @@
             color: #94a3b8;
         }
         
-        /* Responsive */
-        @media (max-width: 992px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.active {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-            
-            .header {
-                padding: 20px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
         }
         
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .quick-actions {
-                grid-template-columns: 1fr;
-            }
-            
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .data-table {
-                min-width: 600px;
-            }
-            
-            .table-container {
-                overflow-x: auto;
-            }
-            
-            .documents-grid {
-                grid-template-columns: 1fr;
-            }
+        .tab {
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
         }
         
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
+        .tab:hover {
+            background: #f8fafc;
+        }
+        
+        .tab.active {
             background: var(--lba-red);
             color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 20px;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        @media (max-width: 992px) {
-            .menu-toggle {
-                display: flex;
-            }
-        }
-        
-        /* Loading */
-        .loading {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 8px;
-        }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
         }
         
         /* Modal */
@@ -717,11 +672,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .modal-header h2 {
             color: var(--lba-dark);
+            font-size: 24px;
         }
         
         .modal-close {
@@ -730,6 +686,11 @@
             font-size: 24px;
             cursor: pointer;
             color: #64748b;
+            transition: color 0.3s;
+        }
+        
+        .modal-close:hover {
+            color: var(--lba-red);
         }
         
         .form-group {
@@ -760,6 +721,12 @@
             outline: none;
             border-color: var(--lba-blue);
             box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.2);
+        }
+        
+        .form-group input.error,
+        .form-group select.error,
+        .form-group textarea.error {
+            border-color: var(--danger-color);
         }
         
         .form-row {
@@ -824,104 +791,102 @@
             font-size: 13px;
         }
         
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
         /* File Upload */
         .file-upload {
             border: 2px dashed #e2e8f0;
             border-radius: 10px;
-            padding: 30px;
+            padding: 40px 30px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-        }
-        
-        .file-upload:hover {
-            border-color: var(--lba-blue);
             background: #f8fafc;
         }
         
+        .file-upload:hover {
+            border-color: var(--lba-red);
+            background: white;
+        }
+        
         .file-upload i {
-            font-size: 40px;
+            font-size: 48px;
             color: var(--lba-blue);
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         .file-upload p {
             color: #64748b;
+            margin-bottom: 5px;
+        }
+        
+        .file-upload small {
+            color: #94a3b8;
+            font-size: 12px;
         }
         
         .file-info {
             margin-top: 15px;
-            padding: 10px;
+            padding: 15px;
             background: #f8fafc;
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid #e2e8f0;
         }
         
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 9999;
-            animation: slideIn 0.3s;
+        .file-info span {
+            font-weight: 500;
+            color: var(--lba-dark);
+        }
+        
+        /* Logo Upload */
+        .logo-upload {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: 600;
+            gap: 20px;
         }
         
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-        
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-        
-        .tab:hover {
+        .logo-preview {
+            width: 100px;
+            height: 100px;
             background: #f8fafc;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
         }
         
-        .tab.active {
-            background: var(--lba-blue);
-            color: white;
+        .logo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .logo-preview i {
+            font-size: 40px;
+            color: #cbd5e0;
         }
         
         /* Settings */
         .settings-group {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         
         .settings-group h3 {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             color: var(--lba-dark);
+            font-size: 18px;
         }
         
         .settings-item {
-            padding: 15px 0;
+            padding: 20px 0;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
@@ -930,6 +895,24 @@
         
         .settings-item:last-child {
             border-bottom: none;
+        }
+        
+        .settings-item-info {
+            flex: 1;
+        }
+        
+        .settings-item-info strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .settings-item-info p {
+            color: #64748b;
+            font-size: 13px;
+        }
+        
+        .settings-item-action {
+            flex-shrink: 0;
         }
         
         /* Toggle Switch */
@@ -977,6 +960,179 @@
         input:checked + .slider:before {
             transform: translateX(26px);
         }
+        
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .page-btn {
+            padding: 8px 15px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .page-btn:hover,
+        .page-btn.active {
+            background: var(--lba-red);
+            color: white;
+            border-color: var(--lba-red);
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 9999;
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s;
+            border-left: 4px solid;
+            max-width: 400px;
+        }
+        
+        .toast.success { border-left-color: var(--success-color); }
+        .toast.error { border-left-color: var(--danger-color); }
+        .toast.warning { border-left-color: var(--warning-color); }
+        .toast.info { border-left-color: var(--info-color); }
+        
+        .toast.success i { color: var(--success-color); }
+        .toast.error i { color: var(--danger-color); }
+        .toast.warning i { color: var(--warning-color); }
+        .toast.info i { color: var(--info-color); }
+        
+        .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo-upload {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .settings-item {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+        
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: var(--lba-red);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 992px) {
+            .menu-toggle {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1008,6 +1164,7 @@
                 <div class="menu-item" data-page="documents">
                     <i class="fas fa-file-upload"></i>
                     <span>Documents</span>
+                    <span class="badge" id="documentsCount">0</span>
                 </div>
                 
                 <div class="menu-item" data-page="notifications">
@@ -1059,14 +1216,15 @@
                 <div class="business-profile-card">
                     <div class="profile-header">
                         <div class="profile-avatar" id="profileAvatar">
-                            <i class="fas fa-building"></i>
+                            <img id="profileLogoImg" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                            <i class="fas fa-building" id="profileLogoIcon"></i>
                         </div>
                         <div class="profile-info">
                             <h2 id="companyName">Your Company Name</h2>
                             <p id="businessIndustry">Industry • Location</p>
                             <p id="businessContact">Contact: loading...</p>
                             <div id="verificationStatus" class="verification-badge">
-                                Verification Pending
+                                Pending Verification
                             </div>
                         </div>
                     </div>
@@ -1149,7 +1307,7 @@
                         <p>Complete your business profile information</p>
                     </div>
                     
-                    <div class="action-card" onclick="switchPage('documents')">
+                    <div class="action-card" onclick="showUploadModal()">
                         <div class="action-icon">
                             <i class="fas fa-upload"></i>
                         </div>
@@ -1208,8 +1366,9 @@
                     
                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
                         <div style="text-align: center;">
-                            <div style="width: 150px; height: 150px; background: linear-gradient(135deg, var(--lba-red), var(--lba-blue)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 60px; color: white; margin: 0 auto 20px;">
-                                <i class="fas fa-building"></i>
+                            <div class="profile-avatar" style="width: 150px; height: 150px; margin: 0 auto 20px;">
+                                <img id="profilePageLogo" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                                <i class="fas fa-building" id="profilePageLogoIcon"></i>
                             </div>
                             <div id="profileStatusBadge" class="verification-badge" style="margin: 10px 0;">Pending</div>
                             <p><small>Member since <span id="memberSince">2025</span></small></p>
@@ -1234,8 +1393,12 @@
                                     <p style="font-weight: 600;" id="profilePhone">-</p>
                                 </div>
                                 <div>
-                                    <p style="color: #64748b; font-size: 12px;">Business Type</p>
-                                    <p style="font-weight: 600;" id="profileBusinessType">-</p>
+                                    <p style="color: #64748b; font-size: 12px;">Industry Sector</p>
+                                    <p style="font-weight: 600;" id="profileIndustry">-</p>
+                                </div>
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Business Category</p>
+                                    <p style="font-weight: 600;" id="profileCategory">-</p>
                                 </div>
                                 <div>
                                     <p style="color: #64748b; font-size: 12px;">Location</p>
@@ -1245,12 +1408,21 @@
                                     <p style="color: #64748b; font-size: 12px;">Website</p>
                                     <p style="font-weight: 600;" id="profileWebsite">-</p>
                                 </div>
-                                <div>
-                                    <p style="color: #64748b; font-size: 12px;">Profile Completion</p>
-                                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 8px;">
-                                        <div id="profileCompletionBar" style="width: 0%; height: 100%; background: var(--lba-red); border-radius: 4px;"></div>
-                                    </div>
+                                <div style="grid-column: span 2;">
+                                    <p style="color: #64748b; font-size: 12px;">Business Description</p>
+                                    <p style="font-weight: 400;" id="profileDescription">-</p>
                                 </div>
+                                <div style="grid-column: span 2;">
+                                    <p style="color: #64748b; font-size: 12px;">Business Address</p>
+                                    <p style="font-weight: 400;" id="profileAddress">-</p>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 30px;">
+                                <div style="background: #e2e8f0; height: 8px; border-radius: 4px;">
+                                    <div id="profileCompletionBar" style="width: 0%; height: 100%; background: var(--lba-red); border-radius: 4px;"></div>
+                                </div>
+                                <p style="text-align: right; margin-top: 5px; color: #64748b;">Profile Completion: <span id="profileCompletionPercent">0%</span></p>
                             </div>
                         </div>
                     </div>
@@ -1283,6 +1455,7 @@
                                 <tr>
                                     <th>Title</th>
                                     <th>Category</th>
+                                    <th>Year</th>
                                     <th>Status</th>
                                     <th>Submitted</th>
                                     <th>Score</th>
@@ -1291,7 +1464,7 @@
                             </thead>
                             <tbody id="nominationsTableBody">
                                 <tr>
-                                    <td colspan="6" style="text-align: center; padding: 40px;">
+                                    <td colspan="7" style="text-align: center; padding: 40px;">
                                         <i class="fas fa-spinner fa-spin fa-2x"></i>
                                         <p>Loading nominations...</p>
                                     </td>
@@ -1299,6 +1472,8 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <div class="pagination" id="nominationsPagination"></div>
                 </div>
             </div>
             
@@ -1315,6 +1490,8 @@
                     <div class="documents-grid" id="documentsGrid">
                         <!-- Documents will be loaded here -->
                     </div>
+                    
+                    <div class="pagination" id="documentsPagination"></div>
                 </div>
             </div>
             
@@ -1340,80 +1517,221 @@
                     <h2><i class="fas fa-cog"></i> Settings</h2>
                     
                     <div class="settings-group">
-                        <h3>Account Settings</h3>
+                        <h3>Account Security</h3>
                         <div class="settings-item">
-                            <div>
-                                <strong>Email Notifications</strong>
-                                <p style="color: #64748b; font-size: 13px;">Receive email updates about your nominations</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="emailNotifications" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="settings-item">
-                            <div>
-                                <strong>Two-Factor Authentication</strong>
-                                <p style="color: #64748b; font-size: 13px;">Add an extra layer of security</p>
-                            </div>
-                            <button class="btn btn-sm btn-secondary" onclick="showTwoFactorSetup()">Enable</button>
-                        </div>
-                        
-                        <div class="settings-item">
-                            <div>
+                            <div class="settings-item-info">
                                 <strong>Change Password</strong>
-                                <p style="color: #64748b; font-size: 13px;">Update your password regularly</p>
+                                <p>Update your password regularly for security</p>
                             </div>
-                            <button class="btn btn-sm btn-secondary" onclick="showChangePasswordModal()">Change</button>
+                            <div class="settings-item-action">
+                                <button class="btn btn-sm btn-secondary" onclick="showChangePasswordModal()">
+                                    Change Password
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <strong>Two-Factor Authentication</strong>
+                                <p>Add an extra layer of security to your account</p>
+                            </div>
+                            <div class="settings-item-action">
+                                <button class="btn btn-sm btn-secondary" onclick="showTwoFactorSetup()">
+                                    Enable
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="settings-group">
-                        <h3>Business Preferences</h3>
+                        <h3>Notification Preferences</h3>
                         <div class="settings-item">
-                            <div>
-                                <strong>Language</strong>
-                                <p style="color: #64748b; font-size: 13px;">Select your preferred language</p>
+                            <div class="settings-item-info">
+                                <strong>Email Notifications</strong>
+                                <p>Receive updates about your nominations</p>
                             </div>
-                            <select style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 5px;">
-                                <option>English</option>
-                                <option>French</option>
-                            </select>
+                            <div class="settings-item-action">
+                                <label class="switch">
+                                    <input type="checkbox" id="emailNotifications" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
                         </div>
                         
                         <div class="settings-item">
-                            <div>
-                                <strong>Time Zone</strong>
-                                <p style="color: #64748b; font-size: 13px;">Set your local time zone</p>
+                            <div class="settings-item-info">
+                                <strong>SMS Notifications</strong>
+                                <p>Get text messages for important updates</p>
                             </div>
-                            <select style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 5px;">
-                                <option>GMT (Monrovia)</option>
-                                <option>UTC</option>
-                            </select>
+                            <div class="settings-item-action">
+                                <label class="switch">
+                                    <input type="checkbox" id="smsNotifications">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div class="settings-item-info">
+                                <strong>Browser Notifications</strong>
+                                <p>Receive notifications in your browser</p>
+                            </div>
+                            <div class="settings-item-action">
+                                <label class="switch">
+                                    <input type="checkbox" id="browserNotifications" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="settings-group">
                         <h3>Data Management</h3>
                         <div class="settings-item">
-                            <div>
-                                <strong>Export Data</strong>
-                                <p style="color: #64748b; font-size: 13px;">Download your business data</p>
+                            <div class="settings-item-info">
+                                <strong>Export Business Data</strong>
+                                <p>Download all your business information</p>
                             </div>
-                            <button class="btn btn-sm btn-success" onclick="exportBusinessData()">Export</button>
+                            <div class="settings-item-action">
+                                <button class="btn btn-sm btn-success" onclick="exportBusinessData()">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="settings-item">
-                            <div>
+                            <div class="settings-item-info">
                                 <strong>Delete Account</strong>
-                                <p style="color: #64748b; font-size: 13px;">Permanently delete your account</p>
+                                <p>Permanently delete your account and all data</p>
                             </div>
-                            <button class="btn btn-sm btn-danger" onclick="showDeleteAccountModal()">Delete</button>
+                            <div class="settings-item-action">
+                                <button class="btn btn-sm btn-danger" onclick="showDeleteAccountModal()">
+                                    Delete Account
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- Profile Edit Modal -->
+    <div class="modal" id="profileEditModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Business Profile</h2>
+                <button class="modal-close" onclick="hideModal('profileEditModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="profileEditForm">
+                <div class="form-group">
+                    <label for="editBusinessName">Business Name *</label>
+                    <input type="text" id="editBusinessName" required maxlength="200">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editBusinessCategory">Business Category</label>
+                    <select id="editBusinessCategory">
+                        <option value="">Select Category</option>
+                        <option value="Startup">Startup</option>
+                        <option value="SME">SME</option>
+                        <option value="Enterprise">Enterprise</option>
+                        <option value="Nonprofit">Nonprofit</option>
+                        <option value="Social Enterprise">Social Enterprise</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editIndustry">Industry Sector</label>
+                    <select id="editIndustry">
+                        <option value="">Select Industry</option>
+                        <option value="Agriculture">Agriculture</option>
+                        <option value="Mining">Mining & Extractives</option>
+                        <option value="Oil & Gas">Oil & Gas</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Construction">Construction & Real Estate</option>
+                        <option value="Energy">Energy & Utilities</option>
+                        <option value="Transportation">Transportation & Logistics</option>
+                        <option value="Technology">Information & Communications Technology</option>
+                        <option value="Finance">Financial Services</option>
+                        <option value="Education">Education</option>
+                        <option value="Health">Health</option>
+                        <option value="Tourism">Tourism & Hospitality</option>
+                        <option value="Trade">Trade & Commerce</option>
+                        <option value="Media">Media & Communications</option>
+                        <option value="Arts">Arts & Culture</option>
+                        <option value="Sports">Sports & Recreation</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editContactName">Contact Person Name</label>
+                    <input type="text" id="editContactName" maxlength="100">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editPhone">Phone Number</label>
+                        <input type="tel" id="editPhone" placeholder="+231 XXX XXX XXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail">Email Address</label>
+                        <input type="email" id="editEmail" readonly disabled>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editLocation">Location</label>
+                        <input type="text" id="editLocation" placeholder="City, County">
+                    </div>
+                    <div class="form-group">
+                        <label for="editWebsite">Website</label>
+                        <input type="url" id="editWebsite" placeholder="https://">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editAddress">Business Address</label>
+                    <textarea id="editAddress" rows="2" maxlength="500"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editDescription">Business Description</label>
+                    <textarea id="editDescription" rows="4" maxlength="2000" placeholder="Tell us about your business..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Business Logo</label>
+                    <div class="logo-upload">
+                        <div class="logo-preview" id="logoPreview">
+                            <img id="logoPreviewImg" style="display: none;">
+                            <i class="fas fa-building" id="logoPreviewIcon"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <input type="file" id="logoUpload" accept="image/jpeg,image/png,image/gif,image/webp">
+                            <p style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                                Allowed: JPG, PNG, GIF, WEBP. Max size: 5MB
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('profileEditModal')" style="flex: 1;">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;" id="profileSaveBtn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -1431,13 +1749,7 @@
                 <input type="hidden" id="nominationId">
                 
                 <div class="form-group">
-                    <label for="nominationTitle">Nomination Title *</label>
-                    <input type="text" id="nominationTitle" required 
-                           placeholder="e.g., Best Technology Company 2025">
-                </div>
-                
-                <div class="form-group">
-                    <label for="nominationCategory">Category *</label>
+                    <label for="nominationCategory">Award Category *</label>
                     <select id="nominationCategory" required>
                         <option value="">Select Category</option>
                         <option value="Technology">Technology</option>
@@ -1450,19 +1762,47 @@
                         <option value="Energy">Energy</option>
                         <option value="Construction">Construction</option>
                         <option value="Transportation">Transportation</option>
+                        <option value="Innovation">Innovation</option>
+                        <option value="Sustainability">Sustainability</option>
+                        <option value="Customer Service">Customer Service</option>
+                        <option value="Export">Export Excellence</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="nominationDescription">Description *</label>
-                    <textarea id="nominationDescription" rows="4" required
-                              placeholder="Describe your business achievements and why you deserve this award..."></textarea>
+                    <label for="nominationTitle">Nomination Title *</label>
+                    <input type="text" id="nominationTitle" required maxlength="200"
+                           placeholder="e.g., Best Technology Innovation 2025">
                 </div>
                 
                 <div class="form-group">
-                    <label for="nominationAchievements">Key Achievements (one per line)</label>
+                    <label for="nominationYear">Year of Nomination</label>
+                    <select id="nominationYear">
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nominationDescription">Business Achievements *</label>
+                    <textarea id="nominationDescription" rows="4" required
+                              placeholder="Describe your key achievements and why you deserve this award..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nominationAchievements">Supporting Details (one per line)</label>
                     <textarea id="nominationAchievements" rows="3"
-                              placeholder="Achievement 1&#10;Achievement 2&#10;Achievement 3"></textarea>
+                              placeholder="Detail 1&#10;Detail 2&#10;Detail 3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nominationDocument">Supporting Document (optional)</label>
+                    <select id="nominationDocument">
+                        <option value="">Select a document</option>
+                    </select>
+                    <p style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                        <i class="fas fa-info-circle"></i> Upload documents first in the Documents section
+                    </p>
                 </div>
                 
                 <div class="form-group">
@@ -1471,6 +1811,9 @@
                         <label><input type="radio" name="nominationStatus" value="draft" checked> Save as Draft</label>
                         <label><input type="radio" name="nominationStatus" value="submitted"> Submit Now</label>
                     </div>
+                    <p style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                        <i class="fas fa-info-circle"></i> Once submitted, nominations cannot be edited
+                    </p>
                 </div>
                 
                 <div style="display: flex; gap: 10px;">
@@ -1479,67 +1822,6 @@
                     </button>
                     <button type="submit" class="btn btn-primary" style="flex: 2;" id="nominationSubmitBtn">
                         <i class="fas fa-paper-plane"></i> Save Nomination
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Profile Edit Modal -->
-    <div class="modal" id="profileEditModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Edit Business Profile</h2>
-                <button class="modal-close" onclick="hideModal('profileEditModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form id="profileEditForm">
-                <div class="form-group">
-                    <label for="editBusinessName">Business Name *</label>
-                    <input type="text" id="editBusinessName" required>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="editContactName">Contact Person</label>
-                        <input type="text" id="editContactName">
-                    </div>
-                    <div class="form-group">
-                        <label for="editPhone">Phone Number</label>
-                        <input type="tel" id="editPhone" placeholder="+231 XXX XXX XXX">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="editBusinessType">Business Type</label>
-                        <select id="editBusinessType">
-                            <option value="">Select Type</option>
-                            <option value="Startup">Startup</option>
-                            <option value="SME">SME</option>
-                            <option value="Enterprise">Enterprise</option>
-                            <option value="Nonprofit">Nonprofit</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editLocation">Location</label>
-                        <input type="text" id="editLocation" placeholder="City, County">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="editWebsite">Website</label>
-                    <input type="url" id="editWebsite" placeholder="https://">
-                </div>
-                
-                <div style="display: flex; gap: 10px;">
-                    <button type="button" class="btn btn-secondary" onclick="hideModal('profileEditModal')" style="flex: 1;">
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary" style="flex: 2;">
-                        <i class="fas fa-save"></i> Save Changes
                     </button>
                 </div>
             </form>
@@ -1559,7 +1841,8 @@
             <form id="uploadForm">
                 <div class="form-group">
                     <label for="documentName">Document Name *</label>
-                    <input type="text" id="documentName" required placeholder="e.g., Business Registration Certificate">
+                    <input type="text" id="documentName" required maxlength="100" 
+                           placeholder="e.g., Business Registration Certificate">
                 </div>
                 
                 <div class="form-group">
@@ -1569,15 +1852,20 @@
                         <option value="tax">Tax Clearance</option>
                         <option value="license">Business License</option>
                         <option value="financial">Financial Statement</option>
+                        <option value="certificate">Award Certificate</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
                 
-                <div class="file-upload" id="fileDropZone">
-                    <input type="file" id="documentFile" style="display: none;" accept=".pdf,.doc,.docx,.jpg,.png">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Drag & drop or click to upload</p>
-                    <small style="color: #64748b;">Supported: PDF, DOC, JPG, PNG (Max 10MB)</small>
+                <div class="form-group">
+                    <label>File Upload *</label>
+                    <div class="file-upload" id="fileDropZone">
+                        <input type="file" id="documentFile" style="display: none;" 
+                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag & drop or click to upload</p>
+                        <small>Supported: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</small>
+                    </div>
                 </div>
                 
                 <div id="fileInfo" class="file-info" style="display: none;">
@@ -1587,7 +1875,7 @@
                     </button>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 20px;" id="uploadBtn">
                     <i class="fas fa-upload"></i> Upload Document
                 </button>
             </form>
@@ -1607,12 +1895,13 @@
             <form id="passwordForm">
                 <div class="form-group">
                     <label for="currentPassword">Current Password *</label>
-                    <input type="password" id="currentPassword" required>
+                    <input type="password" id="currentPassword" required minlength="6">
                 </div>
                 
                 <div class="form-group">
                     <label for="newPassword">New Password *</label>
                     <input type="password" id="newPassword" required minlength="6">
+                    <p style="font-size: 12px; color: #64748b;">Minimum 6 characters</p>
                 </div>
                 
                 <div class="form-group">
@@ -1620,10 +1909,31 @@
                     <input type="password" id="confirmPassword" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-block">
+                <div class="error-message" id="passwordError" style="color: var(--danger-color); margin-bottom: 15px; display: none;"></div>
+                
+                <button type="submit" class="btn btn-primary btn-block" id="passwordSaveBtn">
                     <i class="fas fa-key"></i> Update Password
                 </button>
             </form>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="confirmTitle">Confirm Action</h2>
+                <button class="modal-close" onclick="hideModal('confirmModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Are you sure you want to proceed?</p>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="hideModal('confirmModal')" style="flex: 1;">Cancel</button>
+                    <button class="btn btn-danger" id="confirmActionBtn" style="flex: 1;">Confirm</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1632,7 +1942,15 @@
         // CONFIGURATION
         // ============================================
         const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
-        const SESSION_TIMEOUT = 60; // minutes
+        const SESSION_TIMEOUT = 60 * 60 * 1000; // 60 minutes
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+        const ALLOWED_FILE_TYPES = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'image/jpeg',
+            'image/png'
+        ];
 
         // ============================================
         // STATE MANAGEMENT
@@ -1640,11 +1958,32 @@
         let appState = {
             user: null,
             profile: null,
-            nominations: [],
-            documents: [],
-            notifications: [],
+            nominations: {
+                data: [],
+                currentPage: 1,
+                totalPages: 1,
+                total: 0,
+                filter: 'all'
+            },
+            documents: {
+                data: [],
+                currentPage: 1,
+                totalPages: 1,
+                total: 0
+            },
+            notifications: {
+                data: [],
+                unreadCount: 0
+            },
+            settings: {
+                emailNotifications: true,
+                smsNotifications: false,
+                browserNotifications: true
+            },
             currentPage: 'dashboard',
-            nominationFilter: 'all'
+            loading: false,
+            sessionTimer: null,
+            lastActivity: Date.now()
         };
 
         // ============================================
@@ -1654,27 +1993,29 @@
             console.log('🏢 Business Dashboard Initializing...');
             
             // Check authentication
-            if (!checkAuth()) {
+            const authenticated = await checkAuth();
+            if (!authenticated) {
                 window.location.href = '../login.html';
                 return;
             }
+            
+            // Load saved settings
+            loadSettings();
             
             // Setup UI
             setupUI();
             
             // Load all data
-            await Promise.all([
-                loadProfile(),
-                loadNominations(),
-                loadDocuments(),
-                loadNotifications()
-            ]);
+            await loadAllData();
             
             // Setup navigation
             setupNavigation();
             
-            // Start session timer
-            startSessionTimer();
+            // Start session monitoring
+            startSessionMonitoring();
+            
+            // Setup file upload handlers
+            setupFileUpload();
             
             console.log('✅ Business Dashboard Ready');
         });
@@ -1682,32 +2023,60 @@
         // ============================================
         // AUTHENTICATION
         // ============================================
-        function checkAuth() {
+        async function checkAuth() {
             const token = localStorage.getItem('lba_auth_token');
             const userRole = localStorage.getItem('lba_user_role');
             const userDataStr = localStorage.getItem('lba_user_data');
             
             if (!token || userRole !== 'business' || !userDataStr) {
-                console.warn('⚠️ Not authenticated or not business user');
                 return false;
             }
             
             try {
-                appState.user = JSON.parse(userDataStr);
-                return true;
-            } catch (e) {
-                console.error('❌ Invalid user data');
+                // Verify token with backend
+                const response = await fetch(`${BACKEND_URL}/api/auth/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Token invalid');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    appState.user = data.user || JSON.parse(userDataStr);
+                    
+                    // Update local storage with latest data
+                    if (data.user) {
+                        localStorage.setItem('lba_user_data', JSON.stringify(data.user));
+                    }
+                    
+                    return true;
+                }
+                
+                return false;
+            } catch (error) {
+                console.error('Auth check failed:', error);
                 return false;
             }
         }
 
+        function refreshToken() {
+            // Token refresh logic - can be implemented if backend supports refresh tokens
+        }
+
         function setupUI() {
             // Set user information
-            document.getElementById('businessName').textContent = appState.user.name || 'Business';
-            document.getElementById('companyName').textContent = appState.user.company || appState.user.name || 'Your Company';
-            document.getElementById('userEmail').textContent = appState.user.email || '';
-            document.getElementById('businessContact').textContent = `Contact: ${appState.user.phone || 'Not provided'}`;
-            document.getElementById('userAvatar').textContent = appState.user.name?.charAt(0) || 'B';
+            document.getElementById('businessName').textContent = appState.user?.name || 'Business';
+            document.getElementById('companyName').textContent = appState.user?.company || appState.user?.name || 'Your Company';
+            document.getElementById('userEmail').textContent = appState.user?.email || '';
+            document.getElementById('businessContact').textContent = `Contact: ${appState.user?.phone || 'Not provided'}`;
+            document.getElementById('userAvatar').textContent = appState.user?.name?.charAt(0) || 'B';
             
             // Mobile menu toggle
             const menuToggle = document.getElementById('menuToggle');
@@ -1737,6 +2106,13 @@
                     sidebar.classList.remove('active');
                 }
             });
+            
+            // Track user activity
+            ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+                document.addEventListener(event, () => {
+                    appState.lastActivity = Date.now();
+                });
+            });
         }
 
         function setupNavigation() {
@@ -1753,10 +2129,61 @@
                 tab.addEventListener('click', (e) => {
                     document.querySelectorAll('[data-nomination-status]').forEach(t => t.classList.remove('active'));
                     e.currentTarget.classList.add('active');
-                    appState.nominationFilter = e.currentTarget.dataset.nominationStatus;
-                    displayNominations();
+                    appState.nominations.filter = e.currentTarget.dataset.nominationStatus;
+                    appState.nominations.currentPage = 1;
+                    loadNominations();
                 });
             });
+        }
+
+        function setupFileUpload() {
+            const dropZone = document.getElementById('fileDropZone');
+            const fileInput = document.getElementById('documentFile');
+            
+            dropZone.addEventListener('click', () => fileInput.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.style.background = '#f8fafc';
+            });
+            
+            dropZone.addEventListener('dragleave', (e) => {
+                dropZone.style.background = '';
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.background = '';
+                
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileSelect(file);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFileSelect(file);
+            });
+        }
+
+        // ============================================
+        // SESSION MANAGEMENT
+        // ============================================
+        function startSessionMonitoring() {
+            // Check session every minute
+            appState.sessionTimer = setInterval(() => {
+                const inactiveTime = Date.now() - appState.lastActivity;
+                
+                // Warn at 50 minutes
+                if (inactiveTime > 50 * 60 * 1000 && inactiveTime < 55 * 60 * 1000) {
+                    showToast('Your session will expire in 10 minutes', 'warning');
+                }
+                
+                // Logout at 60 minutes
+                if (inactiveTime > SESSION_TIMEOUT) {
+                    showToast('Session expired. Please login again.', 'error');
+                    logout();
+                }
+            }, 60000);
         }
 
         // ============================================
@@ -1785,40 +2212,91 @@
             document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
             
             appState.currentPage = page;
+            
+            // Load page-specific data if needed
+            if (page === 'nominations' && appState.nominations.data.length === 0) {
+                loadNominations();
+            } else if (page === 'documents' && appState.documents.data.length === 0) {
+                loadDocuments();
+            } else if (page === 'notifications') {
+                loadNotifications();
+            }
         }
 
         // ============================================
         // API HELPER FUNCTIONS
         // ============================================
-        async function fetchWithAuth(endpoint, options = {}) {
+        async function apiRequest(endpoint, options = {}) {
             const token = localStorage.getItem('lba_auth_token');
             
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            // For FormData, don't set Content-Type
+            if (options.body instanceof FormData) {
+                delete defaultOptions.headers['Content-Type'];
+            }
+            
+            const fetchOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...options.headers
+                }
+            };
+            
             try {
-                const response = await fetch(`${BACKEND_URL}${endpoint}`, {
-                    ...options,
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        ...options.headers
-                    }
-                });
+                const response = await fetch(`${BACKEND_URL}${endpoint}`, fetchOptions);
                 
                 if (response.status === 401) {
-                    showNotification('Session expired. Please login again.', 'error');
+                    showToast('Session expired. Please login again.', 'error');
                     setTimeout(logout, 2000);
                     throw new Error('Unauthorized');
                 }
                 
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.message || `HTTP ${response.status}`);
+                if (response.status === 403) {
+                    showToast('Access denied', 'error');
+                    throw new Error('Forbidden');
                 }
                 
-                return await response.json();
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+                
             } catch (error) {
-                console.error('❌ API Error:', error);
+                console.error('API Error:', error);
                 throw error;
+            }
+        }
+
+        // ============================================
+        // LOAD ALL DATA
+        // ============================================
+        async function loadAllData() {
+            showLoading();
+            
+            try {
+                await Promise.all([
+                    loadProfile(),
+                    loadNominations(),
+                    loadDocuments(),
+                    loadNotifications()
+                ]);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showToast('Some data could not be loaded', 'warning');
+            } finally {
+                hideLoading();
             }
         }
 
@@ -1827,14 +2305,13 @@
         // ============================================
         async function loadProfile() {
             try {
-                const data = await fetchWithAuth('/api/business/profile');
+                const data = await apiRequest('/api/business/profile');
                 if (data.success) {
-                    appState.profile = data.profile;
+                    appState.profile = data.profile || data.business || {};
                     updateProfileDisplay();
                 }
             } catch (error) {
-                console.error('❌ Profile load error:', error);
-                loadMockProfile();
+                console.error('Profile load error:', error);
             }
         }
 
@@ -1842,9 +2319,9 @@
             const profile = appState.profile || {};
             
             // Update dashboard
-            document.getElementById('companyName').textContent = profile.business_name || 'Your Company';
+            document.getElementById('companyName').textContent = profile.business_name || profile.name || 'Your Company';
             document.getElementById('businessIndustry').textContent = 
-                `${profile.business_type || 'Industry'} • ${profile.location || 'Location'}`;
+                `${profile.industry || profile.business_type || 'Industry'} • ${profile.location || 'Location'}`;
             document.getElementById('businessContact').textContent = `Contact: ${profile.contact_name || profile.phone || 'Not provided'}`;
             
             // Update verification status
@@ -1855,28 +2332,46 @@
             } else if (profile.status === 'pending') {
                 verificationEl.textContent = '⏳ Pending Verification';
                 verificationEl.style.background = '#F59E0B';
+            } else if (profile.status === 'approved') {
+                verificationEl.textContent = '✓ Approved';
+                verificationEl.style.background = '#10B981';
             } else {
                 verificationEl.textContent = '✗ Not Verified';
                 verificationEl.style.background = '#EF4444';
             }
             
             // Update profile page
-            document.getElementById('profileBusinessName').textContent = profile.business_name || '-';
-            document.getElementById('profileEmail').textContent = appState.user.email || '-';
+            document.getElementById('profileBusinessName').textContent = profile.business_name || profile.name || '-';
+            document.getElementById('profileEmail').textContent = appState.user?.email || profile.email || '-';
             document.getElementById('profileContactName').textContent = profile.contact_name || '-';
             document.getElementById('profilePhone').textContent = profile.phone || '-';
-            document.getElementById('profileBusinessType').textContent = profile.business_type || '-';
+            document.getElementById('profileIndustry').textContent = profile.industry || profile.business_type || '-';
+            document.getElementById('profileCategory').textContent = profile.business_category || '-';
             document.getElementById('profileLocation').textContent = profile.location || '-';
             document.getElementById('profileWebsite').textContent = profile.website || '-';
+            document.getElementById('profileDescription').textContent = profile.description || profile.business_description || '-';
+            document.getElementById('profileAddress').textContent = profile.address || profile.business_address || '-';
+            
+            // Update logo
+            if (profile.logo) {
+                document.getElementById('profileLogoImg').src = profile.logo;
+                document.getElementById('profileLogoImg').style.display = 'block';
+                document.getElementById('profileLogoIcon').style.display = 'none';
+                
+                document.getElementById('profilePageLogo').src = profile.logo;
+                document.getElementById('profilePageLogo').style.display = 'block';
+                document.getElementById('profilePageLogoIcon').style.display = 'none';
+            }
             
             // Calculate profile completion
             const completion = calculateProfileCompletion(profile);
             document.getElementById('profileCompletion').textContent = completion + '%';
             document.getElementById('profileCompletionBar').style.width = completion + '%';
+            document.getElementById('profileCompletionPercent').textContent = completion + '%';
             
             // Member since
-            if (profile.member_since) {
-                document.getElementById('memberSince').textContent = new Date(profile.member_since).getFullYear();
+            if (profile.created_at) {
+                document.getElementById('memberSince').textContent = new Date(profile.created_at).getFullYear();
             }
             
             // Status badge in profile page
@@ -1887,6 +2382,9 @@
             } else if (profile.status === 'pending') {
                 statusBadge.textContent = '⏳ Pending Verification';
                 statusBadge.style.background = '#F59E0B';
+            } else if (profile.status === 'approved') {
+                statusBadge.textContent = '✓ Approved';
+                statusBadge.style.background = '#10B981';
             } else {
                 statusBadge.textContent = '✗ Not Verified';
                 statusBadge.style.background = '#EF4444';
@@ -1894,24 +2392,49 @@
         }
 
         function calculateProfileCompletion(profile) {
-            let completed = 0;
-            const fields = ['business_name', 'contact_name', 'phone', 'business_type', 'location', 'website'];
+            const requiredFields = [
+                'business_name', 'name',
+                'contact_name',
+                'phone',
+                'industry', 'business_type',
+                'location',
+                'description', 'business_description',
+                'address', 'business_address'
+            ];
             
-            fields.forEach(field => {
+            let completed = 0;
+            requiredFields.forEach(field => {
                 if (profile[field]) completed++;
             });
             
-            return Math.round((completed / fields.length) * 100);
+            const percentage = Math.round((completed / requiredFields.length) * 100);
+            return Math.min(100, percentage);
         }
 
         function showProfileModal() {
             // Pre-fill form
-            document.getElementById('editBusinessName').value = appState.profile?.business_name || '';
-            document.getElementById('editContactName').value = appState.profile?.contact_name || '';
-            document.getElementById('editPhone').value = appState.profile?.phone || '';
-            document.getElementById('editBusinessType').value = appState.profile?.business_type || '';
-            document.getElementById('editLocation').value = appState.profile?.location || '';
-            document.getElementById('editWebsite').value = appState.profile?.website || '';
+            const profile = appState.profile || {};
+            
+            document.getElementById('editBusinessName').value = profile.business_name || profile.name || '';
+            document.getElementById('editBusinessCategory').value = profile.business_category || '';
+            document.getElementById('editIndustry').value = profile.industry || profile.business_type || '';
+            document.getElementById('editContactName').value = profile.contact_name || '';
+            document.getElementById('editPhone').value = profile.phone || '';
+            document.getElementById('editEmail').value = appState.user?.email || profile.email || '';
+            document.getElementById('editLocation').value = profile.location || '';
+            document.getElementById('editWebsite').value = profile.website || '';
+            document.getElementById('editAddress').value = profile.address || profile.business_address || '';
+            document.getElementById('editDescription').value = profile.description || profile.business_description || '';
+            
+            // Logo preview
+            if (profile.logo) {
+                document.getElementById('logoPreviewImg').src = profile.logo;
+                document.getElementById('logoPreviewImg').style.display = 'block';
+                document.getElementById('logoPreviewIcon').style.display = 'none';
+            } else {
+                document.getElementById('logoPreviewImg').style.display = 'none';
+                document.getElementById('logoPreviewIcon').style.display = 'block';
+            }
             
             document.getElementById('profileEditModal').classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1920,92 +2443,142 @@
         document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const submitBtn = document.getElementById('profileSaveBtn');
             const originalText = submitBtn.innerHTML;
             
             try {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 submitBtn.disabled = true;
                 
-                const profileData = {
-                    business_name: document.getElementById('editBusinessName').value,
-                    contact_name: document.getElementById('editContactName').value,
-                    phone: document.getElementById('editPhone').value,
-                    business_type: document.getElementById('editBusinessType').value,
-                    location: document.getElementById('editLocation').value,
-                    website: document.getElementById('editWebsite').value
-                };
+                // Validate
+                const businessName = document.getElementById('editBusinessName').value.trim();
+                if (!businessName) {
+                    showToast('Business name is required', 'error');
+                    return;
+                }
                 
-                const response = await fetchWithAuth('/api/business/profile', {
+                const formData = new FormData();
+                
+                // Add text fields
+                formData.append('business_name', businessName);
+                formData.append('business_category', document.getElementById('editBusinessCategory').value);
+                formData.append('industry', document.getElementById('editIndustry').value);
+                formData.append('contact_name', document.getElementById('editContactName').value);
+                formData.append('phone', document.getElementById('editPhone').value);
+                formData.append('location', document.getElementById('editLocation').value);
+                formData.append('website', document.getElementById('editWebsite').value);
+                formData.append('address', document.getElementById('editAddress').value);
+                formData.append('description', document.getElementById('editDescription').value);
+                
+                // Add logo if uploaded
+                const logoFile = document.getElementById('logoUpload').files[0];
+                if (logoFile) {
+                    formData.append('logo', logoFile);
+                }
+                
+                const response = await apiRequest('/api/business/profile', {
                     method: 'PUT',
-                    body: JSON.stringify(profileData)
+                    body: formData
                 });
                 
                 if (response.success) {
-                    showNotification('Profile updated successfully!', 'success');
+                    showToast('Profile updated successfully!', 'success');
                     hideModal('profileEditModal');
                     
                     // Update local state
-                    appState.profile = { ...appState.profile, ...profileData };
-                    updateProfileDisplay();
+                    await loadProfile();
                     
                     // Update local storage
                     const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
-                    Object.assign(userData, profileData);
+                    userData.name = businessName;
                     localStorage.setItem('lba_user_data', JSON.stringify(userData));
                 }
             } catch (error) {
-                showNotification('Failed to update profile: ' + error.message, 'error');
+                showToast(error.message || 'Failed to update profile', 'error');
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         });
 
+        // Logo preview
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showToast('Please select an image file', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                // Validate file size
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('Image must be less than 5MB', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('logoPreviewImg').src = e.target.result;
+                    document.getElementById('logoPreviewImg').style.display = 'block';
+                    document.getElementById('logoPreviewIcon').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         // ============================================
-        // NOMINATION FUNCTIONS
+        // NOMINATIONS FUNCTIONS
         // ============================================
         async function loadNominations() {
             try {
-                const data = await fetchWithAuth('/api/business/nominations?limit=100');
+                const page = appState.nominations.currentPage;
+                const filter = appState.nominations.filter !== 'all' ? `&status=${appState.nominations.filter}` : '';
+                
+                const data = await apiRequest(`/api/business/nominations?page=${page}&limit=10${filter}`);
+                
                 if (data.success) {
-                    appState.nominations = data.nominations || [];
+                    appState.nominations.data = data.nominations || data.data || [];
+                    appState.nominations.total = data.total || data.pagination?.total || 0;
+                    appState.nominations.totalPages = data.pages || data.pagination?.pages || 1;
+                    
                     updateNominationsCount();
                     displayNominations();
-                    displayRecentNominations();
+                    updateNominationsPagination();
                 }
             } catch (error) {
-                console.error('❌ Nominations load error:', error);
-                loadMockNominations();
+                console.error('Nominations load error:', error);
+                showToast('Could not load nominations', 'warning');
             }
         }
 
         function updateNominationsCount() {
+            const nominations = appState.nominations.data;
+            
             const counts = {
-                total: appState.nominations.length,
-                pending: appState.nominations.filter(n => ['submitted', 'under_review'].includes(n.status)).length,
-                approved: appState.nominations.filter(n => n.status === 'approved' || n.status === 'winner').length
+                total: nominations.length,
+                pending: nominations.filter(n => ['submitted', 'under_review'].includes(n.status)).length,
+                approved: nominations.filter(n => n.status === 'approved' || n.status === 'winner').length,
+                winners: nominations.filter(n => n.status === 'winner').length
             };
             
-            document.getElementById('nominationsCount').textContent = counts.total;
+            document.getElementById('nominationsCount').textContent = appState.nominations.total;
             document.getElementById('pendingNominations').textContent = counts.pending;
             document.getElementById('approvedNominations').textContent = counts.approved;
             document.getElementById('activeNominations').textContent = counts.pending;
-            document.getElementById('totalAwards').textContent = appState.nominations.filter(n => n.status === 'winner').length;
+            document.getElementById('totalAwards').textContent = counts.winners;
         }
 
         function displayNominations() {
             const tbody = document.getElementById('nominationsTableBody');
+            const nominations = appState.nominations.data;
             
-            let filtered = appState.nominations;
-            if (appState.nominationFilter !== 'all') {
-                filtered = filtered.filter(n => n.status === appState.nominationFilter);
-            }
-            
-            if (filtered.length === 0) {
+            if (nominations.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px;">
+                        <td colspan="7" style="text-align: center; padding: 40px;">
                             <i class="fas fa-award" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
                             <p>No nominations found</p>
                             <button class="btn btn-primary btn-sm" onclick="showNominationModal()" style="margin-top: 10px;">
@@ -2017,10 +2590,11 @@
                 return;
             }
             
-            tbody.innerHTML = filtered.map(n => `
+            tbody.innerHTML = nominations.map(n => `
                 <tr>
                     <td><strong>${n.title || 'Untitled'}</strong></td>
                     <td>${n.category || 'General'}</td>
+                    <td>${n.year || new Date().getFullYear()}</td>
                     <td><span class="status-badge status-${n.status || 'draft'}">${(n.status || 'draft').replace(/_/g, ' ').toUpperCase()}</span></td>
                     <td>${n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Recent'}</td>
                     <td>${n.score ? n.score + '%' : '-'}</td>
@@ -2029,7 +2603,7 @@
                             <button class="action-btn view" onclick="viewNomination('${n._id}')">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            ${n.status === 'draft' ? `
+                            ${['draft', 'submitted'].includes(n.status) ? `
                                 <button class="action-btn edit" onclick="editNomination('${n._id}')">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -2037,20 +2611,18 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             ` : ''}
-                            ${n.status === 'submitted' ? `
-                                <button class="action-btn edit" onclick="editNomination('${n._id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            ` : ''}
                         </div>
                     </td>
                 </tr>
             `).join('');
+            
+            // Update recent nominations on dashboard
+            displayRecentNominations();
         }
 
         function displayRecentNominations() {
             const tbody = document.getElementById('recentNominationsList');
-            const recent = appState.nominations.slice(0, 5);
+            const recent = appState.nominations.data.slice(0, 5);
             
             if (recent.length === 0) {
                 tbody.innerHTML = `
@@ -2082,15 +2654,61 @@
             `).join('');
         }
 
+        function updateNominationsPagination() {
+            const pagination = document.getElementById('nominationsPagination');
+            const { currentPage, totalPages } = appState.nominations;
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changeNominationPage(${currentPage - 1})">
+                <i class="fas fa-chevron-left"></i>
+            </button>`;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changeNominationPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span class="page-btn" disabled>...</span>`;
+                }
+            }
+            
+            // Next button
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changeNominationPage(${currentPage + 1})">
+                <i class="fas fa-chevron-right"></i>
+            </button>`;
+            
+            pagination.innerHTML = html;
+        }
+
+        function changeNominationPage(page) {
+            appState.nominations.currentPage = page;
+            loadNominations();
+        }
+
         function showNominationModal(editId = null) {
+            // Load documents for dropdown
+            loadDocumentsForDropdown();
+            
             if (editId) {
-                const nomination = appState.nominations.find(n => n._id === editId);
+                const nomination = appState.nominations.data.find(n => n._id === editId);
                 if (nomination) {
                     document.getElementById('nominationId').value = nomination._id;
                     document.getElementById('nominationTitle').value = nomination.title || '';
                     document.getElementById('nominationCategory').value = nomination.category || '';
+                    document.getElementById('nominationYear').value = nomination.year || '2025';
                     document.getElementById('nominationDescription').value = nomination.description || '';
                     document.getElementById('nominationAchievements').value = (nomination.achievements || []).join('\n');
+                    
+                    if (nomination.document_id) {
+                        document.getElementById('nominationDocument').value = nomination.document_id;
+                    }
                     
                     const statusRadio = document.querySelector(`input[name="nominationStatus"][value="${nomination.status}"]`);
                     if (statusRadio) statusRadio.checked = true;
@@ -2108,6 +2726,23 @@
             document.body.style.overflow = 'hidden';
         }
 
+        async function loadDocumentsForDropdown() {
+            try {
+                const data = await apiRequest('/api/business/documents?limit=100');
+                if (data.success) {
+                    const documents = data.documents || data.data || [];
+                    const select = document.getElementById('nominationDocument');
+                    
+                    select.innerHTML = '<option value="">Select a document</option>';
+                    documents.forEach(doc => {
+                        select.innerHTML += `<option value="${doc._id}">${doc.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading documents for dropdown:', error);
+            }
+        }
+
         document.getElementById('nominationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -2118,16 +2753,29 @@
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 submitBtn.disabled = true;
                 
+                // Validate
+                const title = document.getElementById('nominationTitle').value.trim();
+                const category = document.getElementById('nominationCategory').value;
+                const description = document.getElementById('nominationDescription').value.trim();
+                
+                if (!title || !category || !description) {
+                    showToast('Please fill in all required fields', 'error');
+                    return;
+                }
+                
+                const achievements = document.getElementById('nominationAchievements').value
+                    .split('\n')
+                    .map(a => a.trim())
+                    .filter(a => a.length > 0);
+                
                 const nominationData = {
-                    title: document.getElementById('nominationTitle').value,
-                    category: document.getElementById('nominationCategory').value,
-                    description: document.getElementById('nominationDescription').value,
-                    achievements: document.getElementById('nominationAchievements').value
-                        .split('\n')
-                        .map(a => a.trim())
-                        .filter(a => a.length > 0),
-                    status: document.querySelector('input[name="nominationStatus"]:checked').value,
-                    year: new Date().getFullYear()
+                    title: title,
+                    category: category,
+                    year: document.getElementById('nominationYear').value,
+                    description: description,
+                    achievements: achievements,
+                    document_id: document.getElementById('nominationDocument').value || null,
+                    status: document.querySelector('input[name="nominationStatus"]:checked').value
                 };
                 
                 const nominationId = document.getElementById('nominationId').value;
@@ -2136,18 +2784,21 @@
                     '/api/business/nominations';
                 const method = nominationId ? 'PUT' : 'POST';
                 
-                const response = await fetchWithAuth(url, {
+                const response = await apiRequest(url, {
                     method,
                     body: JSON.stringify(nominationData)
                 });
                 
                 if (response.success) {
-                    showNotification(nominationId ? 'Nomination updated!' : 'Nomination submitted!', 'success');
+                    showToast(nominationId ? 'Nomination updated!' : 'Nomination submitted!', 'success');
                     hideModal('nominationModal');
+                    
+                    // Reload nominations
+                    appState.nominations.currentPage = 1;
                     await loadNominations();
                 }
             } catch (error) {
-                showNotification('Failed to save nomination: ' + error.message, 'error');
+                showToast(error.message || 'Failed to save nomination', 'error');
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -2155,31 +2806,37 @@
         });
 
         function viewNomination(id) {
-            const nomination = appState.nominations.find(n => n._id === id);
+            const nomination = appState.nominations.data.find(n => n._id === id);
             if (!nomination) return;
             
-            // Show details modal (simplified for now)
-            showNotification(`Viewing: ${nomination.title}`, 'info');
+            // Create a detailed view modal
+            showNominationDetails(nomination);
+        }
+
+        function showNominationDetails(nomination) {
+            // Simple implementation - can be enhanced
+            showToast(`Viewing: ${nomination.title}`, 'info');
         }
 
         function editNomination(id) {
+            if (!confirm('Edit this nomination?')) return;
             showNominationModal(id);
         }
 
         async function deleteNomination(id) {
-            if (!confirm('Are you sure you want to delete this nomination?')) return;
+            if (!confirm('Are you sure you want to delete this nomination? This action cannot be undone.')) return;
             
             try {
-                const response = await fetchWithAuth(`/api/business/nominations/${id}`, {
+                const response = await apiRequest(`/api/business/nominations/${id}`, {
                     method: 'DELETE'
                 });
                 
                 if (response.success) {
-                    showNotification('Nomination deleted', 'success');
+                    showToast('Nomination deleted', 'success');
                     await loadNominations();
                 }
             } catch (error) {
-                showNotification('Failed to delete nomination', 'error');
+                showToast(error.message || 'Failed to delete nomination', 'error');
             }
         }
 
@@ -2188,23 +2845,31 @@
         // ============================================
         async function loadDocuments() {
             try {
-                const data = await fetchWithAuth('/api/business/documents');
+                const page = appState.documents.currentPage;
+                const data = await apiRequest(`/api/business/documents?page=${page}&limit=12`);
+                
                 if (data.success) {
-                    appState.documents = data.documents || [];
+                    appState.documents.data = data.documents || data.data || [];
+                    appState.documents.total = data.total || data.pagination?.total || 0;
+                    appState.documents.totalPages = data.pages || data.pagination?.pages || 1;
+                    
                     displayDocuments();
-                    document.getElementById('documentsUploaded').textContent = appState.documents.length;
-                    document.getElementById('totalDocuments').textContent = appState.documents.length;
+                    updateDocumentsPagination();
+                    
+                    document.getElementById('documentsCount').textContent = appState.documents.total;
+                    document.getElementById('documentsUploaded').textContent = appState.documents.total;
+                    document.getElementById('totalDocuments').textContent = appState.documents.total;
                 }
             } catch (error) {
-                console.error('❌ Documents load error:', error);
-                loadMockDocuments();
+                console.error('Documents load error:', error);
             }
         }
 
         function displayDocuments() {
             const grid = document.getElementById('documentsGrid');
+            const documents = appState.documents.data;
             
-            if (appState.documents.length === 0) {
+            if (documents.length === 0) {
                 grid.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
                         <i class="fas fa-file-upload" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
@@ -2217,22 +2882,62 @@
                 return;
             }
             
-            grid.innerHTML = appState.documents.map(doc => `
-                <div class="document-card">
-                    <div class="document-icon">
-                        <i class="fas fa-file-pdf"></i>
+            grid.innerHTML = documents.map(doc => {
+                const icon = doc.type?.includes('pdf') ? 'fa-file-pdf' : 
+                            doc.type?.includes('image') ? 'fa-file-image' : 'fa-file';
+                
+                return `
+                    <div class="document-card">
+                        <div class="document-icon">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <div class="document-info">
+                            <div class="document-name">${doc.name || 'Document'}</div>
+                            <div class="document-date">Uploaded: ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'Recent'}</div>
+                        </div>
+                        <div class="document-actions">
+                            <button onclick="viewDocument('${doc._id}')"><i class="fas fa-eye"></i></button>
+                            <button onclick="downloadDocument('${doc._id}')"><i class="fas fa-download"></i></button>
+                            <button onclick="deleteDocument('${doc._id}')"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>
-                    <div class="document-info">
-                        <div class="document-name">${doc.name}</div>
-                        <div class="document-date">Uploaded: ${new Date(doc.uploaded_at).toLocaleDateString()}</div>
-                    </div>
-                    <div class="document-actions">
-                        <button onclick="viewDocument('${doc.id}')"><i class="fas fa-eye"></i></button>
-                        <button onclick="downloadDocument('${doc.id}')"><i class="fas fa-download"></i></button>
-                        <button onclick="deleteDocument('${doc.id}')"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        function updateDocumentsPagination() {
+            const pagination = document.getElementById('documentsPagination');
+            const { currentPage, totalPages } = appState.documents;
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage - 1})">
+                <i class="fas fa-chevron-left"></i>
+            </button>`;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changeDocumentsPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span class="page-btn" disabled>...</span>`;
+                }
+            }
+            
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage + 1})">
+                <i class="fas fa-chevron-right"></i>
+            </button>`;
+            
+            pagination.innerHTML = html;
+        }
+
+        function changeDocumentsPage(page) {
+            appState.documents.currentPage = page;
+            loadDocuments();
         }
 
         function showUploadModal() {
@@ -2242,36 +2947,18 @@
             document.body.style.overflow = 'hidden';
         }
 
-        // File upload handling
-        document.getElementById('fileDropZone').addEventListener('click', () => {
-            document.getElementById('documentFile').click();
-        });
-
-        document.getElementById('fileDropZone').addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.currentTarget.style.background = '#f8fafc';
-        });
-
-        document.getElementById('fileDropZone').addEventListener('dragleave', (e) => {
-            e.currentTarget.style.background = '';
-        });
-
-        document.getElementById('fileDropZone').addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.currentTarget.style.background = '';
-            
-            const file = e.dataTransfer.files[0];
-            if (file) handleFileSelect(file);
-        });
-
-        document.getElementById('documentFile').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) handleFileSelect(file);
-        });
-
         function handleFileSelect(file) {
-            if (file.size > 10 * 1024 * 1024) {
-                showNotification('File too large. Max 10MB', 'error');
+            // Validate file type
+            if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+                showToast('File type not allowed. Please upload PDF, DOC, DOCX, JPG, or PNG.', 'error');
+                document.getElementById('documentFile').value = '';
+                return;
+            }
+            
+            // Validate file size
+            if (file.size > MAX_FILE_SIZE) {
+                showToast('File too large. Maximum size is 10MB.', 'error');
+                document.getElementById('documentFile').value = '';
                 return;
             }
             
@@ -2289,35 +2976,43 @@
             
             const file = document.getElementById('documentFile').files[0];
             if (!file) {
-                showNotification('Please select a file', 'error');
+                showToast('Please select a file', 'error');
                 return;
             }
             
-            const formData = new FormData();
-            formData.append('document', file);
-            formData.append('name', document.getElementById('documentName').value);
-            formData.append('type', document.getElementById('documentType').value);
+            const documentName = document.getElementById('documentName').value.trim();
+            if (!documentName) {
+                showToast('Please enter a document name', 'error');
+                return;
+            }
+            
+            const uploadBtn = document.getElementById('uploadBtn');
+            const originalText = uploadBtn.innerHTML;
             
             try {
-                const response = await fetch(`${BACKEND_URL}/api/business/documents`, {
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+                uploadBtn.disabled = true;
+                
+                const formData = new FormData();
+                formData.append('document', file);
+                formData.append('name', documentName);
+                formData.append('type', document.getElementById('documentType').value);
+                
+                const response = await apiRequest('/api/business/documents', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('lba_auth_token')}`
-                    },
                     body: formData
                 });
                 
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification('Document uploaded successfully', 'success');
+                if (response.success) {
+                    showToast('Document uploaded successfully', 'success');
                     hideModal('uploadModal');
                     await loadDocuments();
-                } else {
-                    throw new Error(data.message || 'Upload failed');
                 }
             } catch (error) {
-                showNotification('Upload failed: ' + error.message, 'error');
+                showToast(error.message || 'Upload failed', 'error');
+            } finally {
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
             }
         });
 
@@ -2330,19 +3025,19 @@
         }
 
         async function deleteDocument(id) {
-            if (!confirm('Delete this document?')) return;
+            if (!confirm('Delete this document? This action cannot be undone.')) return;
             
             try {
-                const response = await fetchWithAuth(`/api/business/documents/${id}`, {
+                const response = await apiRequest(`/api/business/documents/${id}`, {
                     method: 'DELETE'
                 });
                 
                 if (response.success) {
-                    showNotification('Document deleted', 'success');
+                    showToast('Document deleted', 'success');
                     await loadDocuments();
                 }
             } catch (error) {
-                showNotification('Failed to delete document', 'error');
+                showToast(error.message || 'Failed to delete document', 'error');
             }
         }
 
@@ -2351,24 +3046,26 @@
         // ============================================
         async function loadNotifications() {
             try {
-                const data = await fetchWithAuth('/api/business/notifications');
+                const data = await apiRequest('/api/business/notifications?limit=50');
+                
                 if (data.success) {
-                    appState.notifications = data.notifications || [];
+                    appState.notifications.data = data.notifications || data.data || [];
+                    appState.notifications.unreadCount = appState.notifications.data.filter(n => !n.read).length;
+                    
                     displayNotifications();
                     
-                    const unread = appState.notifications.filter(n => !n.read).length;
-                    document.getElementById('notificationsCount').textContent = unread;
+                    document.getElementById('notificationsCount').textContent = appState.notifications.unreadCount;
                 }
             } catch (error) {
-                console.error('❌ Notifications load error:', error);
-                loadMockNotifications();
+                console.error('Notifications load error:', error);
             }
         }
 
         function displayNotifications() {
             const list = document.getElementById('notificationsList');
+            const notifications = appState.notifications.data;
             
-            if (appState.notifications.length === 0) {
+            if (notifications.length === 0) {
                 list.innerHTML = `
                     <div style="text-align: center; padding: 60px;">
                         <i class="fas fa-bell-slash" style="font-size: 48px; color: #cbd5e0;"></i>
@@ -2378,7 +3075,7 @@
                 return;
             }
             
-            list.innerHTML = appState.notifications.map(n => {
+            list.innerHTML = notifications.map(n => {
                 const iconColor = n.type === 'success' ? '#10B981' :
                                  n.type === 'warning' ? '#F59E0B' :
                                  n.type === 'error' ? '#EF4444' : '#3B82F6';
@@ -2388,7 +3085,7 @@
                             n.type === 'error' ? 'exclamation-circle' : 'info-circle';
                 
                 return `
-                    <div class="notification-item ${n.read ? '' : 'unread'}" onclick="markNotificationRead('${n.id}')">
+                    <div class="notification-item ${n.read ? '' : 'unread'}" onclick="markNotificationRead('${n._id}')">
                         <div class="notification-icon" style="background: ${iconColor}20; color: ${iconColor};">
                             <i class="fas fa-${icon}"></i>
                         </div>
@@ -2404,10 +3101,13 @@
 
         async function markNotificationRead(id) {
             try {
-                await fetchWithAuth(`/api/business/notifications/${id}/read`, {
+                const response = await apiRequest(`/api/business/notifications/${id}/read`, {
                     method: 'POST'
                 });
-                await loadNotifications();
+                
+                if (response.success) {
+                    await loadNotifications();
+                }
             } catch (error) {
                 console.error('Error marking notification read:', error);
             }
@@ -2415,21 +3115,56 @@
 
         async function markAllNotificationsRead() {
             try {
-                await fetchWithAuth('/api/business/notifications/read-all', {
+                const response = await apiRequest('/api/business/notifications/read-all', {
                     method: 'POST'
                 });
-                await loadNotifications();
-                showNotification('All notifications marked as read', 'success');
+                
+                if (response.success) {
+                    await loadNotifications();
+                    showToast('All notifications marked as read', 'success');
+                }
             } catch (error) {
-                console.error('Error marking all read:', error);
+                showToast('Failed to mark notifications as read', 'error');
             }
         }
 
         // ============================================
         // SETTINGS FUNCTIONS
         // ============================================
+        function loadSettings() {
+            const saved = localStorage.getItem('business_settings');
+            if (saved) {
+                try {
+                    appState.settings = JSON.parse(saved);
+                    
+                    document.getElementById('emailNotifications').checked = appState.settings.emailNotifications;
+                    document.getElementById('smsNotifications').checked = appState.settings.smsNotifications;
+                    document.getElementById('browserNotifications').checked = appState.settings.browserNotifications;
+                } catch (e) {
+                    console.error('Error loading settings:', e);
+                }
+            }
+            
+            // Save settings when changed
+            document.getElementById('emailNotifications').addEventListener('change', saveSettings);
+            document.getElementById('smsNotifications').addEventListener('change', saveSettings);
+            document.getElementById('browserNotifications').addEventListener('change', saveSettings);
+        }
+
+        function saveSettings() {
+            appState.settings = {
+                emailNotifications: document.getElementById('emailNotifications').checked,
+                smsNotifications: document.getElementById('smsNotifications').checked,
+                browserNotifications: document.getElementById('browserNotifications').checked
+            };
+            
+            localStorage.setItem('business_settings', JSON.stringify(appState.settings));
+            showToast('Settings saved', 'success');
+        }
+
         function showChangePasswordModal() {
             document.getElementById('passwordForm').reset();
+            document.getElementById('passwordError').style.display = 'none';
             document.getElementById('passwordModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
@@ -2437,41 +3172,59 @@
         document.getElementById('passwordForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             
             if (newPassword !== confirmPassword) {
-                showNotification('Passwords do not match', 'error');
+                document.getElementById('passwordError').textContent = 'New passwords do not match';
+                document.getElementById('passwordError').style.display = 'block';
                 return;
             }
             
+            if (newPassword.length < 6) {
+                document.getElementById('passwordError').textContent = 'Password must be at least 6 characters';
+                document.getElementById('passwordError').style.display = 'block';
+                return;
+            }
+            
+            const saveBtn = document.getElementById('passwordSaveBtn');
+            const originalText = saveBtn.innerHTML;
+            
             try {
-                const response = await fetchWithAuth('/api/auth/change-password', {
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                saveBtn.disabled = true;
+                
+                const response = await apiRequest('/api/auth/change-password', {
                     method: 'POST',
                     body: JSON.stringify({
-                        currentPassword: document.getElementById('currentPassword').value,
-                        newPassword: newPassword
+                        currentPassword,
+                        newPassword
                     })
                 });
                 
                 if (response.success) {
-                    showNotification('Password changed successfully', 'success');
+                    showToast('Password changed successfully', 'success');
                     hideModal('passwordModal');
                 }
             } catch (error) {
-                showNotification('Failed to change password', 'error');
+                document.getElementById('passwordError').textContent = error.message || 'Failed to change password';
+                document.getElementById('passwordError').style.display = 'block';
+            } finally {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
             }
         });
 
         function showTwoFactorSetup() {
-            showNotification('Two-factor authentication coming soon!', 'info');
+            showToast('Two-factor authentication will be available soon', 'info');
         }
 
         function exportBusinessData() {
             const data = {
                 profile: appState.profile,
-                nominations: appState.nominations,
-                documents: appState.documents,
+                nominations: appState.nominations.data,
+                documents: appState.documents.data,
                 exportDate: new Date().toISOString()
             };
             
@@ -2483,114 +3236,13 @@
             a.click();
             URL.revokeObjectURL(url);
             
-            showNotification('Data exported successfully', 'success');
+            showToast('Data exported successfully', 'success');
         }
 
         function showDeleteAccountModal() {
-            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-                showNotification('Account deletion - Please contact admin', 'info');
+            if (confirm('⚠️ Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.')) {
+                showToast('Account deletion - Please contact administrator', 'info');
             }
-        }
-
-        // ============================================
-        // MOCK DATA FOR DEMO
-        // ============================================
-        function loadMockProfile() {
-            appState.profile = {
-                business_name: 'Demo Business',
-                contact_name: 'John Doe',
-                phone: '+231 123 456 789',
-                business_type: 'Technology',
-                location: 'Monrovia',
-                website: 'https://example.com',
-                verified: true,
-                status: 'active',
-                member_since: new Date(2024, 0, 1).toISOString()
-            };
-            updateProfileDisplay();
-        }
-
-        function loadMockNominations() {
-            appState.nominations = [
-                {
-                    _id: '1',
-                    title: 'Best Technology Innovation 2025',
-                    category: 'Technology',
-                    status: 'submitted',
-                    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                    score: null
-                },
-                {
-                    _id: '2',
-                    title: 'Excellence in Customer Service',
-                    category: 'Service',
-                    status: 'approved',
-                    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    score: 85
-                },
-                {
-                    _id: '3',
-                    title: 'Sustainable Business Practices',
-                    category: 'Sustainability',
-                    status: 'draft',
-                    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-                    score: null
-                }
-            ];
-            updateNominationsCount();
-            displayNominations();
-            displayRecentNominations();
-        }
-
-        function loadMockDocuments() {
-            appState.documents = [
-                {
-                    id: '1',
-                    name: 'Business Registration Certificate',
-                    uploaded_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-                },
-                {
-                    id: '2',
-                    name: 'Tax Clearance 2025',
-                    uploaded_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
-                }
-            ];
-            displayDocuments();
-            document.getElementById('documentsUploaded').textContent = appState.documents.length;
-            document.getElementById('totalDocuments').textContent = appState.documents.length;
-        }
-
-        function loadMockNotifications() {
-            appState.notifications = [
-                {
-                    id: '1',
-                    title: 'Nomination Approved',
-                    message: 'Your nomination for "Best Technology Innovation" has been approved!',
-                    type: 'success',
-                    read: false,
-                    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-                },
-                {
-                    id: '2',
-                    title: 'Document Required',
-                    message: 'Please upload your business registration certificate',
-                    type: 'warning',
-                    read: true,
-                    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-                },
-                {
-                    id: '3',
-                    title: 'Profile Update',
-                    message: 'Complete your profile to increase visibility',
-                    type: 'info',
-                    read: false,
-                    created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
-                }
-            ];
-            displayNotifications();
-            
-            const unread = appState.notifications.filter(n => !n.read).length;
-            document.getElementById('notificationsCount').textContent = unread;
         }
 
         // ============================================
@@ -2602,46 +3254,24 @@
         }
 
         // ============================================
-        // SESSION MANAGEMENT
+        // LOADING STATES
         // ============================================
-        function startSessionTimer() {
-            let timeLeft = SESSION_TIMEOUT * 60;
-            
-            setInterval(() => {
-                timeLeft--;
-                
-                if (timeLeft === 300) {
-                    showNotification('Session will expire in 5 minutes', 'warning');
-                } else if (timeLeft === 60) {
-                    showNotification('Session will expire in 1 minute', 'warning');
-                } else if (timeLeft <= 0) {
-                    showNotification('Session expired. Redirecting...', 'error');
-                    setTimeout(logout, 2000);
-                }
-            }, 1000);
-            
-            ['click', 'mousemove', 'keypress'].forEach(event => {
-                document.addEventListener(event, () => {
-                    timeLeft = SESSION_TIMEOUT * 60;
-                }, { passive: true });
-            });
+        function showLoading() {
+            appState.loading = true;
+            // Could add a global spinner
+        }
+
+        function hideLoading() {
+            appState.loading = false;
         }
 
         // ============================================
-        // NOTIFICATION SYSTEM
+        // TOAST NOTIFICATIONS
         // ============================================
-        function showNotification(message, type = 'success') {
-            document.querySelectorAll('.notification').forEach(n => n.remove());
-            
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            
-            const colors = {
-                success: '#10B981',
-                error: '#EF4444',
-                warning: '#F59E0B',
-                info: '#3B82F6'
-            };
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
             
             const icons = {
                 success: 'check-circle',
@@ -2650,37 +3280,46 @@
                 info: 'info-circle'
             };
             
-            notification.style.background = colors[type] || colors.info;
-            notification.style.color = 'white';
-            
-            notification.innerHTML = `
-                <i class="fas fa-${icons[type] || icons.info}"></i>
-                <span>${message}</span>
+            toast.innerHTML = `
+                <i class="fas fa-${icons[type] || 'info-circle'}"></i>
+                <span style="flex: 1;">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
             `;
             
-            document.body.appendChild(notification);
+            container.appendChild(toast);
             
             setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s';
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
+                if (toast.parentNode) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
         }
 
         // ============================================
         // LOGOUT
         // ============================================
         function logout() {
+            if (appState.sessionTimer) {
+                clearInterval(appState.sessionTimer);
+            }
+            
             localStorage.removeItem('lba_auth_token');
             localStorage.removeItem('lba_user_data');
             localStorage.removeItem('lba_user_role');
+            
             window.location.href = '../login.html';
         }
 
         // ============================================
         // EXPORT TO GLOBAL SCOPE
         // ============================================
-        window.showNominationModal = showNominationModal;
+        window.switchPage = switchPage;
         window.showProfileModal = showProfileModal;
+        window.showNominationModal = showNominationModal;
         window.showUploadModal = showUploadModal;
         window.hideModal = hideModal;
         window.viewNomination = viewNomination;
@@ -2694,8 +3333,10 @@
         window.showTwoFactorSetup = showTwoFactorSetup;
         window.exportBusinessData = exportBusinessData;
         window.showDeleteAccountModal = showDeleteAccountModal;
-        window.switchPage = switchPage;
         window.logout = logout;
+        window.clearFile = clearFile;
+        window.changeNominationPage = changeNominationPage;
+        window.changeDocumentsPage = changeDocumentsPage;
 
         console.log('✅ Business Dashboard Ready');
     </script>
