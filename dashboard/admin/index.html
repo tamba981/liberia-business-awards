@@ -4571,6 +4571,1158 @@ window.showCreateBusinessModal = showCreateBusinessModal;
 window.createBusinessAccount = createBusinessAccount;
 window.exportBusinesses = exportBusinesses;  
 
+// ============================================
+// NEW FUNCTIONS FOR ALL 12 TASKS
+// ============================================
+
+// ============ ANNOUNCEMENTS MANAGEMENT (TASK 8) ============
+async function fetchAnnouncements() {
+    const data = await fetchFromSheets('getAnnouncements');
+    return data;
+}
+
+async function createAnnouncement(announcementData) {
+    try {
+        const formData = new URLSearchParams({
+            formType: 'announcement',
+            title: announcementData.title,
+            description: announcementData.description,
+            image: announcementData.image || '',
+            status: announcementData.status || 'draft',
+            created_by: dashboardState.user.email || 'admin',
+            source: 'dashboard',
+            timestamp: new Date().toISOString()
+        });
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error creating announcement:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ JUDGES MANAGEMENT (TASK 11) ============
+async function fetchJudges() {
+    const data = await fetchFromSheets('getJudges');
+    return data;
+}
+
+async function createJudge(judgeData) {
+    try {
+        const formData = new URLSearchParams({
+            formType: 'judge',
+            name: judgeData.name,
+            profession: judgeData.profession,
+            organization: judgeData.organization || '',
+            photo: judgeData.photo || '',
+            bio: judgeData.bio || '',
+            status: judgeData.status || 'active',
+            source: 'dashboard',
+            timestamp: new Date().toISOString()
+        });
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error creating judge:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ CATEGORIES MANAGEMENT (TASK 4) ============
+async function fetchCategories() {
+    const data = await fetchFromSheets('getCategories');
+    return data;
+}
+
+async function createCategory(categoryData) {
+    try {
+        const formData = new URLSearchParams({
+            formType: 'category',
+            name: categoryData.name,
+            sector: categoryData.sector,
+            description: categoryData.description || '',
+            icon: categoryData.icon || 'fa-tag',
+            color: categoryData.color || '#FF0000',
+            display_order: categoryData.display_order || '1',
+            status: categoryData.status || 'active',
+            source: 'dashboard',
+            timestamp: new Date().toISOString()
+        });
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error creating category:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ SYSTEM USERS MANAGEMENT (TASK 7) ============
+async function fetchSystemUsers() {
+    const data = await fetchFromSheets('getSystemUsers');
+    return data;
+}
+
+async function createSystemUser(userData) {
+    try {
+        const formData = new URLSearchParams({
+            formType: 'system_user',
+            fullName: userData.fullName,
+            email: userData.email,
+            password: userData.password,
+            role: userData.role || 'staff',
+            status: userData.status || 'active',
+            source: 'dashboard',
+            timestamp: new Date().toISOString()
+        });
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error creating system user:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ SYSTEM SETTINGS MANAGEMENT (TASK 10) ============
+async function fetchSettings() {
+    const data = await fetchFromSheets('getSettings');
+    return data;
+}
+
+async function updateSettings(settingsData) {
+    try {
+        const formData = new URLSearchParams({
+            formType: 'settings',
+            platformName: settingsData.platformName,
+            adminEmail: settingsData.adminEmail,
+            logo: settingsData.logo || '',
+            systemStatus: settingsData.systemStatus || 'online',
+            updated_by: dashboardState.user.email || 'admin',
+            source: 'dashboard',
+            timestamp: new Date().toISOString()
+        });
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ BUSINESS SPOTLIGHT MANAGEMENT (TASK 9) ============
+async function fetchSpotlights() {
+    const data = await fetchFromSheets('getSpotlight');
+    return data;
+}
+
+async function createSpotlight(spotlightData) {
+    try {
+        const formData = new URLSearchParams({
+            formType: 'spotlight',
+            business_id: spotlightData.business_id,
+            title: spotlightData.title,
+            story: spotlightData.story,
+            logo: spotlightData.logo || '',
+            category: spotlightData.category || '',
+            contact: spotlightData.contact || '',
+            status: spotlightData.status || 'draft',
+            featured_until: spotlightData.featured_until || '',
+            source: 'dashboard',
+            timestamp: new Date().toISOString()
+        });
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error creating spotlight:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ NOMINATIONS MANAGEMENT (TASK 3) ============
+async function fetchNominations(status) {
+    const url = status 
+        ? `${GOOGLE_APPS_SCRIPT_URL}?action=getNominations&status=${status}`
+        : `${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+        
+        const text = await response.text();
+        try {
+            const data = JSON.parse(text);
+            return data;
+        } catch (e) {
+            console.error('Invalid JSON response:', text.substring(0, 100));
+            return { success: false, error: 'Invalid response' };
+        }
+    } catch (error) {
+        console.error('Error fetching nominations:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function submitNomination(nominationData) {
+    try {
+        const formData = new URLSearchParams({
+            formType: 'nomination',
+            business_email: nominationData.business_email,
+            category: nominationData.category,
+            sector: nominationData.sector,
+            year: nominationData.year || new Date().getFullYear(),
+            description: nominationData.description,
+            yourName: nominationData.yourName,
+            yourEmail: nominationData.yourEmail,
+            relationship: nominationData.relationship || '',
+            source: 'dashboard',
+            timestamp: new Date().toISOString()
+        });
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error submitting nomination:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ ENHANCED ANALYTICS (TASK 5) ============
+async function fetchEnhancedAnalytics() {
+    const data = await fetchFromSheets('getAnalytics');
+    return data;
+}
+
+// ============ REPORTS (TASK 6) ============
+async function generateSheetReport(type, format = 'csv') {
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=generateReport&type=${type}&format=${format}`, {
+            method: 'GET',
+            headers: {
+                'Accept': format === 'csv' ? 'text/csv' : 'application/json',
+            }
+        });
+        
+        if (format === 'csv') {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${type}-report-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            return { success: true };
+        } else {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.error('Error generating report:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ============ MODAL FUNCTIONS FOR NEW MODULES ============
+
+// Show categories modal with data
+async function showCategoriesModal() {
+    hideAllModals();
+    
+    // Check if modal exists, if not create it
+    let modal = document.getElementById('categoriesModal');
+    if (!modal) {
+        createCategoriesModal();
+        modal = document.getElementById('categoriesModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Load categories
+    await loadCategoriesData();
+}
+
+// Create categories modal dynamically
+function createCategoriesModal() {
+    const modalHTML = `
+    <div class="modal" id="categoriesModal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-list-alt"></i> Categories Management</h2>
+                <button class="modal-close" onclick="hideModal('categoriesModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; text-align: right;">
+                    <button class="sheet-btn" onclick="showAddCategoryModal()">
+                        <i class="fas fa-plus"></i> Add Category
+                    </button>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Sector</th>
+                                <th>Description</th>
+                                <th>Icon</th>
+                                <th>Color</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addCategoryModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2 id="categoryModalTitle">Add Category</h2>
+                <button class="modal-close" onclick="hideModal('addCategoryModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId">
+                    
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <input type="text" id="categoryName" class="sheet-btn secondary" style="width: 100%;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Sector *</label>
+                        <input type="text" id="categorySector" class="sheet-btn secondary" style="width: 100%;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="categoryDescription" rows="3" class="sheet-btn secondary" style="width: 100%;"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Icon (Font Awesome class)</label>
+                        <input type="text" id="categoryIcon" class="sheet-btn secondary" style="width: 100%;" placeholder="fa-tag">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Color</label>
+                        <input type="color" id="categoryColor" class="sheet-btn secondary" style="width: 100%; height: 40px;" value="#FF0000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Display Order</label>
+                        <input type="number" id="categoryOrder" class="sheet-btn secondary" style="width: 100%;" value="1" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="categoryStatus" class="sheet-btn secondary" style="width: 100%;">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addCategoryModal')" style="flex: 1;">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveCategory()" style="flex: 2;">Save Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Load categories data
+async function loadCategoriesData() {
+    const tbody = document.getElementById('categoriesTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading categories...</td></tr>';
+    
+    try {
+        const result = await fetchCategories();
+        
+        if (result.success && result.categories) {
+            displayCategories(result.categories);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No categories found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error loading categories</td></tr>';
+    }
+}
+
+// Display categories in table
+function displayCategories(categories) {
+    const tbody = document.getElementById('categoriesTableBody');
+    if (!tbody) return;
+    
+    if (!categories || categories.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No categories found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = categories.map(cat => `
+        <tr>
+            <td><strong>${escapeHtml(cat.name)}</strong></td>
+            <td>${escapeHtml(cat.sector)}</td>
+            <td>${escapeHtml(cat.description || '-')}</td>
+            <td><i class="fas ${cat.icon || 'fa-tag'}" style="color: ${cat.color || '#FF0000'};"></i> ${cat.icon || 'fa-tag'}</td>
+            <td><span style="display: inline-block; width: 20px; height: 20px; background: ${cat.color || '#FF0000'}; border-radius: 4px;"></span></td>
+            <td><span class="status-badge status-${cat.status === 'active' ? 'active' : 'pending'}">${cat.status}</span></td>
+            <td>
+                <button class="sheet-btn secondary" onclick="editCategory('${cat.id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn ${cat.status === 'active' ? 'warning' : 'success'}" onclick="toggleCategoryStatus('${cat.id}', '${cat.status}')">
+                    ${cat.status === 'active' ? 'Deactivate' : 'Activate'}
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Show add category modal
+function showAddCategoryModal() {
+    document.getElementById('categoryModalTitle').textContent = 'Add Category';
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryColor').value = '#FF0000';
+    document.getElementById('addCategoryModal').classList.add('active');
+}
+
+// Edit category
+async function editCategory(id) {
+    try {
+        const result = await fetchCategories();
+        if (result.success && result.categories) {
+            const category = result.categories.find(c => c.id === id);
+            if (category) {
+                document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+                document.getElementById('categoryId').value = category.id;
+                document.getElementById('categoryName').value = category.name;
+                document.getElementById('categorySector').value = category.sector;
+                document.getElementById('categoryDescription').value = category.description || '';
+                document.getElementById('categoryIcon').value = category.icon || 'fa-tag';
+                document.getElementById('categoryColor').value = category.color || '#FF0000';
+                document.getElementById('categoryOrder').value = category.displayOrder || '1';
+                document.getElementById('categoryStatus').value = category.status || 'active';
+                document.getElementById('addCategoryModal').classList.add('active');
+            }
+        }
+    } catch (error) {
+        console.error('Error editing category:', error);
+        showNotification('Error loading category details', 'error');
+    }
+}
+
+// Save category
+async function saveCategory() {
+    const id = document.getElementById('categoryId').value;
+    const categoryData = {
+        name: document.getElementById('categoryName').value,
+        sector: document.getElementById('categorySector').value,
+        description: document.getElementById('categoryDescription').value,
+        icon: document.getElementById('categoryIcon').value,
+        color: document.getElementById('categoryColor').value,
+        display_order: document.getElementById('categoryOrder').value,
+        status: document.getElementById('categoryStatus').value
+    };
+    
+    if (!categoryData.name || !categoryData.sector) {
+        showNotification('Name and sector are required', 'warning');
+        return;
+    }
+    
+    try {
+        const result = await createCategory(categoryData);
+        
+        if (result.success) {
+            showNotification(id ? 'Category updated!' : 'Category created!', 'success');
+            hideModal('addCategoryModal');
+            loadCategoriesData();
+        } else {
+            showNotification(result.error || 'Error saving category', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving category:', error);
+        showNotification('Error saving category', 'error');
+    }
+}
+
+// Toggle category status
+async function toggleCategoryStatus(id, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    
+    if (!confirm(`Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this category?`)) return;
+    
+    try {
+        // Create a temporary update
+        const result = await fetchCategories();
+        if (result.success && result.categories) {
+            const category = result.categories.find(c => c.id === id);
+            if (category) {
+                category.status = newStatus;
+                const updateResult = await createCategory(category);
+                if (updateResult.success) {
+                    showNotification(`Category ${newStatus === 'active' ? 'activated' : 'deactivated'}!`, 'success');
+                    loadCategoriesData();
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling category status:', error);
+        showNotification('Error updating category', 'error');
+    }
+}
+
+// ============ UPDATE EXISTING MODAL FUNCTIONS ============
+
+// Replace the placeholder showCategoriesModal with the real one
+window.showCategoriesModal = showCategoriesModal;
+
+// Update showAnnouncementModal to use real data
+async function showAnnouncementModal() {
+    hideAllModals();
+    
+    // Check if modal exists, if not create it
+    let modal = document.getElementById('announcementsModal');
+    if (!modal) {
+        createAnnouncementsModal();
+        modal = document.getElementById('announcementsModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Load announcements
+    await loadAnnouncementsData();
+}
+
+// Create announcements modal if not exists
+function createAnnouncementsModal() {
+    const modalHTML = `
+    <div class="modal" id="announcementsModal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-bullhorn"></i> Announcements Management</h2>
+                <button class="modal-close" onclick="hideModal('announcementsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; text-align: right;">
+                    <button class="sheet-btn" onclick="showAddAnnouncementModal()">
+                        <i class="fas fa-plus"></i> New Announcement
+                    </button>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcementsTableBody">
+                            <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addAnnouncementModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2 id="announcementModalTitle">Add Announcement</h2>
+                <button class="modal-close" onclick="hideModal('addAnnouncementModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="announcementForm">
+                    <input type="hidden" id="announcementId">
+                    
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" id="announcementTitle" class="sheet-btn secondary" style="width: 100%;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea id="announcementDescription" rows="4" class="sheet-btn secondary" style="width: 100%;" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Image URL (optional)</label>
+                        <input type="url" id="announcementImage" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="announcementStatus" class="sheet-btn secondary" style="width: 100%;">
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addAnnouncementModal')" style="flex: 1;">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveAnnouncement()" style="flex: 2;">Save Announcement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Load announcements data
+async function loadAnnouncementsData() {
+    const tbody = document.getElementById('announcementsTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading announcements...</td></tr>';
+    
+    try {
+        const result = await fetchAnnouncements();
+        
+        if (result.success && result.announcements) {
+            displayAnnouncements(result.announcements);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No announcements found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading announcements:', error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #EF4444;">Error loading announcements</td></tr>';
+    }
+}
+
+// Display announcements
+function displayAnnouncements(announcements) {
+    const tbody = document.getElementById('announcementsTableBody');
+    if (!tbody) return;
+    
+    if (!announcements || announcements.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No announcements found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = announcements.map(a => `
+        <tr>
+            <td><strong>${escapeHtml(a.title)}</strong></td>
+            <td>${escapeHtml(a.description.substring(0, 100))}...</td>
+            <td><span class="status-badge status-${a.status === 'published' ? 'active' : 'pending'}">${a.status}</span></td>
+            <td>${new Date(a.timestamp).toLocaleDateString()}</td>
+            <td>
+                <button class="sheet-btn secondary" onclick="editAnnouncement('${a.id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" onclick="deleteAnnouncement('${a.id}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Show add announcement modal
+function showAddAnnouncementModal() {
+    document.getElementById('announcementModalTitle').textContent = 'Add Announcement';
+    document.getElementById('announcementForm').reset();
+    document.getElementById('announcementId').value = '';
+    document.getElementById('addAnnouncementModal').classList.add('active');
+}
+
+// Edit announcement
+async function editAnnouncement(id) {
+    try {
+        const result = await fetchAnnouncements();
+        if (result.success && result.announcements) {
+            const announcement = result.announcements.find(a => a.id === id);
+            if (announcement) {
+                document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+                document.getElementById('announcementId').value = announcement.id;
+                document.getElementById('announcementTitle').value = announcement.title;
+                document.getElementById('announcementDescription').value = announcement.description;
+                document.getElementById('announcementImage').value = announcement.image || '';
+                document.getElementById('announcementStatus').value = announcement.status;
+                document.getElementById('addAnnouncementModal').classList.add('active');
+            }
+        }
+    } catch (error) {
+        console.error('Error editing announcement:', error);
+        showNotification('Error loading announcement', 'error');
+    }
+}
+
+// Save announcement
+async function saveAnnouncement() {
+    const announcementData = {
+        title: document.getElementById('announcementTitle').value,
+        description: document.getElementById('announcementDescription').value,
+        image: document.getElementById('announcementImage').value,
+        status: document.getElementById('announcementStatus').value
+    };
+    
+    if (!announcementData.title || !announcementData.description) {
+        showNotification('Title and description are required', 'warning');
+        return;
+    }
+    
+    try {
+        const result = await createAnnouncement(announcementData);
+        
+        if (result.success) {
+            showNotification('Announcement created!', 'success');
+            hideModal('addAnnouncementModal');
+            loadAnnouncementsData();
+        } else {
+            showNotification(result.error || 'Error saving announcement', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving announcement:', error);
+        showNotification('Error saving announcement', 'error');
+    }
+}
+
+// Delete announcement
+async function deleteAnnouncement(id) {
+    if (!confirm('Delete this announcement?')) return;
+    
+    showNotification('Delete functionality coming soon', 'info');
+}
+
+// ============ UPDATE ENHANCED ANALYTICS MODAL ============
+async function showAnalyticsModal() {
+    hideAllModals();
+    
+    let modal = document.getElementById('analyticsModal');
+    if (!modal) {
+        createAnalyticsModal();
+        modal = document.getElementById('analyticsModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    await loadEnhancedAnalytics();
+}
+
+function createAnalyticsModal() {
+    const modalHTML = `
+    <div class="modal" id="analyticsModal">
+        <div class="modal-content" style="max-width: 1200px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-chart-bar"></i> Enhanced Analytics Dashboard</h2>
+                <button class="modal-close" onclick="hideModal('analyticsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="analyticsContent">
+                    <div style="text-align: center; padding: 50px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Loading enhanced analytics...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+async function loadEnhancedAnalytics() {
+    const content = document.getElementById('analyticsContent');
+    if (!content) return;
+    
+    try {
+        const result = await fetchEnhancedAnalytics();
+        
+        if (result.success && result.analytics) {
+            displayEnhancedAnalytics(result.analytics);
+        } else {
+            content.innerHTML = '<div style="text-align: center; padding: 50px; color: #EF4444;">Failed to load analytics</div>';
+        }
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        content.innerHTML = '<div style="text-align: center; padding: 50px; color: #EF4444;">Error loading analytics</div>';
+    }
+}
+
+function displayEnhancedAnalytics(analytics) {
+    const content = document.getElementById('analyticsContent');
+    const o = analytics.overview;
+    
+    // Simple bar chart using divs (you could add Chart.js later)
+    const nominationsByCategoryHTML = analytics.charts.nominationsByCategory.map(item => `
+        <div style="margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>${escapeHtml(item.category)}</span>
+                <span>${item.count}</span>
+            </div>
+            <div style="background: #f1f5f9; height: 20px; border-radius: 10px; overflow: hidden;">
+                <div style="background: #FF0000; width: ${(item.count / Math.max(...analytics.charts.nominationsByCategory.map(i => i.count)) * 100)}%; height: 100%;"></div>
+            </div>
+        </div>
+    `).join('');
+    
+    const businessesBySectorHTML = analytics.charts.businessesBySector.map(item => `
+        <div style="margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>${escapeHtml(item.sector)}</span>
+                <span>${item.count}</span>
+            </div>
+            <div style="background: #f1f5f9; height: 20px; border-radius: 10px; overflow: hidden;">
+                <div style="background: #87CEEB; width: ${(item.count / Math.max(...analytics.charts.businessesBySector.map(i => i.count)) * 100)}%; height: 100%;"></div>
+            </div>
+        </div>
+    `).join('');
+    
+    const monthlyHTML = analytics.charts.monthlyRegistrations.map(item => `
+        <div style="margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>${escapeHtml(item.month)}</span>
+                <span>${item.count}</span>
+            </div>
+            <div style="background: #f1f5f9; height: 20px; border-radius: 10px; overflow: hidden;">
+                <div style="background: #10B981; width: ${(item.count / Math.max(...analytics.charts.monthlyRegistrations.map(i => i.count)) * 100)}%; height: 100%;"></div>
+            </div>
+        </div>
+    `).join('');
+    
+    content.innerHTML = `
+        <div class="stats-grid" style="margin-bottom: 30px;">
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalBusinesses}</h3>
+                <p>Total Businesses</p>
+                <small>Pending: ${o.pendingBusinesses} | Approved: ${o.approvedBusinesses}</small>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalNominations}</h3>
+                <p>Nominations</p>
+                <small>Pending: ${o.pendingNominations} | Approved: ${o.approvedNominations}</small>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalJudges}</h3>
+                <p>Judges</p>
+                <small>Active: ${o.activeJudges}</small>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalAnnouncements}</h3>
+                <p>Announcements</p>
+                <small>Published: ${o.publishedAnnouncements}</small>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+            <div style="background: white; padding: 20px; border-radius: 12px;">
+                <h4>Categories</h4>
+                <p>Total: ${o.totalCategories} | Active: ${o.activeCategories}</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 12px;">
+                <h4>Spotlight</h4>
+                <p>Total: ${o.totalSpotlight} | Featured: ${o.featuredSpotlight}</p>
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 12px;">
+                <h4>System Users</h4>
+                <p>Total: ${o.totalUsers}</p>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 12px;">
+                <h4>Nominations by Category</h4>
+                ${nominationsByCategoryHTML || '<p>No data</p>'}
+            </div>
+            <div style="background: white; padding: 20px; border-radius: 12px;">
+                <h4>Businesses by Sector</h4>
+                ${businessesBySectorHTML || '<p>No data</p>'}
+            </div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 12px; margin-top: 20px;">
+            <h4>Monthly Registrations</h4>
+            ${monthlyHTML || '<p>No data</p>'}
+        </div>
+    `;
+}
+
+// ============ UPDATE REPORTS MODAL ============
+async function showReportsModal() {
+    hideAllModals();
+    
+    let modal = document.getElementById('reportsModal');
+    if (!modal) {
+        createReportsModal();
+        modal = document.getElementById('reportsModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function createReportsModal() {
+    const modalHTML = `
+    <div class="modal" id="reportsModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-file-alt"></i> Reports</h2>
+                <button class="modal-close" onclick="hideModal('reportsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid" style="margin-bottom: 30px;">
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('businesses', 'csv')">
+                        <h3>Businesses Report</h3>
+                        <p>Export all businesses to CSV</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('nominations', 'csv')">
+                        <h3>Nominations Report</h3>
+                        <p>Export all nominations to CSV</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('judges', 'csv')">
+                        <h3>Judges Report</h3>
+                        <p>Export all judges to CSV</p>
+                    </div>
+                </div>
+                
+                <div class="stats-grid" style="margin-bottom: 30px;">
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('categories', 'csv')">
+                        <h3>Categories Report</h3>
+                        <p>Export all categories to CSV</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('announcements', 'csv')">
+                        <h3>Announcements Report</h3>
+                        <p>Export all announcements to CSV</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('spotlight', 'csv')">
+                        <h3>Spotlight Report</h3>
+                        <p>Export all spotlights to CSV</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// ============ UPDATE SETTINGS MODAL ============
+async function showSettingsModal() {
+    hideAllModals();
+    
+    let modal = document.getElementById('settingsModal');
+    if (!modal) {
+        createSettingsModal();
+        modal = document.getElementById('settingsModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    await loadSettings();
+}
+
+function createSettingsModal() {
+    const modalHTML = `
+    <div class="modal" id="settingsModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-cog"></i> System Settings</h2>
+                <button class="modal-close" onclick="hideModal('settingsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label>Platform Name</label>
+                        <input type="text" id="settingsPlatformName" class="sheet-btn secondary" style="width: 100%;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Admin Email</label>
+                        <input type="email" id="settingsAdminEmail" class="sheet-btn secondary" style="width: 100%;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Logo URL</label>
+                        <input type="url" id="settingsLogo" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>System Status</label>
+                        <select id="settingsSystemStatus" class="sheet-btn secondary" style="width: 100%;">
+                            <option value="online">Online</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('settingsModal')" style="flex: 1;">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveSettings()" style="flex: 2;">Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+async function loadSettings() {
+    try {
+        const result = await fetchSettings();
+        
+        if (result.success && result.settings) {
+            document.getElementById('settingsPlatformName').value = result.settings.platformName || '';
+            document.getElementById('settingsAdminEmail').value = result.settings.adminEmail || '';
+            document.getElementById('settingsLogo').value = result.settings.logo || '';
+            document.getElementById('settingsSystemStatus').value = result.settings.systemStatus || 'online';
+            
+            // Update system status indicator
+            const systemStatus = document.getElementById('systemStatus');
+            const statusText = document.querySelector('.system-status span');
+            if (systemStatus) {
+                systemStatus.style.background = result.settings.systemStatus === 'online' ? '#10B981' : '#F59E0B';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+async function saveSettings() {
+    const settingsData = {
+        platformName: document.getElementById('settingsPlatformName').value,
+        adminEmail: document.getElementById('settingsAdminEmail').value,
+        logo: document.getElementById('settingsLogo').value,
+        systemStatus: document.getElementById('settingsSystemStatus').value
+    };
+    
+    try {
+        const result = await updateSettings(settingsData);
+        
+        if (result.success) {
+            showNotification('Settings saved!', 'success');
+            hideModal('settingsModal');
+            
+            // Update system status indicator
+            const systemStatus = document.getElementById('systemStatus');
+            if (systemStatus) {
+                systemStatus.style.background = settingsData.systemStatus === 'online' ? '#10B981' : '#F59E0B';
+            }
+        } else {
+            showNotification(result.error || 'Error saving settings', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        showNotification('Error saving settings', 'error');
+    }
+}
+
+// ============ EXPORT ALL NEW FUNCTIONS TO GLOBAL SCOPE ============
+window.showAnnouncementModal = showAnnouncementModal;
+window.showAnnouncementsModal = showAnnouncementModal;
+window.showCategoriesModal = showCategoriesModal;
+window.showReportsModal = showReportsModal;
+window.showSettingsModal = showSettingsModal;
+window.generateSheetReport = generateSheetReport;
+window.fetchEnhancedAnalytics = fetchEnhancedAnalytics;
+window.fetchCategories = fetchCategories;
+window.fetchAnnouncements = fetchAnnouncements;
+window.fetchJudges = fetchJudges;
+window.fetchSystemUsers = fetchSystemUsers;
+window.fetchSpotlights = fetchSpotlights;
+window.fetchNominations = fetchNominations;
+window.submitNomination = submitNomination;     
+
 
 </script>
     
@@ -5377,3 +6529,4 @@ window.exportBusinesses = exportBusinesses;
 </div>
 </body>
 </html>
+
