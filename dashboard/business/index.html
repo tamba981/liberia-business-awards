@@ -20,6 +20,7 @@
             --success-color: #10B981;
             --warning-color: #F59E0B;
             --danger-color: #EF4444;
+            --info-color: #3B82F6;
         }
         
         * {
@@ -151,6 +152,11 @@
             background: var(--lba-light);
             padding: 10px 20px;
             border-radius: 12px;
+            cursor: pointer;
+        }
+        
+        .user-info:hover {
+            background: #e2e8f0;
         }
         
         .user-avatar {
@@ -360,34 +366,39 @@
             line-height: 1.5;
         }
         
-        /* Recent Nominations */
-        .nominations-table {
+        /* Tables */
+        .data-table-container {
             background: white;
             border-radius: 15px;
             box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
             overflow: hidden;
-            margin-top: 30px;
+            margin-top: 20px;
         }
         
-        .table-header {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            padding: 20px 30px;
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th {
+            text-align: left;
+            padding: 20px 25px;
             background: var(--lba-light);
             font-weight: 600;
             color: var(--lba-dark);
         }
         
-        .table-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            padding: 20px 30px;
+        .data-table td {
+            padding: 15px 25px;
             border-bottom: 1px solid var(--lba-light);
-            align-items: center;
         }
         
-        .table-row:last-child {
+        .data-table tr:last-child td {
             border-bottom: none;
+        }
+        
+        .data-table tr:hover {
+            background: #f8fafc;
         }
         
         .status-badge {
@@ -405,6 +416,188 @@
         .status-approved { background: #dcfce7; color: #15803d; }
         .status-winner { background: #fef3c7; color: #d97706; }
         .status-rejected { background: #fee2e2; color: #b91c1c; }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .action-btn.edit {
+            background: #f1f5f9;
+            color: var(--lba-dark);
+        }
+        
+        .action-btn.delete {
+            background: #fee2e2;
+            color: var(--danger-color);
+        }
+        
+        .action-btn.view {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Content Sections */
+        .content-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            margin-top: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-header h2 {
+            font-size: 22px;
+            color: var(--lba-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Documents Grid */
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .document-card {
+            background: var(--lba-light);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+        
+        .document-card:hover {
+            background: #e2e8f0;
+            transform: translateY(-3px);
+        }
+        
+        .document-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--lba-red);
+        }
+        
+        .document-info {
+            flex: 1;
+        }
+        
+        .document-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .document-date {
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .document-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            padding: 5px;
+        }
+        
+        .document-actions button:hover {
+            color: var(--lba-red);
+        }
+        
+        /* Notifications List */
+        .notifications-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .notification-item {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .notification-item:hover {
+            background: #f8fafc;
+        }
+        
+        .notification-item.unread {
+            background: #f0f9ff;
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .notification-message {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+        
+        .notification-time {
+            font-size: 11px;
+            color: #94a3b8;
+        }
         
         /* Responsive */
         @media (max-width: 992px) {
@@ -444,9 +637,16 @@
                 text-align: center;
             }
             
-            .table-header, .table-row {
+            .data-table {
+                min-width: 600px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .documents-grid {
                 grid-template-columns: 1fr;
-                gap: 10px;
             }
         }
         
@@ -507,7 +707,7 @@
             background: white;
             border-radius: 20px;
             padding: 30px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -562,6 +762,12 @@
             box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.2);
         }
         
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
         .btn {
             padding: 12px 25px;
             border: none;
@@ -594,8 +800,63 @@
             background: #e2e8f0;
         }
         
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
         .btn-block {
             width: 100%;
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 13px;
+        }
+        
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed #e2e8f0;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--lba-blue);
+            background: #f8fafc;
+        }
+        
+        .file-upload i {
+            font-size: 40px;
+            color: var(--lba-blue);
+            margin-bottom: 10px;
+        }
+        
+        .file-upload p {
+            color: #64748b;
+        }
+        
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         /* Notification */
@@ -623,6 +884,99 @@
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
         }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #f8fafc;
+        }
+        
+        .tab.active {
+            background: var(--lba-blue);
+            color: white;
+        }
+        
+        /* Settings */
+        .settings-group {
+            margin-bottom: 30px;
+        }
+        
+        .settings-group h3 {
+            margin-bottom: 15px;
+            color: var(--lba-dark);
+        }
+        
+        .settings-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--lba-red);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
@@ -635,43 +989,43 @@
             </div>
             
             <div class="sidebar-menu">
-                <a href="#" class="menu-item active" onclick="return false;">
+                <div class="menu-item active" data-page="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
-                </a>
+                </div>
                 
-                <a href="#" class="menu-item" onclick="return false;">
+                <div class="menu-item" data-page="profile">
                     <i class="fas fa-user"></i>
                     <span>Business Profile</span>
-                </a>
+                </div>
                 
-                <a href="#" class="menu-item" onclick="return false;">
+                <div class="menu-item" data-page="nominations">
                     <i class="fas fa-award"></i>
                     <span>My Nominations</span>
                     <span class="badge" id="nominationsCount">0</span>
-                </a>
+                </div>
                 
-                <a href="#" class="menu-item" onclick="return false;">
+                <div class="menu-item" data-page="documents">
                     <i class="fas fa-file-upload"></i>
                     <span>Documents</span>
-                </a>
+                </div>
                 
-                <a href="#" class="menu-item" onclick="return false;">
+                <div class="menu-item" data-page="notifications">
                     <i class="fas fa-bell"></i>
                     <span>Notifications</span>
                     <span class="badge" id="notificationsCount">0</span>
-                </a>
+                </div>
                 
                 <div style="padding: 25px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
-                    <a href="#" class="menu-item" onclick="return false;">
+                    <div class="menu-item" data-page="settings">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
-                    </a>
+                    </div>
                     
-                    <a href="#" id="logoutBtn" class="menu-item">
+                    <div class="menu-item" id="logoutBtn">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Logout</span>
-                    </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -685,12 +1039,12 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div>
-                        <h1>Business Dashboard</h1>
+                        <h1 id="pageTitle">Dashboard</h1>
                         <p>Welcome back, <span id="businessName" style="color: var(--lba-red); font-weight: 600;">Business</span></p>
                     </div>
                 </div>
                 
-                <div class="user-info">
+                <div class="user-info" onclick="showProfileModal()">
                     <div class="user-avatar" id="userAvatar">B</div>
                     <div>
                         <div id="userEmail">business@example.com</div>
@@ -699,137 +1053,363 @@
                 </div>
             </div>
             
-            <!-- Business Profile Card -->
-            <div class="business-profile-card">
-                <div class="profile-header">
-                    <div class="profile-avatar" id="profileAvatar">
-                        <i class="fas fa-building"></i>
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="page active">
+                <!-- Business Profile Card -->
+                <div class="business-profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar" id="profileAvatar">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h2 id="companyName">Your Company Name</h2>
+                            <p id="businessIndustry">Industry • Location</p>
+                            <p id="businessContact">Contact: loading...</p>
+                            <div id="verificationStatus" class="verification-badge">
+                                Verification Pending
+                            </div>
+                        </div>
                     </div>
-                    <div class="profile-info">
-                        <h2 id="companyName">Your Company Name</h2>
-                        <p id="businessIndustry">Industry • Location</p>
-                        <p id="businessContact">Contact: loading...</p>
-                        <div id="verificationStatus" class="verification-badge">
-                            Verification Pending
+                    
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <strong id="profileCompletion">0%</strong>
+                            <span>Profile Complete</span>
+                        </div>
+                        <div class="profile-stat">
+                            <strong id="awardsWon">0</strong>
+                            <span>Awards Won</span>
+                        </div>
+                        <div class="profile-stat">
+                            <strong id="activeNominations">0</strong>
+                            <span>Active Nominations</span>
+                        </div>
+                        <div class="profile-stat">
+                            <strong id="documentsUploaded">0</strong>
+                            <span>Documents</span>
                         </div>
                     </div>
                 </div>
                 
-                <div class="profile-stats">
-                    <div class="profile-stat">
-                        <strong id="profileCompletion">0%</strong>
-                        <span>Profile Complete</span>
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalAwards">0</h3>
+                            <p>Total Awards Won</p>
+                        </div>
                     </div>
-                    <div class="profile-stat">
-                        <strong id="awardsWon">0</strong>
-                        <span>Awards Won</span>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="pendingNominations">0</h3>
+                            <p>Pending Review</p>
+                        </div>
                     </div>
-                    <div class="profile-stat">
-                        <strong id="activeNominations">0</strong>
-                        <span>Active Nominations</span>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="approvedNominations">0</h3>
+                            <p>Approved</p>
+                        </div>
                     </div>
-                    <div class="profile-stat">
-                        <strong id="documentsUploaded">0</strong>
-                        <span>Documents</span>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalDocuments">0</h3>
+                            <p>Documents</p>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="totalAwards">0</h3>
-                        <p>Total Awards Won</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="pendingNominations">0</h3>
-                        <p>Pending Review</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="approvedNominations">0</h3>
-                        <p>Approved</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-file"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3 id="totalDocuments">0</h3>
-                        <p>Documents</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <div class="action-card" onclick="showNominationModal()">
-                    <div class="action-icon">
-                        <i class="fas fa-plus-circle"></i>
-                    </div>
-                    <h3>Submit Nomination</h3>
-                    <p>Submit your business for awards consideration</p>
                 </div>
                 
-                <div class="action-card" onclick="showProfileModal()">
-                    <div class="action-icon">
-                        <i class="fas fa-edit"></i>
-                    </div>
-                    <h3>Update Profile</h3>
-                    <p>Complete your business profile information</p>
-                </div>
-                
-                <div class="action-card" onclick="showDocumentsModal()">
-                    <div class="action-icon">
-                        <i class="fas fa-upload"></i>
-                    </div>
-                    <h3>Upload Documents</h3>
-                    <p>Submit required business documents</p>
-                </div>
-                
-                <div class="action-card" onclick="viewAllNominations()">
-                    <div class="action-icon">
-                        <i class="fas fa-history"></i>
-                    </div>
-                    <h3>View History</h3>
-                    <p>See your nomination history and status</p>
-                </div>
-            </div>
-            
-            <!-- Recent Nominations -->
-            <div style="margin-top: 40px;">
-                <h2 style="color: var(--lba-dark); margin-bottom: 20px; font-size: 24px;">
-                    <i class="fas fa-history"></i> Recent Nominations
-                </h2>
-                
-                <div class="nominations-table">
-                    <div class="table-header">
-                        <div>Nomination Title</div>
-                        <div>Category</div>
-                        <div>Status</div>
-                        <div>Submitted</div>
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <div class="action-card" onclick="showNominationModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <h3>Submit Nomination</h3>
+                        <p>Submit your business for awards consideration</p>
                     </div>
                     
-                    <div id="nominationsList">
-                        <div class="table-row">
-                            <div class="loading" style="height: 20px;"></div>
-                            <div class="loading" style="height: 20px;"></div>
-                            <div class="loading" style="height: 20px; width: 100px;"></div>
-                            <div class="loading" style="height: 20px; width: 120px;"></div>
+                    <div class="action-card" onclick="switchPage('profile')">
+                        <div class="action-icon">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <h3>Update Profile</h3>
+                        <p>Complete your business profile information</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="switchPage('documents')">
+                        <div class="action-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <h3>Upload Documents</h3>
+                        <p>Submit required business documents</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="switchPage('nominations')">
+                        <div class="action-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h3>View History</h3>
+                        <p>See your nomination history and status</p>
+                    </div>
+                </div>
+                
+                <!-- Recent Nominations -->
+                <div style="margin-top: 40px;">
+                    <h2 style="color: var(--lba-dark); margin-bottom: 20px; font-size: 24px;">
+                        <i class="fas fa-history"></i> Recent Nominations
+                    </h2>
+                    
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nomination Title</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentNominationsList">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 40px;">
+                                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                        <p>Loading nominations...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Page -->
+            <div id="profilePage" class="page" style="display: none;">
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user"></i> Business Profile</h2>
+                        <button class="btn btn-primary" onclick="showProfileModal()">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
+                        <div style="text-align: center;">
+                            <div style="width: 150px; height: 150px; background: linear-gradient(135deg, var(--lba-red), var(--lba-blue)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 60px; color: white; margin: 0 auto 20px;">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div id="profileStatusBadge" class="verification-badge" style="margin: 10px 0;">Pending</div>
+                            <p><small>Member since <span id="memberSince">2025</span></small></p>
+                        </div>
+                        
+                        <div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Business Name</p>
+                                    <p style="font-weight: 600;" id="profileBusinessName">-</p>
+                                </div>
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Email</p>
+                                    <p style="font-weight: 600;" id="profileEmail">-</p>
+                                </div>
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Contact Person</p>
+                                    <p style="font-weight: 600;" id="profileContactName">-</p>
+                                </div>
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Phone</p>
+                                    <p style="font-weight: 600;" id="profilePhone">-</p>
+                                </div>
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Business Type</p>
+                                    <p style="font-weight: 600;" id="profileBusinessType">-</p>
+                                </div>
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Location</p>
+                                    <p style="font-weight: 600;" id="profileLocation">-</p>
+                                </div>
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Website</p>
+                                    <p style="font-weight: 600;" id="profileWebsite">-</p>
+                                </div>
+                                <div>
+                                    <p style="color: #64748b; font-size: 12px;">Profile Completion</p>
+                                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 8px;">
+                                        <div id="profileCompletionBar" style="width: 0%; height: 100%; background: var(--lba-red); border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nominations Page -->
+            <div id="nominationsPage" class="page" style="display: none;">
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-award"></i> My Nominations</h2>
+                        <button class="btn btn-primary" onclick="showNominationModal()">
+                            <i class="fas fa-plus"></i> New Nomination
+                        </button>
+                    </div>
+                    
+                    <div class="tabs">
+                        <div class="tab active" data-nomination-status="all">All</div>
+                        <div class="tab" data-nomination-status="draft">Drafts</div>
+                        <div class="tab" data-nomination-status="submitted">Submitted</div>
+                        <div class="tab" data-nomination-status="under_review">Under Review</div>
+                        <div class="tab" data-nomination-status="approved">Approved</div>
+                        <div class="tab" data-nomination-status="winner">Winners</div>
+                        <div class="tab" data-nomination-status="rejected">Rejected</div>
+                    </div>
+                    
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Score</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nominationsTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px;">
+                                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                        <p>Loading nominations...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Documents Page -->
+            <div id="documentsPage" class="page" style="display: none;">
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-file-upload"></i> Business Documents</h2>
+                        <button class="btn btn-primary" onclick="showUploadModal()">
+                            <i class="fas fa-upload"></i> Upload Document
+                        </button>
+                    </div>
+                    
+                    <div class="documents-grid" id="documentsGrid">
+                        <!-- Documents will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notifications Page -->
+            <div id="notificationsPage" class="page" style="display: none;">
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-bell"></i> Notifications</h2>
+                        <button class="btn btn-secondary" onclick="markAllNotificationsRead()">
+                            <i class="fas fa-check-double"></i> Mark All Read
+                        </button>
+                    </div>
+                    
+                    <div class="notifications-list" id="notificationsList">
+                        <!-- Notifications will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Page -->
+            <div id="settingsPage" class="page" style="display: none;">
+                <div class="content-section">
+                    <h2><i class="fas fa-cog"></i> Settings</h2>
+                    
+                    <div class="settings-group">
+                        <h3>Account Settings</h3>
+                        <div class="settings-item">
+                            <div>
+                                <strong>Email Notifications</strong>
+                                <p style="color: #64748b; font-size: 13px;">Receive email updates about your nominations</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="emailNotifications" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div>
+                                <strong>Two-Factor Authentication</strong>
+                                <p style="color: #64748b; font-size: 13px;">Add an extra layer of security</p>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" onclick="showTwoFactorSetup()">Enable</button>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div>
+                                <strong>Change Password</strong>
+                                <p style="color: #64748b; font-size: 13px;">Update your password regularly</p>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" onclick="showChangePasswordModal()">Change</button>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <h3>Business Preferences</h3>
+                        <div class="settings-item">
+                            <div>
+                                <strong>Language</strong>
+                                <p style="color: #64748b; font-size: 13px;">Select your preferred language</p>
+                            </div>
+                            <select style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 5px;">
+                                <option>English</option>
+                                <option>French</option>
+                            </select>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div>
+                                <strong>Time Zone</strong>
+                                <p style="color: #64748b; font-size: 13px;">Set your local time zone</p>
+                            </div>
+                            <select style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 5px;">
+                                <option>GMT (Monrovia)</option>
+                                <option>UTC</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <h3>Data Management</h3>
+                        <div class="settings-item">
+                            <div>
+                                <strong>Export Data</strong>
+                                <p style="color: #64748b; font-size: 13px;">Download your business data</p>
+                            </div>
+                            <button class="btn btn-sm btn-success" onclick="exportBusinessData()">Export</button>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <div>
+                                <strong>Delete Account</strong>
+                                <p style="color: #64748b; font-size: 13px;">Permanently delete your account</p>
+                            </div>
+                            <button class="btn btn-sm btn-danger" onclick="showDeleteAccountModal()">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -841,13 +1421,15 @@
     <div class="modal" id="nominationModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Submit Nomination</h2>
+                <h2 id="nominationModalTitle">Submit Nomination</h2>
                 <button class="modal-close" onclick="hideModal('nominationModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <form id="nominationForm" onsubmit="submitNomination(event)">
+            <form id="nominationForm">
+                <input type="hidden" id="nominationId">
+                
                 <div class="form-group">
                     <label for="nominationTitle">Nomination Title *</label>
                     <input type="text" id="nominationTitle" required 
@@ -883,51 +1465,163 @@
                               placeholder="Achievement 1&#10;Achievement 2&#10;Achievement 3"></textarea>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-block">
-                    <i class="fas fa-paper-plane"></i> Submit Nomination
+                <div class="form-group">
+                    <label>Status</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label><input type="radio" name="nominationStatus" value="draft" checked> Save as Draft</label>
+                        <label><input type="radio" name="nominationStatus" value="submitted"> Submit Now</label>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('nominationModal')" style="flex: 1;">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;" id="nominationSubmitBtn">
+                        <i class="fas fa-paper-plane"></i> Save Nomination
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Profile Edit Modal -->
+    <div class="modal" id="profileEditModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Business Profile</h2>
+                <button class="modal-close" onclick="hideModal('profileEditModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="profileEditForm">
+                <div class="form-group">
+                    <label for="editBusinessName">Business Name *</label>
+                    <input type="text" id="editBusinessName" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editContactName">Contact Person</label>
+                        <input type="text" id="editContactName">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPhone">Phone Number</label>
+                        <input type="tel" id="editPhone" placeholder="+231 XXX XXX XXX">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editBusinessType">Business Type</label>
+                        <select id="editBusinessType">
+                            <option value="">Select Type</option>
+                            <option value="Startup">Startup</option>
+                            <option value="SME">SME</option>
+                            <option value="Enterprise">Enterprise</option>
+                            <option value="Nonprofit">Nonprofit</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editLocation">Location</label>
+                        <input type="text" id="editLocation" placeholder="City, County">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editWebsite">Website</label>
+                    <input type="url" id="editWebsite" placeholder="https://">
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('profileEditModal')" style="flex: 1;">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Upload Document Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Upload Document</h2>
+                <button class="modal-close" onclick="hideModal('uploadModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="documentName">Document Name *</label>
+                    <input type="text" id="documentName" required placeholder="e.g., Business Registration Certificate">
+                </div>
+                
+                <div class="form-group">
+                    <label for="documentType">Document Type</label>
+                    <select id="documentType">
+                        <option value="registration">Registration Certificate</option>
+                        <option value="tax">Tax Clearance</option>
+                        <option value="license">Business License</option>
+                        <option value="financial">Financial Statement</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="file-upload" id="fileDropZone">
+                    <input type="file" id="documentFile" style="display: none;" accept=".pdf,.doc,.docx,.jpg,.png">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag & drop or click to upload</p>
+                    <small style="color: #64748b;">Supported: PDF, DOC, JPG, PNG (Max 10MB)</small>
+                </div>
+                
+                <div id="fileInfo" class="file-info" style="display: none;">
+                    <span id="fileName"></span>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="clearFile()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 20px;">
+                    <i class="fas fa-upload"></i> Upload Document
                 </button>
             </form>
         </div>
     </div>
     
-    <!-- Profile Modal -->
-    <div class="modal" id="profileModal">
+    <!-- Change Password Modal -->
+    <div class="modal" id="passwordModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Update Business Profile</h2>
-                <button class="modal-close" onclick="hideModal('profileModal')">
+                <h2>Change Password</h2>
+                <button class="modal-close" onclick="hideModal('passwordModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <form id="profileForm" onsubmit="updateProfile(event)">
+            <form id="passwordForm">
                 <div class="form-group">
-                    <label for="profileBusinessName">Business Name *</label>
-                    <input type="text" id="profileBusinessName" required>
+                    <label for="currentPassword">Current Password *</label>
+                    <input type="password" id="currentPassword" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="profileIndustry">Industry</label>
-                    <input type="text" id="profileIndustry" placeholder="e.g., Technology, Agriculture">
+                    <label for="newPassword">New Password *</label>
+                    <input type="password" id="newPassword" required minlength="6">
                 </div>
                 
                 <div class="form-group">
-                    <label for="profileLocation">Location</label>
-                    <input type="text" id="profileLocation" placeholder="City, County">
-                </div>
-                
-                <div class="form-group">
-                    <label for="profilePhone">Phone Number</label>
-                    <input type="tel" id="profilePhone" placeholder="+231 XXX XXX XXX">
-                </div>
-                
-                <div class="form-group">
-                    <label for="profileWebsite">Website</label>
-                    <input type="url" id="profileWebsite" placeholder="https://">
+                    <label for="confirmPassword">Confirm New Password *</label>
+                    <input type="password" id="confirmPassword" required>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-block">
-                    <i class="fas fa-save"></i> Update Profile
+                    <i class="fas fa-key"></i> Update Password
                 </button>
             </form>
         </div>
@@ -941,23 +1635,43 @@
         const SESSION_TIMEOUT = 60; // minutes
 
         // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        let appState = {
+            user: null,
+            profile: null,
+            nominations: [],
+            documents: [],
+            notifications: [],
+            currentPage: 'dashboard',
+            nominationFilter: 'all'
+        };
+
+        // ============================================
         // INITIALIZATION
         // ============================================
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🏢 Business Dashboard Initializing...');
             
             // Check authentication
-            const userData = checkAuth();
-            if (!userData) {
+            if (!checkAuth()) {
                 window.location.href = '../login.html';
                 return;
             }
             
-            // Setup UI with user data
-            setupUI(userData);
+            // Setup UI
+            setupUI();
             
-            // Load dashboard data
-            await loadDashboardData();
+            // Load all data
+            await Promise.all([
+                loadProfile(),
+                loadNominations(),
+                loadDocuments(),
+                loadNotifications()
+            ]);
+            
+            // Setup navigation
+            setupNavigation();
             
             // Start session timer
             startSessionTimer();
@@ -975,24 +1689,25 @@
             
             if (!token || userRole !== 'business' || !userDataStr) {
                 console.warn('⚠️ Not authenticated or not business user');
-                return null;
+                return false;
             }
             
             try {
-                return JSON.parse(userDataStr);
+                appState.user = JSON.parse(userDataStr);
+                return true;
             } catch (e) {
                 console.error('❌ Invalid user data');
-                return null;
+                return false;
             }
         }
 
-        function setupUI(userData) {
+        function setupUI() {
             // Set user information
-            document.getElementById('businessName').textContent = userData.name || 'Business';
-            document.getElementById('companyName').textContent = userData.company || 'Your Company';
-            document.getElementById('userEmail').textContent = userData.email || '';
-            document.getElementById('businessContact').textContent = `Contact: ${userData.phone || 'Not provided'}`;
-            document.getElementById('userAvatar').textContent = userData.name?.charAt(0) || 'B';
+            document.getElementById('businessName').textContent = appState.user.name || 'Business';
+            document.getElementById('companyName').textContent = appState.user.company || appState.user.name || 'Your Company';
+            document.getElementById('userEmail').textContent = appState.user.email || '';
+            document.getElementById('businessContact').textContent = `Contact: ${appState.user.phone || 'Not provided'}`;
+            document.getElementById('userAvatar').textContent = appState.user.name?.charAt(0) || 'B';
             
             // Mobile menu toggle
             const menuToggle = document.getElementById('menuToggle');
@@ -1024,73 +1739,113 @@
             });
         }
 
+        function setupNavigation() {
+            // Menu items
+            document.querySelectorAll('.menu-item[data-page]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const page = e.currentTarget.dataset.page;
+                    switchPage(page);
+                });
+            });
+            
+            // Nomination tabs
+            document.querySelectorAll('[data-nomination-status]').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('[data-nomination-status]').forEach(t => t.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    appState.nominationFilter = e.currentTarget.dataset.nominationStatus;
+                    displayNominations();
+                });
+            });
+        }
+
+        // ============================================
+        // PAGE NAVIGATION
+        // ============================================
+        function switchPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            
+            // Show selected page
+            document.getElementById(page + 'Page').style.display = 'block';
+            
+            // Update active menu
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
+            
+            // Update page title
+            const titles = {
+                dashboard: 'Dashboard',
+                profile: 'Business Profile',
+                nominations: 'My Nominations',
+                documents: 'Documents',
+                notifications: 'Notifications',
+                settings: 'Settings'
+            };
+            document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
+            
+            appState.currentPage = page;
+        }
+
         // ============================================
         // API HELPER FUNCTIONS
         // ============================================
         async function fetchWithAuth(endpoint, options = {}) {
             const token = localStorage.getItem('lba_auth_token');
             
-            const response = await fetch(`${BACKEND_URL}${endpoint}`, {
-                ...options,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    ...options.headers
+            try {
+                const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...options.headers
+                    }
+                });
+                
+                if (response.status === 401) {
+                    showNotification('Session expired. Please login again.', 'error');
+                    setTimeout(logout, 2000);
+                    throw new Error('Unauthorized');
                 }
-            });
-            
-            if (response.status === 401) {
-                // Token expired
-                showNotification('Session expired. Please login again.', 'error');
-                setTimeout(logout, 2000);
-                throw new Error('Unauthorized');
+                
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || `HTTP ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('❌ API Error:', error);
+                throw error;
             }
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            return await response.json();
         }
 
         // ============================================
-        // DASHBOARD DATA
+        // PROFILE FUNCTIONS
         // ============================================
-        async function loadDashboardData() {
+        async function loadProfile() {
             try {
-                const data = await fetchWithAuth('/api/business/dashboard');
-                
+                const data = await fetchWithAuth('/api/business/profile');
                 if (data.success) {
-                    updateDashboard(data.dashboard);
-                } else {
-                    throw new Error(data.message || 'Failed to load data');
+                    appState.profile = data.profile;
+                    updateProfileDisplay();
                 }
             } catch (error) {
-                console.error('❌ Dashboard load error:', error);
-                showNotification('Could not load dashboard data. Using demo data.', 'warning');
-                loadDemoData();
+                console.error('❌ Profile load error:', error);
+                loadMockProfile();
             }
         }
 
-        function updateDashboard(dashboard) {
-            const stats = dashboard.stats || {};
-            const profile = dashboard.profile || {};
-            const nominations = dashboard.recent_nominations || [];
+        function updateProfileDisplay() {
+            const profile = appState.profile || {};
             
-            // Update stats cards
-            document.getElementById('totalAwards').textContent = stats.total_awards || 0;
-            document.getElementById('pendingNominations').textContent = 
-                nominations.filter(n => ['submitted', 'under_review'].includes(n.status)).length || 0;
-            document.getElementById('approvedNominations').textContent = 
-                nominations.filter(n => n.status === 'approved' || n.status === 'winner').length || 0;
-            document.getElementById('totalDocuments').textContent = stats.documents_uploaded || 0;
-            
-            // Update profile stats
-            document.getElementById('profileCompletion').textContent = `${stats.profile_completion || 0}%`;
-            document.getElementById('awardsWon').textContent = stats.total_awards || 0;
-            document.getElementById('activeNominations').textContent = stats.active_nominations || 0;
-            document.getElementById('documentsUploaded').textContent = stats.documents_uploaded || 0;
+            // Update dashboard
+            document.getElementById('companyName').textContent = profile.business_name || 'Your Company';
+            document.getElementById('businessIndustry').textContent = 
+                `${profile.business_type || 'Industry'} • ${profile.location || 'Location'}`;
+            document.getElementById('businessContact').textContent = `Contact: ${profile.contact_name || profile.phone || 'Not provided'}`;
             
             // Update verification status
             const verificationEl = document.getElementById('verificationStatus');
@@ -1105,196 +1860,80 @@
                 verificationEl.style.background = '#EF4444';
             }
             
-            // Update business info
-            const industryText = profile.business_type ? profile.business_type : 'Industry';
-            const locationText = profile.location ? profile.location : 'Location';
-            document.getElementById('businessIndustry').textContent = `${industryText} • ${locationText}`;
+            // Update profile page
+            document.getElementById('profileBusinessName').textContent = profile.business_name || '-';
+            document.getElementById('profileEmail').textContent = appState.user.email || '-';
+            document.getElementById('profileContactName').textContent = profile.contact_name || '-';
+            document.getElementById('profilePhone').textContent = profile.phone || '-';
+            document.getElementById('profileBusinessType').textContent = profile.business_type || '-';
+            document.getElementById('profileLocation').textContent = profile.location || '-';
+            document.getElementById('profileWebsite').textContent = profile.website || '-';
             
-            // Update nominations list
-            updateNominationsList(nominations);
-        }
-
-        function updateNominationsList(nominations) {
-            const nominationsList = document.getElementById('nominationsList');
-            const nominationsCount = document.getElementById('nominationsCount');
+            // Calculate profile completion
+            const completion = calculateProfileCompletion(profile);
+            document.getElementById('profileCompletion').textContent = completion + '%';
+            document.getElementById('profileCompletionBar').style.width = completion + '%';
             
-            if (!nominations || nominations.length === 0) {
-                nominationsList.innerHTML = `
-                    <div class="table-row" style="text-align: center; padding: 40px;">
-                        <div style="grid-column: 1 / -1; color: #64748b;">
-                            <i class="fas fa-award" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
-                            <p>No nominations yet</p>
-                            <button class="btn btn-primary" onclick="showNominationModal()" 
-                                    style="margin-top: 15px; padding: 10px 20px;">
-                                <i class="fas fa-plus"></i> Submit Your First Nomination
-                            </button>
-                        </div>
-                    </div>
-                `;
-                nominationsCount.textContent = '0';
-                return;
+            // Member since
+            if (profile.member_since) {
+                document.getElementById('memberSince').textContent = new Date(profile.member_since).getFullYear();
             }
             
-            nominationsCount.textContent = nominations.length;
+            // Status badge in profile page
+            const statusBadge = document.getElementById('profileStatusBadge');
+            if (profile.verified) {
+                statusBadge.textContent = '✓ Verified';
+                statusBadge.style.background = '#10B981';
+            } else if (profile.status === 'pending') {
+                statusBadge.textContent = '⏳ Pending Verification';
+                statusBadge.style.background = '#F59E0B';
+            } else {
+                statusBadge.textContent = '✗ Not Verified';
+                statusBadge.style.background = '#EF4444';
+            }
+        }
+
+        function calculateProfileCompletion(profile) {
+            let completed = 0;
+            const fields = ['business_name', 'contact_name', 'phone', 'business_type', 'location', 'website'];
             
-            let html = '';
-            nominations.forEach(nomination => {
-                const statusClass = `status-${nomination.status || 'draft'}`;
-                const statusText = (nomination.status || 'draft')
-                    .replace(/_/g, ' ')
-                    .toUpperCase();
-                const date = nomination.created_at ? new Date(nomination.created_at).toLocaleDateString() : 'Recent';
-                
-                html += `
-                    <div class="table-row">
-                        <div style="font-weight: 500;">${nomination.title || 'Untitled'}</div>
-                        <div>${nomination.category || 'General'}</div>
-                        <div><span class="status-badge ${statusClass}">${statusText}</span></div>
-                        <div>${date}</div>
-                    </div>
-                `;
+            fields.forEach(field => {
+                if (profile[field]) completed++;
             });
             
-            nominationsList.innerHTML = html;
+            return Math.round((completed / fields.length) * 100);
         }
 
-        // ============================================
-        // DEMO DATA
-        // ============================================
-        function loadDemoData() {
-            const demoDashboard = {
-                stats: {
-                    total_awards: 2,
-                    active_nominations: 3,
-                    documents_uploaded: 5,
-                    profile_completion: 75
-                },
-                recent_nominations: [
-                    {
-                        title: 'Best Technology Innovation 2025',
-                        category: 'Technology',
-                        status: 'submitted',
-                        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-                    },
-                    {
-                        title: 'Excellence in Customer Service',
-                        category: 'Service',
-                        status: 'approved',
-                        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                    },
-                    {
-                        title: 'Sustainable Business Practices',
-                        category: 'Sustainability',
-                        status: 'draft',
-                        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-                    }
-                ],
-                profile: {
-                    verified: true,
-                    status: 'active',
-                    business_type: 'Technology',
-                    location: 'Monrovia'
-                }
-            };
-            
-            updateDashboard(demoDashboard);
-        }
-
-        // ============================================
-        // NOMINATION FUNCTIONS
-        // ============================================
-        function showNominationModal() {
-            hideAllModals();
-            document.getElementById('nominationForm').reset();
-            document.getElementById('nominationModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        async function submitNomination(event) {
-            event.preventDefault();
-            
-            const form = event.target;
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            
-            try {
-                // Show loading
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-                submitBtn.disabled = true;
-                
-                // Get form data
-                const achievements = document.getElementById('nominationAchievements').value
-                    .split('\n')
-                    .map(a => a.trim())
-                    .filter(a => a.length > 0);
-                
-                const nominationData = {
-                    title: document.getElementById('nominationTitle').value,
-                    category: document.getElementById('nominationCategory').value,
-                    description: document.getElementById('nominationDescription').value,
-                    achievements: achievements,
-                    year: new Date().getFullYear()
-                };
-                
-                // Submit to API
-                const response = await fetchWithAuth('/api/nominations', {
-                    method: 'POST',
-                    body: JSON.stringify(nominationData)
-                });
-                
-                if (response.success) {
-                    showNotification('Nomination submitted successfully!', 'success');
-                    hideModal('nominationModal');
-                    form.reset();
-                    await loadDashboardData();
-                } else {
-                    throw new Error(response.message || 'Failed to submit nomination');
-                }
-                
-            } catch (error) {
-                console.error('❌ Nomination error:', error);
-                showNotification('Failed to submit nomination. Please try again.', 'error');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        }
-
-        // ============================================
-        // PROFILE FUNCTIONS
-        // ============================================
         function showProfileModal() {
-            hideAllModals();
+            // Pre-fill form
+            document.getElementById('editBusinessName').value = appState.profile?.business_name || '';
+            document.getElementById('editContactName').value = appState.profile?.contact_name || '';
+            document.getElementById('editPhone').value = appState.profile?.phone || '';
+            document.getElementById('editBusinessType').value = appState.profile?.business_type || '';
+            document.getElementById('editLocation').value = appState.profile?.location || '';
+            document.getElementById('editWebsite').value = appState.profile?.website || '';
             
-            // Pre-fill form with current data
-            document.getElementById('profileBusinessName').value = 
-                document.getElementById('companyName').textContent;
-            document.getElementById('profileIndustry').value = 
-                document.getElementById('businessIndustry').textContent.split('•')[0].trim();
-            document.getElementById('profileLocation').value = 
-                document.getElementById('businessIndustry').textContent.split('•')[1]?.trim() || '';
-            
-            document.getElementById('profileModal').classList.add('active');
+            document.getElementById('profileEditModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
 
-        async function updateProfile(event) {
-            event.preventDefault();
+        document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            const form = event.target;
-            const submitBtn = form.querySelector('button[type="submit"]');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             
             try {
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 submitBtn.disabled = true;
                 
                 const profileData = {
-                    name: document.getElementById('profileBusinessName').value,
-                    business_type: document.getElementById('profileIndustry').value,
-                    location: document.getElementById('profileLocation').value,
-                    phone: document.getElementById('profilePhone').value,
-                    website: document.getElementById('profileWebsite').value
+                    business_name: document.getElementById('editBusinessName').value,
+                    contact_name: document.getElementById('editContactName').value,
+                    phone: document.getElementById('editPhone').value,
+                    business_type: document.getElementById('editBusinessType').value,
+                    location: document.getElementById('editLocation').value,
+                    website: document.getElementById('editWebsite').value
                 };
                 
                 const response = await fetchWithAuth('/api/business/profile', {
@@ -1304,37 +1943,654 @@
                 
                 if (response.success) {
                     showNotification('Profile updated successfully!', 'success');
-                    hideModal('profileModal');
+                    hideModal('profileEditModal');
                     
-                    // Update local storage with new data
+                    // Update local state
+                    appState.profile = { ...appState.profile, ...profileData };
+                    updateProfileDisplay();
+                    
+                    // Update local storage
                     const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
                     Object.assign(userData, profileData);
                     localStorage.setItem('lba_user_data', JSON.stringify(userData));
-                    
-                    // Reload dashboard to show updated data
-                    await loadDashboardData();
-                } else {
-                    throw new Error(response.message || 'Failed to update profile');
                 }
-                
             } catch (error) {
-                console.error('❌ Profile update error:', error);
-                showNotification('Failed to update profile. Please try again.', 'error');
+                showNotification('Failed to update profile: ' + error.message, 'error');
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
+            }
+        });
+
+        // ============================================
+        // NOMINATION FUNCTIONS
+        // ============================================
+        async function loadNominations() {
+            try {
+                const data = await fetchWithAuth('/api/business/nominations?limit=100');
+                if (data.success) {
+                    appState.nominations = data.nominations || [];
+                    updateNominationsCount();
+                    displayNominations();
+                    displayRecentNominations();
+                }
+            } catch (error) {
+                console.error('❌ Nominations load error:', error);
+                loadMockNominations();
+            }
+        }
+
+        function updateNominationsCount() {
+            const counts = {
+                total: appState.nominations.length,
+                pending: appState.nominations.filter(n => ['submitted', 'under_review'].includes(n.status)).length,
+                approved: appState.nominations.filter(n => n.status === 'approved' || n.status === 'winner').length
+            };
+            
+            document.getElementById('nominationsCount').textContent = counts.total;
+            document.getElementById('pendingNominations').textContent = counts.pending;
+            document.getElementById('approvedNominations').textContent = counts.approved;
+            document.getElementById('activeNominations').textContent = counts.pending;
+            document.getElementById('totalAwards').textContent = appState.nominations.filter(n => n.status === 'winner').length;
+        }
+
+        function displayNominations() {
+            const tbody = document.getElementById('nominationsTableBody');
+            
+            let filtered = appState.nominations;
+            if (appState.nominationFilter !== 'all') {
+                filtered = filtered.filter(n => n.status === appState.nominationFilter);
+            }
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-award" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
+                            <p>No nominations found</p>
+                            <button class="btn btn-primary btn-sm" onclick="showNominationModal()" style="margin-top: 10px;">
+                                <i class="fas fa-plus"></i> Create Nomination
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(n => `
+                <tr>
+                    <td><strong>${n.title || 'Untitled'}</strong></td>
+                    <td>${n.category || 'General'}</td>
+                    <td><span class="status-badge status-${n.status || 'draft'}">${(n.status || 'draft').replace(/_/g, ' ').toUpperCase()}</span></td>
+                    <td>${n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Recent'}</td>
+                    <td>${n.score ? n.score + '%' : '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn view" onclick="viewNomination('${n._id}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${n.status === 'draft' ? `
+                                <button class="action-btn edit" onclick="editNomination('${n._id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete" onclick="deleteNomination('${n._id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : ''}
+                            ${n.status === 'submitted' ? `
+                                <button class="action-btn edit" onclick="editNomination('${n._id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function displayRecentNominations() {
+            const tbody = document.getElementById('recentNominationsList');
+            const recent = appState.nominations.slice(0, 5);
+            
+            if (recent.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-award" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
+                            <p>No nominations yet</p>
+                            <button class="btn btn-primary btn-sm" onclick="showNominationModal()" style="margin-top: 10px;">
+                                <i class="fas fa-plus"></i> Submit Your First Nomination
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = recent.map(n => `
+                <tr>
+                    <td><strong>${n.title || 'Untitled'}</strong></td>
+                    <td>${n.category || 'General'}</td>
+                    <td><span class="status-badge status-${n.status || 'draft'}">${(n.status || 'draft').replace(/_/g, ' ').toUpperCase()}</span></td>
+                    <td>${n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Recent'}</td>
+                    <td>
+                        <button class="action-btn view" onclick="viewNomination('${n._id}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showNominationModal(editId = null) {
+            if (editId) {
+                const nomination = appState.nominations.find(n => n._id === editId);
+                if (nomination) {
+                    document.getElementById('nominationId').value = nomination._id;
+                    document.getElementById('nominationTitle').value = nomination.title || '';
+                    document.getElementById('nominationCategory').value = nomination.category || '';
+                    document.getElementById('nominationDescription').value = nomination.description || '';
+                    document.getElementById('nominationAchievements').value = (nomination.achievements || []).join('\n');
+                    
+                    const statusRadio = document.querySelector(`input[name="nominationStatus"][value="${nomination.status}"]`);
+                    if (statusRadio) statusRadio.checked = true;
+                    
+                    document.getElementById('nominationModalTitle').textContent = 'Edit Nomination';
+                }
+            } else {
+                document.getElementById('nominationForm').reset();
+                document.getElementById('nominationId').value = '';
+                document.querySelector('input[name="nominationStatus"][value="draft"]').checked = true;
+                document.getElementById('nominationModalTitle').textContent = 'Submit Nomination';
+            }
+            
+            document.getElementById('nominationModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        document.getElementById('nominationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('nominationSubmitBtn');
+            const originalText = submitBtn.innerHTML;
+            
+            try {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                submitBtn.disabled = true;
+                
+                const nominationData = {
+                    title: document.getElementById('nominationTitle').value,
+                    category: document.getElementById('nominationCategory').value,
+                    description: document.getElementById('nominationDescription').value,
+                    achievements: document.getElementById('nominationAchievements').value
+                        .split('\n')
+                        .map(a => a.trim())
+                        .filter(a => a.length > 0),
+                    status: document.querySelector('input[name="nominationStatus"]:checked').value,
+                    year: new Date().getFullYear()
+                };
+                
+                const nominationId = document.getElementById('nominationId').value;
+                const url = nominationId ? 
+                    `/api/business/nominations/${nominationId}` : 
+                    '/api/business/nominations';
+                const method = nominationId ? 'PUT' : 'POST';
+                
+                const response = await fetchWithAuth(url, {
+                    method,
+                    body: JSON.stringify(nominationData)
+                });
+                
+                if (response.success) {
+                    showNotification(nominationId ? 'Nomination updated!' : 'Nomination submitted!', 'success');
+                    hideModal('nominationModal');
+                    await loadNominations();
+                }
+            } catch (error) {
+                showNotification('Failed to save nomination: ' + error.message, 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        function viewNomination(id) {
+            const nomination = appState.nominations.find(n => n._id === id);
+            if (!nomination) return;
+            
+            // Show details modal (simplified for now)
+            showNotification(`Viewing: ${nomination.title}`, 'info');
+        }
+
+        function editNomination(id) {
+            showNominationModal(id);
+        }
+
+        async function deleteNomination(id) {
+            if (!confirm('Are you sure you want to delete this nomination?')) return;
+            
+            try {
+                const response = await fetchWithAuth(`/api/business/nominations/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.success) {
+                    showNotification('Nomination deleted', 'success');
+                    await loadNominations();
+                }
+            } catch (error) {
+                showNotification('Failed to delete nomination', 'error');
             }
         }
 
         // ============================================
         // DOCUMENTS FUNCTIONS
         // ============================================
-        function showDocumentsModal() {
-            showNotification('Documents management coming soon!', 'info');
+        async function loadDocuments() {
+            try {
+                const data = await fetchWithAuth('/api/business/documents');
+                if (data.success) {
+                    appState.documents = data.documents || [];
+                    displayDocuments();
+                    document.getElementById('documentsUploaded').textContent = appState.documents.length;
+                    document.getElementById('totalDocuments').textContent = appState.documents.length;
+                }
+            } catch (error) {
+                console.error('❌ Documents load error:', error);
+                loadMockDocuments();
+            }
         }
 
-        function viewAllNominations() {
-            showNotification('View all nominations - feature coming soon!', 'info');
+        function displayDocuments() {
+            const grid = document.getElementById('documentsGrid');
+            
+            if (appState.documents.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                        <i class="fas fa-file-upload" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
+                        <p>No documents uploaded yet</p>
+                        <button class="btn btn-primary btn-sm" onclick="showUploadModal()" style="margin-top: 10px;">
+                            <i class="fas fa-upload"></i> Upload Your First Document
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = appState.documents.map(doc => `
+                <div class="document-card">
+                    <div class="document-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="document-info">
+                        <div class="document-name">${doc.name}</div>
+                        <div class="document-date">Uploaded: ${new Date(doc.uploaded_at).toLocaleDateString()}</div>
+                    </div>
+                    <div class="document-actions">
+                        <button onclick="viewDocument('${doc.id}')"><i class="fas fa-eye"></i></button>
+                        <button onclick="downloadDocument('${doc.id}')"><i class="fas fa-download"></i></button>
+                        <button onclick="deleteDocument('${doc.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showUploadModal() {
+            document.getElementById('uploadForm').reset();
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('uploadModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // File upload handling
+        document.getElementById('fileDropZone').addEventListener('click', () => {
+            document.getElementById('documentFile').click();
+        });
+
+        document.getElementById('fileDropZone').addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.currentTarget.style.background = '#f8fafc';
+        });
+
+        document.getElementById('fileDropZone').addEventListener('dragleave', (e) => {
+            e.currentTarget.style.background = '';
+        });
+
+        document.getElementById('fileDropZone').addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.currentTarget.style.background = '';
+            
+            const file = e.dataTransfer.files[0];
+            if (file) handleFileSelect(file);
+        });
+
+        document.getElementById('documentFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFileSelect(file);
+        });
+
+        function handleFileSelect(file) {
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification('File too large. Max 10MB', 'error');
+                return;
+            }
+            
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileInfo').style.display = 'flex';
+        }
+
+        function clearFile() {
+            document.getElementById('documentFile').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const file = document.getElementById('documentFile').files[0];
+            if (!file) {
+                showNotification('Please select a file', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('document', file);
+            formData.append('name', document.getElementById('documentName').value);
+            formData.append('type', document.getElementById('documentType').value);
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/business/documents`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('lba_auth_token')}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Document uploaded successfully', 'success');
+                    hideModal('uploadModal');
+                    await loadDocuments();
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            } catch (error) {
+                showNotification('Upload failed: ' + error.message, 'error');
+            }
+        });
+
+        function viewDocument(id) {
+            window.open(`${BACKEND_URL}/api/business/documents/${id}/view`, '_blank');
+        }
+
+        function downloadDocument(id) {
+            window.open(`${BACKEND_URL}/api/business/documents/${id}/download`, '_blank');
+        }
+
+        async function deleteDocument(id) {
+            if (!confirm('Delete this document?')) return;
+            
+            try {
+                const response = await fetchWithAuth(`/api/business/documents/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.success) {
+                    showNotification('Document deleted', 'success');
+                    await loadDocuments();
+                }
+            } catch (error) {
+                showNotification('Failed to delete document', 'error');
+            }
+        }
+
+        // ============================================
+        // NOTIFICATIONS FUNCTIONS
+        // ============================================
+        async function loadNotifications() {
+            try {
+                const data = await fetchWithAuth('/api/business/notifications');
+                if (data.success) {
+                    appState.notifications = data.notifications || [];
+                    displayNotifications();
+                    
+                    const unread = appState.notifications.filter(n => !n.read).length;
+                    document.getElementById('notificationsCount').textContent = unread;
+                }
+            } catch (error) {
+                console.error('❌ Notifications load error:', error);
+                loadMockNotifications();
+            }
+        }
+
+        function displayNotifications() {
+            const list = document.getElementById('notificationsList');
+            
+            if (appState.notifications.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 60px;">
+                        <i class="fas fa-bell-slash" style="font-size: 48px; color: #cbd5e0;"></i>
+                        <p style="margin-top: 20px;">No notifications</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = appState.notifications.map(n => {
+                const iconColor = n.type === 'success' ? '#10B981' :
+                                 n.type === 'warning' ? '#F59E0B' :
+                                 n.type === 'error' ? '#EF4444' : '#3B82F6';
+                
+                const icon = n.type === 'success' ? 'check-circle' :
+                            n.type === 'warning' ? 'exclamation-triangle' :
+                            n.type === 'error' ? 'exclamation-circle' : 'info-circle';
+                
+                return `
+                    <div class="notification-item ${n.read ? '' : 'unread'}" onclick="markNotificationRead('${n.id}')">
+                        <div class="notification-icon" style="background: ${iconColor}20; color: ${iconColor};">
+                            <i class="fas fa-${icon}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${n.title}</div>
+                            <div class="notification-message">${n.message}</div>
+                            <div class="notification-time">${new Date(n.created_at).toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function markNotificationRead(id) {
+            try {
+                await fetchWithAuth(`/api/business/notifications/${id}/read`, {
+                    method: 'POST'
+                });
+                await loadNotifications();
+            } catch (error) {
+                console.error('Error marking notification read:', error);
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                await fetchWithAuth('/api/business/notifications/read-all', {
+                    method: 'POST'
+                });
+                await loadNotifications();
+                showNotification('All notifications marked as read', 'success');
+            } catch (error) {
+                console.error('Error marking all read:', error);
+            }
+        }
+
+        // ============================================
+        // SETTINGS FUNCTIONS
+        // ============================================
+        function showChangePasswordModal() {
+            document.getElementById('passwordForm').reset();
+            document.getElementById('passwordModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showNotification('Passwords do not match', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetchWithAuth('/api/auth/change-password', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        currentPassword: document.getElementById('currentPassword').value,
+                        newPassword: newPassword
+                    })
+                });
+                
+                if (response.success) {
+                    showNotification('Password changed successfully', 'success');
+                    hideModal('passwordModal');
+                }
+            } catch (error) {
+                showNotification('Failed to change password', 'error');
+            }
+        });
+
+        function showTwoFactorSetup() {
+            showNotification('Two-factor authentication coming soon!', 'info');
+        }
+
+        function exportBusinessData() {
+            const data = {
+                profile: appState.profile,
+                nominations: appState.nominations,
+                documents: appState.documents,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `business-data-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('Data exported successfully', 'success');
+        }
+
+        function showDeleteAccountModal() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                showNotification('Account deletion - Please contact admin', 'info');
+            }
+        }
+
+        // ============================================
+        // MOCK DATA FOR DEMO
+        // ============================================
+        function loadMockProfile() {
+            appState.profile = {
+                business_name: 'Demo Business',
+                contact_name: 'John Doe',
+                phone: '+231 123 456 789',
+                business_type: 'Technology',
+                location: 'Monrovia',
+                website: 'https://example.com',
+                verified: true,
+                status: 'active',
+                member_since: new Date(2024, 0, 1).toISOString()
+            };
+            updateProfileDisplay();
+        }
+
+        function loadMockNominations() {
+            appState.nominations = [
+                {
+                    _id: '1',
+                    title: 'Best Technology Innovation 2025',
+                    category: 'Technology',
+                    status: 'submitted',
+                    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                    score: null
+                },
+                {
+                    _id: '2',
+                    title: 'Excellence in Customer Service',
+                    category: 'Service',
+                    status: 'approved',
+                    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    score: 85
+                },
+                {
+                    _id: '3',
+                    title: 'Sustainable Business Practices',
+                    category: 'Sustainability',
+                    status: 'draft',
+                    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+                    score: null
+                }
+            ];
+            updateNominationsCount();
+            displayNominations();
+            displayRecentNominations();
+        }
+
+        function loadMockDocuments() {
+            appState.documents = [
+                {
+                    id: '1',
+                    name: 'Business Registration Certificate',
+                    uploaded_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: '2',
+                    name: 'Tax Clearance 2025',
+                    uploaded_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
+                }
+            ];
+            displayDocuments();
+            document.getElementById('documentsUploaded').textContent = appState.documents.length;
+            document.getElementById('totalDocuments').textContent = appState.documents.length;
+        }
+
+        function loadMockNotifications() {
+            appState.notifications = [
+                {
+                    id: '1',
+                    title: 'Nomination Approved',
+                    message: 'Your nomination for "Best Technology Innovation" has been approved!',
+                    type: 'success',
+                    read: false,
+                    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: '2',
+                    title: 'Document Required',
+                    message: 'Please upload your business registration certificate',
+                    type: 'warning',
+                    read: true,
+                    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: '3',
+                    title: 'Profile Update',
+                    message: 'Complete your profile to increase visibility',
+                    type: 'info',
+                    read: false,
+                    created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
+                }
+            ];
+            displayNotifications();
+            
+            const unread = appState.notifications.filter(n => !n.read).length;
+            document.getElementById('notificationsCount').textContent = unread;
         }
 
         // ============================================
@@ -1342,13 +2598,6 @@
         // ============================================
         function hideModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-
-        function hideAllModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('active');
-            });
             document.body.style.overflow = 'auto';
         }
 
@@ -1361,9 +2610,9 @@
             setInterval(() => {
                 timeLeft--;
                 
-                if (timeLeft === 300) { // 5 minutes
+                if (timeLeft === 300) {
                     showNotification('Session will expire in 5 minutes', 'warning');
-                } else if (timeLeft === 60) { // 1 minute
+                } else if (timeLeft === 60) {
                     showNotification('Session will expire in 1 minute', 'warning');
                 } else if (timeLeft <= 0) {
                     showNotification('Session expired. Redirecting...', 'error');
@@ -1371,7 +2620,6 @@
                 }
             }, 1000);
             
-            // Reset timer on user activity
             ['click', 'mousemove', 'keypress'].forEach(event => {
                 document.addEventListener(event, () => {
                     timeLeft = SESSION_TIMEOUT * 60;
@@ -1383,7 +2631,6 @@
         // NOTIFICATION SYSTEM
         // ============================================
         function showNotification(message, type = 'success') {
-            // Remove existing notifications
             document.querySelectorAll('.notification').forEach(n => n.remove());
             
             const notification = document.createElement('div');
@@ -1413,7 +2660,6 @@
             
             document.body.appendChild(notification);
             
-            // Auto-remove after 4 seconds
             setTimeout(() => {
                 notification.style.animation = 'slideOut 0.3s';
                 setTimeout(() => notification.remove(), 300);
@@ -1435,11 +2681,20 @@
         // ============================================
         window.showNominationModal = showNominationModal;
         window.showProfileModal = showProfileModal;
-        window.showDocumentsModal = showDocumentsModal;
-        window.viewAllNominations = viewAllNominations;
+        window.showUploadModal = showUploadModal;
         window.hideModal = hideModal;
-        window.submitNomination = submitNomination;
-        window.updateProfile = updateProfile;
+        window.viewNomination = viewNomination;
+        window.editNomination = editNomination;
+        window.deleteNomination = deleteNomination;
+        window.viewDocument = viewDocument;
+        window.downloadDocument = downloadDocument;
+        window.deleteDocument = deleteDocument;
+        window.markAllNotificationsRead = markAllNotificationsRead;
+        window.showChangePasswordModal = showChangePasswordModal;
+        window.showTwoFactorSetup = showTwoFactorSetup;
+        window.exportBusinessData = exportBusinessData;
+        window.showDeleteAccountModal = showDeleteAccountModal;
+        window.switchPage = switchPage;
         window.logout = logout;
 
         console.log('✅ Business Dashboard Ready');
