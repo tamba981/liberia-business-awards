@@ -8831,10 +8831,270 @@ if ('connection' in navigator) {
     }
 }
 </script>
+<!-- Welcome Modal - Shows on first visit -->
+<div id="welcomeModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[10001] opacity-0 pointer-events-none transition-opacity duration-500" role="dialog" aria-labelledby="welcomeModalTitle" aria-modal="true">
+    <div class="modal-content bg-white rounded-2xl w-11/12 md:w-4/5 lg:w-3/4 max-w-5xl max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-500 shadow-2xl">
+        <!-- Header with brand colors -->
+        <div class="bg-gradient-to-r from-lba-red to-lba-blue p-6 rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mr-4 backdrop-blur-sm">
+                        <i class="fas fa-award text-white text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 id="welcomeModalTitle" class="text-3xl md:text-4xl font-bold text-white">Welcome to LBA 3.0</h2>
+                        <p class="text-white/90 text-lg mt-1">Liberia Business Awards 2026</p>
+                    </div>
+                </div>
+                <button onclick="closeWelcomeModal()" class="text-white/80 hover:text-white transition-colors" aria-label="Close welcome message">
+                    <i class="fas fa-times text-3xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-6 md:p-8 space-y-8">
+            <!-- OUR FOCUS & REACH Section (Your requested text) -->
+            <div class="bg-gradient-to-r from-lba-red/5 to-lba-blue/5 p-6 rounded-xl border-l-4 border-lba-red">
+                <h3 class="text-2xl font-bold text-lba-red mb-4 flex items-center">
+                    <i class="fas fa-bullseye mr-3 text-lba-blue"></i>
+                    OUR FOCUS & REACH
+                </h3>
+                <p class="text-gray-700 text-lg leading-relaxed mb-4">
+                    The Liberia Business Awards is a nationally rooted and globally connected platform dedicated to elevating Liberian businesses.
+                </p>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                    <span class="font-bold text-lba-red">Our primary focus is Liberia</span>, where we recognize, support, and showcase excellence across all counties and economic sectors. From startups to established enterprises, LBA exists to strengthen the backbone of Liberia's private sector.
+                </p>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                    Beyond national borders, LBA maintains strategic interest and engagement across Africa and key global markets. These regions represent partnerships, diaspora connections, development institutions, investors, and platforms that support trade, innovation, and business growth for Liberian enterprises.
+                </p>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                    Through this national-to-global approach, LBA serves as a bridge between Liberian businesses and international opportunity, positioning local enterprises for visibility, credibility, and sustainable expansion.
+                </p>
+                <div class="text-center mt-4 p-4 bg-white/50 rounded-lg">
+                    <p class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-lba-red to-lba-blue">
+                        🇱🇷 Liberia first. Africa connected. Global impact. 🌍
+                    </p>
+                </div>
+            </div>
+
+            <!-- Vision Section -->
+            <div>
+                <h3 class="text-2xl font-bold text-lba-blue mb-4 flex items-center">
+                    <i class="fas fa-eye mr-3 text-lba-red"></i>
+                    Our Vision
+                </h3>
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <p class="text-gray-700 leading-relaxed text-lg italic">
+                        "To become Liberia's leading national platform for business recognition, visibility, and private sector excellence, showcasing the entrepreneurs and enterprises driving innovation, job creation, and economic transformation."
+                    </p>
+                    <p class="text-gray-600 mt-4">
+                        We position Liberia's most impactful businesses on a credible national and international stage, strengthening the country's reputation as a growing hub for entrepreneurship and investment.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Mission Section -->
+            <div>
+                <h3 class="text-2xl font-bold text-lba-red mb-4 flex items-center">
+                    <i class="fas fa-bullseye mr-3 text-lba-blue"></i>
+                    Our Mission
+                </h3>
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <p class="text-gray-700 mb-4">To recognize, celebrate, and elevate businesses and entrepreneurs that are contributing to Liberia's economic growth and social development.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-lba-red mt-1 mr-3"></i>
+                            <span class="text-gray-700">Providing a credible national recognition platform</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-lba-red mt-1 mr-3"></i>
+                            <span class="text-gray-700">Increasing visibility and credibility for entrepreneurs</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-lba-red mt-1 mr-3"></i>
+                            <span class="text-gray-700">Connecting businesses with partners and investors</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-lba-red mt-1 mr-3"></i>
+                            <span class="text-gray-700">Promoting innovation and ethical business practices</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-lba-red mt-1 mr-3"></i>
+                            <span class="text-gray-700">Supporting inclusive private sector growth</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategic Goals -->
+            <div>
+                <h3 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-lba-red to-lba-blue mb-4 flex items-center">
+                    <i class="fas fa-flag-checkered mr-3 text-lba-red"></i>
+                    Strategic Goals
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white border border-gray-200 p-5 rounded-xl hover:shadow-lg transition-shadow">
+                        <div class="w-10 h-10 bg-lba-red/10 rounded-full flex items-center justify-center mb-3">
+                            <span class="text-lba-red font-bold">1</span>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-2">Promote Business Excellence</h4>
+                        <p class="text-gray-600 text-sm">Recognize outstanding businesses demonstrating innovation, resilience, and impact.</p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 p-5 rounded-xl hover:shadow-lg transition-shadow">
+                        <div class="w-10 h-10 bg-lba-blue/10 rounded-full flex items-center justify-center mb-3">
+                            <span class="text-lba-blue font-bold">2</span>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-2">Increase Visibility</h4>
+                        <p class="text-gray-600 text-sm">Provide a national platform highlighting enterprises from startups to established companies.</p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 p-5 rounded-xl hover:shadow-lg transition-shadow">
+                        <div class="w-10 h-10 bg-lba-red/10 rounded-full flex items-center justify-center mb-3">
+                            <span class="text-lba-red font-bold">3</span>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-2">Strengthen Private Sector</h4>
+                        <p class="text-gray-600 text-sm">Create collaboration opportunities between entrepreneurs, investors, and partners.</p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 p-5 rounded-xl hover:shadow-lg transition-shadow">
+                        <div class="w-10 h-10 bg-lba-blue/10 rounded-full flex items-center justify-center mb-3">
+                            <span class="text-lba-blue font-bold">4</span>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-2">Encourage Entrepreneurship</h4>
+                        <p class="text-gray-600 text-sm">Celebrate entrepreneurs building solutions, creating jobs, and driving transformation.</p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 p-5 rounded-xl hover:shadow-lg transition-shadow">
+                        <div class="w-10 h-10 bg-lba-red/10 rounded-full flex items-center justify-center mb-3">
+                            <span class="text-lba-red font-bold">5</span>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-2">Build National Platform</h4>
+                        <p class="text-gray-600 text-sm">Develop LBA into a trusted institution documenting business success stories.</p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 p-5 rounded-xl hover:shadow-lg transition-shadow">
+                        <div class="w-10 h-10 bg-lba-blue/10 rounded-full flex items-center justify-center mb-3">
+                            <span class="text-lba-blue font-bold">6</span>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-2">Support Economic Development</h4>
+                        <p class="text-gray-600 text-sm">Encourage businesses to expand, improve standards, and invest in sustainable growth.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="bg-gradient-to-r from-lba-red to-lba-blue p-6 rounded-xl text-white text-center">
+                <h4 class="text-2xl font-bold mb-3">Ready to Join the Movement?</h4>
+                <p class="mb-6 opacity-90">Be part of Liberia's premier business recognition platform</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="closeWelcomeModalAndOpen('nominateModal')" class="bg-white text-lba-red px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition transform hover:scale-105">
+                        <i class="fas fa-trophy mr-2"></i>Nominate a Business
+                    </button>
+                    <button onclick="closeWelcomeModalAndOpen('partnerModal')" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full font-bold hover:bg-white/10 transition transform hover:scale-105">
+                        <i class="fas fa-handshake mr-2"></i>Partner With Us
+                    </button>
+                </div>
+            </div>
+
+            <!-- Don't show again option -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" id="dontShowWelcomeAgain" class="w-5 h-5 text-lba-red rounded focus:ring-lba-red">
+                    <span class="ml-3 text-gray-600">Don't show this message again</span>
+                </label>
+                <button onclick="closeWelcomeModal()" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-times mr-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Welcome Modal Functions
+function initWelcomeModal() {
+    // Check if user has seen the welcome modal before
+    const hasSeenWelcome = localStorage.getItem('lbaWelcomeSeen');
+    
+    if (!hasSeenWelcome) {
+        // Show modal after a slight delay (2 seconds) to let page load first
+        setTimeout(() => {
+            openWelcomeModal();
+        }, 2000);
+    }
+}
+
+function openWelcomeModal() {
+    const modal = document.getElementById('welcomeModal');
+    if (!modal) return;
+    
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100', 'pointer-events-auto');
+    
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.remove('scale-95');
+        modalContent.classList.add('scale-100');
+    }
+    
+    document.body.style.overflow = 'hidden';
+}
+
+function closeWelcomeModal() {
+    const modal = document.getElementById('welcomeModal');
+    if (!modal) return;
+    
+    // Check if "Don't show again" is checked
+    const dontShowAgain = document.getElementById('dontShowWelcomeAgain');
+    if (dontShowAgain && dontShowAgain.checked) {
+        localStorage.setItem('lbaWelcomeSeen', 'true');
+    }
+    
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.classList.remove('scale-100');
+        modalContent.classList.add('scale-95');
+    }
+    
+    document.body.style.overflow = 'auto';
+}
+
+function closeWelcomeModalAndOpen(otherModalId) {
+    closeWelcomeModal();
+    setTimeout(() => {
+        openModal(otherModalId);
+    }, 500);
+}
+
+// Add reset function for testing/debugging (optional)
+function resetWelcomeModal() {
+    localStorage.removeItem('lbaWelcomeSeen');
+    location.reload();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Make sure AOS is initialized first
+    if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+    }
+    
+    // Initialize welcome modal after everything else
+    setTimeout(initWelcomeModal, 500);
+});
+</script>    
 
 </body>
 
 </html>
+
 
 
 
