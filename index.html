@@ -8210,11 +8210,50 @@ document.addEventListener('DOMContentLoaded', function() {
     initPartnersSlider();
 });
 
+// Function to toggle all categories view
+function toggleAllCategories() {
+    console.log('🔄 Toggling all categories view');
+    const allCategories = document.getElementById('allCategories');
+    const button = document.querySelector('button[onclick="toggleAllCategories()"]');
+    
+    if (!allCategories) {
+        console.error('❌ allCategories element not found');
+        return;
+    }
+    
+    // Toggle visibility
+    if (allCategories.classList.contains('hidden')) {
+        // Show the categories
+        allCategories.classList.remove('hidden');
+        
+        // Change button text if it exists
+        if (button) {
+            const buttonText = button.innerHTML;
+            if (buttonText.includes('View All 18 Sectors')) {
+                button.innerHTML = '<i class="fas fa-times mr-2"></i> Hide Categories';
+            }
+        }
+        
+        // Scroll to the categories section smoothly
+        setTimeout(() => {
+            allCategories.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    } else {
+        // Hide the categories
+        allCategories.classList.add('hidden');
+        
+        // Restore button text
+        if (button) {
+            button.innerHTML = '<i class="fas fa-list mr-2"></i> View All 18 Sectors & Sub-Categories';
+        }
+    }
+}
+
 // Function to scroll to specific sector
 function scrollToCategory(sector) {
     // First close the all categories view
     const allCategories = document.getElementById('allCategories');
-    if (allCategories) {
+    if (allCategories && !allCategories.classList.contains('hidden')) {
         allCategories.classList.add('hidden');
     }
     
@@ -8795,6 +8834,7 @@ if ('connection' in navigator) {
 </body>
 
 </html>
+
 
 
 
