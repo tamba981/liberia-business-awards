@@ -59,6 +59,14 @@ gtag('consent', 'default', {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://images.unsplash.com">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+        <!-- Preload critical images for faster loading -->
+    <link rel="preload" as="image" href="/images/logo.png" fetchpriority="high">
+    <link rel="preload" as="image" href="/images/welcome.jpg" fetchpriority="high">
+    <link rel="preload" as="image" href="/images/LBA-cover.png" fetchpriority="high">
+    
+    <!-- Preconnect to important domains -->
+    <link rel="preconnect" href="https://raw.githubusercontent.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -356,9 +364,57 @@ gtag('consent', 'default', {
     left: 0;
 }
 
-/* Image Optimization */
+/* ========== IMAGE OPTIMIZATION ========== */
+/* Critical images (above the fold) */
+.hero-bg, 
+.logo-image,
+img[fetchpriority="high"] {
+    content-visibility: visible;
+    contain: none;
+}
+
+/* All other images - lazy load */
 img {
     content-visibility: auto;
+    loading: lazy;
+    decoding: async;
+    background-color: #f0f0f0; /* Placeholder color while loading */
+}
+
+/* Add blur-up effect for smoother loading */
+img:not([loading="eager"]) {
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+img.loaded {
+    opacity: 1;
+}
+
+/* Responsive image containers */
+.image-slider img,
+.team-member img,
+.blog-card img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: attr(width) / attr(height);
+}
+
+/* Prevent layout shift */
+img[width][height] {
+    aspect-ratio: attr(width) / attr(height);
+}
+
+/* Placeholder background for images not yet loaded */
+img:not([src]) {
+    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
 
 /* Optimize background images */
@@ -715,10 +771,12 @@ window.addEventListener('load', function() {
         <div class="flex items-center">
     <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
         <img src="images/logo.png" 
-             alt="Liberia Business Awards Logo - Home" 
-             class="h-20 md:h-28 lg:h-32 xl:h-36 mr-3 object-contain"
-             width="160"
-             height="160">
+     alt="Liberia Business Awards Logo - Home" 
+     class="h-20 md:h-28 lg:h-32 xl:h-36 mr-3 object-contain"
+     width="160"
+     height="160"
+     fetchpriority="high"
+     loading="eager">
     </a>
 </div>
         
@@ -9103,11 +9161,116 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize welcome modal after everything else
     setTimeout(initWelcomeModal, 500);
 });
-</script>    
+</script>
+
+<!-- Image Loading Optimization -->
+<script>
+// ============================================
+// ✅ IMAGE LOADING OPTIMIZATION
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing image optimizations...');
+    
+    // Check if browser supports native lazy loading
+    const hasNativeLazyLoading = 'loading' in HTMLImageElement.prototype;
+    
+    if (!hasNativeLazyLoading) {
+        // Load lazysizes polyfill for older browsers
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js';
+        script.async = true;
+        document.body.appendChild(script);
+        console.log('📦 Loading lazy loading polyfill');
+    }
+    
+    // Mark images as loaded for fade-in effect
+    const images = document.querySelectorAll('img:not([loading="eager"])');
+    
+    images.forEach(img => {
+        if (img.complete) {
+            img.classList.add('loaded');
+        } else {
+            img.addEventListener('load', function() {
+                this.classList.add('loaded');
+            });
+            img.addEventListener('error', function() {
+                console.log('❌ Failed to load image:', this.src);
+                // Add fallback for broken images
+                this.style.backgroundColor = '#f0f0f0';
+            });
+        }
+    });
+    
+    console.log('✅ Image optimizations complete');
+});
+
+// ============================================
+// ✅ PROGRESSIVE IMAGE LOADING
+// ============================================
+// This function loads images only when they're about to enter the viewport
+function setupIntersectionObserver() {
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    
+                    // If image has data-src, load it
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                    }
+                    
+                    // Stop observing once loaded
+                    observer.unobserve(img);
+                }
+            });
+        }, {
+            rootMargin: '50px 0px', // Start loading when within 50px of viewport
+            threshold: 0.01
+        });
+        
+        // Observe all images with data-src attribute
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
+}
+
+// Call this if you want to implement progressive loading
+// setupIntersectionObserver();
+</script>
+
+<!-- Performance Monitoring Summary -->
+<script>
+// ============================================
+// ✅ LOAD TIME SUMMARY FOR DEVELOPERS
+// ============================================
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        const perfData = performance.getEntriesByType('navigation')[0];
+        const loadTime = Math.round(perfData.loadEventEnd);
+        
+        console.log('📊 ====== PERFORMANCE SUMMARY ======');
+        console.log(`⏱️  Total Load Time: ${loadTime}ms`);
+        
+        if (loadTime > 3000) {
+            console.warn('⚠️  Load time exceeds 3 seconds. Consider:');
+            console.warn('   - Compress images further');
+            console.warn('   - Use next-gen formats (WebP)');
+            console.warn('   - Implement CDN for images');
+        } else {
+            console.log('✅ Load time is good!');
+        }
+        console.log('📊 ================================');
+    }, 100);
+});
+</script>
 
 </body>
 
 </html>
+
 
 
 
