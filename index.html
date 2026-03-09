@@ -8846,7 +8846,7 @@ if ('connection' in navigator) {
                         <p class="text-white/90 text-lg mt-1">Liberia Business Awards 2026</p>
                     </div>
                 </div>
-                <button onclick="closeWelcomeModal()" class="text-white/80 hover:text-white transition-colors" aria-label="Close welcome message">
+                <button onclick="closeWelcomeModal(true)" class="text-gray-500 hover:text-gray-700 transition-colors">
                     <i class="fas fa-times text-3xl"></i>
                 </button>
             </div>
@@ -9020,11 +9020,15 @@ function initWelcomeModal() {
     // Check if user has seen the welcome modal before
     const hasSeenWelcome = localStorage.getItem('lbaWelcomeSeen');
     
+    console.log('🔍 Checking welcome modal status:', hasSeenWelcome ? 'Already seen' : 'First visit');
+    
     if (!hasSeenWelcome) {
         // Show modal after a slight delay (2 seconds) to let page load first
         setTimeout(() => {
             openWelcomeModal();
         }, 2000);
+    } else {
+        console.log('👋 Welcome modal not shown - returning visitor');
     }
 }
 
@@ -9044,14 +9048,24 @@ function openWelcomeModal() {
     document.body.style.overflow = 'hidden';
 }
 
-function closeWelcomeModal() {
+function closeWelcomeModal(rememberChoice = true) {
     const modal = document.getElementById('welcomeModal');
     if (!modal) return;
     
-    // Check if "Don't show again" is checked
+    // Check if "Don't show again" is checked OR if we should remember this visit
     const dontShowAgain = document.getElementById('dontShowWelcomeAgain');
-    if (dontShowAgain && dontShowAgain.checked) {
+    
+    // Save to localStorage if:
+    // 1. User checked "Don't show again", OR
+    // 2. User clicked close (we remember they've seen it)
+    if (rememberChoice && dontShowAgain && dontShowAgain.checked) {
         localStorage.setItem('lbaWelcomeSeen', 'true');
+        console.log('✅ Welcome modal preference saved: user checked "Don\'t show again"');
+    } else if (rememberChoice) {
+        // Even if they didn't check the box, they've still seen it
+        // So we save that they've viewed it once
+        localStorage.setItem('lbaWelcomeSeen', 'true');
+        console.log('✅ Welcome modal preference saved: user has seen it');
     }
     
     modal.classList.remove('opacity-100', 'pointer-events-auto');
@@ -9094,6 +9108,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </body>
 
 </html>
+
 
 
 
