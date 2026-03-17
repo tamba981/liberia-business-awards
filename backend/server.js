@@ -904,6 +904,60 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
         res.status(500).json({ success: false, message: 'Logout failed' });
     }
 });
+// ============ CHANGE PASSWORD ============
+
+// Change password for authenticated user
+app.post('/api/auth/change-password', authenticate, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Current password and new password are required' 
+            });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'New password must be at least 6 characters' 
+            });
+        }
+        
+        // Get user based on role
+        let user;
+        if (req.userRole === 'admin') {
+            user = await Admin.findById(req.userId);
+        } else if (req.userRole === 'business') {
+            user = await BusinessUser.findById(req.userId);
+        } else {
+            user = await SystemUser.findById(req.userId);
+        }
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        
+        // Verify current password
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        }
+        
+        // Update password
+        user.password = newPassword;
+        await user.save();
+        
+        // Log audit
+        await logAudit(req, req.userId, req.userRole, 'CHANGE_PASSWORD');
+        
+        res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 
 // ============ ADMIN BUSINESS MANAGEMENT ENDPOINTS ============
 
@@ -1107,6 +1161,58 @@ app.get('/api/admin/businesses/stats', authenticate, authorize('admin'), csrfPro
                 approved,
                 rejected,
                 suspended
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ ADMIN NOMINATIONS ENDPOINTS ============
+
+// Get all nominations (admin)
+app.get('/api/admin/nominations', authenticate, authorize('admin'), csrfProtection, async (req, res) => {
+    try {
+        const { status, page = 1, limit = 1000, search = '' } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        let query = {};
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { category: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const total = await Nomination.countDocuments(query);
+        const nominations = await Nomination.find(query)
+            .populate('business_id', 'business_name email')
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        await logAudit(req, req.userId, 'admin', 'VIEW_NOMINATIONS', null, null, { status, page, search });
+        
+        res.json({
+            success: true,
+            nominations: nominations.map(n => ({
+                _id: n._id,
+                business_name: n.business_id?.business_name || 'Unknown',
+                title: n.title,
+                category: n.category,
+                year: n.year,
+                status: n.status,
+                created_at: n.created_at
+            })),
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                pages: Math.ceil(total / parseInt(limit))
             }
         });
     } catch (error) {
