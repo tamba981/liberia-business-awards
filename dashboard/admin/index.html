@@ -1820,41 +1820,179 @@
         }
 
         // ============================================
-        // FIXED: SIMPLIFIED FETCH FUNCTIONS - NO CORS ISSUES
-        // ============================================
-        async function fetchFromSheets(action) {
-            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=${action}`;
+// PRODUCTION API REQUEST FUNCTION - USE FOR ALL BACKEND CALLS
+// ============================================
+const API_BASE = 'https://liberia-business-awards-backend.onrender.com';
+const API_TIMEOUT = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+
+// CSRF Token Management
+let csrfToken = localStorage.getItem('csrf_token');
+
+if (!csrfToken) {
+    csrfToken = Math.random().toString(36).substring(2, 15) + 
+                Math.random().toString(36).substring(2, 15) +
+                Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('csrf_token', csrfToken);
+}
+
+// Enhanced API request function with retry logic
+async function apiRequest(endpoint, options = {}) {
+    const token = localStorage.getItem('lba_auth_token');
+    let retries = 0;
+    
+    const makeRequest = async () => {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
             
-            console.log(`📡 Fetching: ${url}`);
+            const headers = {
+                'Accept': 'application/json',
+                'X-CSRF-Token': csrfToken
+            };
             
-            try {
-                // Simple fetch - no CORS mode, no complex options
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const text = await response.text();
-                
-                try {
-                    const data = JSON.parse(text);
-                    return data;
-                } catch (e) {
-                    console.log('📄 Response is not JSON:', text.substring(0, 100));
-                    return { success: false, error: 'Invalid JSON response' };
-                }
-                
-            } catch (error) {
-                console.error('❌ Fetch error:', error);
-                return { success: false, error: error.message };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
+            
+            // Don't set Content-Type for FormData
+            if (!(options.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+            
+            const fetchOptions = {
+                ...options,
+                headers: {
+                    ...headers,
+                    ...options.headers
+                },
+                signal: controller.signal,
+                credentials: 'include'
+            };
+            
+            const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+            clearTimeout(timeoutId);
+            
+            // Get new CSRF token from response if provided
+            const newCsrfToken = response.headers.get('X-CSRF-Token');
+            if (newCsrfToken) {
+                csrfToken = newCsrfToken;
+                localStorage.setItem('csrf_token', newCsrfToken);
+            }
+            
+            // Handle 401 Unauthorized
+            if (response.status === 401) {
+                // Try to refresh token
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    // Retry the request with new token
+                    const newToken = localStorage.getItem('lba_auth_token');
+                    headers['Authorization'] = `Bearer ${newToken}`;
+                    return await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+                } else {
+                    // Redirect to login
+                    localStorage.clear();
+                    window.location.href = '../login.html';
+                    throw new Error('Session expired');
+                }
+            }
+            
+            // Handle rate limiting
+            if (response.status === 429) {
+                const retryAfter = response.headers.get('Retry-After') || 60;
+                showNotification(`Rate limited. Try again in ${retryAfter} seconds.`, 'warning');
+                return null;
+            }
+            
+            // Parse response
+            const text = await response.text();
+            try {
+                return text ? JSON.parse(text) : { success: true };
+            } catch (e) {
+                return { success: true, data: text };
+            }
+            
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                throw new Error('Request timeout');
+            }
+            throw error;
         }
+    };
+    
+    while (retries < MAX_RETRIES) {
+        try {
+            return await makeRequest();
+        } catch (error) {
+            retries++;
+            if (retries === MAX_RETRIES) {
+                console.error(`API request failed after ${MAX_RETRIES} retries:`, error);
+                showNotification(`Request failed: ${error.message}`, 'error');
+                throw error;
+            }
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+        }
+    }
+}
+
+// Refresh access token using refresh token
+async function refreshAccessToken() {
+    const refreshToken = localStorage.getItem('lba_refresh_token');
+    if (!refreshToken) return false;
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+        });
+        
+        const data = await response.json();
+        if (data.success && data.token) {
+            localStorage.setItem('lba_auth_token', data.token);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Token refresh failed:', error);
+        return false;
+    }
+}
+
+// Keep fetchFromSheets for Google Sheets integration if needed
+async function fetchFromSheets(action) {
+    const url = `${GOOGLE_APPS_SCRIPT_URL}?action=${action}`;
+    
+    console.log(`📡 Fetching from Sheets: ${url}`);
+    
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        
+        try {
+            const data = JSON.parse(text);
+            return data;
+        } catch (e) {
+            console.log('📄 Response is not JSON:', text.substring(0, 100));
+            return { success: false, error: 'Invalid JSON response' };
+        }
+        
+    } catch (error) {
+        console.error('❌ Sheets fetch error:', error);
+        return { success: false, error: error.message };
+    }
+}
 
         // Update your fetchDashboardStats function
         async function fetchDashboardStats() {
