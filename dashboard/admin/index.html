@@ -2015,28 +2015,78 @@ async function fetchFromSheets(action) {
 
         async function fetchDashboardStats() {
     try {
-        const data = await apiRequest('/api/health');
-        return data;
+        // Try to get real stats from backend
+        const [businesses, stats] = await Promise.all([
+            apiRequest('/api/admin/businesses?limit=1').catch(() => ({ success: false })),
+            apiRequest('/api/admin/businesses/stats').catch(() => ({ success: false }))
+        ]);
+        
+        if (stats.success) {
+            return {
+                success: true,
+                totalSubmissions: stats.stats.total || 0,
+                todaySubmissions: 0,
+                summary: {
+                    totalBusinesses: stats.stats.total || 0,
+                    totalNominations: 0,
+                    approvedNominations: stats.stats.approved || 0
+                },
+                sheetStats: {
+                    Businesses: { total: stats.stats.total || 0, approved: stats.stats.approved || 0, pending: stats.stats.pending || 0 },
+                    Nominations: { total: 0, approved: 0, pending: 0 }
+                }
+            };
+        }
+        throw new Error('Failed to fetch stats');
     } catch (error) {
         console.error('Failed to fetch dashboard stats:', error);
-        // Fallback to Sheets if backend fails
+        // Fallback to Sheets
         return await fetchFromSheets('getStats');
     }
 }
 
         async function fetchRecentActivity() {
     try {
-        // This endpoint doesn't exist yet in backend, but we'll add it
         const data = await apiRequest('/api/admin/audit-logs?limit=10');
-        if (data.success) {
-            return { activity: data.logs };
+        if (data.success && data.logs) {
+            const activities = data.logs.map(log => ({
+                title: formatActivityTitle(log.action),
+                description: `${log.resource || 'System'} ${log.action.toLowerCase()}`,
+                icon: getActivityIcon(log.action),
+                timestamp: log.timestamp,
+                user: log.user_id
+            }));
+            return { activity: activities };
         }
         throw new Error('Failed to fetch activity');
     } catch (error) {
         console.error('Failed to fetch activity:', error);
-        // Fallback to Sheets
         return await fetchFromSheets('getActivity');
     }
+}
+
+function formatActivityTitle(action) {
+    const titles = {
+        'LOGIN': 'User Login',
+        'LOGOUT': 'User Logout',
+        'APPROVE_BUSINESS': 'Business Approved',
+        'REJECT_BUSINESS': 'Business Rejected',
+        'CREATE_ANNOUNCEMENT': 'New Announcement',
+        'UPDATE_SETTINGS': 'Settings Updated'
+    };
+    return titles[action] || action.replace(/_/g, ' ');
+}
+
+function getActivityIcon(action) {
+    const icons = {
+        'LOGIN': 'sign-in-alt',
+        'LOGOUT': 'sign-out-alt',
+        'APPROVE_BUSINESS': 'check-circle',
+        'REJECT_BUSINESS': 'times-circle',
+        'CREATE_ANNOUNCEMENT': 'bullhorn',
+        'UPDATE_SETTINGS': 'cog'
+    };
+    return icons[action] || 'file-alt';
 }
 
         async function fetchAllSheetData() {
