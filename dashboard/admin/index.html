@@ -1686,6 +1686,8 @@
             }
         };
 
+         
+
         // ============================================
         // INITIALIZATION
         // ============================================
@@ -1716,6 +1718,23 @@
                 useFallbackData();
             }
         });
+
+
+
+          // Add CSRF token to all forms
+document.addEventListener('DOMContentLoaded', function() {
+    // Add CSRF token to all forms
+    document.querySelectorAll('form').forEach(form => {
+        // Check if CSRF input already exists
+        if (!form.querySelector('input[name="_csrf"]')) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+        }
+    });
+});
 
         // ============================================
         // AUTHENTICATION
