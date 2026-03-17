@@ -3464,21 +3464,17 @@ async function rejectBusiness(id) {
             return;
         }
         
-        // First, get business details to get email and phone
+        // Get business details
         const businessResponse = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const businessData = await businessResponse.json();
         const business = businessData.businesses.find(b => b._id === id);
         
-        if (!business) {
-            throw new Error('Business not found');
-        }
+        if (!business) throw new Error('Business not found');
         
-        // Reject the business
+        // STEP 1: Reject the business in your database
         const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${id}/reject`, {
             method: 'POST',
             headers: {
@@ -3493,38 +3489,31 @@ async function rejectBusiness(id) {
         if (data.success) {
             showNotification('Business rejected', 'warning');
             
-            // Send rejection email via Apps Script
+            // STEP 2: Send rejection email (ONE request)
             try {
-                const emailResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}`, {
+                await fetch(`${GOOGLE_APPS_SCRIPT_URL}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
                         formType: 'business_rejected',
                         email: business.email,
                         businessName: business.business_name,
-                        status: 'rejected',
                         reason: reason.trim(),
                         timestamp: new Date().toISOString()
                     })
                 });
-                
-                console.log('✅ Rejection email sent to:', business.email);
                 showNotification(`Rejection email sent to ${business.email}`, 'success');
             } catch (emailError) {
-                console.error('Email sending failed:', emailError);
+                console.error('Email failed:', emailError);
             }
             
-            // Send SMS notification for rejection
+            // STEP 3: Send SMS notification (SEPARATE request)
             try {
-                const smsResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}`, {
+                await fetch(`${GOOGLE_APPS_SCRIPT_URL}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
-                        formType: 'business_rejected_sms',
+                        formType: 'business_rejected_sms',  // ← THIS IS KEY!
                         businessName: business.business_name,
                         contactName: business.contact_name || '',
                         email: business.email,
@@ -3533,17 +3522,13 @@ async function rejectBusiness(id) {
                         timestamp: new Date().toISOString()
                     })
                 });
-                
-                console.log('✅ SMS notification sent for rejection');
-                showNotification('SMS notification sent', 'success');
+                showNotification('SMS notification sent to business owner', 'success');
             } catch (smsError) {
-                console.error('SMS sending failed:', smsError);
+                console.error('SMS failed:', smsError);
             }
             
             loadBusinesses();
             updateBusinessStats();
-        } else {
-            throw new Error(data.message || 'Failed to reject business');
         }
     } catch (error) {
         console.error('Error rejecting business:', error);
@@ -3556,7 +3541,6 @@ async function rejectBusiness(id) {
 async function approveBusiness(id) {
     if (!confirm('Are you sure you want to approve this business?')) return;
     
-    // Optional: Get additional notes
     const notes = prompt('Add any approval notes (optional):');
     
     try {
@@ -3566,21 +3550,17 @@ async function approveBusiness(id) {
             return;
         }
         
-        // First, get business details to get email and phone
+        // Get business details
         const businessResponse = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const businessData = await businessResponse.json();
         const business = businessData.businesses.find(b => b._id === id);
         
-        if (!business) {
-            throw new Error('Business not found');
-        }
+        if (!business) throw new Error('Business not found');
         
-        // Approve the business
+        // STEP 1: Approve the business in your database
         const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${id}/approve`, {
             method: 'POST',
             headers: {
@@ -3594,38 +3574,31 @@ async function approveBusiness(id) {
         if (data.success) {
             showNotification('Business approved successfully!', 'success');
             
-            // Send approval email via Apps Script
+            // STEP 2: Send approval email (ONE request)
             try {
-                const emailResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}`, {
+                await fetch(`${GOOGLE_APPS_SCRIPT_URL}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
                         formType: 'business_approved',
                         email: business.email,
                         businessName: business.business_name,
-                        status: 'approved',
                         notes: notes || 'Congratulations! Your business has been approved.',
                         timestamp: new Date().toISOString()
                     })
                 });
-                
-                console.log('✅ Approval email sent to:', business.email);
                 showNotification(`Approval email sent to ${business.email}`, 'success');
             } catch (emailError) {
-                console.error('Email sending failed:', emailError);
+                console.error('Email failed:', emailError);
             }
             
-            // Send SMS notification to admin
+            // STEP 3: Send SMS notification (SEPARATE request)
             try {
-                const smsResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}`, {
+                await fetch(`${GOOGLE_APPS_SCRIPT_URL}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
-                        formType: 'business_approved_sms',
+                        formType: 'business_approved_sms',  // ← THIS IS KEY!
                         businessName: business.business_name,
                         contactName: business.contact_name || '',
                         email: business.email,
@@ -3634,17 +3607,13 @@ async function approveBusiness(id) {
                         timestamp: new Date().toISOString()
                     })
                 });
-                
-                console.log('✅ SMS notification sent for approval');
-                showNotification('SMS notification sent', 'success');
+                showNotification('SMS notification sent to business owner', 'success');
             } catch (smsError) {
-                console.error('SMS sending failed:', smsError);
+                console.error('SMS failed:', smsError);
             }
             
             loadBusinesses();
             updateBusinessStats();
-        } else {
-            throw new Error(data.message || 'Failed to approve business');
         }
     } catch (error) {
         console.error('Error approving business:', error);
