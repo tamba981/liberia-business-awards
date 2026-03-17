@@ -1838,122 +1838,123 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-                 // ============================================
-        // PRODUCTION API REQUEST FUNCTION - USE FOR ALL BACKEND CALLS
-        // ============================================
-        const API_BASE = 'https://liberia-business-awards-backend.onrender.com';
-        const API_TIMEOUT = 30000; // 30 seconds
-        const MAX_RETRIES = 3;
+         // ============================================
+// PRODUCTION API REQUEST FUNCTION - USE FOR ALL BACKEND CALLS
+// ============================================
+// ✅ REMOVED DUPLICATE API_BASE DECLARATION
+const API_TIMEOUT = 30000; // 30 seconds
+const MAX_RETRIES = 3;
 
-        // CSRF Token Management
-        let csrfToken = localStorage.getItem('csrf_token');
+// CSRF Token Management
+let csrfToken = localStorage.getItem('csrf_token');
 
-        if (!csrfToken) {
-            csrfToken = Math.random().toString(36).substring(2, 15) + 
-                        Math.random().toString(36).substring(2, 15) +
-                        Math.random().toString(36).substring(2, 15);
-            localStorage.setItem('csrf_token', csrfToken);
-        }
+if (!csrfToken) {
+    csrfToken = Math.random().toString(36).substring(2, 15) + 
+                Math.random().toString(36).substring(2, 15) +
+                Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('csrf_token', csrfToken);
+}
 
-        // Enhanced API request function with retry logic
-        async function apiRequest(endpoint, options = {}) {
-            const token = localStorage.getItem('lba_auth_token');
-            let retries = 0;
+// Enhanced API request function with retry logic
+async function apiRequest(endpoint, options = {}) {
+    const token = localStorage.getItem('lba_auth_token');
+    let retries = 0;
+    
+    const makeRequest = async () => {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
             
-            const makeRequest = async () => {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-                    
-                    const headers = {
-                        'Accept': 'application/json',
-                        'X-CSRF-Token': csrfToken
-                    };
-                    
-                    if (token) {
-                        headers['Authorization'] = `Bearer ${token}`;
-                    }
-                    
-                    // Don't set Content-Type for FormData
-                    if (!(options.body instanceof FormData)) {
-                        headers['Content-Type'] = 'application/json';
-                    }
-                    
-                    const fetchOptions = {
-                        ...options,
-                        headers: {
-                            ...headers,
-                            ...options.headers
-                        },
-                        signal: controller.signal,
-                        credentials: 'include'
-                    };
-                    
-                    const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
-                    clearTimeout(timeoutId);
-                    
-                    // Get new CSRF token from response if provided
-                    const newCsrfToken = response.headers.get('X-CSRF-Token');
-                    if (newCsrfToken) {
-                        csrfToken = newCsrfToken;
-                        localStorage.setItem('csrf_token', newCsrfToken);
-                    }
-                    
-                    // Handle 401 Unauthorized
-                    if (response.status === 401) {
-                        // Try to refresh token
-                        const refreshed = await refreshAccessToken();
-                        if (refreshed) {
-                            // Retry the request with new token
-                            const newToken = localStorage.getItem('lba_auth_token');
-                            headers['Authorization'] = `Bearer ${newToken}`;
-                            return await fetch(`${API_BASE}${endpoint}`, fetchOptions);
-                        } else {
-                            // Redirect to login
-                            localStorage.clear();
-                            window.location.href = '../login.html';
-                            throw new Error('Session expired');
-                        }
-                    }
-                    
-                    // Handle rate limiting
-                    if (response.status === 429) {
-                        const retryAfter = response.headers.get('Retry-After') || 60;
-                        showNotification(`Rate limited. Try again in ${retryAfter} seconds.`, 'warning');
-                        return null;
-                    }
-                    
-                    // Parse response
-                    const text = await response.text();
-                    try {
-                        return text ? JSON.parse(text) : { success: true };
-                    } catch (e) {
-                        return { success: true, data: text };
-                    }
-                    
-                } catch (error) {
-                    if (error.name === 'AbortError') {
-                        throw new Error('Request timeout');
-                    }
-                    throw error;
-                }
+            const headers = {
+                'Accept': 'application/json',
+                'X-CSRF-Token': csrfToken
             };
             
-            while (retries < MAX_RETRIES) {
-                try {
-                    return await makeRequest();
-                } catch (error) {
-                    retries++;
-                    if (retries === MAX_RETRIES) {
-                        console.error(`API request failed after ${MAX_RETRIES} retries:`, error);
-                        showNotification(`Request failed: ${error.message}`, 'error');
-                        throw error;
-                    }
-                    // Wait before retrying (exponential backoff)
-                    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            // Don't set Content-Type for FormData
+            if (!(options.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+            
+            const fetchOptions = {
+                ...options,
+                headers: {
+                    ...headers,
+                    ...options.headers
+                },
+                signal: controller.signal,
+                credentials: 'include'
+            };
+            
+            // ✅ Using the first API_BASE from line 43
+            const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+            clearTimeout(timeoutId);
+            
+            // Get new CSRF token from response if provided
+            const newCsrfToken = response.headers.get('X-CSRF-Token');
+            if (newCsrfToken) {
+                csrfToken = newCsrfToken;
+                localStorage.setItem('csrf_token', newCsrfToken);
+            }
+            
+            // Handle 401 Unauthorized
+            if (response.status === 401) {
+                // Try to refresh token
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    // Retry the request with new token
+                    const newToken = localStorage.getItem('lba_auth_token');
+                    headers['Authorization'] = `Bearer ${newToken}`;
+                    return await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+                } else {
+                    // Redirect to login
+                    localStorage.clear();
+                    window.location.href = '../login.html';
+                    throw new Error('Session expired');
                 }
             }
+            
+            // Handle rate limiting
+            if (response.status === 429) {
+                const retryAfter = response.headers.get('Retry-After') || 60;
+                showNotification(`Rate limited. Try again in ${retryAfter} seconds.`, 'warning');
+                return null;
+            }
+            
+            // Parse response
+            const text = await response.text();
+            try {
+                return text ? JSON.parse(text) : { success: true };
+            } catch (e) {
+                return { success: true, data: text };
+            }
+            
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                throw new Error('Request timeout');
+            }
+            throw error;
         }
+    };
+    
+    while (retries < MAX_RETRIES) {
+        try {
+            return await makeRequest();
+        } catch (error) {
+            retries++;
+            if (retries === MAX_RETRIES) {
+                console.error(`API request failed after ${MAX_RETRIES} retries:`, error);
+                showNotification(`Request failed: ${error.message}`, 'error');
+                throw error;
+            }
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+        }
+    }
+}
 
         // Refresh access token using refresh token
         async function refreshAccessToken() {
