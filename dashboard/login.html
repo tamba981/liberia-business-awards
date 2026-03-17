@@ -762,12 +762,19 @@
                 });
                 
                 const result = await response.json();
-                
                 if (response.ok && result.success) {
-                    // Store authentication
-                    localStorage.setItem('lba_auth_token', result.token);
-                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-                    localStorage.setItem('lba_user_role', result.user.role);
+    // Store authentication
+    localStorage.setItem('lba_auth_token', result.token);
+    if (result.refreshToken) {
+        localStorage.setItem('lba_refresh_token', result.refreshToken);
+    }
+    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+    localStorage.setItem('lba_user_role', result.user.role);
+    
+    // Update CSRF token if returned
+    if (result.csrfToken) {
+        localStorage.setItem('csrf_token', result.csrfToken);
+    }
                     
                     showSuccess(successEl, '✓ Login successful! Redirecting...');
                     console.log('✅ Admin login successful');
