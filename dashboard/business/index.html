@@ -2396,20 +2396,26 @@ async function apiRequest(endpoint, options = {}) {
             }
         }
 
-        // ============================================
-        // PROFILE FUNCTIONS
-        // ============================================
         async function loadProfile() {
-            try {
-                const data = await apiRequest('/api/business/profile');
-                if (data.success) {
-                    appState.profile = data.profile || data.business || {};
-                    updateProfileDisplay();
-                }
-            } catch (error) {
-                console.error('Profile load error:', error);
+    try {
+        const data = await apiRequest('/api/business/dashboard');
+        if (data.success) {
+            appState.profile = data.dashboard.profile || {};
+            updateProfileDisplay();
+            
+            // Update stats
+            if (data.dashboard.stats) {
+                document.getElementById('profileCompletion').textContent = data.dashboard.stats.profile_completion + '%';
+                document.getElementById('totalNominations').textContent = data.dashboard.stats.total_nominations || 0;
+                document.getElementById('approvedNominations').textContent = data.dashboard.stats.approved_nominations || 0;
+                document.getElementById('totalDocuments').textContent = data.dashboard.stats.total_documents || 0;
             }
         }
+    } catch (error) {
+        console.error('Profile load error:', error);
+        showToast('Could not load profile data', 'warning');
+    }
+}
 
         function updateProfileDisplay() {
             const profile = appState.profile || {};
