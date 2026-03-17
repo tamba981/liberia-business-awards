@@ -1838,296 +1838,296 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+                 // ============================================
+        // PRODUCTION API REQUEST FUNCTION - USE FOR ALL BACKEND CALLS
         // ============================================
-// PRODUCTION API REQUEST FUNCTION - USE FOR ALL BACKEND CALLS
-// ============================================
-const API_BASE = 'https://liberia-business-awards-backend.onrender.com';
-const API_TIMEOUT = 30000; // 30 seconds
-const MAX_RETRIES = 3;
+        const API_BASE = 'https://liberia-business-awards-backend.onrender.com';
+        const API_TIMEOUT = 30000; // 30 seconds
+        const MAX_RETRIES = 3;
 
-// CSRF Token Management
-let csrfToken = localStorage.getItem('csrf_token');
+        // CSRF Token Management
+        let csrfToken = localStorage.getItem('csrf_token');
 
-if (!csrfToken) {
-    csrfToken = Math.random().toString(36).substring(2, 15) + 
-                Math.random().toString(36).substring(2, 15) +
-                Math.random().toString(36).substring(2, 15);
-    localStorage.setItem('csrf_token', csrfToken);
-}
+        if (!csrfToken) {
+            csrfToken = Math.random().toString(36).substring(2, 15) + 
+                        Math.random().toString(36).substring(2, 15) +
+                        Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('csrf_token', csrfToken);
+        }
 
-// Enhanced API request function with retry logic
-async function apiRequest(endpoint, options = {}) {
-    const token = localStorage.getItem('lba_auth_token');
-    let retries = 0;
-    
-    const makeRequest = async () => {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+        // Enhanced API request function with retry logic
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('lba_auth_token');
+            let retries = 0;
             
-            const headers = {
-                'Accept': 'application/json',
-                'X-CSRF-Token': csrfToken
+            const makeRequest = async () => {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+                    
+                    const headers = {
+                        'Accept': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    };
+                    
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                    
+                    // Don't set Content-Type for FormData
+                    if (!(options.body instanceof FormData)) {
+                        headers['Content-Type'] = 'application/json';
+                    }
+                    
+                    const fetchOptions = {
+                        ...options,
+                        headers: {
+                            ...headers,
+                            ...options.headers
+                        },
+                        signal: controller.signal,
+                        credentials: 'include'
+                    };
+                    
+                    const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+                    clearTimeout(timeoutId);
+                    
+                    // Get new CSRF token from response if provided
+                    const newCsrfToken = response.headers.get('X-CSRF-Token');
+                    if (newCsrfToken) {
+                        csrfToken = newCsrfToken;
+                        localStorage.setItem('csrf_token', newCsrfToken);
+                    }
+                    
+                    // Handle 401 Unauthorized
+                    if (response.status === 401) {
+                        // Try to refresh token
+                        const refreshed = await refreshAccessToken();
+                        if (refreshed) {
+                            // Retry the request with new token
+                            const newToken = localStorage.getItem('lba_auth_token');
+                            headers['Authorization'] = `Bearer ${newToken}`;
+                            return await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+                        } else {
+                            // Redirect to login
+                            localStorage.clear();
+                            window.location.href = '../login.html';
+                            throw new Error('Session expired');
+                        }
+                    }
+                    
+                    // Handle rate limiting
+                    if (response.status === 429) {
+                        const retryAfter = response.headers.get('Retry-After') || 60;
+                        showNotification(`Rate limited. Try again in ${retryAfter} seconds.`, 'warning');
+                        return null;
+                    }
+                    
+                    // Parse response
+                    const text = await response.text();
+                    try {
+                        return text ? JSON.parse(text) : { success: true };
+                    } catch (e) {
+                        return { success: true, data: text };
+                    }
+                    
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        throw new Error('Request timeout');
+                    }
+                    throw error;
+                }
             };
             
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-            
-            // Don't set Content-Type for FormData
-            if (!(options.body instanceof FormData)) {
-                headers['Content-Type'] = 'application/json';
-            }
-            
-            const fetchOptions = {
-                ...options,
-                headers: {
-                    ...headers,
-                    ...options.headers
-                },
-                signal: controller.signal,
-                credentials: 'include'
-            };
-            
-            const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
-            clearTimeout(timeoutId);
-            
-            // Get new CSRF token from response if provided
-            const newCsrfToken = response.headers.get('X-CSRF-Token');
-            if (newCsrfToken) {
-                csrfToken = newCsrfToken;
-                localStorage.setItem('csrf_token', newCsrfToken);
-            }
-            
-            // Handle 401 Unauthorized
-            if (response.status === 401) {
-                // Try to refresh token
-                const refreshed = await refreshAccessToken();
-                if (refreshed) {
-                    // Retry the request with new token
-                    const newToken = localStorage.getItem('lba_auth_token');
-                    headers['Authorization'] = `Bearer ${newToken}`;
-                    return await fetch(`${API_BASE}${endpoint}`, fetchOptions);
-                } else {
-                    // Redirect to login
-                    localStorage.clear();
-                    window.location.href = '../login.html';
-                    throw new Error('Session expired');
+            while (retries < MAX_RETRIES) {
+                try {
+                    return await makeRequest();
+                } catch (error) {
+                    retries++;
+                    if (retries === MAX_RETRIES) {
+                        console.error(`API request failed after ${MAX_RETRIES} retries:`, error);
+                        showNotification(`Request failed: ${error.message}`, 'error');
+                        throw error;
+                    }
+                    // Wait before retrying (exponential backoff)
+                    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
                 }
             }
+        }
+
+        // Refresh access token using refresh token
+        async function refreshAccessToken() {
+            const refreshToken = localStorage.getItem('lba_refresh_token');
+            if (!refreshToken) return false;
             
-            // Handle rate limiting
-            if (response.status === 429) {
-                const retryAfter = response.headers.get('Retry-After') || 60;
-                showNotification(`Rate limited. Try again in ${retryAfter} seconds.`, 'warning');
-                return null;
-            }
-            
-            // Parse response
-            const text = await response.text();
             try {
-                return text ? JSON.parse(text) : { success: true };
-            } catch (e) {
-                return { success: true, data: text };
+                const response = await fetch(`${API_BASE}/api/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshToken })
+                });
+                
+                const data = await response.json();
+                if (data.success && data.token) {
+                    localStorage.setItem('lba_auth_token', data.token);
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Token refresh failed:', error);
+                return false;
             }
+        }
+
+        // Keep fetchFromSheets for Google Sheets integration if needed
+        async function fetchFromSheets(action) {
+            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=${action}`;
             
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                throw new Error('Request timeout');
+            console.log(`📡 Fetching from Sheets: ${url}`);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                try {
+                    const data = JSON.parse(text);
+                    return data;
+                } catch (e) {
+                    console.log('📄 Response is not JSON:', text.substring(0, 100));
+                    return { success: false, error: 'Invalid JSON response' };
+                }
+                
+            } catch (error) {
+                console.error('❌ Sheets fetch error:', error);
+                return { success: false, error: error.message };
             }
-            throw error;
         }
-    };
-    
-    while (retries < MAX_RETRIES) {
-        try {
-            return await makeRequest();
-        } catch (error) {
-            retries++;
-            if (retries === MAX_RETRIES) {
-                console.error(`API request failed after ${MAX_RETRIES} retries:`, error);
-                showNotification(`Request failed: ${error.message}`, 'error');
-                throw error;
-            }
-            // Wait before retrying (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
-        }
-    }
-}
-
-// Refresh access token using refresh token
-async function refreshAccessToken() {
-    const refreshToken = localStorage.getItem('lba_refresh_token');
-    if (!refreshToken) return false;
-    
-    try {
-        const response = await fetch(`${API_BASE}/api/auth/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken })
-        });
-        
-        const data = await response.json();
-        if (data.success && data.token) {
-            localStorage.setItem('lba_auth_token', data.token);
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.error('Token refresh failed:', error);
-        return false;
-    }
-}
-
-// Keep fetchFromSheets for Google Sheets integration if needed
-async function fetchFromSheets(action) {
-    const url = `${GOOGLE_APPS_SCRIPT_URL}?action=${action}`;
-    
-    console.log(`📡 Fetching from Sheets: ${url}`);
-    
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const text = await response.text();
-        
-        try {
-            const data = JSON.parse(text);
-            return data;
-        } catch (e) {
-            console.log('📄 Response is not JSON:', text.substring(0, 100));
-            return { success: false, error: 'Invalid JSON response' };
-        }
-        
-    } catch (error) {
-        console.error('❌ Sheets fetch error:', error);
-        return { success: false, error: error.message };
-    }
-}
 
         async function fetchDashboardStats() {
-    try {
-        // Try to get real stats from backend
-        const [businesses, stats] = await Promise.all([
-            apiRequest('/api/admin/businesses?limit=1').catch(() => ({ success: false })),
-            apiRequest('/api/admin/businesses/stats').catch(() => ({ success: false }))
-        ]);
-        
-        if (stats.success) {
-            return {
-                success: true,
-                totalSubmissions: stats.stats.total || 0,
-                todaySubmissions: 0,
-                summary: {
-                    totalBusinesses: stats.stats.total || 0,
-                    totalNominations: 0,
-                    approvedNominations: stats.stats.approved || 0
-                },
-                sheetStats: {
-                    Businesses: { total: stats.stats.total || 0, approved: stats.stats.approved || 0, pending: stats.stats.pending || 0 },
-                    Nominations: { total: 0, approved: 0, pending: 0 }
+            try {
+                // Try to get real stats from backend
+                const [businesses, stats] = await Promise.all([
+                    apiRequest('/api/admin/businesses?limit=1').catch(() => ({ success: false })),
+                    apiRequest('/api/admin/businesses/stats').catch(() => ({ success: false }))
+                ]);
+                
+                if (stats.success) {
+                    return {
+                        success: true,
+                        totalSubmissions: stats.stats.total || 0,
+                        todaySubmissions: 0,
+                        summary: {
+                            totalBusinesses: stats.stats.total || 0,
+                            totalNominations: 0,
+                            approvedNominations: stats.stats.approved || 0
+                        },
+                        sheetStats: {
+                            Businesses: { total: stats.stats.total || 0, approved: stats.stats.approved || 0, pending: stats.stats.pending || 0 },
+                            Nominations: { total: 0, approved: 0, pending: 0 }
+                        }
+                    };
                 }
-            };
+                throw new Error('Failed to fetch stats');
+            } catch (error) {
+                console.error('Failed to fetch dashboard stats:', error);
+                // Fallback to Sheets
+                return await fetchFromSheets('getStats');
+            }
         }
-        throw new Error('Failed to fetch stats');
-    } catch (error) {
-        console.error('Failed to fetch dashboard stats:', error);
-        // Fallback to Sheets
-        return await fetchFromSheets('getStats');
-    }
-}
 
         async function fetchRecentActivity() {
-    try {
-        const data = await apiRequest('/api/admin/audit-logs?limit=10');
-        if (data.success && data.logs) {
-            const activities = data.logs.map(log => ({
-                title: formatActivityTitle(log.action),
-                description: `${log.resource || 'System'} ${log.action.toLowerCase()}`,
-                icon: getActivityIcon(log.action),
-                timestamp: log.timestamp,
-                user: log.user_id
-            }));
-            return { activity: activities };
+            try {
+                const data = await apiRequest('/api/admin/audit-logs?limit=10');
+                if (data.success && data.logs) {
+                    const activities = data.logs.map(log => ({
+                        title: formatActivityTitle(log.action),
+                        description: `${log.resource || 'System'} ${log.action.toLowerCase()}`,
+                        icon: getActivityIcon(log.action),
+                        timestamp: log.timestamp,
+                        user: log.user_id
+                    }));
+                    return { activity: activities };
+                }
+                throw new Error('Failed to fetch activity');
+            } catch (error) {
+                console.error('Failed to fetch activity:', error);
+                return await fetchFromSheets('getActivity');
+            }
         }
-        throw new Error('Failed to fetch activity');
-    } catch (error) {
-        console.error('Failed to fetch activity:', error);
-        return await fetchFromSheets('getActivity');
-    }
-}
 
-function formatActivityTitle(action) {
-    const titles = {
-        'LOGIN': 'User Login',
-        'LOGOUT': 'User Logout',
-        'APPROVE_BUSINESS': 'Business Approved',
-        'REJECT_BUSINESS': 'Business Rejected',
-        'CREATE_ANNOUNCEMENT': 'New Announcement',
-        'UPDATE_SETTINGS': 'Settings Updated'
-    };
-    return titles[action] || action.replace(/_/g, ' ');
-}
+        function formatActivityTitle(action) {
+            const titles = {
+                'LOGIN': 'User Login',
+                'LOGOUT': 'User Logout',
+                'APPROVE_BUSINESS': 'Business Approved',
+                'REJECT_BUSINESS': 'Business Rejected',
+                'CREATE_ANNOUNCEMENT': 'New Announcement',
+                'UPDATE_SETTINGS': 'Settings Updated'
+            };
+            return titles[action] || action.replace(/_/g, ' ');
+        }
 
-function getActivityIcon(action) {
-    const icons = {
-        'LOGIN': 'sign-in-alt',
-        'LOGOUT': 'sign-out-alt',
-        'APPROVE_BUSINESS': 'check-circle',
-        'REJECT_BUSINESS': 'times-circle',
-        'CREATE_ANNOUNCEMENT': 'bullhorn',
-        'UPDATE_SETTINGS': 'cog'
-    };
-    return icons[action] || 'file-alt';
-}
+        function getActivityIcon(action) {
+            const icons = {
+                'LOGIN': 'sign-in-alt',
+                'LOGOUT': 'sign-out-alt',
+                'APPROVE_BUSINESS': 'check-circle',
+                'REJECT_BUSINESS': 'times-circle',
+                'CREATE_ANNOUNCEMENT': 'bullhorn',
+                'UPDATE_SETTINGS': 'cog'
+            };
+            return icons[action] || 'file-alt';
+        }
 
         async function fetchAllSheetData() {
-    try {
-        // Try to get real data from backend
-        const [businesses, nominations] = await Promise.all([
-            apiRequest('/api/admin/businesses?limit=1000').catch(() => ({ success: false })),
-            apiRequest('/api/admin/nominations?limit=1000').catch(() => ({ success: false }))
-        ]);
-        
-        if (businesses.success && nominations.success) {
-            // Combine data for backward compatibility
-            return {
-                success: true,
-                submissions: [
-                    ...businesses.businesses.map(b => ({
-                        id: b._id,
-                        formType: 'business',
-                        business_name: b.business_name,
-                        email: b.email,
-                        status: b.status,
-                        timestamp: b.created_at
-                    })),
-                    ...nominations.nominations.map(n => ({
-                        id: n._id,
-                        formType: 'nomination',
-                        business_name: n.business_name,
-                        category: n.category,
-                        status: n.status,
-                        timestamp: n.created_at
-                    }))
-                ]
-            };
+            try {
+                // Try to get real data from backend
+                const [businesses, nominations] = await Promise.all([
+                    apiRequest('/api/admin/businesses?limit=1000').catch(() => ({ success: false })),
+                    apiRequest('/api/admin/nominations?limit=1000').catch(() => ({ success: false }))
+                ]);
+                
+                if (businesses.success && nominations.success) {
+                    // Combine data for backward compatibility
+                    return {
+                        success: true,
+                        submissions: [
+                            ...businesses.businesses.map(b => ({
+                                id: b._id,
+                                formType: 'business',
+                                business_name: b.business_name,
+                                email: b.email,
+                                status: b.status,
+                                timestamp: b.created_at
+                            })),
+                            ...nominations.nominations.map(n => ({
+                                id: n._id,
+                                formType: 'nomination',
+                                business_name: n.business_name,
+                                category: n.category,
+                                status: n.status,
+                                timestamp: n.created_at
+                            }))
+                        ]
+                    };
+                }
+                throw new Error('Failed to fetch from backend');
+            } catch (error) {
+                console.error('Failed to fetch all data:', error);
+                // Fallback to Sheets
+                return await fetchFromSheets('getAllData');
+            }
         }
-        throw new Error('Failed to fetch from backend');
-    } catch (error) {
-        console.error('Failed to fetch all data:', error);
-        // Fallback to Sheets
-        return await fetchFromSheets('getAllData');
-    }
-}
 
         async function testApiConnection() {
             console.log('🔌 Testing API connection...');
@@ -3093,7 +3093,7 @@ function getActivityIcon(action) {
         }
 
         // ============================================
-        // EXPORT TO GLOBAL SCOPE
+        // EXPORT TO GLOBAL SCOPE - FIXED!
         // ============================================
         window.showNominationsModal = showNominationsModal;
         window.refreshActivities = refreshActivities;
@@ -3118,6 +3118,8 @@ function getActivityIcon(action) {
         window.showReportsModal = showReportsModal;
         window.showSettingsModal = showSettingsModal;
         window.showSheetsModal = showSheetsModal;
+        window.showSpotlightModal = showSpotlightModal; // ← ADDED THIS!
+        window.showBusinessApprovalModal = showBusinessApprovalModal; // ← ADDED THIS!
 
         console.log('✅ Admin Dashboard Ready');
         console.log('📊 Google Sheets Integration: ACTIVE');
