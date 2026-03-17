@@ -3340,5 +3340,55 @@
 
         console.log('✅ Business Dashboard Ready');
     </script>
+    <!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<style>
+.toast-container {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    z-index: 9999;
+}
+
+.toast {
+    background: white;
+    border-radius: 10px;
+    padding: 15px 25px;
+    margin-bottom: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.3s ease;
+    border-left: 4px solid;
+    max-width: 400px;
+    transition: all 0.3s;
+}
+
+.toast.success { border-left-color: #10B981; }
+.toast.error { border-left-color: #EF4444; }
+.toast.warning { border-left-color: #F59E0B; }
+.toast.info { border-left-color: #3B82F6; }
+
+.toast.success i { color: #10B981; }
+.toast.error i { color: #EF4444; }
+.toast.warning i { color: #F59E0B; }
+.toast.info i { color: #3B82F6; }
+
+.toast-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+    font-size: 16px;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+</style>
 </body>
 </html>
