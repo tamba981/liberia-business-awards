@@ -2013,23 +2013,71 @@ async function fetchFromSheets(action) {
     }
 }
 
-        // Update your fetchDashboardStats function
         async function fetchDashboardStats() {
-            const data = await fetchFromSheets('getStats');
-            return data;
-        }
+    try {
+        const data = await apiRequest('/api/health');
+        return data;
+    } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+        // Fallback to Sheets if backend fails
+        return await fetchFromSheets('getStats');
+    }
+}
 
-        // Update your fetchRecentActivity function
         async function fetchRecentActivity() {
-            const data = await fetchFromSheets('getActivity');
-            return data;
+    try {
+        // This endpoint doesn't exist yet in backend, but we'll add it
+        const data = await apiRequest('/api/admin/audit-logs?limit=10');
+        if (data.success) {
+            return { activity: data.logs };
         }
+        throw new Error('Failed to fetch activity');
+    } catch (error) {
+        console.error('Failed to fetch activity:', error);
+        // Fallback to Sheets
+        return await fetchFromSheets('getActivity');
+    }
+}
 
-        // Update your fetchAllSheetData function
         async function fetchAllSheetData() {
-            const data = await fetchFromSheets('getAllData');
-            return data;
+    try {
+        // Try to get real data from backend
+        const [businesses, nominations] = await Promise.all([
+            apiRequest('/api/admin/businesses?limit=1000').catch(() => ({ success: false })),
+            apiRequest('/api/admin/nominations?limit=1000').catch(() => ({ success: false }))
+        ]);
+        
+        if (businesses.success && nominations.success) {
+            // Combine data for backward compatibility
+            return {
+                success: true,
+                submissions: [
+                    ...businesses.businesses.map(b => ({
+                        id: b._id,
+                        formType: 'business',
+                        business_name: b.business_name,
+                        email: b.email,
+                        status: b.status,
+                        timestamp: b.created_at
+                    })),
+                    ...nominations.nominations.map(n => ({
+                        id: n._id,
+                        formType: 'nomination',
+                        business_name: n.business_name,
+                        category: n.category,
+                        status: n.status,
+                        timestamp: n.created_at
+                    }))
+                ]
+            };
         }
+        throw new Error('Failed to fetch from backend');
+    } catch (error) {
+        console.error('Failed to fetch all data:', error);
+        // Fallback to Sheets
+        return await fetchFromSheets('getAllData');
+    }
+}
 
         async function testApiConnection() {
             console.log('🔌 Testing API connection...');
