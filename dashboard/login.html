@@ -588,6 +588,8 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    
     
     <!-- Main Script -->
     <script>
@@ -982,6 +984,266 @@
         window.handleBusinessRegistration = handleBusinessRegistration;
 
         console.log('✅ Login page ready - Production Mode');
-    </script>
+
+    // ==================== CSRF INTEGRATION ====================
+// Generate and store CSRF token on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    // Generate CSRF token if not exists
+    if (!localStorage.getItem('csrf_token')) {
+        const token = Math.random().toString(36).substring(2, 15) + 
+                     Math.random().toString(36).substring(2, 15) +
+                     Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('csrf_token', token);
+    }
+    
+    // Add CSRF token to all forms
+    const csrfToken = localStorage.getItem('csrf_token');
+    document.querySelectorAll('form').forEach(form => {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_csrf';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+    });
+});
+
+// Update admin login function
+async function handleAdminLogin() {
+    const email = document.getElementById('adminEmail').value.trim();
+    const password = document.getElementById('adminPassword').value;
+    const errorEl = document.getElementById('adminError');
+    const successEl = document.getElementById('adminSuccess');
+    const btn = document.getElementById('adminBtn');
+    
+    clearAllMessages();
+    
+    if (!email || !password) {
+        showError(errorEl, 'Please fill in all fields');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/admin/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('csrf_token')
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // Store authentication
+            localStorage.setItem('lba_auth_token', result.token);
+            localStorage.setItem('lba_refresh_token', result.refreshToken);
+            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+            localStorage.setItem('lba_user_role', result.user.role);
+            
+            // Update CSRF token if returned
+            if (result.csrfToken) {
+                localStorage.setItem('csrf_token', result.csrfToken);
+            }
+            
+            showSuccess(successEl, '✓ Login successful! Redirecting...');
+            console.log('✅ Admin login successful');
+            
+            // Redirect to admin dashboard
+            setTimeout(() => {
+                window.location.href = 'admin/index.html';
+            }, 1500);
+            
+        } else {
+            throw new Error(result.message || 'Invalid admin credentials');
+        }
+        
+    } catch (error) {
+        console.error('❌ Admin login error:', error);
+        showError(errorEl, error.message || 'Login failed. Please check your credentials.');
+        
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
+
+// Update business login function
+async function handleBusinessLogin() {
+    const email = document.getElementById('businessEmail').value.trim();
+    const password = document.getElementById('businessPassword').value;
+    const errorEl = document.getElementById('businessError');
+    const successEl = document.getElementById('businessSuccess');
+    const btn = document.getElementById('businessBtn');
+    
+    clearAllMessages();
+    
+    if (!email || !password) {
+        showError(errorEl, 'Please fill in all fields');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/business/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('csrf_token')
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // Store authentication
+            localStorage.setItem('lba_auth_token', result.token);
+            localStorage.setItem('lba_refresh_token', result.refreshToken);
+            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+            localStorage.setItem('lba_user_role', result.user.role);
+            
+            // Update CSRF token if returned
+            if (result.csrfToken) {
+                localStorage.setItem('csrf_token', result.csrfToken);
+            }
+            
+            showSuccess(successEl, '✓ Login successful! Redirecting...');
+            console.log('✅ Business login successful');
+            
+            // Redirect to business dashboard
+            setTimeout(() => {
+                window.location.href = 'business/index.html';
+            }, 1500);
+            
+        } else {
+            // Handle specific status messages
+            if (result.message.includes('pending')) {
+                throw new Error('Your account is pending admin approval. You will be able to login once approved.');
+            } else if (result.message.includes('rejected')) {
+                throw new Error(result.message || 'Your business registration was rejected.');
+            } else {
+                throw new Error(result.message || 'Invalid business credentials');
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Business login error:', error);
+        
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to server. Please try again later.';
+        }
+        
+        showError(errorEl, errorMessage);
+        
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
+
+// Update business registration function
+async function handleBusinessRegistration() {
+    const businessName = document.getElementById('regBusinessName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+    const contactName = document.getElementById('regContactName').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const businessType = document.getElementById('regBusinessType').value;
+    
+    const errorEl = document.getElementById('registerError');
+    const successEl = document.getElementById('registerSuccess');
+    const btn = document.getElementById('registerBtn');
+    
+    clearAllMessages();
+    
+    // Validate
+    if (!businessName || !email || !password || !confirmPassword) {
+        showError(errorEl, 'Please fill in all required fields');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showError(errorEl, 'Password must be at least 6 characters');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        showError(errorEl, 'Passwords do not match');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/business/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('csrf_token')
+            },
+            body: JSON.stringify({
+                email,
+                password,
+                business_name: businessName,
+                contact_name: contactName,
+                phone,
+                business_type: businessType
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showSuccess(successEl, '✓ Registration successful! Your account is pending admin approval. You will be notified once approved.');
+            
+            // Clear form
+            document.getElementById('regBusinessName').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
+            document.getElementById('regContactName').value = '';
+            document.getElementById('regPhone').value = '';
+            document.getElementById('regBusinessType').value = '';
+            
+            // Show login form after 3 seconds
+            setTimeout(() => {
+                showBusinessLogin();
+            }, 3000);
+            
+        } else {
+            throw new Error(result.message || 'Registration failed');
+        }
+        
+    } catch (error) {
+        console.error('❌ Registration error:', error);
+        showError(errorEl, error.message || 'Registration failed. Please try again.');
+        
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
+ </script>
 </body>
 </html>
