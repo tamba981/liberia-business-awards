@@ -1,14 +1,29 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Login - Liberia Business Awards</title>
+    <title>Admin Dashboard - Liberia Business Awards</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --lba-red: #FF0000;
-            --lba-blue: #87CEEB;
+            /* LBA Brand Colors - Modern Gradient */
+            --lba-primary: #FF0000;
+            --lba-secondary: #87CEEB;
             --lba-dark: #1a202c;
+            --lba-light: #f8f9fa;
+            --lba-gradient: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%);
+            --lba-gradient-dark: linear-gradient(135deg, #cc0000 0%, #6bb9e2 100%);
+            
+            /* Dashboard Variables */
+            --sidebar-width: 280px;
+            --header-height: 80px;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --info-color: #3B82F6;
+            --purple: #8B5CF6;
         }
         
         * {
@@ -18,970 +33,2931 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--lba-red) 0%, var(--lba-blue) 100%);
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fb;
+            color: var(--lba-dark);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            overflow-x: hidden;
         }
         
-        .login-container {
-            width: 100%;
-            max-width: 500px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Modern Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--lba-dark);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            z-index: 1000;
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .sidebar-header {
+            padding: 30px 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
             overflow: hidden;
         }
         
-        .login-header {
-            background: var(--lba-dark);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .logo-img {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-            border-radius: 50%;
-            background: white;
-            padding: 5px;
-        }
-        
-        .login-header h1 {
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-        
-        .login-header p {
-            opacity: 0.8;
-            font-size: 14px;
-        }
-        
-        .login-content {
-            padding: 30px;
-        }
-        
-        .login-tabs {
-            display: flex;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #eee;
-        }
-        
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-        
-        .tab-btn.active {
-            color: var(--lba-red);
-        }
-        
-        .tab-btn.active::after {
+        .sidebar-header::before {
             content: '';
             position: absolute;
-            bottom: -2px;
+            top: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: var(--lba-red);
-            border-radius: 3px;
+            height: 4px;
+            background: var(--lba-gradient);
         }
         
-        .login-form {
-            display: none;
-        }
-        
-        .login-form.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--lba-red);
-            box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.1);
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--lba-red), #FF4444);
+        .sidebar-header h3 {
             color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+        
+        .sidebar-header p {
+            color: var(--lba-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+        
+        .sidebar-menu {
+            padding: 25px 0;
+        }
+        
+        .menu-section {
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
+        
+        .menu-section h4 {
+            color: var(--lba-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding: 0 15px;
+            opacity: 0.6;
             font-weight: 600;
-            cursor: pointer;
+        }
+        
+        .menu-item {
+            padding: 14px 20px;
+            margin: 6px 15px;
+            display: flex;
+            align-items: center;
+            color: #cbd5e0;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid transparent;
+        }
+        
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .menu-item.active {
+            background: rgba(255, 0, 0, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.15);
+        }
+        
+        .menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--lba-primary);
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .menu-item i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .menu-item span {
+            flex: 1;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .menu-item .badge {
+            background: var(--lba-secondary);
+            color: var(--lba-dark);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 25px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(135, 206, 235, 0.3);
+        }
+        
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 25px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            min-height: 100vh;
             transition: all 0.3s;
-            margin-top: 10px;
+        }
+        
+        /* Modern Header */
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--lba-primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,0,0,0.05) 0%, transparent 70%);
+            opacity: 0.5;
+        }
+        
+        .header h1 {
+            color: var(--lba-dark);
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: var(--lba-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 12px 25px;
+            border-radius: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .user-info:hover {
+            border-color: var(--lba-secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(135, 206, 235, 0.2);
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--lba-gradient);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-        }
-        
-        .login-btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #CC0000, #FF3333);
-            transform: translateY(-2px);
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
             box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
         }
         
-        .login-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
+        .user-details {
+            display: flex;
+            flex-direction: column;
         }
         
-        .secondary-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--lba-blue), #99d6f0);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
+        .user-details strong {
+            color: var(--lba-dark);
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
+            font-size: 16px;
+        }
+        
+        .user-details small {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* Modern Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--lba-gradient);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 0, 0, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-card.businesses .stat-icon {
+            background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+            color: var(--lba-primary);
+        }
+        
+        .stat-card.nominations .stat-icon {
+            background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+            color: var(--lba-secondary);
+        }
+        
+        .stat-card.approved .stat-icon {
+            background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+            color: var(--success-color);
+        }
+        
+        .stat-card.users .stat-icon {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            color: var(--warning-color);
+        }
+        
+        .stat-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            font-size: 34px;
+            flex-shrink: 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
         
-        .secondary-btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #6bb9e2, #87CEEB);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.3);
+        .stat-content {
+            flex: 1;
         }
         
-        .secondary-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .error-message {
-            background: #fee;
-            color: #c00;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #c00;
-            margin: 15px 0;
-            display: none;
-            font-size: 14px;
-        }
-        
-        .success-message {
-            background: #dfd;
-            color: #080;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #080;
-            margin: 15px 0;
-            display: none;
-            font-size: 14px;
-        }
-        
-        .info-box {
-            background: #f0f8ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid var(--lba-blue);
-        }
-        
-        .info-box h4 {
+        .stat-content h3 {
+            font-size: 42px;
+            font-weight: 800;
             color: var(--lba-dark);
+            margin-bottom: 5px;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+        
+        .stat-content p {
+            color: #64748b;
+            font-size: 16px;
+            font-weight: 600;
             margin-bottom: 10px;
+        }
+        
+        .stat-trend {
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            width: fit-content;
         }
         
-        .info-box ul {
+        .stat-trend.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        /* Recent Activity Modern */
+        .recent-activity {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        
+        .recent-activity h2 {
+            color: var(--lba-dark);
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .activity-list {
             list-style: none;
-            padding-left: 10px;
         }
         
-        .info-box li {
+        .activity-item {
+            padding: 22px 0;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s;
+        }
+        
+        .activity-item:hover {
+            background: linear-gradient(90deg, #f8fafc 0%, transparent 100%);
+            margin: 0 -35px;
+            padding: 22px 35px;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--lba-dark);
+            flex-shrink: 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-content h4 {
             margin-bottom: 8px;
-            color: #555;
+            color: var(--lba-dark);
+            font-weight: 600;
+            font-size: 17px;
         }
         
-        .info-box strong {
-            color: var(--lba-red);
+        .activity-content p {
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.5;
         }
         
-        .api-status {
+        .activity-time {
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            background: #f8fafc;
+            padding: 6px 15px;
+            border-radius: 20px;
+        }
+        
+        /* Modern Quick Actions */
+        .quick-actions {
+            margin-top: 30px;
+        }
+        
+        .quick-actions h2 {
+            color: var(--lba-dark);
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 25px;
+        }
+        
+        .action-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--lba-secondary);
+            box-shadow: 0 15px 40px rgba(135, 206, 235, 0.15);
+        }
+        
+        .action-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 25px;
+            background: var(--lba-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            color: white;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(255, 0, 0, 0.2);
+        }
+        
+        .action-card:nth-child(2) .action-icon {
+            background: linear-gradient(135deg, var(--lba-secondary), #6bb9e2);
+        }
+        
+        .action-card:nth-child(3) .action-icon {
+            background: linear-gradient(135deg, var(--success-color), #34d399);
+        }
+        
+        .action-card:nth-child(4) .action-icon {
+            background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+        }
+        
+        .action-content h3 {
+            color: var(--lba-dark);
+            margin-bottom: 12px;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        
+        .action-content p {
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        /* System Status */
+        .system-status {
+            margin-top: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+        }
+        
+        .system-status h3 {
+            color: var(--lba-dark);
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+        
+        .status-item {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid var(--lba-primary);
+        }
+        
+        .status-item p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .status-item strong {
+            color: var(--lba-dark);
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .status-item .online {
+            color: var(--success-color);
+        }
+        
+        .status-item .warning {
+            color: var(--warning-color);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+        
+        .modal-header {
+            padding: 30px;
+            background: var(--lba-gradient);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        /* Google Sheets Integration Styles */
+        .sheets-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .sheets-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .sheets-header h3 {
+            color: var(--lba-dark);
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        }
+        
+        .sheets-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .sheet-btn {
+            background: var(--lba-gradient);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
             font-size: 14px;
         }
         
-        .api-status.online {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border-left: 4px solid #4caf50;
+        .sheet-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 0, 0, 0.3);
         }
         
-        .api-status.offline {
-            background: #ffebee;
-            color: #c62828;
-            border-left: 4px solid #f44336;
+        .sheet-btn.secondary {
+            background: linear-gradient(135deg, var(--lba-secondary), #6bb9e2);
         }
         
-        .api-status.connecting {
-            background: #fff3cd;
-            color: #856404;
-            border-left: 4px solid #ffc107;
+        .sheet-btn.warning {
+            background: linear-gradient(135deg, var(--warning-color), #fbbf24);
         }
         
-        .business-options {
+        .sheet-btn.danger {
+            background: linear-gradient(135deg, var(--danger-color), #f87171);
+        }
+        
+        .sheets-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
         }
         
-        .option-card {
-            background: #f9f9f9;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
+        .sheet-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
             transition: all 0.3s;
             cursor: pointer;
-        }
-        
-        .option-card:hover {
-            border-color: var(--lba-blue);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .option-card i {
-            font-size: 32px;
-            color: var(--lba-red);
-            margin-bottom: 10px;
-        }
-        
-        .option-card h4 {
-            margin-bottom: 5px;
-            color: #333;
-        }
-        
-        .option-card p {
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .footer-links {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        
-        .footer-links a {
-            color: var(--lba-red);
             text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+            color: inherit;
         }
         
-        .footer-links a:hover {
-            text-decoration: underline;
+        .sheet-card:hover {
+            border-color: var(--lba-primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 0, 0, 0.1);
         }
         
-        .password-checkbox {
+        .sheet-card h4 {
+            color: var(--lba-dark);
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 700;
             display: flex;
             align-items: center;
+            gap: 10px;
+        }
+        
+        .sheet-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .sheet-stat {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .sheet-stat strong {
+            display: block;
+            font-size: 28px;
+            color: var(--lba-primary);
+            font-weight: 800;
+        }
+        
+        .sheet-stat span {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .sheets-viewer {
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .sheets-viewer-header {
+            background: #f1f5f9;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sheets-viewer-header h4 {
+            color: var(--lba-dark);
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .quick-actions-panel {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .quick-actions-panel h4 {
+            color: var(--lba-dark);
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .action-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 18px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .action-btn:hover {
+            border-color: var(--lba-secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.2);
+        }
+        
+        .action-btn i {
+            font-size: 24px;
+            color: var(--lba-primary);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn.approve:hover i {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+        
+        .action-btn.reject:hover i {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .action-btn.export:hover i {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--info-color);
+        }
+        
+        .action-btn.notify:hover i {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--purple);
+        }
+        
+        /* Data Table Styles */
+        .data-table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            background: #f1f5f9;
+            z-index: 10;
+        }
+        
+        .data-table th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--lba-dark);
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        
+        .data-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .data-table .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .data-table .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .data-table .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .data-table .status-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .data-table .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        /* Loading States */
+        .loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        .loading-text {
+            height: 20px;
+            margin: 10px 0;
+        }
+        
+        /* Filter Controls */
+        .filter-controls {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
             gap: 8px;
-            margin-top: 8px;
-            cursor: pointer;
         }
         
-        .password-checkbox input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-        
-        .password-checkbox label {
-            margin: 0;
-            font-weight: normal;
-            color: #666;
+        .filter-group label {
             font-size: 14px;
-            cursor: pointer;
+            font-weight: 600;
+            color: var(--lba-dark);
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            color: var(--lba-dark);
+        }
+        
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--lba-secondary);
+        }
+        
+        /* Real-time indicator */
+        .real-time-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .real-time-indicator .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
         }
         
         /* Responsive */
-        @media (max-width: 480px) {
-            .login-container {
-                max-width: 100%;
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
             
-            .login-content {
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
                 padding: 20px;
             }
             
-            .login-tabs {
+            .header {
+                padding: 20px;
+            }
+            
+            .stat-card {
+                padding: 25px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .user-info {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .sheets-actions {
                 flex-direction: column;
             }
             
-            .tab-btn {
-                text-align: center;
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-content {
                 padding: 15px;
             }
             
-            .business-options {
-                grid-template-columns: 1fr;
+            .modal-content {
+                margin: 10px;
+            }
+            
+            .modal-header, .modal-body {
+                padding: 20px;
+            }
+            
+            .sheet-btn {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: var(--lba-gradient);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .menu-toggle:hover {
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 992px) {
+            .menu-toggle {
+                display: flex;
             }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <!-- Header with Logo -->
-        <div class="login-header">
-            <div class="logo-container">
-                <img src="../images/logo.png" alt="Liberia Business Awards Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/80x80/FF0000/ffffff?text=LBA'">
-                <div>
-                    <h1>LBA Dashboard</h1>
-                    <p>Liberia Business Awards Administration System</p>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Liberia Business Awards</h3>
+                <p>Admin Dashboard</p>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-section">
+                    <h4>Main Navigation</h4>
+                    <a href="index.html" class="menu-item active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    
+                    <a href="#" class="menu-item" onclick="showNominationsModal()">
+                        <i class="fas fa-building"></i>
+                        <span>Businesses</span>
+                        <span class="badge" id="businessCount">0</span>
+                    </a>
+                    
+                    <a href="#" class="menu-item" onclick="showNominationsModal()">
+                        <i class="fas fa-award"></i>
+                        <span>Nominations</span>
+                        <span class="badge" id="nominationCount">0</span>
+                    </a>
+                </div>
+                
+                <div class="menu-section">
+                    <h4>Content Management</h4>
+                    <a href="#" class="menu-item" onclick="showSheetsModal()">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Announcements</span>
+                    </a>
+                    
+                    <a href="#" class="menu-item" onclick="showCategoriesModal()">
+                        <i class="fas fa-list-alt"></i>
+                        <span>Categories</span>
+                    </a>
+                    
+                    <a href="#" class="menu-item" onclick="showJudgesModal()">
+                        <i class="fas fa-gavel"></i>
+                        <span>Judges Panel</span>
+                    </a>
+                </div>
+                
+                <div class="menu-section">
+                    <h4>System</h4>
+                    <a href="#" class="menu-item" onclick="showUsersModal()">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                    
+                    <a href="#" class="menu-item" onclick="showAnalyticsModal()">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
+                    </a>
+                    
+                    <a href="#" class="menu-item" onclick="showReportsModal()">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Reports</span>
+                    </a>
+                </div>
+                
+                <div class="menu-divider"></div>
+                
+                <div class="menu-section">
+                    <a href="#" class="menu-item" onclick="showSettingsModal()">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    
+                    <a href="#" id="logoutBtn" class="menu-item">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+                
+                <div class="menu-section" style="margin-top: 30px;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
+                        <p style="font-size: 12px; color: var(--lba-secondary); margin-bottom: 8px; font-weight: 600;">System Status</p>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                            <div id="systemStatus" style="width: 12px; height: 12px; background: #10B981; border-radius: 50%; box-shadow: 0 0 10px #10B981;"></div>
+                            <span style="font-size: 14px; color: #90ee90; font-weight: 700;">Online</span>
+                        </div>
+                        <p style="font-size: 11px; color: rgba(255,255,255,0.5);">Updated: <span id="statusTime">Just now</span></p>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- Content -->
-        <div class="login-content">
-            <!-- API Status -->
-            <div class="api-status connecting" id="apiStatus">
-                <i class="fas fa-sync fa-spin"></i>
-                <span>Connecting to system...</span>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1>Dashboard Overview</h1>
+                        <p>Welcome back, <span id="adminName" style="color: var(--lba-primary); font-weight: 700;">System Administrator</span></p>
+                    </div>
+                </div>
+                
+                <div class="user-info" id="userProfile" onclick="showUserMenu()">
+                    <div class="user-avatar" id="userAvatar">SA</div>
+                    <div class="user-details">
+                        <strong id="userName">System Administrator</strong>
+                        <small id="userEmail">admin@liberiabusinessawardslr.com</small>
+                        <small style="color: var(--lba-secondary); font-weight: 600;">Administrator</small>
+                    </div>
+                    <i class="fas fa-chevron-down" style="color: #64748b;"></i>
+                </div>
             </div>
             
-            <!-- Tabs -->
-            <div class="login-tabs">
-                <button class="tab-btn active" data-tab="admin">Admin Login</button>
-                <button class="tab-btn" data-tab="business">Business Portal</button>
-            </div>
-            
-            <!-- Admin Login Form -->
-            <form class="login-form active" id="adminForm">
-                <div class="info-box">
-                    <h4><i class="fas fa-user-shield"></i> Administrator Access</h4>
-                    <p>Restricted access for system administrators only. Use your official credentials.</p>
-                </div>
-                
-                <div class="form-group">
-                    <label for="adminEmail">Admin Email Address</label>
-                    <input type="email" id="adminEmail" required 
-                           placeholder="Enter admin email address"
-                           autocomplete="username">
-                </div>
-                
-                <div class="form-group">
-                    <label for="adminPassword">Admin Password</label>
-                    <input type="password" id="adminPassword" required 
-                           placeholder="Enter admin password"
-                           autocomplete="current-password">
-                    <div class="password-checkbox">
-                        <input type="checkbox" id="showAdminPassword" onchange="togglePasswordVisibility('adminPassword')">
-                        <label for="showAdminPassword">Show password</label>
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card businesses">
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
                     </div>
-                </div>
-                
-                <div class="error-message" id="adminError"></div>
-                <div class="success-message" id="adminSuccess"></div>
-                
-                <button type="submit" class="login-btn" id="adminBtn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span>Login as Administrator</span>
-                </button>
-            </form>
-            
-            <!-- Business Portal Form -->
-            <div class="login-form" id="businessForm">
-                <div class="info-box">
-                    <h4><i class="fas fa-building"></i> Business Portal Access</h4>
-                    <p>Login with your business credentials or register a new account.</p>
-                </div>
-                
-                <!-- Business Options -->
-                <div class="business-options" id="businessOptions">
-                    <div class="option-card" onclick="showBusinessLogin()">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <h4>Login</h4>
-                        <p>Existing business account</p>
-                    </div>
-                    
-                    <div class="option-card" onclick="showBusinessRegister()">
-                        <i class="fas fa-user-plus"></i>
-                        <h4>Register</h4>
-                        <p>New business registration</p>
-                    </div>
-                </div>
-                
-                <!-- Business Login Form -->
-                <div id="businessLoginForm" style="display: none;">
-                    <div class="form-group">
-                        <label for="businessEmail">Business Email</label>
-                        <input type="email" id="businessEmail" required 
-                               placeholder="Enter business email">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="businessPassword">Password</label>
-                        <input type="password" id="businessPassword" required 
-                               placeholder="Enter your password">
-                        <div class="password-checkbox">
-                            <input type="checkbox" id="showBusinessPassword" onchange="togglePasswordVisibility('businessPassword')">
-                            <label for="showBusinessPassword">Show password</label>
+                    <div class="stat-content">
+                        <h3 id="totalBusinesses">0</h3>
+                        <p>Total Registered Businesses</p>
+                        <div class="stat-trend" id="businessTrend">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
                         </div>
                     </div>
-                    
-                    <div class="error-message" id="businessError"></div>
-                    <div class="success-message" id="businessSuccess"></div>
-                    
-                    <button type="button" class="login-btn" onclick="handleBusinessLogin()" id="businessBtn">
-                        <i class="fas fa-building"></i>
-                        <span>Login to Business Dashboard</span>
-                    </button>
-                    
-                    <button type="button" class="secondary-btn" onclick="showBusinessOptions()">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Back to Options</span>
-                    </button>
                 </div>
                 
-                <!-- Business Registration Form -->
-                <div id="businessRegisterForm" style="display: none;">
-                    <div class="info-box">
-                        <h4><i class="fas fa-user-plus"></i> Register Your Business</h4>
-                        <p>Complete the form below to create your business account. You'll receive admin approval before accessing the portal.</p>
+                <div class="stat-card nominations">
+                    <div class="stat-icon">
+                        <i class="fas fa-award"></i>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="regBusinessName">Business Name *</label>
-                        <input type="text" id="regBusinessName" required placeholder="e.g., ABC Company Liberia">
+                    <div class="stat-content">
+                        <h3 id="totalNominations">0</h3>
+                        <p>Total Nominations</p>
+                        <div class="stat-trend" id="nominationTrend">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="regEmail">Business Email *</label>
-                        <input type="email" id="regEmail" required placeholder="business@example.com">
+                </div>
+                
+                <div class="stat-card approved">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="regPassword">Password *</label>
-                        <input type="password" id="regPassword" required placeholder="Minimum 6 characters">
+                    <div class="stat-content">
+                        <h3 id="approvedNominations">0</h3>
+                        <p>Approved Nominations</p>
+                        <div class="stat-trend" id="approvalTrend">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="regConfirmPassword">Confirm Password *</label>
-                        <input type="password" id="regConfirmPassword" required placeholder="Re-enter password">
+                </div>
+                
+                <div class="stat-card users">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="regContactName">Contact Person Name</label>
-                        <input type="text" id="regContactName" placeholder="e.g., John Doe">
+                    <div class="stat-content">
+                        <h3 id="activeUsers">0</h3>
+                        <p>Active Users</p>
+                        <div class="stat-trend" id="userTrend">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <span>Loading...</span>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="regPhone">Phone Number</label>
-                        <input type="tel" id="regPhone" placeholder="+231 XXX XXX XXX">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="regBusinessType">Business Type</label>
-                        <select id="regBusinessType">
-                            <option value="">Select Business Type</option>
-                            <option value="Startup">Startup</option>
-                            <option value="SME">SME</option>
-                            <option value="Enterprise">Enterprise</option>
-                            <option value="Nonprofit">Nonprofit</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="error-message" id="registerError"></div>
-                    <div class="success-message" id="registerSuccess"></div>
-                    
-                    <button type="button" class="login-btn" onclick="handleBusinessRegistration()" id="registerBtn">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Register Business</span>
-                    </button>
-                    
-                    <button type="button" class="secondary-btn" onclick="showBusinessOptions()" style="margin-top: 10px;">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Back to Options</span>
-                    </button>
                 </div>
             </div>
             
-            <!-- Footer Links -->
-            <div class="footer-links">
-                <a href="../index.html">
-                    <i class="fas fa-arrow-left"></i> Back to Main Website
-                </a>
-                <div style="margin-top: 15px; font-size: 12px; color: #888;">
-                    &copy; 2026 Liberia Business Awards. All rights reserved.
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h2>
+                    <i class="fas fa-history"></i>
+                    Recent Activity
+                    <span style="margin-left: auto; font-size: 14px; color: var(--lba-secondary); cursor: pointer; font-weight: 600; background: #f1f5f9; padding: 8px 16px; border-radius: 20px;" onclick="refreshActivities()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </span>
+                </h2>
+                
+                <ul class="activity-list" id="activityList">
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>Loading recent activity...</h4>
+                            <p>Fetching latest submissions from Google Sheets</p>
+                        </div>
+                        <div class="activity-time">Just now</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                
+                <div class="action-grid">
+                    <a href="#" class="action-card" onclick="showBusinessModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Add Business</h3>
+                            <p>Register new business account manually</p>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="action-card" onclick="showNominationsModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Review Nominations</h3>
+                            <p>Approve or reject pending nominations</p>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="action-card" onclick="showAnnouncementModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>Create Announcement</h3>
+                            <p>Post news and updates to all users</p>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="action-card" onclick="showAnalyticsModal()">
+                        <div class="action-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="action-content">
+                            <h3>View Analytics</h3>
+                            <p>See detailed reports and statistics</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- System Status -->
+            <div class="system-status">
+                <h3><i class="fas fa-server"></i> System Information</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <p>Last Updated</p>
+                        <strong id="lastUpdated">Loading...</strong>
+                    </div>
+                    <div class="status-item">
+                        <p>Google Sheets Status</p>
+                        <strong class="online" id="sheetsStatus">Connected</strong>
+                    </div>
+                    <div class="status-item">
+                        <p>Session Expires</p>
+                        <strong id="sessionTimer">60:00</strong>
+                    </div>
+                    <div class="status-item">
+                        <p>Total Submissions</p>
+                        <strong id="totalSubmissions">0</strong>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Main Script -->
-    <script>
-        // ==================== CONFIGURATION ====================
-        const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
-        
-        // ==================== INITIALIZATION ====================
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 LBA Dashboard Login Initialized');
-            
-            // Check if already logged in
-            const token = localStorage.getItem('lba_auth_token');
-            const userRole = localStorage.getItem('lba_user_role');
-            
-            if (token && userRole) {
-                // Verify token validity
-                try {
-                    const response = await fetch(`${BACKEND_URL}/api/health`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+    <!-- Nominations Modal (Google Sheets Integration) -->
+    <div class="modal" id="nominationsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-award"></i> Nominations Management</h2>
+                <button class="modal-close" onclick="hideModal('nominationsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="sheets-container">
+                    <div class="sheets-header">
+                        <h3><i class="fas fa-table"></i> Google Sheets Integration</h3>
+                        <div class="sheets-actions">
+                            <button class="sheet-btn" onclick="refreshSheetsData()">
+                                <i class="fas fa-sync-alt"></i> Refresh Data
+                            </button>
+                            <button class="sheet-btn secondary" onclick="openGoogleSheets()">
+                                <i class="fab fa-google"></i> Open Google Sheets
+                            </button>
+                            <button class="sheet-btn warning" onclick="startAutoRefresh()" id="autoRefreshBtn">
+                                <i class="fas fa-sync"></i> Auto Refresh
+                            </button>
+                        </div>
+                    </div>
                     
-                    if (response.ok) {
-                        // Redirect based on role
-                        if (userRole === 'admin') {
-                            window.location.href = 'admin/index.html';
-                        } else if (userRole === 'business') {
-                            window.location.href = 'business/index.html';
-                        }
-                        return;
-                    }
-                } catch (error) {
-                    console.log('Token expired, staying on login page');
-                    localStorage.clear();
-                }
+                    <div class="sheets-grid">
+                        <div class="sheet-card" onclick="switchSheet('businesses')">
+                            <h4><i class="fas fa-building"></i> Businesses Sheet</h4>
+                            <p>View all registered businesses and their details</p>
+                            <div class="sheet-stats">
+                                <div class="sheet-stat">
+                                    <strong id="sheetBusinessesTotal">0</strong>
+                                    <span>Total</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <strong id="sheetBusinessesActive">0</strong>
+                                    <span>Active</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <strong id="sheetBusinessesPending">0</strong>
+                                    <span>Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sheet-card" onclick="switchSheet('nominations')">
+                            <h4><i class="fas fa-award"></i> Nominations Sheet</h4>
+                            <p>Review and manage all award nominations</p>
+                            <div class="sheet-stats">
+                                <div class="sheet-stat">
+                                    <strong id="sheetNominationsTotal">0</strong>
+                                    <span>Total</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <strong id="sheetNominationsApproved">0</strong>
+                                    <span>Approved</span>
+                                </div>
+                                <div class="sheet-stat">
+                                    <strong id="sheetNominationsPending">0</strong>
+                                    <span>Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Controls -->
+                    <div class="filter-controls">
+                        <h4><i class="fas fa-filter"></i> Filter Data</h4>
+                        <div class="filter-grid">
+                            <div class="filter-group">
+                                <label for="filterSheet">Select Sheet</label>
+                                <select id="filterSheet" onchange="switchSheet(this.value)">
+                                    <option value="businesses">Businesses Sheet</option>
+                                    <option value="nominations">Nominations Sheet</option>
+                                    <option value="all">All Submissions</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filterStatus">Status Filter</label>
+                                <select id="filterStatus" onchange="applyFilters()">
+                                    <option value="all">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filterSearch">Search</label>
+                                <input type="text" id="filterSearch" placeholder="Search submissions..." onkeyup="applyFilters()">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Data View -->
+                    <div class="sheets-viewer">
+                        <div class="sheets-viewer-header">
+                            <h4>
+                                <i class="fas fa-eye"></i> Live Data View 
+                                <span class="real-time-indicator" id="realtimeIndicator">
+                                    <span class="pulse-dot"></span>
+                                    Live
+                                </span>
+                            </h4>
+                            <div style="display: flex; gap: 10px;">
+                                <span id="dataCount" style="color: #64748b; font-size: 14px; font-weight: 600;">0 submissions</span>
+                            </div>
+                        </div>
+                        <div id="sheetsData" style="padding: 20px; min-height: 400px; max-height: 400px; overflow-y: auto;">
+                            <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                                <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
+                                <p>Connecting to Google Sheets...</p>
+                                <p style="font-size: 12px; margin-top: 10px;">Fetching live submission data</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="quick-actions-panel">
+                        <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+                        <div class="actions-grid">
+                            <a href="#" class="action-btn approve" onclick="approveSelected()">
+                                <i class="fas fa-check"></i>
+                                <div>
+                                    <strong>Approve Selected</strong>
+                                    <small>Approve pending nominations</small>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="action-btn reject" onclick="rejectSelected()">
+                                <i class="fas fa-times"></i>
+                                <div>
+                                    <strong>Reject Selected</strong>
+                                    <small>Reject pending nominations</small>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="action-btn export" onclick="exportToExcel()">
+                                <i class="fas fa-download"></i>
+                                <div>
+                                    <strong>Export to Excel</strong>
+                                    <small>Download data as Excel file</small>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="action-btn notify" onclick="sendNotifications()">
+                                <i class="fas fa-bell"></i>
+                                <div>
+                                    <strong>Send Notifications</strong>
+                                    <small>Notify selected users</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+            <!-- Dashboard Script - FIXED VERSION -->
+    <script>
+        // ============================================
+        // CONFIGURATION - UPDATED
+        // ============================================
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+        const GOOGLE_SHEETS_VIEW_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit';
+        const SESSION_TIMEOUT = 60; // minutes
+        const REFRESH_INTERVAL = 30000; // 30 seconds
+
+        // ============================================
+        // GLOBAL STATE
+        // ============================================
+        let dashboardState = {
+            isConnected: false,
+            lastUpdate: null,
+            autoRefresh: null,
+            currentSheet: 'businesses',
+            sheetData: {
+                businesses: [],
+                nominations: [],
+                all: []
+            },
+            user: {
+                name: 'System Administrator',
+                role: 'admin',
+                email: 'admin@liberiabusinessawardslr.com'
             }
+        };
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Admin Dashboard Initializing...');
             
-            // Setup UI
-            setupTabs();
-            
-            // Check backend status
-            await checkBackendStatus();
+            try {
+                // Check authentication
+                await checkAuthentication();
+                
+                // Setup UI components
+                setupUserInterface();
+                
+                // Verify API endpoints
+                await verifyApiEndpoints();
+                
+                // Test API connection
+                await testApiConnection();
+                
+                // Load initial data
+                await loadInitialData();
+                
+                // Setup periodic updates
+                setupPeriodicUpdates();
+                
+                // Update UI state
+                updateConnectionStatus(true);
+                
+                console.log('✅ Dashboard Ready');
+                
+            } catch (error) {
+                console.error('❌ Dashboard initialization failed:', error);
+                showNotification('Failed to initialize dashboard. Using limited functionality.', 'danger');
+                useFallbackData();
+            }
         });
 
-        // ==================== UI FUNCTIONS ====================
-        function setupTabs() {
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            const forms = document.querySelectorAll('.login-form');
+        // ============================================
+        // AUTHENTICATION
+        // ============================================
+        async function checkAuthentication() {
+            const token = localStorage.getItem('lba_auth_token');
+            const userData = localStorage.getItem('lba_user_data');
             
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tab = this.dataset.tab;
-                    
-                    // Update active tab
-                    tabBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Show corresponding form
-                    forms.forEach(form => {
-                        form.classList.remove('active');
-                        if (form.id === tab + 'Form') {
-                            form.classList.add('active');
-                            clearAllMessages();
-                        }
-                    });
+            if (!token || !userData) {
+                console.warn('⚠️ Authentication required');
+                redirectToLogin();
+                return;
+            }
+            
+            try {
+                dashboardState.user = JSON.parse(userData);
+                updateUserDisplay();
+            } catch (error) {
+                console.error('❌ Invalid user data:', error);
+                redirectToLogin();
+            }
+        }
+
+        function redirectToLogin() {
+            // Clear auth data
+            localStorage.removeItem('lba_auth_token');
+            localStorage.removeItem('lba_user_data');
+            localStorage.removeItem('lba_user_role');
+            
+            // Redirect
+            window.location.href = '../login.html';
+        }
+
+        // ============================================
+        // UI SETUP
+        // ============================================
+        function setupUserInterface() {
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                    menuToggle.style.transform = sidebar.classList.contains('active') ? 'rotate(90deg)' : 'rotate(0)';
                 });
+            }
+            
+            // Close sidebar on outside click (mobile)
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 992 && 
+                    !sidebar.contains(e.target) && 
+                    !menuToggle.contains(e.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    menuToggle.style.transform = 'rotate(0)';
+                }
             });
             
-            // Admin form submission
-            document.getElementById('adminForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await handleAdminLogin();
+            // Logout handler
+            document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
+            
+            // Window resize handler
+            window.addEventListener('resize', handleWindowResize);
+            
+            // Setup session timer
+            startSessionTimer();
+        }
+
+        function updateUserDisplay() {
+            const user = dashboardState.user;
+            
+            document.getElementById('adminName').textContent = user.name;
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userEmail').textContent = user.email;
+            
+            // Generate avatar initials
+            const initials = user.name
+                .split(' ')
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+            
+            document.getElementById('userAvatar').textContent = initials;
+        }
+
+        function handleWindowResize() {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            
+            if (window.innerWidth > 992 && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                menuToggle.style.transform = 'rotate(0)';
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                redirectToLogin();
+            }
+        }
+
+        // ============================================
+        // API CONNECTION - FIXED
+        // ============================================
+        async function fetchWithTimeout(url, options = {}) {
+            const { timeout = 10000, ...fetchOptions } = options;
+            
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                // ✅ FIXED: Added the actual fetch call
+                const response = await fetch(url, { 
+                    ...fetchOptions, 
+                    signal: controller.signal 
+                });
+                
+                clearTimeout(id);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.text();
+                
+            } catch (error) {
+                clearTimeout(id);
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timeout');
+                }
+                throw error;
+            }
+        }
+
+        async function fetchWithRetry(url, options = {}, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    return await fetchWithTimeout(url, options);
+                } catch (error) {
+                    console.log(`🔄 Retry ${i + 1}/${retries} for ${url}`);
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                }
+            }
+        }
+
+        async function fetchJson(url, options = {}) {
+            try {
+                const response = await fetchWithRetry(url, {
+                    ...options,
+                    timeout: 15000,
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                }, 3);
+                
+                const data = JSON.parse(response);
+                
+                if (data.status === 'ERROR') {
+                    throw new Error(data.error?.message || 'API error');
+                }
+                
+                return data;
+                
+            } catch (error) {
+                console.error('❌ Fetch error:', error);
+                throw error;
+            }
+        }
+
+        async function verifyApiEndpoints() {
+            console.log('🔍 Verifying API endpoints...');
+            
+            const endpoints = ['ping', 'getStats', 'getAllData', 'getActivity'];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetchWithTimeout(
+                        `${GOOGLE_APPS_SCRIPT_URL}?action=${endpoint}`,
+                        { timeout: 5000 }
+                    );
+                    console.log(`✅ ${endpoint}: OK`);
+                } catch (error) {
+                    console.warn(`⚠️ ${endpoint}: Failed - ${error.message}`);
+                }
+            }
+        }
+
+        async function testApiConnection() {
+            console.log('🔌 Testing API connection...');
+            
+            try {
+                const response = await fetchWithTimeout(`${GOOGLE_APPS_SCRIPT_URL}?action=ping`, {
+                    timeout: 10000
+                });
+                
+                if (response === 'OK' || response.includes('OK')) {
+                    dashboardState.isConnected = true;
+                    console.log('✅ API Connection: OK');
+                    return true;
+                }
+                
+                throw new Error('Invalid response');
+                
+            } catch (error) {
+                console.error('❌ API Connection failed:', error);
+                dashboardState.isConnected = false;
+                return false;
+            }
+        }
+
+        async function checkConnection() {
+            const wasConnected = dashboardState.isConnected;
+            dashboardState.isConnected = await testApiConnection();
+            
+            if (wasConnected !== dashboardState.isConnected) {
+                updateConnectionStatus(dashboardState.isConnected);
+                showNotification(
+                    dashboardState.isConnected 
+                        ? '✅ Reconnected to Google Sheets' 
+                        : '⚠️ Lost connection to Google Sheets',
+                    dashboardState.isConnected ? 'success' : 'warning'
+                );
+            }
+        }
+
+        function updateConnectionStatus(isConnected) {
+            const statusElement = document.getElementById('sheetsStatus');
+            const systemStatus = document.getElementById('systemStatus');
+            
+            if (isConnected) {
+                statusElement.textContent = 'Connected';
+                statusElement.className = 'online';
+                systemStatus.style.background = '#10B981';
+                systemStatus.style.boxShadow = '0 0 10px #10B981';
+            } else {
+                statusElement.textContent = 'Disconnected';
+                statusElement.className = 'warning';
+                systemStatus.style.background = '#F59E0B';
+                systemStatus.style.boxShadow = '0 0 10px #F59E0B';
+            }
+        }
+
+        // ============================================
+        // DATA LOADING - FIXED
+        // ============================================
+        async function loadInitialData() {
+            console.log('📊 Loading initial data...');
+            
+            // Show loading states
+            showLoadingStates();
+            
+            try {
+                // Load dashboard statistics
+                const stats = await fetchDashboardStats();
+                if (stats) {
+                    updateDashboardStats(stats);
+                }
+                
+                // Load recent activity
+                const activity = await fetchRecentActivity();
+                if (activity) {
+                    updateRecentActivity(activity);
+                }
+                
+                // Load sheet data
+                const allData = await fetchAllSheetData();
+                if (allData) {
+                    processSheetData(allData);
+                    updateSheetStats();
+                }
+                
+                // Update last update time
+                dashboardState.lastUpdate = new Date();
+                updateLastUpdateDisplay();
+                
+                console.log('✅ Data loaded successfully');
+                
+            } catch (error) {
+                console.error('❌ Failed to load data:', error);
+                showNotification('Could not load live data. Using cached information.', 'warning');
+            } finally {
+                // Hide loading states
+                hideLoadingStates();
+            }
+        }
+
+        async function refreshData() {
+            try {
+                const [stats, activity] = await Promise.all([
+                    fetchDashboardStats(),
+                    fetchRecentActivity()
+                ]);
+                
+                if (stats) updateDashboardStats(stats);
+                if (activity) updateRecentActivity(activity);
+                
+                dashboardState.lastUpdate = new Date();
+                updateLastUpdateDisplay();
+                
+            } catch (error) {
+                console.warn('⚠️ Data refresh failed:', error);
+            }
+        }
+
+        // ============================================
+        // API FETCH FUNCTIONS - FIXED
+        // ============================================
+        async function fetchDashboardStats() {
+            try {
+                const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getStats`);
+                
+                // Check correct response structure
+                if (response && response.success === true) {
+                    return response;
+                }
+                
+                throw new Error('Invalid response format');
+                
+            } catch (error) {
+                console.error('❌ Failed to fetch stats:', error);
+                return null;
+            }
+        }
+
+        async function fetchAllSheetData() {
+            try {
+                const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllData`);
+                
+                if (response && response.success === true && response.data) {
+                    return response.data;
+                }
+                
+                throw new Error('Invalid data format');
+                
+            } catch (error) {
+                console.error('❌ Failed to fetch sheet data:', error);
+                return null;
+            }
+        }
+
+        async function fetchRecentActivity() {
+            try {
+                const response = await fetchJson(`${GOOGLE_APPS_SCRIPT_URL}?action=getActivity`);
+                
+                if (response && response.success === true && response.data) {
+                    return response.data.activity || [];
+                }
+                
+                throw new Error('Invalid activity data');
+                
+            } catch (error) {
+                console.error('❌ Failed to fetch activity:', error);
+                return null;
+            }
+        }
+
+        // ============================================
+        // DATA PROCESSING
+        // ============================================
+        function processSheetData(data) {
+            if (!data || !data.submissions || !Array.isArray(data.submissions)) {
+                throw new Error('Invalid sheet data structure');
+            }
+            
+            // Reset state
+            dashboardState.sheetData = {
+                businesses: [],
+                nominations: [],
+                all: data.submissions
+            };
+            
+            // Categorize submissions
+            data.submissions.forEach(submission => {
+                if (submission.formType === 'business' || submission.formType === 'register') {
+                    dashboardState.sheetData.businesses.push(enhanceBusinessData(submission));
+                } else if (submission.formType === 'nomination' || submission.formType === 'nominate') {
+                    dashboardState.sheetData.nominations.push(enhanceNominationData(submission));
+                }
+            });
+            
+            console.log('📊 Data processed:', {
+                total: dashboardState.sheetData.all.length,
+                businesses: dashboardState.sheetData.businesses.length,
+                nominations: dashboardState.sheetData.nominations.length
             });
         }
 
-        function showBusinessOptions() {
-            document.getElementById('businessOptions').style.display = 'grid';
-            document.getElementById('businessLoginForm').style.display = 'none';
-            document.getElementById('businessRegisterForm').style.display = 'none';
-            clearAllMessages();
+        function enhanceBusinessData(submission) {
+            return {
+                id: submission.id || generateId('business'),
+                name: submission.business_name || submission.displayName || 'Unknown Business',
+                email: submission.email || submission.displayEmail || 'No email',
+                phone: submission.phone || 'No phone',
+                category: submission.business_category || 'General',
+                status: submission.status || 'pending',
+                statusClass: submission.statusClass || 'warning',
+                nominations: parseInt(submission.nominations) || 0,
+                timestamp: submission.timestamp || new Date().toISOString(),
+                displayDate: formatDisplayDate(submission.timestamp),
+                source: submission.source || 'website'
+            };
         }
 
-        function showBusinessLogin() {
-            document.getElementById('businessOptions').style.display = 'none';
-            document.getElementById('businessRegisterForm').style.display = 'none';
-            document.getElementById('businessLoginForm').style.display = 'block';
-            clearAllMessages();
+        function enhanceNominationData(submission) {
+            return {
+                id: submission.id || generateId('nomination'),
+                businessName: submission.business_name || submission.displayName || 'Unknown Business',
+                category: submission.nominated_category || submission.category || 'General',
+                submittedDate: submission.timestamp || new Date().toISOString(),
+                status: submission.status || 'pending',
+                statusClass: submission.statusClass || 'warning',
+                reviewer: submission.reviewer || '',
+                score: parseFloat(submission.score) || 0,
+                scoreColor: getScoreColor(parseFloat(submission.score) || 0),
+                timestamp: submission.timestamp || new Date().toISOString(),
+                displayDate: formatDisplayDate(submission.timestamp),
+                source: submission.source || 'website'
+            };
+        }
+
+        // ============================================
+        // UI UPDATES - FIXED
+        // ============================================
+        function updateDashboardStats(response) {
+            if (!response) return;
             
+            // Handle both response formats
+            const stats = response.data || response;
+            
+            // Update main stats
+            document.getElementById('totalBusinesses').textContent = stats.totalBusinesses || 
+                                                                   stats.businessCount || 
+                                                                   stats.sheetStats?.Registrations?.total || 0;
+            
+            document.getElementById('totalNominations').textContent = stats.totalNominations || 
+                                                                      stats.nominationCount || 
+                                                                      stats.sheetStats?.Nominations?.total || 0;
+            
+            document.getElementById('approvedNominations').textContent = stats.approvedNominations || 
+                                                                        stats.sheetStats?.Nominations?.approved || 0;
+            
+            document.getElementById('totalSubmissions').textContent = stats.totalSubmissions || 
+                                                                      stats.submissionCount || 0;
+            document.getElementById('activeUsers').textContent = stats.totalSubmissions || 
+                                                                 stats.activeUsers || 0;
+            
+            // Update menu badges
+            document.getElementById('businessCount').textContent = stats.totalBusinesses || 
+                                                                  stats.sheetStats?.Registrations?.total || 0;
+            
+            document.getElementById('nominationCount').textContent = stats.totalNominations || 
+                                                                    stats.sheetStats?.Nominations?.total || 0;
+            
+            // Update trend indicators
+            updateTrendIndicators(stats);
+            
+            // Update sheet stats in modal
+            updateSheetStatsDisplay(stats);
+        }
+
+        function updateTrendIndicators(stats) {
+            // Business trend
+            const businessTrend = document.getElementById('businessTrend');
+            const businessGrowth = stats.todayBusinesses > 0 ? `+${stats.todayBusinesses} today` : 'No new today';
+            businessTrend.innerHTML = `<i class="fas fa-chart-line"></i><span>${businessGrowth}</span>`;
+            
+            // Nomination trend
+            const nominationTrend = document.getElementById('nominationTrend');
+            const nominationGrowth = stats.todayNominations > 0 ? `+${stats.todayNominations} today` : 'No new today';
+            nominationTrend.innerHTML = `<i class="fas fa-chart-line"></i><span>${nominationGrowth}</span>`;
+            
+            // Approval trend
+            const approvalTrend = document.getElementById('approvalTrend');
+            const totalNoms = stats.totalNominations || 0;
+            const approvedNoms = stats.approvedNominations || 0;
+            const approvalRate = totalNoms > 0 ? Math.round((approvedNoms / totalNoms) * 100) + '% rate' : '0% rate';
+            approvalTrend.innerHTML = `<i class="fas fa-percentage"></i><span>${approvalRate}</span>`;
+            
+            // User trend
+            const userTrend = document.getElementById('userTrend');
+            const userGrowth = stats.todaySubmissions > 0 ? `+${stats.todaySubmissions} today` : 'No activity today';
+            userTrend.innerHTML = `<i class="fas fa-users"></i><span>${userGrowth}</span>`;
+        }
+
+        function updateRecentActivity(activity) {
+            const activityList = document.getElementById('activityList');
+            
+            if (!activity || activity.length === 0) {
+                activityList.innerHTML = `
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>No recent activity</h4>
+                            <p>Form submissions will appear here</p>
+                        </div>
+                        <div class="activity-time">Just now</div>
+                    </li>
+                `;
+                return;
+            }
+            
+            activityList.innerHTML = activity.map(item => `
+                <li class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-${item.icon || 'file-alt'}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>${escapeHtml(item.title || 'New Activity')}</h4>
+                        <p>${escapeHtml(item.description || 'Activity recorded')}</p>
+                    </div>
+                    <div class="activity-time">${formatTimeAgo(item.timestamp)}</div>
+                </li>
+            `).join('');
+        }
+
+        function updateSheetStatsDisplay(stats) {
+            if (!stats.sheetStats) return;
+            
+            // Businesses sheet
+            const businessStats = stats.sheetStats.Registrations || stats.sheetStats.Businesses || {};
+            document.getElementById('sheetBusinessesTotal').textContent = businessStats.total || 0;
+            document.getElementById('sheetBusinessesActive').textContent = businessStats.active || businessStats.approved || 0;
+            document.getElementById('sheetBusinessesPending').textContent = businessStats.pending || 0;
+            
+            // Nominations sheet
+            const nominationStats = stats.sheetStats.Nominations || {};
+            document.getElementById('sheetNominationsTotal').textContent = nominationStats.total || 0;
+            document.getElementById('sheetNominationsApproved').textContent = nominationStats.approved || 0;
+            document.getElementById('sheetNominationsPending').textContent = nominationStats.pending || 0;
+        }
+
+        // ============================================
+        // LOADING STATES
+        // ============================================
+        function showLoadingStates() {
+            // Stats cards
+            const statCards = document.querySelectorAll('.stat-card .stat-content h3');
+            statCards.forEach(card => {
+                card.innerHTML = '<span class="loading loading-text" style="width: 60px; display: inline-block;"></span>';
+            });
+            
+            // Activity list
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = `
+                <li class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4><span class="loading loading-text" style="width: 200px;"></span></h4>
+                        <p><span class="loading loading-text" style="width: 150px;"></span></p>
+                    </div>
+                    <div class="activity-time"><span class="loading loading-text" style="width: 60px;"></span></div>
+                </li>
+            `;
+        }
+
+        function hideLoadingStates() {
+            // Remove loading classes
+            document.querySelectorAll('.loading').forEach(el => {
+                el.classList.remove('loading');
+            });
+        }
+
+        // ============================================
+        // PERIODIC UPDATES
+        // ============================================
+        function setupPeriodicUpdates() {
+            // Data refresh every 30 seconds
+            setInterval(async () => {
+                if (dashboardState.isConnected) {
+                    await refreshData();
+                }
+            }, REFRESH_INTERVAL);
+            
+            // Connection check every minute
+            setInterval(async () => {
+                await checkConnection();
+            }, 60000);
+            
+            // UI updates every 10 seconds
+            setInterval(() => {
+                updateRealTimeIndicator();
+            }, 10000);
+        }
+
+        function updateRealTimeIndicator() {
+            const indicator = document.getElementById('realtimeIndicator');
+            
+            if (!dashboardState.lastUpdate) {
+                indicator.style.display = 'none';
+                return;
+            }
+            
+            const secondsAgo = Math.floor((new Date() - dashboardState.lastUpdate) / 1000);
+            
+            if (secondsAgo < 10) {
+                indicator.innerHTML = '<span class="pulse-dot"></span> Live';
+                indicator.style.display = 'inline-flex';
+            } else if (secondsAgo < 60) {
+                indicator.innerHTML = `<i class="fas fa-clock"></i> ${secondsAgo}s ago`;
+                indicator.style.display = 'inline-flex';
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+
+        function updateLastUpdateDisplay() {
+            if (!dashboardState.lastUpdate) return;
+            
+            const timeString = dashboardState.lastUpdate.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            document.getElementById('lastUpdated').textContent = timeString;
+            document.getElementById('statusTime').textContent = timeString;
+        }
+
+        // ============================================
+        // SESSION MANAGEMENT
+        // ============================================
+        function startSessionTimer() {
+            let timeLeft = SESSION_TIMEOUT * 60;
+            const timerElement = document.getElementById('sessionTimer');
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Warning states
+                if (timeLeft <= 300) {
+                    timerElement.style.color = 'var(--warning-color)';
+                }
+                
+                if (timeLeft <= 60) {
+                    timerElement.style.color = 'var(--danger-color)';
+                    if (timeLeft === 60) {
+                        showNotification('Session will expire in 1 minute', 'warning');
+                    }
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showNotification('Session expired. Redirecting to login...', 'danger');
+                    setTimeout(handleLogout, 2000);
+                }
+            }, 1000);
+            
+            // Reset on user activity
+            const resetTimer = () => {
+                if (timeLeft <= 300) {
+                    timeLeft = SESSION_TIMEOUT * 60;
+                    timerElement.style.color = 'var(--lba-dark)';
+                }
+            };
+            
+            ['click', 'mousemove', 'keypress'].forEach(event => {
+                document.addEventListener(event, resetTimer);
+            });
+        }
+
+        // ============================================
+        // FALLBACK DATA
+        // ============================================
+        function useFallbackData() {
+            console.log('🔄 Using fallback data');
+            
+            // Create basic data structure
+            const fallbackData = {
+                success: true,
+                data: {
+                    totalSubmissions: 0,
+                    todaySubmissions: 0,
+                    totalBusinesses: 0,
+                    totalNominations: 0,
+                    approvedNominations: 0,
+                    pendingReview: 0,
+                    sheetStats: {
+                        Registrations: { total: 0, active: 0, pending: 0 },
+                        Nominations: { total: 0, approved: 0, pending: 0 }
+                    }
+                }
+            };
+            
+            updateDashboardStats(fallbackData);
+            updateConnectionStatus(false);
+        }
+
+        // ============================================
+        // SHEETS MODAL FUNCTIONS
+        // ============================================
+        function showNominationsModal() {
+            hideAllModals();
+            
+            const modal = document.getElementById('nominationsModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Load data if needed
+            if (dashboardState.sheetData.all.length === 0) {
+                loadSheetsDataForModal();
+            } else {
+                renderSheetData();
+            }
+        }
+
+        async function loadSheetsDataForModal() {
+            const sheetsData = document.getElementById('sheetsData');
+            sheetsData.innerHTML = `
+                <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 20px;"></i>
+                    <p>Loading Google Sheets data...</p>
+                </div>
+            `;
+            
+            try {
+                const data = await fetchAllSheetData();
+                if (data) {
+                    processSheetData(data);
+                    renderSheetData();
+                    showNotification('✅ Data loaded successfully', 'success');
+                }
+            } catch (error) {
+                sheetsData.innerHTML = `
+                    <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fas fa-exclamation-triangle fa-2x" style="color: var(--warning-color); margin-bottom: 20px;"></i>
+                        <p>Could not load data</p>
+                        <p style="font-size: 12px; margin-top: 10px;">${escapeHtml(error.message)}</p>
+                        <button class="sheet-btn secondary" onclick="loadSheetsDataForModal()" style="margin-top: 20px;">
+                            <i class="fas fa-sync-alt"></i> Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderSheetData() {
+            const sheetsData = document.getElementById('sheetsData');
+            const sheet = dashboardState.currentSheet;
+            const data = dashboardState.sheetData[sheet] || [];
+            
+            // Apply filters
+            const filteredData = applyFiltersToData(data);
+            
+            if (filteredData.length === 0) {
+                sheetsData.innerHTML = `
+                    <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fas fa-database fa-2x" style="margin-bottom: 20px;"></i>
+                        <p>No data found</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Try refreshing or check your Google Sheets</p>
+                    </div>
+                `;
+                document.getElementById('dataCount').textContent = '0 submissions';
+                return;
+            }
+            
+            // Update count
+            document.getElementById('dataCount').textContent = `${filteredData.length} submissions`;
+            
+            // Render appropriate table
+            let tableHtml;
+            
+            switch (sheet) {
+                case 'businesses':
+                    tableHtml = renderBusinessTable(filteredData);
+                    break;
+                case 'nominations':
+                    tableHtml = renderNominationsTable(filteredData);
+                    break;
+                default:
+                    tableHtml = renderAllTable(filteredData);
+            }
+            
+            sheetsData.innerHTML = tableHtml;
+        }
+
+        function applyFiltersToData(data) {
+            const statusFilter = document.getElementById('filterStatus')?.value || 'all';
+            const searchFilter = document.getElementById('filterSearch')?.value?.toLowerCase() || '';
+            
+            return data.filter(item => {
+                // Status filter
+                if (statusFilter !== 'all' && item.status !== statusFilter) {
+                    return false;
+                }
+                
+                // Search filter
+                if (searchFilter) {
+                    const searchable = [
+                        item.name,
+                        item.businessName,
+                        item.email,
+                        item.category,
+                        item.phone
+                    ].filter(Boolean).map(f => f.toLowerCase());
+                    
+                    return searchable.some(field => field.includes(searchFilter));
+                }
+                
+                return true;
+            });
+        }
+
+        function renderBusinessTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
+                                <tr>
+                                    <td><strong>${escapeHtml(item.name)}</strong></td>
+                                    <td>${escapeHtml(item.email)}</td>
+                                    <td>${escapeHtml(item.phone)}</td>
+                                    <td>${escapeHtml(item.category)}</td>
+                                    <td>
+                                        <span class="status-badge status-${item.statusClass || 'warning'}">
+                                            ${item.status}
+                                        </span>
+                                    </td>
+                                    <td>${item.displayDate}</td>
+                                    <td>
+                                        <button class="sheet-btn secondary" onclick="viewItem('${item.id}')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderNominationsTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
+                                <tr>
+                                    <td><strong>${escapeHtml(item.businessName)}</strong></td>
+                                    <td>${escapeHtml(item.category)}</td>
+                                    <td>
+                                        <span class="status-badge status-${item.statusClass || 'warning'}">
+                                            ${item.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="
+                                            display: inline-block;
+                                            padding: 4px 12px;
+                                            border-radius: 20px;
+                                            font-weight: bold;
+                                            background: ${item.scoreColor};
+                                            color: white;
+                                        ">
+                                            ${item.score}
+                                        </span>
+                                    </td>
+                                    <td>${item.displayDate}</td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            ${item.status === 'pending' ? `
+                                                <button class="sheet-btn" style="background: var(--success-color); padding: 6px 12px;" 
+                                                        onclick="approveItem('${item.id}')">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="sheet-btn" style="background: var(--danger-color); padding: 6px 12px;" 
+                                                        onclick="rejectItem('${item.id}')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            ` : ''}
+                                            <button class="sheet-btn secondary" style="padding: 6px 12px;" 
+                                                    onclick="viewItem('${item.id}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderAllTable(data) {
+            return `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
+                                <tr>
+                                    <td>
+                                        <span class="status-badge" style="background: rgba(255,0,0,0.1); color: var(--lba-primary);">
+                                            ${item.formType || 'submission'}
+                                        </span>
+                                    </td>
+                                    <td><strong>${escapeHtml(item.name || item.businessName || 'N/A')}</strong></td>
+                                    <td>${escapeHtml(item.email || 'N/A')}</td>
+                                    <td>
+                                        <span class="status-badge status-${item.statusClass || 'info'}">
+                                            ${item.status}
+                                        </span>
+                                    </td>
+                                    <td>${item.displayDate}</td>
+                                    <td>
+                                        <button class="sheet-btn secondary" onclick="viewItem('${item.id}')">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // MODAL CONTROLS
+        // ============================================
+        function switchSheet(sheet) {
+            dashboardState.currentSheet = sheet;
+            document.getElementById('filterSheet').value = sheet;
+            renderSheetData();
+        }
+
+        function applyFilters() {
+            renderSheetData();
+        }
+
+        function refreshSheetsData() {
+            showNotification('Refreshing data...', 'info');
+            loadSheetsDataForModal();
+        }
+
+        function openGoogleSheets() {
+            window.open(GOOGLE_SHEETS_VIEW_URL, '_blank');
+        }
+
+        function startAutoRefresh() {
+            const btn = document.getElementById('autoRefreshBtn');
+            
+            if (dashboardState.autoRefresh) {
+                clearInterval(dashboardState.autoRefresh);
+                dashboardState.autoRefresh = null;
+                btn.innerHTML = '<i class="fas fa-sync"></i> Auto Refresh';
+                btn.classList.remove('danger');
+                showNotification('Auto-refresh stopped', 'warning');
+            } else {
+                dashboardState.autoRefresh = setInterval(refreshSheetsData, 30000);
+                btn.innerHTML = '<i class="fas fa-stop"></i> Stop Auto Refresh';
+                btn.classList.add('danger');
+                showNotification('Auto-refresh started (every 30 seconds)', 'success');
+            }
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+            
+            // Stop auto-refresh
+            if (dashboardState.autoRefresh) {
+                clearInterval(dashboardState.autoRefresh);
+                dashboardState.autoRefresh = null;
+                const btn = document.getElementById('autoRefreshBtn');
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-sync"></i> Auto Refresh';
+                    btn.classList.remove('danger');
+                }
+            }
+        }
+
+        function hideAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Just now';
+            
+            const now = new Date();
+            const date = new Date(timestamp);
+            const diff = now - date;
+            
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (seconds < 60) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function formatDisplayDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        function getScoreColor(score) {
+            if (score >= 90) return '#10B981';
+            if (score >= 80) return '#F59E0B';
+            return '#EF4444';
+        }
+
+        function generateId(prefix = 'id') {
+            return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: '#10B981',
+                warning: '#F59E0B',
+                danger: '#EF4444',
+                info: '#3B82F6'
+            };
+            
+            const icons = {
+                success: 'check-circle',
+                warning: 'exclamation-triangle',
+                danger: 'exclamation-circle',
+                info: 'info-circle'
+            };
+            
+            // Remove existing notifications
+            document.querySelectorAll('.notification').forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 30px;
+                right: 30px;
+                background: white;
+                color: ${colors[type]};
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+                z-index: 9999;
+                animation: slideUp 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-left: 4px solid ${colors[type]};
+                max-width: 350px;
+                font-weight: 600;
+                font-size: 14px;
+            `;
+            
+            notification.innerHTML = `
+                <i class="fas fa-${icons[type]}" style="font-size: 18px;"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 4 seconds
             setTimeout(() => {
-                document.getElementById('businessEmail').focus();
-            }, 100);
+                notification.style.animation = 'slideUp 0.3s reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+            
+            // Click to dismiss
+            notification.addEventListener('click', () => notification.remove());
         }
 
-        function showBusinessRegister() {
-            document.getElementById('businessOptions').style.display = 'none';
-            document.getElementById('businessLoginForm').style.display = 'none';
-            document.getElementById('businessRegisterForm').style.display = 'block';
-            clearAllMessages();
+        // ============================================
+        // ACTION FUNCTIONS (Stubs for now)
+        // ============================================
+        function approveSelected() {
+            showNotification('This feature requires backend implementation', 'info');
         }
 
-        function togglePasswordVisibility(fieldId) {
-            const field = document.getElementById(fieldId);
-            const checkbox = document.getElementById(`show${fieldId.charAt(0).toUpperCase() + fieldId.slice(1)}`);
-            
-            if (field && checkbox) {
-                field.type = checkbox.checked ? 'text' : 'password';
-            }
+        function rejectSelected() {
+            showNotification('This feature requires backend implementation', 'info');
         }
 
-        // ==================== BACKEND STATUS ====================
-        async function checkBackendStatus() {
-            const apiStatus = document.getElementById('apiStatus');
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/health`, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' },
-                    signal: AbortSignal.timeout(5000)
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('✅ Backend Status:', data);
-                    
-                    let statusText = 'Backend Online - Ready for Login';
-                    if (data.stats) {
-                        statusText += ` | Users: ${data.stats.users || 0}`;
-                    }
-                    
-                    apiStatus.innerHTML = `<i class="fas fa-check-circle"></i><span>${statusText}</span>`;
-                    apiStatus.className = 'api-status online';
-                    
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-            } catch (error) {
-                console.warn('⚠️ Backend check failed:', error.message);
-                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Please try again later</span>`;
-                apiStatus.className = 'api-status offline';
-            }
+        function exportToExcel() {
+            showNotification('Export feature coming soon', 'info');
         }
 
-        // ==================== ADMIN LOGIN ====================
-        async function handleAdminLogin() {
-            const email = document.getElementById('adminEmail').value.trim();
-            const password = document.getElementById('adminPassword').value;
-            const errorEl = document.getElementById('adminError');
-            const successEl = document.getElementById('adminSuccess');
-            const btn = document.getElementById('adminBtn');
-            
-            clearAllMessages();
-            
-            if (!email || !password) {
-                showError(errorEl, 'Please fill in all fields');
-                return;
-            }
-            
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/admin/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    // Store authentication
-                    localStorage.setItem('lba_auth_token', result.token);
-                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-                    localStorage.setItem('lba_user_role', result.user.role);
-                    
-                    showSuccess(successEl, '✓ Login successful! Redirecting...');
-                    console.log('✅ Admin login successful');
-                    
-                    // Redirect to admin dashboard
-                    setTimeout(() => {
-                        window.location.href = 'admin/index.html';
-                    }, 1500);
-                    
-                } else {
-                    throw new Error(result.message || 'Invalid admin credentials');
-                }
-                
-            } catch (error) {
-                console.error('❌ Admin login error:', error);
-                showError(errorEl, error.message || 'Login failed. Please check your credentials.');
-                
-            } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }, 1000);
-            }
+        function sendNotifications() {
+            showNotification('Notification feature coming soon', 'info');
         }
 
-        // ==================== BUSINESS LOGIN ====================
-        async function handleBusinessLogin() {
-            const email = document.getElementById('businessEmail').value.trim();
-            const password = document.getElementById('businessPassword').value;
-            const errorEl = document.getElementById('businessError');
-            const successEl = document.getElementById('businessSuccess');
-            const btn = document.getElementById('businessBtn');
-            
-            clearAllMessages();
-            
-            if (!email || !password) {
-                showError(errorEl, 'Please fill in all fields');
-                return;
-            }
-            
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/business/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    // Store authentication
-                    localStorage.setItem('lba_auth_token', result.token);
-                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-                    localStorage.setItem('lba_user_role', result.user.role);
-                    
-                    showSuccess(successEl, '✓ Login successful! Redirecting...');
-                    console.log('✅ Business login successful');
-                    
-                    // Redirect to business dashboard
-                    setTimeout(() => {
-                        window.location.href = 'business/index.html';
-                    }, 1500);
-                    
-                } else {
-                    // Handle specific status messages
-                    if (result.message.includes('pending')) {
-                        throw new Error('Your account is pending admin approval. You will be able to login once approved.');
-                    } else if (result.message.includes('rejected')) {
-                        throw new Error(result.message || 'Your business registration was rejected.');
-                    } else {
-                        throw new Error(result.message || 'Invalid business credentials');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('❌ Business login error:', error);
-                
-                let errorMessage = error.message;
-                if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Cannot connect to server. Please try again later.';
-                }
-                
-                showError(errorEl, errorMessage);
-                
-            } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }, 1000);
-            }
+        function viewItem(id) {
+            showNotification(`Viewing item ${id} - Detail view coming soon`, 'info');
         }
 
-        // ==================== BUSINESS REGISTRATION ====================
-        async function handleBusinessRegistration() {
-            const businessName = document.getElementById('regBusinessName').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regConfirmPassword').value;
-            const contactName = document.getElementById('regContactName').value.trim();
-            const phone = document.getElementById('regPhone').value.trim();
-            const businessType = document.getElementById('regBusinessType').value;
-            
-            const errorEl = document.getElementById('registerError');
-            const successEl = document.getElementById('registerSuccess');
-            const btn = document.getElementById('registerBtn');
-            
-            clearAllMessages();
-            
-            // Validate
-            if (!businessName || !email || !password || !confirmPassword) {
-                showError(errorEl, 'Please fill in all required fields');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showError(errorEl, 'Password must be at least 6 characters');
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                showError(errorEl, 'Passwords do not match');
-                return;
-            }
-            
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/business/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email,
-                        password,
-                        business_name: businessName,
-                        contact_name: contactName,
-                        phone,
-                        business_type: businessType
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    showSuccess(successEl, '✓ Registration successful! Your account is pending admin approval. You will be notified once approved.');
-                    
-                    // Clear form
-                    document.getElementById('regBusinessName').value = '';
-                    document.getElementById('regEmail').value = '';
-                    document.getElementById('regPassword').value = '';
-                    document.getElementById('regConfirmPassword').value = '';
-                    document.getElementById('regContactName').value = '';
-                    document.getElementById('regPhone').value = '';
-                    document.getElementById('regBusinessType').value = '';
-                    
-                    // Show login form after 3 seconds
-                    setTimeout(() => {
-                        showBusinessLogin();
-                    }, 3000);
-                    
-                } else {
-                    throw new Error(result.message || 'Registration failed');
-                }
-                
-            } catch (error) {
-                console.error('❌ Registration error:', error);
-                showError(errorEl, error.message || 'Registration failed. Please try again.');
-                
-            } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }, 1000);
-            }
+        function approveItem(id) {
+            showNotification(`Approving item ${id} - Backend integration required`, 'success');
         }
 
-        // ==================== UTILITY FUNCTIONS ====================
-        function showError(element, message) {
-            if (!element) return;
-            element.textContent = message;
-            element.style.display = 'block';
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        function rejectItem(id) {
+            showNotification(`Rejecting item ${id} - Backend integration required`, 'warning');
         }
 
-        function showSuccess(element, message) {
-            if (!element) return;
-            element.textContent = message;
-            element.style.display = 'block';
+        function refreshActivities() {
+            loadInitialData();
+            showNotification('Refreshing dashboard data...', 'info');
         }
 
-        function clearAllMessages() {
-            document.querySelectorAll('.error-message, .success-message').forEach(msg => {
-                msg.style.display = 'none';
-            });
+        // ============================================
+        // MODAL SHORTCUT FUNCTIONS
+        // ============================================
+        function showBusinessModal() {
+            showNominationsModal();
+            switchSheet('businesses');
         }
 
-        // ==================== EXPORT FUNCTIONS ====================
-        window.showBusinessOptions = showBusinessOptions;
-        window.showBusinessLogin = showBusinessLogin;
-        window.showBusinessRegister = showBusinessRegister;
-        window.togglePasswordVisibility = togglePasswordVisibility;
-        window.handleBusinessLogin = handleBusinessLogin;
-        window.handleBusinessRegistration = handleBusinessRegistration;
+        function showSheetsModal() {
+            showNominationsModal();
+        }
 
-        console.log('✅ Login page ready - Production Mode');
+        function showAnnouncementModal() {
+            showNotification('Announcements module coming soon', 'info');
+        }
+
+        function showAnalyticsModal() {
+            showNotification('Analytics module coming soon', 'info');
+        }
+
+        function showCategoriesModal() {
+            showNotification('Categories module coming soon', 'info');
+        }
+
+        function showJudgesModal() {
+            showNotification('Judges panel module coming soon', 'info');
+        }
+
+        function showUsersModal() {
+            showNotification('Users module coming soon', 'info');
+        }
+
+        function showReportsModal() {
+            showNotification('Reports module coming soon', 'info');
+        }
+
+        function showSettingsModal() {
+            showNotification('Settings module coming soon', 'info');
+        }
+
+        function showTroubleshootingGuide() {
+            showNotification('See console for troubleshooting information', 'info');
+            console.log('🔧 Troubleshooting Guide:');
+            console.log('1. Check Apps Script deployment: ' + GOOGLE_APPS_SCRIPT_URL);
+            console.log('2. Verify Web App deployment settings');
+            console.log('3. Check Google Sheets permissions');
+            console.log('4. Test API endpoint: ' + GOOGLE_APPS_SCRIPT_URL + '?action=ping');
+        }
+
+        // ============================================
+        // EXPORT TO GLOBAL SCOPE
+        // ============================================
+        window.showNominationsModal = showNominationsModal;
+        window.refreshActivities = refreshActivities;
+        window.logout = handleLogout;
+        window.refreshSheetsData = refreshSheetsData;
+        window.openGoogleSheets = openGoogleSheets;
+        window.switchSheet = switchSheet;
+        window.applyFilters = applyFilters;
+        window.startAutoRefresh = startAutoRefresh;
+        window.approveSelected = approveSelected;
+        window.rejectSelected = rejectSelected;
+        window.exportToExcel = exportToExcel;
+        window.sendNotifications = sendNotifications;
+        window.showBusinessModal = showBusinessModal;
+        window.hideModal = hideModal;
+        window.showTroubleshootingGuide = showTroubleshootingGuide;
+        window.showAnnouncementModal = showAnnouncementModal;
+        window.showAnalyticsModal = showAnalyticsModal;
+        window.showCategoriesModal = showCategoriesModal;
+        window.showJudgesModal = showJudgesModal;
+        window.showUsersModal = showUsersModal;
+        window.showReportsModal = showReportsModal;
+        window.showSettingsModal = showSettingsModal;
+        window.showSheetsModal = showSheetsModal;
+
+        console.log('✅ Admin Dashboard Ready');
+        console.log('📊 Google Sheets Integration: ACTIVE');
+        console.log('🔗 Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
+        console.log('🎯 Features: Real-time Google Sheets integration with sample data fallback');
     </script>
 </body>
 </html>
+
+
+
+
