@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -231,17 +230,6 @@
             font-size: 14px;
         }
         
-        .warning-message {
-            background: #fff3cd;
-            color: #856404;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #ffc107;
-            margin: 15px 0;
-            display: none;
-            font-size: 14px;
-        }
-        
         .info-box {
             background: #f0f8ff;
             padding: 15px;
@@ -266,6 +254,10 @@
         .info-box li {
             margin-bottom: 8px;
             color: #555;
+        }
+        
+        .info-box strong {
+            color: var(--lba-red);
         }
         
         .api-status {
@@ -400,47 +392,11 @@
                 grid-template-columns: 1fr;
             }
         }
-        
-        /* Retry Button */
-        .retry-btn {
-            background: var(--lba-blue);
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: all 0.3s;
-        }
-        
-        .retry-btn:hover {
-            background: #6bb9e2;
-        }
-        
-        /* Demo Mode Notice */
-        .demo-notice {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 8px;
-            display: none;
-        }
-        
-        .demo-notice p {
-            font-size: 13px;
-            color: #0d47a1;
-        }
-        
-        .demo-notice a {
-            color: #0d47a1;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
     <div class="login-container">
+        <!-- Header with Logo -->
         <div class="login-header">
             <div class="logo-container">
                 <img src="../images/logo.png" alt="Liberia Business Awards Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/80x80/FF0000/ffffff?text=LBA'">
@@ -451,19 +407,12 @@
             </div>
         </div>
         
+        <!-- Content -->
         <div class="login-content">
-            <!-- API Status with Retry -->
+            <!-- API Status -->
             <div class="api-status connecting" id="apiStatus">
                 <i class="fas fa-sync fa-spin"></i>
                 <span>Connecting to system...</span>
-                <button class="retry-btn" onclick="checkBackendStatus()" style="display: none;" id="retryBtn">
-                    <i class="fas fa-redo"></i> Retry
-                </button>
-            </div>
-            
-            <!-- Demo Mode Notice -->
-            <div class="demo-notice" id="demoNotice">
-                <p><i class="fas fa-info-circle"></i> <strong>Demo Mode Active</strong> - Backend server is starting up. You can use demo credentials to test the interface. <a href="#" onclick="enableDemoMode()">Continue to Demo Dashboard</a></p>
             </div>
             
             <!-- Tabs -->
@@ -513,6 +462,7 @@
                     <p>Login with your business credentials or register a new account.</p>
                 </div>
                 
+                <!-- Business Options -->
                 <div class="business-options" id="businessOptions">
                     <div class="option-card" onclick="showBusinessLogin()">
                         <i class="fas fa-sign-in-alt"></i>
@@ -527,6 +477,7 @@
                     </div>
                 </div>
                 
+                <!-- Business Login Form -->
                 <div id="businessLoginForm" style="display: none;">
                     <div class="form-group">
                         <label for="businessEmail">Business Email</label>
@@ -558,6 +509,7 @@
                     </button>
                 </div>
                 
+                <!-- Business Registration Form -->
                 <div id="businessRegisterForm" style="display: none;">
                     <div class="info-box">
                         <h4><i class="fas fa-user-plus"></i> Register Your Business</h4>
@@ -621,6 +573,7 @@
                 </div>
             </div>
             
+            <!-- Footer Links -->
             <div class="footer-links">
                 <a href="../index.html">
                     <i class="fas fa-arrow-left"></i> Back to Main Website
@@ -632,14 +585,15 @@
         </div>
     </div>
 
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     
+    
+    <!-- Main Script -->
     <script>
         // ==================== CONFIGURATION ====================
         const BACKEND_URL = 'https://liberia-business-awards-backend.onrender.com';
-        let backendOnline = false;
-        let retryCount = 0;
-        const MAX_RETRIES = 3;
         
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', async function() {
@@ -650,13 +604,14 @@
             const userRole = localStorage.getItem('lba_user_role');
             
             if (token && userRole) {
+                // Verify token validity
                 try {
                     const response = await fetch(`${BACKEND_URL}/api/health`, {
-                        headers: { 'Authorization': `Bearer ${token}` },
-                        signal: AbortSignal.timeout(5000)
+                        headers: { 'Authorization': `Bearer ${token}` }
                     });
                     
                     if (response.ok) {
+                        // Redirect based on role
                         if (userRole === 'admin') {
                             window.location.href = 'admin/index.html';
                         } else if (userRole === 'business') {
@@ -670,10 +625,14 @@
                 }
             }
             
+            // Setup UI
             setupTabs();
+            
+            // Check backend status
             await checkBackendStatus();
         });
 
+        // ==================== UI FUNCTIONS ====================
         function setupTabs() {
             const tabBtns = document.querySelectorAll('.tab-btn');
             const forms = document.querySelectorAll('.login-form');
@@ -681,8 +640,12 @@
             tabBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tab = this.dataset.tab;
+                    
+                    // Update active tab
                     tabBtns.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
+                    
+                    // Show corresponding form
                     forms.forEach(form => {
                         form.classList.remove('active');
                         if (form.id === tab + 'Form') {
@@ -693,6 +656,7 @@
                 });
             });
             
+            // Admin form submission
             document.getElementById('adminForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await handleAdminLogin();
@@ -711,7 +675,10 @@
             document.getElementById('businessRegisterForm').style.display = 'none';
             document.getElementById('businessLoginForm').style.display = 'block';
             clearAllMessages();
-            setTimeout(() => document.getElementById('businessEmail').focus(), 100);
+            
+            setTimeout(() => {
+                document.getElementById('businessEmail').focus();
+            }, 100);
         }
 
         function showBusinessRegister() {
@@ -724,35 +691,33 @@
         function togglePasswordVisibility(fieldId) {
             const field = document.getElementById(fieldId);
             const checkbox = document.getElementById(`show${fieldId.charAt(0).toUpperCase() + fieldId.slice(1)}`);
+            
             if (field && checkbox) {
                 field.type = checkbox.checked ? 'text' : 'password';
             }
         }
 
+        // ==================== BACKEND STATUS ====================
         async function checkBackendStatus() {
             const apiStatus = document.getElementById('apiStatus');
-            const retryBtn = document.getElementById('retryBtn');
-            const demoNotice = document.getElementById('demoNotice');
-            
-            apiStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i><span>Connecting to system...</span>';
-            apiStatus.className = 'api-status connecting';
-            retryBtn.style.display = 'none';
-            demoNotice.style.display = 'none';
             
             try {
                 const response = await fetch(`${BACKEND_URL}/api/health`, {
                     method: 'GET',
                     headers: { 'Accept': 'application/json' },
-                    signal: AbortSignal.timeout(8000)
+                    signal: AbortSignal.timeout(5000)
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
                     console.log('✅ Backend Status:', data);
-                    backendOnline = true;
-                    retryCount = 0;
                     
-                    apiStatus.innerHTML = `<i class="fas fa-check-circle"></i><span>Backend Online - Ready for Login</span>`;
+                    let statusText = 'Backend Online - Ready for Login';
+                    if (data.stats) {
+                        statusText += ` | Users: ${data.stats.users || 0}`;
+                    }
+                    
+                    apiStatus.innerHTML = `<i class="fas fa-check-circle"></i><span>${statusText}</span>`;
                     apiStatus.className = 'api-status online';
                     
                 } else {
@@ -761,33 +726,12 @@
                 
             } catch (error) {
                 console.warn('⚠️ Backend check failed:', error.message);
-                backendOnline = false;
-                retryCount++;
-                
-                if (error.message.includes('timeout') || error.message.includes('Failed to fetch')) {
-                    apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend server is starting up (may take 30-60 seconds). Please wait or retry.</span>`;
-                    apiStatus.className = 'api-status offline';
-                    retryBtn.style.display = 'inline-flex';
-                    
-                    // Show demo mode notice after first failure
-                    if (retryCount >= 1) {
-                        demoNotice.style.display = 'block';
-                    }
-                    
-                    // Auto retry after 10 seconds
-                    if (retryCount < MAX_RETRIES) {
-                        console.log(`Auto retry in 10 seconds... (attempt ${retryCount}/${MAX_RETRIES})`);
-                        setTimeout(() => checkBackendStatus(), 10000);
-                    }
-                } else {
-                    apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Please try again later</span>`;
-                    apiStatus.className = 'api-status offline';
-                    retryBtn.style.display = 'inline-flex';
-                    demoNotice.style.display = 'block';
-                }
+                apiStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>Backend Limited - Please try again later</span>`;
+                apiStatus.className = 'api-status offline';
             }
         }
 
+        // ==================== ADMIN LOGIN ====================
         async function handleAdminLogin() {
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
@@ -802,11 +746,6 @@
                 return;
             }
             
-            if (!backendOnline) {
-                showError(errorEl, '⚠️ Backend server is starting up. Please wait a moment and try again. If this persists, contact support.');
-                return;
-            }
-            
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
@@ -816,43 +755,41 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-Token': localStorage.getItem('csrf_token') || ''
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ email, password }),
-                    signal: AbortSignal.timeout(15000)
+                    body: JSON.stringify({ email, password })
                 });
                 
                 const result = await response.json();
-                
                 if (response.ok && result.success) {
-                    localStorage.setItem('lba_auth_token', result.token);
-                    if (result.refreshToken) localStorage.setItem('lba_refresh_token', result.refreshToken);
-                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-                    localStorage.setItem('lba_user_role', result.user.role);
-                    if (result.csrfToken) localStorage.setItem('csrf_token', result.csrfToken);
+    // Store authentication
+    localStorage.setItem('lba_auth_token', result.token);
+    if (result.refreshToken) {
+        localStorage.setItem('lba_refresh_token', result.refreshToken);
+    }
+    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+    localStorage.setItem('lba_user_role', result.user.role);
+    
+    // Update CSRF token if returned
+    if (result.csrfToken) {
+        localStorage.setItem('csrf_token', result.csrfToken);
+    }
                     
                     showSuccess(successEl, '✓ Login successful! Redirecting...');
                     console.log('✅ Admin login successful');
                     
+                    // Redirect to admin dashboard
                     setTimeout(() => {
                         window.location.href = 'admin/index.html';
                     }, 1500);
+                    
                 } else {
                     throw new Error(result.message || 'Invalid admin credentials');
                 }
                 
             } catch (error) {
                 console.error('❌ Admin login error:', error);
-                
-                let errorMessage = error.message;
-                if (error.message.includes('timeout')) {
-                    errorMessage = 'Request timed out. The server may be starting up. Please wait 30 seconds and try again.';
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Cannot connect to server. Please check your internet connection and try again.';
-                }
-                
-                showError(errorEl, errorMessage);
+                showError(errorEl, error.message || 'Login failed. Please check your credentials.');
                 
             } finally {
                 setTimeout(() => {
@@ -862,6 +799,7 @@
             }
         }
 
+        // ==================== BUSINESS LOGIN ====================
         async function handleBusinessLogin() {
             const email = document.getElementById('businessEmail').value.trim();
             const password = document.getElementById('businessPassword').value;
@@ -876,11 +814,6 @@
                 return;
             }
             
-            if (!backendOnline) {
-                showError(errorEl, '⚠️ Backend server is starting up. Please wait a moment and try again.');
-                return;
-            }
-            
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
@@ -890,34 +823,33 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-Token': localStorage.getItem('csrf_token') || ''
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ email, password }),
-                    signal: AbortSignal.timeout(15000)
+                    body: JSON.stringify({ email, password })
                 });
                 
                 const result = await response.json();
                 
                 if (response.ok && result.success) {
+                    // Store authentication
                     localStorage.setItem('lba_auth_token', result.token);
-                    if (result.refreshToken) localStorage.setItem('lba_refresh_token', result.refreshToken);
                     localStorage.setItem('lba_user_data', JSON.stringify(result.user));
                     localStorage.setItem('lba_user_role', result.user.role);
-                    if (result.csrfToken) localStorage.setItem('csrf_token', result.csrfToken);
                     
                     showSuccess(successEl, '✓ Login successful! Redirecting...');
                     console.log('✅ Business login successful');
                     
+                    // Redirect to business dashboard
                     setTimeout(() => {
                         window.location.href = 'business/index.html';
                     }, 1500);
                     
                 } else {
-                    if (result.message?.includes('pending')) {
+                    // Handle specific status messages
+                    if (result.message.includes('pending')) {
                         throw new Error('Your account is pending admin approval. You will be able to login once approved.');
-                    } else if (result.message?.includes('rejected')) {
-                        throw new Error(result.message);
+                    } else if (result.message.includes('rejected')) {
+                        throw new Error(result.message || 'Your business registration was rejected.');
                     } else {
                         throw new Error(result.message || 'Invalid business credentials');
                     }
@@ -927,10 +859,8 @@
                 console.error('❌ Business login error:', error);
                 
                 let errorMessage = error.message;
-                if (error.message.includes('timeout')) {
-                    errorMessage = 'Request timed out. The server may be starting up. Please wait 30 seconds and try again.';
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Cannot connect to server. Please check your internet connection and try again.';
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Cannot connect to server. Please try again later.';
                 }
                 
                 showError(errorEl, errorMessage);
@@ -943,6 +873,7 @@
             }
         }
 
+        // ==================== BUSINESS REGISTRATION ====================
         async function handleBusinessRegistration() {
             const businessName = document.getElementById('regBusinessName').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -958,6 +889,7 @@
             
             clearAllMessages();
             
+            // Validate
             if (!businessName || !email || !password || !confirmPassword) {
                 showError(errorEl, 'Please fill in all required fields');
                 return;
@@ -973,11 +905,6 @@
                 return;
             }
             
-            if (!backendOnline) {
-                showError(errorEl, '⚠️ Backend server is starting up. Please wait a moment and try again.');
-                return;
-            }
-            
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
@@ -987,8 +914,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-Token': localStorage.getItem('csrf_token') || ''
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         email,
@@ -997,8 +923,7 @@
                         contact_name: contactName,
                         phone,
                         business_type: businessType
-                    }),
-                    signal: AbortSignal.timeout(15000)
+                    })
                 });
                 
                 const result = await response.json();
@@ -1006,6 +931,7 @@
                 if (response.ok && result.success) {
                     showSuccess(successEl, '✓ Registration successful! Your account is pending admin approval. You will be notified once approved.');
                     
+                    // Clear form
                     document.getElementById('regBusinessName').value = '';
                     document.getElementById('regEmail').value = '';
                     document.getElementById('regPassword').value = '';
@@ -1014,6 +940,7 @@
                     document.getElementById('regPhone').value = '';
                     document.getElementById('regBusinessType').value = '';
                     
+                    // Show login form after 3 seconds
                     setTimeout(() => {
                         showBusinessLogin();
                     }, 3000);
@@ -1024,15 +951,7 @@
                 
             } catch (error) {
                 console.error('❌ Registration error:', error);
-                
-                let errorMessage = error.message;
-                if (error.message.includes('timeout')) {
-                    errorMessage = 'Request timed out. The server may be starting up. Please wait 30 seconds and try again.';
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Cannot connect to server. Please check your internet connection and try again.';
-                }
-                
-                showError(errorEl, errorMessage);
+                showError(errorEl, error.message || 'Registration failed. Please try again.');
                 
             } finally {
                 setTimeout(() => {
@@ -1042,13 +961,7 @@
             }
         }
 
-        function enableDemoMode() {
-            localStorage.setItem('demo_mode', 'true');
-            localStorage.setItem('lba_user_role', 'admin');
-            localStorage.setItem('lba_user_data', JSON.stringify({ name: 'Demo User', role: 'admin' }));
-            window.location.href = 'admin/index.html';
-        }
-
+        // ==================== UTILITY FUNCTIONS ====================
         function showError(element, message) {
             if (!element) return;
             element.textContent = message;
@@ -1063,21 +976,280 @@
         }
 
         function clearAllMessages() {
-            document.querySelectorAll('.error-message, .success-message, .warning-message').forEach(msg => {
+            document.querySelectorAll('.error-message, .success-message').forEach(msg => {
                 msg.style.display = 'none';
             });
         }
 
+        // ==================== EXPORT FUNCTIONS ====================
         window.showBusinessOptions = showBusinessOptions;
         window.showBusinessLogin = showBusinessLogin;
         window.showBusinessRegister = showBusinessRegister;
         window.togglePasswordVisibility = togglePasswordVisibility;
         window.handleBusinessLogin = handleBusinessLogin;
         window.handleBusinessRegistration = handleBusinessRegistration;
-        window.checkBackendStatus = checkBackendStatus;
-        window.enableDemoMode = enableDemoMode;
 
         console.log('✅ Login page ready - Production Mode');
-    </script>
+
+    // ==================== CSRF INTEGRATION ====================
+// Generate and store CSRF token on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    // Generate CSRF token if not exists
+    if (!localStorage.getItem('csrf_token')) {
+        const token = Math.random().toString(36).substring(2, 15) + 
+                     Math.random().toString(36).substring(2, 15) +
+                     Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('csrf_token', token);
+    }
+    
+    // Add CSRF token to all forms
+    const csrfToken = localStorage.getItem('csrf_token');
+    document.querySelectorAll('form').forEach(form => {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_csrf';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+    });
+});
+
+// Update admin login function
+async function handleAdminLogin() {
+    const email = document.getElementById('adminEmail').value.trim();
+    const password = document.getElementById('adminPassword').value;
+    const errorEl = document.getElementById('adminError');
+    const successEl = document.getElementById('adminSuccess');
+    const btn = document.getElementById('adminBtn');
+    
+    clearAllMessages();
+    
+    if (!email || !password) {
+        showError(errorEl, 'Please fill in all fields');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/admin/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('csrf_token')
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // Store authentication
+            localStorage.setItem('lba_auth_token', result.token);
+            localStorage.setItem('lba_refresh_token', result.refreshToken);
+            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+            localStorage.setItem('lba_user_role', result.user.role);
+            
+            // Update CSRF token if returned
+            if (result.csrfToken) {
+                localStorage.setItem('csrf_token', result.csrfToken);
+            }
+            
+            showSuccess(successEl, '✓ Login successful! Redirecting...');
+            console.log('✅ Admin login successful');
+            
+            // Redirect to admin dashboard
+            setTimeout(() => {
+                window.location.href = 'admin/index.html';
+            }, 1500);
+            
+        } else {
+            throw new Error(result.message || 'Invalid admin credentials');
+        }
+        
+    } catch (error) {
+        console.error('❌ Admin login error:', error);
+        showError(errorEl, error.message || 'Login failed. Please check your credentials.');
+        
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
+
+// Update business login function
+async function handleBusinessLogin() {
+    const email = document.getElementById('businessEmail').value.trim();
+    const password = document.getElementById('businessPassword').value;
+    const errorEl = document.getElementById('businessError');
+    const successEl = document.getElementById('businessSuccess');
+    const btn = document.getElementById('businessBtn');
+    
+    clearAllMessages();
+    
+    if (!email || !password) {
+        showError(errorEl, 'Please fill in all fields');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/business/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('csrf_token')
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // Store authentication
+            localStorage.setItem('lba_auth_token', result.token);
+            localStorage.setItem('lba_refresh_token', result.refreshToken);
+            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+            localStorage.setItem('lba_user_role', result.user.role);
+            
+            // Update CSRF token if returned
+            if (result.csrfToken) {
+                localStorage.setItem('csrf_token', result.csrfToken);
+            }
+            
+            showSuccess(successEl, '✓ Login successful! Redirecting...');
+            console.log('✅ Business login successful');
+            
+            // Redirect to business dashboard
+            setTimeout(() => {
+                window.location.href = 'business/index.html';
+            }, 1500);
+            
+        } else {
+            // Handle specific status messages
+            if (result.message.includes('pending')) {
+                throw new Error('Your account is pending admin approval. You will be able to login once approved.');
+            } else if (result.message.includes('rejected')) {
+                throw new Error(result.message || 'Your business registration was rejected.');
+            } else {
+                throw new Error(result.message || 'Invalid business credentials');
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Business login error:', error);
+        
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to server. Please try again later.';
+        }
+        
+        showError(errorEl, errorMessage);
+        
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
+
+// Update business registration function
+async function handleBusinessRegistration() {
+    const businessName = document.getElementById('regBusinessName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+    const contactName = document.getElementById('regContactName').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const businessType = document.getElementById('regBusinessType').value;
+    
+    const errorEl = document.getElementById('registerError');
+    const successEl = document.getElementById('registerSuccess');
+    const btn = document.getElementById('registerBtn');
+    
+    clearAllMessages();
+    
+    // Validate
+    if (!businessName || !email || !password || !confirmPassword) {
+        showError(errorEl, 'Please fill in all required fields');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showError(errorEl, 'Password must be at least 6 characters');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        showError(errorEl, 'Passwords do not match');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/business/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('csrf_token')
+            },
+            body: JSON.stringify({
+                email,
+                password,
+                business_name: businessName,
+                contact_name: contactName,
+                phone,
+                business_type: businessType
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showSuccess(successEl, '✓ Registration successful! Your account is pending admin approval. You will be notified once approved.');
+            
+            // Clear form
+            document.getElementById('regBusinessName').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
+            document.getElementById('regContactName').value = '';
+            document.getElementById('regPhone').value = '';
+            document.getElementById('regBusinessType').value = '';
+            
+            // Show login form after 3 seconds
+            setTimeout(() => {
+                showBusinessLogin();
+            }, 3000);
+            
+        } else {
+            throw new Error(result.message || 'Registration failed');
+        }
+        
+    } catch (error) {
+        console.error('❌ Registration error:', error);
+        showError(errorEl, error.message || 'Registration failed. Please try again.');
+        
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
+ </script>
 </body>
 </html>
