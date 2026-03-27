@@ -2697,198 +2697,66 @@ app.post('/api/business/notifications/read-all', authenticate, authorize('busine
         res.status(500).json({ success: false, error: error.message });
     }
 });
-// ============ HEALTH CHECK ============
-app.get('/api/health', async (req, res) => {
-    const isConnected = mongoose.connection.readyState === 1;
-    
-    const stats = {
-        businesses: await BusinessUser.countDocuments().catch(() => 0),
-        pending: await BusinessUser.countDocuments({ status: 'pending' }).catch(() => 0),
-        approved: await BusinessUser.countDocuments({ status: 'approved' }).catch(() => 0),
-        rejected: await BusinessUser.countDocuments({ status: 'rejected' }).catch(() => 0),
-        nominations: await Nomination.countDocuments().catch(() => 0),
-        documents: await Document.countDocuments().catch(() => 0),
-        announcements: await Announcement.countDocuments().catch(() => 0),
-        judges: await Judge.countDocuments().catch(() => 0),
-        categories: await Category.countDocuments().catch(() => 0)
-    };
-    
-    res.json({
-        status: 'OK',
+// ============ SIMPLE ROUTES THAT MUST WORK ============
+// These routes will work even if MongoDB is down
+
+app.get('/test', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        message: 'Test route works!',
         timestamp: new Date().toISOString(),
-        service: 'Liberia Business Awards API',
-        version: '5.0.0',
-        database: isConnected ? 'connected' : 'disconnected',
-        stats,
-        uptime: process.uptime()
+        port: PORT,
+        node_env: process.env.NODE_ENV
     });
 });
 
-// ============ TEST ROUTES ============
-app.get('/api/auth/test', (req, res) => {
-    res.json({ 
-        success: true,
-        message: 'Auth routes working!',
-        endpoints: {
-            admin_login: '/api/auth/admin/login',
-            business_login: '/api/auth/business/login',
-            business_register: '/api/business/register',
-            verify: '/api/auth/verify',
-            refresh: '/api/auth/refresh',
-            logout: '/api/auth/logout'
-        }
-    });
-});
-
-app.get('/api/business/test', (req, res) => {
-    res.json({ 
-        success: true,
-        message: 'Business routes working!',
-        endpoints: {
-            register: '/api/business/register',
-            login: '/api/auth/business/login',
-            dashboard: '/api/business/dashboard',
-            profile: '/api/business/profile',
-            nominations: '/api/business/nominations',
-            documents: '/api/business/documents',
-            notifications: '/api/business/notifications'
-        }
-    });
-});
-
-// ============ HOME ROUTE ============
 app.get('/', (req, res) => {
     res.json({
         service: 'Liberia Business Awards API',
         version: '5.0.0',
-        status: 'operational',
-        documentation: {
-            public: [
-                'GET  /',
-                'GET  /api/health',
-                'GET  /api/auth/test',
-                'GET  /api/business/test',
-                'GET  /api/announcements',
-                'GET  /api/judges',
-                'GET  /api/categories',
-                'GET  /api/spotlight',
-                'POST /api/auth/admin/login',
-                'POST /api/auth/business/login',
-                'POST /api/business/register',
-                'POST /api/auth/verify',
-                'POST /api/auth/refresh',
-                'POST /api/auth/logout'
-            ],
-            admin: [
-                'GET    /api/admin/businesses',
-                'GET    /api/admin/businesses/pending',
-                'GET    /api/admin/businesses/stats',
-                'GET    /api/admin/businesses/:id',
-                'POST   /api/admin/businesses/:id/approve',
-                'POST   /api/admin/businesses/:id/reject',
-                'POST   /api/admin/businesses/bulk-approve',
-                'POST   /api/admin/businesses/bulk-reject',
-                'DELETE /api/admin/businesses/bulk-delete',
-                'POST   /api/admin/impersonate/:businessId',
-                'GET    /api/admin/announcements',
-                'POST   /api/admin/announcements',
-                'PUT    /api/admin/announcements/:id',
-                'DELETE /api/admin/announcements/:id',
-                'GET    /api/admin/judges',
-                'POST   /api/admin/judges',
-                'PUT    /api/admin/judges/:id',
-                'DELETE /api/admin/judges/:id',
-                'GET    /api/admin/categories',
-                'POST   /api/admin/categories',
-                'PUT    /api/admin/categories/:id',
-                'DELETE /api/admin/categories/:id',
-                'GET    /api/admin/system-users',
-                'POST   /api/admin/system-users',
-                'PUT    /api/admin/system-users/:id',
-                'DELETE /api/admin/system-users/:id',
-                'POST   /api/admin/system-users/:id/toggle-status',
-                'GET    /api/admin/settings',
-                'PUT    /api/admin/settings',
-                'GET    /api/admin/audit-logs',
-                'GET    /api/admin/analytics',
-                'POST   /api/admin/reports/generate',
-                'GET    /api/admin/spotlight',
-                'POST   /api/admin/spotlight',
-                'PUT    /api/admin/spotlight/:id',
-                'DELETE /api/admin/spotlight/:id'
-            ],
-            business: [
-                'GET    /api/business/dashboard',
-                'PUT    /api/business/profile',
-                'GET    /api/business/nominations',
-                'POST   /api/business/nominations',
-                'PUT    /api/business/nominations/:id',
-                'DELETE /api/business/nominations/:id',
-                'POST   /api/business/nominations/draft',
-                'GET    /api/business/documents',
-                'POST   /api/business/documents',
-                'GET    /api/business/documents/:id/view',
-                'GET    /api/business/documents/:id/download',
-                'DELETE /api/business/documents/:id',
-                'GET    /api/business/notifications'
-            ]
-        }
+        status: 'starting',
+        port: PORT,
+        mongodb_status: mongoose.connection.readyState === 1 ? 'connected' : 'connecting'
     });
 });
 
-// ============ 404 HANDLER ============
-app.use('*', (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Endpoint not found',
-        available_endpoints: {
-            public: ['/', '/api/health', '/api/auth/test', '/api/business/test']
-        }
-    });
-});
-
-// ============ ERROR HANDLER ============
-app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
+// ============ HEALTH CHECK ============
+app.get('/api/health', (req, res) => {
+    const isConnected = mongoose.connection.readyState === 1;
     
-    if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ success: false, message: 'File too large. Max size: 10MB' });
-        }
-        return res.status(400).json({ success: false, message: err.message });
-    }
-    
-    res.status(500).json({
-        success: false,
-        message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    res.json({
+        status: isConnected ? 'ok' : 'starting',
+        message: isConnected ? 'Server is running' : 'Server starting, waiting for MongoDB',
+        timestamp: new Date().toISOString(),
+        mongodb: isConnected ? 'connected' : 'connecting',
+        port: PORT,
+        uptime: process.uptime()
     });
 });
 
-// ============ START SERVER ============
+// ============ START SERVER WITH BETTER ERROR HANDLING ============
 async function startServer() {
     console.log('='.repeat(70));
     console.log('🚀 LIBERIA BUSINESS AWARDS - PRODUCTION SYSTEM V5.0');
     console.log('='.repeat(70));
+    console.log(`📡 PORT: ${PORT}`);
+    console.log(`🌍 NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`🗄️  MONGODB_URI: ${MONGODB_URI ? 'Set' : 'NOT SET!'}`);
     
-    const connected = await connectToMongoDB();
+    // Don't wait for MongoDB to start the server
+    // Let MongoDB connect in the background
+    connectToMongoDB().catch(err => {
+        console.error('❌ MongoDB connection error:', err.message);
+    });
     
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('\n✅ SERVER RUNNING');
         console.log('='.repeat(70));
         console.log(`📡 Port: ${PORT}`);
-        console.log(`🌍 Public: https://liberia-business-awards-backend.onrender.com`);
-        console.log(`🗄️  MongoDB: ${connected ? '✅ CONNECTED' : '❌ DISCONNECTED'}`);
+        console.log(`🌍 Health: https://liberia-business-awards.up.railway.app/api/health`);
+        console.log(`🌍 Test: https://liberia-business-awards.up.railway.app/test`);
         console.log('='.repeat(70));
-        console.log('\n📊 BUSINESS AUTHENTICATION SYSTEM:');
-        console.log('   • Registration → pending');
-        console.log('   • Admin approves → active');
-        console.log('   • Business can then login');
-        console.log('   • Account locking after 5 failed attempts');
-        console.log('   • CSRF protection enabled');
-        console.log('   • Rate limiting enabled');
-        console.log('   • Audit logging active');
-        console.log('\n🚀 System ready for production!');
+        console.log('\n🚀 System ready! Waiting for MongoDB connection...');
     });
 
     server.on('error', (error) => {
@@ -2900,14 +2768,12 @@ async function startServer() {
 // ============ PROCESS HANDLERS ============
 process.on('uncaughtException', (err) => {
     console.error('💥 UNCAUGHT EXCEPTION:', err);
-    console.error(err.stack);
-    process.exit(1);
+    // Don't exit, let the server continue
 });
 
 process.on('unhandledRejection', (err) => {
     console.error('🔥 UNHANDLED REJECTION:', err);
-    console.error(err.stack);
-    process.exit(1);
+    // Don't exit, let the server continue
 });
 
 // Start the server
