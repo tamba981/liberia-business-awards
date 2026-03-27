@@ -22,6 +22,16 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// SIMPLE HEALTH CHECK - MUST COME FIRST
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        message: 'Server is running',
+        timestamp: new Date().toISOString(),
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
+});
+
 // ============ ENVIRONMENT VARIABLES ============
 const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
