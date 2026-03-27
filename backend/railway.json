@@ -1,11 +1,13 @@
 {
-  "name": "liberia-business-awards-backend",
-  "version": "5.0.0",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "deploy": {
+    "startCommand": "node server.js",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10,
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 100
   }
 }
