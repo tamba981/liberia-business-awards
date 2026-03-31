@@ -2,14 +2,11 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Clear npm cache
-RUN npm cache clean --force
-
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with verbose output
-RUN npm install --verbose --no-package-lock
+# Install dependencies
+RUN npm install
 
 # Copy application code
 COPY . .
