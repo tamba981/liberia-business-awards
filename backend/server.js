@@ -130,6 +130,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
