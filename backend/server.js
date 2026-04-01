@@ -105,6 +105,8 @@ const corsOptions = {
     origin: function (origin, callback) {
         const allowedOrigins = [
             'https://liberiabusinessawardslr.com',
+            'https://www.liberiabusinessawardslr.com',
+            'https://liberia-business-awards.up.railway.app',
             'http://localhost:5500',
             'http://localhost:3000',
             'http://127.0.0.1:5500',
@@ -113,11 +115,13 @@ const corsOptions = {
             'http://127.0.0.1:5501'
         ];
         
+        // Allow all in development or if origin is allowed
         if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
             callback(null, true);
         } else {
             console.log('CORS blocked origin:', origin);
-            callback(null, true); // Allow temporarily for testing
+            // Allow for testing - you can remove this line in production
+            callback(null, true);
         }
     },
     credentials: true,
