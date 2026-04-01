@@ -20,6 +20,17 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
+// DEBUG: Log all requests
+app.use((req, res, next) => {
+    console.log(`📡 ${req.method} ${req.url}`);
+    next();
+});
+
+// Simple test endpoint
+app.get('/ping', (req, res) => {
+    res.json({ status: 'ok', message: 'pong', timestamp: new Date().toISOString() });
+});
+
 const PORT = process.env.PORT || 10000;
 
 // SIMPLE HEALTH CHECK - MUST COME FIRST
