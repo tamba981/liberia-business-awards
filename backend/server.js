@@ -38,33 +38,30 @@ const corsOptions = {
             'http://127.0.0.1:5501'
         ];
         
-        // Allow requests with no origin (like mobile apps or curl)
-        if (!origin) {
-            return callback(null, true);
-        }
-        
-        // Check if origin is allowed
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log('❌ CORS blocked origin:', origin);
-            // For production, you may want to block this
-            // For now, allow all for testing
-            callback(null, true);
-        }
-    },
-    credentials: true,
-    optionsSuccessStatus: 200,
+        // Allow all origins - this will definitely work
+app.use(cors({
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Accept', 'Origin', 'X-Requested-With'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
-};
+    credentials: false,
+    optionsSuccessStatus: 200
+}));
 
-// Apply CORS middleware
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// Add a custom middleware to ensure CORS headers are always present
+app.use((req, res, next) => {
+    // Set CORS headers for every response
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token, Accept, Origin, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'false');
+    
+    // Handle preflight requests immediately
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    
+    next();
+});
 
 // Log all requests for debugging
 app.use((req, res, next) => {
