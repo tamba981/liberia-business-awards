@@ -490,7 +490,7 @@ async function startServer() {
         console.log('\n✅ SERVER RUNNING');
         console.log('='.repeat(70));
         console.log(`📡 Port: ${PORT}`);
-        console.log(`🌍 Health: https://liberia-business-awards.up.railway.app/api/health`);
+        console.log(`🌍 Health: liberia-business-awards-production.up.railway.app/api/health`);
         console.log('='.repeat(70));
         console.log('\n🚀 System ready!');
     });
