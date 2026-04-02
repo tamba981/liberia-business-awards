@@ -2,7 +2,7 @@
 class APIConfig {
     static getApiUrl(endpoint = '') {
         const baseUrl = window.location.hostname === 'liberiabusinessawardslr.com' 
-    ? 'https://liberia-business-awards.up.railway.app'
+    ? 'https://liberia-business-awards-production.up.railway.app'
     : 'http://localhost:10000';
         
         return `${baseUrl}${endpoint}`;
