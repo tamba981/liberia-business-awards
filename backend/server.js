@@ -21,14 +21,20 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// ============ CORS CONFIGURATION - SIMPLE & WORKING ============
-// Allow all origins - this works
-app.use(cors({
-    origin: true,
+// ============ CORS CONFIGURATION ============
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow all origins for now (for testing)
+        // In production, you can restrict to specific domains
+        callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Accept']
-}));
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Accept', 'Origin']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Handle preflight requests
 app.options('*', cors());
