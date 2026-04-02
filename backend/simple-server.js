@@ -53,5 +53,5 @@ app.post('/api/auth/admin/login', express.json(), (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Test server running on port ${PORT}`);
-    console.log(`📍 URL: https://liberia-business-awards.up.railway.app`);
+    console.log(`📍 URL: liberia-business-awards-production.up.railway.app`);
 });
