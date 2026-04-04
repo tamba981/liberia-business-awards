@@ -2264,8 +2264,13 @@
     };
     
     try {
-        // FIXED: Remove the extra /api - BACKEND_URL already includes /api
-        const url = `${BACKEND_URL}${endpoint}`;
+        // FIXED: Remove leading slash from endpoint if needed, but don't add extra /api
+        // BACKEND_URL already includes /api, so endpoint should NOT start with /api
+        let cleanEndpoint = endpoint;
+        if (cleanEndpoint.startsWith('/api/')) {
+            cleanEndpoint = cleanEndpoint.substring(4); // Remove '/api' from beginning
+        }
+        const url = `${BACKEND_URL}${cleanEndpoint}`;
         console.log(`📡 API Request: ${options.method || 'GET'} ${url}`);
         
         const response = await fetch(url, fetchOptions);
