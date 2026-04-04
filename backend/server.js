@@ -480,6 +480,248 @@ app.post('/api/auth/verify', async (req, res) => {
     }
 });
 
+// ============ AUTHENTICATION MIDDLEWARE ============
+
+// JWT Token verification middleware
+const authenticate = async (req, res, next) => {
+    try {
+        const token = req.header('Authorization')?.replace('Bearer ', '') || 
+                     req.query.token ||
+                     req.body.token;
+        
+        if (!token) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Access denied. No token provided.' 
+            });
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        let user;
+        if (decoded.role === 'admin') {
+            user = await Admin.findById(decoded.userId).select('-password');
+        } else {
+            user = await BusinessUser.findById(decoded.userId).select('-password');
+        }
+        
+        if (!user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'User not found.' 
+            });
+        }
+
+        req.user = user;
+        req.userRole = decoded.role;
+        next();
+    } catch (error) {
+        console.error('Auth error:', error.message);
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Invalid or expired token.' 
+        });
+    }
+};
+
+// Role-based authorization middleware
+const authorize = (...roles) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Authentication required.' 
+            });
+        }
+
+        if (!roles.includes(req.userRole)) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Access denied. Insufficient permissions.' 
+            });
+        }
+
+        next();
+    };
+};
+
+// ============ ADMIN BUSINESS MANAGEMENT ENDPOINTS ============
+
+// Get all businesses (with filtering)
+app.get('/api/admin/businesses', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status, page = 1, limit = 20, search } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        if (search) {
+            query.$or = [
+                { business_name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { contact_name: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [businesses, total] = await Promise.all([
+            BusinessUser.find(query)
+                .select('-password')
+                .sort({ created_at: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            BusinessUser.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            businesses: businesses.map(b => ({
+                _id: b._id,
+                business_name: b.business_name,
+                email: b.email,
+                contact_name: b.contact_name,
+                phone: b.phone,
+                business_type: b.business_type,
+                status: b.status,
+                created_at: b.created_at,
+                approved_at: b.approved_at
+            })),
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get business stats
+app.get('/api/admin/businesses/stats', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const [total, pending, approved, rejected] = await Promise.all([
+            BusinessUser.countDocuments(),
+            BusinessUser.countDocuments({ status: 'pending' }),
+            BusinessUser.countDocuments({ status: 'approved' }),
+            BusinessUser.countDocuments({ status: 'rejected' })
+        ]);
+        
+        res.json({
+            success: true,
+            stats: {
+                total,
+                pending,
+                approved,
+                rejected
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get single business by ID
+app.get('/api/admin/businesses/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const business = await BusinessUser.findById(req.params.id).select('-password');
+        
+        if (!business) {
+            return res.status(404).json({ success: false, error: 'Business not found' });
+        }
+
+        res.json({
+            success: true,
+            business: {
+                _id: business._id,
+                business_name: business.business_name,
+                email: business.email,
+                contact_name: business.contact_name,
+                phone: business.phone,
+                business_type: business.business_type,
+                status: business.status,
+                rejection_reason: business.rejection_reason,
+                created_at: business.created_at,
+                approved_at: business.approved_at
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Approve business
+app.post('/api/admin/businesses/:id/approve', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const business = await BusinessUser.findById(req.params.id);
+        
+        if (!business) {
+            return res.status(404).json({ success: false, error: 'Business not found' });
+        }
+        
+        business.status = 'approved';
+        business.approved_at = new Date();
+        business.approved_by = req.user._id;
+        business.rejection_reason = undefined;
+        
+        await business.save();
+        
+        res.json({
+            success: true,
+            message: 'Business approved successfully',
+            business: {
+                _id: business._id,
+                business_name: business.business_name,
+                email: business.email,
+                status: business.status
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Reject business
+app.post('/api/admin/businesses/:id/reject', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { reason } = req.body;
+        
+        if (!reason) {
+            return res.status(400).json({ success: false, error: 'Rejection reason is required' });
+        }
+        
+        const business = await BusinessUser.findById(req.params.id);
+        
+        if (!business) {
+            return res.status(404).json({ success: false, error: 'Business not found' });
+        }
+        
+        business.status = 'rejected';
+        business.rejection_reason = reason;
+        business.approved_by = req.user._id;
+        
+        await business.save();
+        
+        res.json({
+            success: true,
+            message: 'Business rejected',
+            business: {
+                _id: business._id,
+                business_name: business.business_name,
+                email: business.email,
+                status: business.status,
+                rejection_reason: business.rejection_reason
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
