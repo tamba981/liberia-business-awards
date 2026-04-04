@@ -2024,47 +2024,59 @@
         // AUTHENTICATION
         // ============================================
         async function checkAuth() {
-            const token = localStorage.getItem('lba_auth_token');
-            const userRole = localStorage.getItem('lba_user_role');
-            const userDataStr = localStorage.getItem('lba_user_data');
-            
-            if (!token || userRole !== 'business' || !userDataStr) {
-                return false;
+    const token = localStorage.getItem('lba_auth_token');
+    const userRole = localStorage.getItem('lba_user_role');
+    const userDataStr = localStorage.getItem('lba_user_data');
+    
+    // If no token or not business role, return false
+    if (!token || userRole !== 'business' || !userDataStr) {
+        console.log('No token or not business role');
+        return false;
+    }
+    
+    try {
+        // FIXED: Remove the extra /api - BACKEND_URL already includes /api
+        const url = `${BACKEND_URL}/auth/verify`;
+        console.log('Verifying token at:', url);
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-            
-            try {
-                // Verify token with backend
-                const response = await fetch(`${BACKEND_URL}/api/auth/verify`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Token invalid');
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    appState.user = data.user || JSON.parse(userDataStr);
-                    
-                    // Update local storage with latest data
-                    if (data.user) {
-                        localStorage.setItem('lba_user_data', JSON.stringify(data.user));
-                    }
-                    
-                    return true;
-                }
-                
-                return false;
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                return false;
-            }
+        });
+        
+        console.log('Verify response status:', response.status);
+        
+        if (!response.ok) {
+            console.log('Token invalid, clearing storage');
+            localStorage.removeItem('lba_auth_token');
+            localStorage.removeItem('lba_user_data');
+            localStorage.removeItem('lba_user_role');
+            return false;
         }
+        
+        const data = await response.json();
+        console.log('Verify response:', data);
+        
+        if (data.success) {
+            appState.user = data.user || JSON.parse(userDataStr);
+            
+            // Update local storage with latest data
+            if (data.user) {
+                localStorage.setItem('lba_user_data', JSON.stringify(data.user));
+            }
+            
+            return true;
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        return false;
+    }
+}
 
         function refreshToken() {
             // Token refresh logic - can be implemented if backend supports refresh tokens
