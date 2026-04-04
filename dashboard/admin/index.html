@@ -1662,7 +1662,7 @@
         // ============================================
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
         const GOOGLE_SHEETS_VIEW_URL = 'https://docs.google.com/spreadsheets/d/10IlmNF0WT5kRokKRuyOuXkVWrftX9LdsFJtB8CEUnYI/edit';
-        const BACKEND_URL ='https://liberia-business-awards-production.up.railway.app';
+        const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
         const SESSION_TIMEOUT = 60; // minutes
         const REFRESH_INTERVAL = 30000; // 30 seconds
 
@@ -2172,21 +2172,7 @@ function updateSheetStatsDisplay(data) {
     if (sheetNominationsApproved) sheetNominationsApproved.textContent = nominationStats.approved || 0;
     if (sheetNominationsPending) sheetNominationsPending.textContent = nominationStats.pending || 0;
 }
-        function updateSheetStatsDisplay(stats) {
-            if (!stats.sheetStats) return;
-            
-            // Businesses sheet
-            const businessStats = stats.sheetStats.Registrations || stats.sheetStats.Businesses || {};
-            document.getElementById('sheetBusinessesTotal').textContent = businessStats.total || 0;
-            document.getElementById('sheetBusinessesActive').textContent = businessStats.active || businessStats.approved || 0;
-            document.getElementById('sheetBusinessesPending').textContent = businessStats.pending || 0;
-            
-            // Nominations sheet
-            const nominationStats = stats.sheetStats.Nominations || {};
-            document.getElementById('sheetNominationsTotal').textContent = nominationStats.total || 0;
-            document.getElementById('sheetNominationsApproved').textContent = nominationStats.approved || 0;
-            document.getElementById('sheetNominationsPending').textContent = nominationStats.pending || 0;
-        }
+    
 
         // ============================================
         // LOADING STATES
