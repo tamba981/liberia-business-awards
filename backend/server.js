@@ -123,6 +123,32 @@ app.use(session({
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// ============ FILE UPLOAD CONFIGURATION ============
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type'), false);
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    fileFilter: fileFilter
+});
+
 // ============ DATABASE CONNECTION ============
 async function connectToMongoDB() {
     try {
@@ -251,10 +277,50 @@ businessUserSchema.methods.resetLoginAttempts = function() {
     return this.save();
 };
 
+// ============ NOMINATION SCHEMA ============
+const nominationSchema = new mongoose.Schema({
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
+    title: { type: String, required: true },
+    category: { type: String, required: true },
+    year: { type: Number, default: new Date().getFullYear() },
+    description: { type: String, required: true },
+    achievements: [{ type: String }],
+    document_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessDocument' },
+    status: { type: String, enum: ['draft', 'submitted', 'under_review', 'approved', 'winner', 'rejected'], default: 'draft' },
+    score: { type: Number, default: 0 },
+    reviewed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+    reviewed_at: { type: Date },
+    rejection_reason: { type: String }
+}, { timestamps: true });
+
+// ============ BUSINESS DOCUMENT SCHEMA ============
+const businessDocumentSchema = new mongoose.Schema({
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
+    name: { type: String, required: true },
+    type: { type: String, enum: ['registration', 'tax', 'license', 'financial', 'certificate', 'other'], default: 'other' },
+    file_url: { type: String, required: true },
+    file_name: { type: String },
+    file_size: { type: Number },
+    mime_type: { type: String }
+}, { timestamps: true });
+
+// ============ NOTIFICATION SCHEMA ============
+const notificationSchema = new mongoose.Schema({
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    type: { type: String, enum: ['info', 'success', 'warning', 'error'], default: 'info' },
+    read: { type: Boolean, default: false },
+    related_id: { type: mongoose.Schema.Types.ObjectId }
+}, { timestamps: true });
+
 // Create Models
 const Admin = mongoose.model('Admin', adminSchema);
 const BusinessUser = mongoose.model('BusinessUser', businessUserSchema);
 const RefreshToken = mongoose.model('RefreshToken', refreshTokenSchema);
+const Nomination = mongoose.model('Nomination', nominationSchema);
+const BusinessDocument = mongoose.model('BusinessDocument', businessDocumentSchema);
+const Notification = mongoose.model('Notification', notificationSchema);
 
 // ============ AUTH ROUTES ============
 
@@ -719,6 +785,408 @@ app.post('/api/admin/businesses/:id/reject', authenticate, authorize('admin'), a
         });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ BUSINESS PROFILE ROUTES ============
+
+// Get business profile
+app.get('/api/business/profile', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const business = await BusinessUser.findById(req.user._id).select('-password');
+        
+        if (!business) {
+            return res.status(404).json({ success: false, message: 'Business not found' });
+        }
+        
+        res.json({
+            success: true,
+            profile: {
+                _id: business._id,
+                business_name: business.business_name,
+                email: business.email,
+                contact_name: business.contact_name,
+                phone: business.phone,
+                business_type: business.business_type,
+                industry: business.industry,
+                business_category: business.business_category,
+                location: business.location,
+                website: business.website,
+                description: business.description,
+                address: business.address,
+                logo: business.logo,
+                status: business.status,
+                verified: business.verified,
+                created_at: business.created_at
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update business profile
+app.put('/api/business/profile', authenticate, authorize('business'), upload.single('logo'), async (req, res) => {
+    try {
+        const business = await BusinessUser.findById(req.user._id);
+        
+        if (!business) {
+            return res.status(404).json({ success: false, message: 'Business not found' });
+        }
+        
+        // Update fields
+        const allowedFields = [
+            'business_name', 'contact_name', 'phone', 'business_type', 'industry',
+            'business_category', 'location', 'website', 'description', 'address'
+        ];
+        
+        allowedFields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                business[field] = req.body[field];
+            }
+        });
+        
+        // Handle logo upload
+        if (req.file) {
+            const logoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+            business.logo = logoUrl;
+        }
+        
+        await business.save();
+        
+        res.json({
+            success: true,
+            message: 'Profile updated successfully',
+            profile: {
+                business_name: business.business_name,
+                email: business.email,
+                contact_name: business.contact_name,
+                phone: business.phone,
+                logo: business.logo
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ BUSINESS NOMINATION ROUTES ============
+
+// Get business nominations
+app.get('/api/business/nominations', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { page = 1, limit = 10, status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        let query = { business_id: req.user._id };
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+       const nominations = await Nomination.find(query)
+    .sort({ created_at: -1 })
+    .skip(skip)
+    .limit(parseInt(limit));
+        
+        const total = await Nomination.countDocuments(query);
+        
+        res.json({
+            success: true,
+            nominations: nominations.map(n => ({
+                _id: n._id,
+                title: n.title,
+                category: n.category || 'General',
+                year: n.year,
+                description: n.description,
+                achievements: n.achievements || [],
+                status: n.status,
+                score: n.score,
+                document_id: n.document_id,
+                created_at: n.created_at
+            })),
+            total,
+            pages: Math.ceil(total / parseInt(limit)),
+            currentPage: parseInt(page)
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create nomination
+app.post('/api/business/nominations', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { title, category, year, description, achievements, document_id, status } = req.body;
+        
+        if (!title || !category || !description) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const nomination = new Nomination({
+            business_id: req.user._id,
+            title,
+            category,
+            year: year || new Date().getFullYear(),
+            description,
+            achievements: achievements || [],
+            document_id: document_id || null,
+            status: status || 'draft'
+        });
+        
+        await nomination.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Nomination created successfully',
+            nomination
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update nomination
+app.put('/api/business/nominations/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const nomination = await Nomination.findOne({
+            _id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        if (!nomination) {
+            return res.status(404).json({ success: false, message: 'Nomination not found' });
+        }
+        
+        // Only allow editing if status is draft or submitted
+        if (nomination.status !== 'draft' && nomination.status !== 'submitted') {
+            return res.status(403).json({ success: false, message: 'Cannot edit nomination at this stage' });
+        }
+        
+        const { title, category, year, description, achievements, document_id, status } = req.body;
+        
+        if (title) nomination.title = title;
+        if (category) nomination.category = category;
+        if (year) nomination.year = year;
+        if (description) nomination.description = description;
+        if (achievements) nomination.achievements = achievements;
+        if (document_id !== undefined) nomination.document_id = document_id;
+        if (status) nomination.status = status;
+        
+        await nomination.save();
+        
+        res.json({
+            success: true,
+            message: 'Nomination updated successfully',
+            nomination
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete nomination
+app.delete('/api/business/nominations/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const nomination = await Nomination.findOneAndDelete({
+            _id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        if (!nomination) {
+            return res.status(404).json({ success: false, message: 'Nomination not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Nomination deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ BUSINESS DOCUMENT ROUTES ============
+
+// Get business documents
+app.get('/api/business/documents', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { page = 1, limit = 12 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const documents = await BusinessDocument.find({ business_id: req.user._id })
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await BusinessDocument.countDocuments({ business_id: req.user._id });
+        
+        res.json({
+            success: true,
+            documents: documents.map(d => ({
+                _id: d._id,
+                name: d.name,
+                type: d.type,
+                file_url: d.file_url,
+                uploaded_at: d.created_at
+            })),
+            total,
+            pages: Math.ceil(total / parseInt(limit)),
+            currentPage: parseInt(page)
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Upload document
+app.post('/api/business/documents', authenticate, authorize('business'), upload.single('document'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+        
+        const { name, type } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ success: false, message: 'Document name is required' });
+        }
+        
+        const document = new BusinessDocument({
+            business_id: req.user._id,
+            name,
+            type: type || 'other',
+            file_url: `/uploads/${req.file.filename}`,
+            file_name: req.file.originalname,
+            file_size: req.file.size,
+            mime_type: req.file.mimetype
+        });
+        
+        await document.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Document uploaded successfully',
+            document: {
+                _id: document._id,
+                name: document.name,
+                type: document.type,
+                file_url: document.file_url
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete document
+app.delete('/api/business/documents/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const document = await BusinessDocument.findOneAndDelete({
+            _id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        // Delete file from filesystem
+        const filePath = path.join(__dirname, document.file_url);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        
+        res.json({
+            success: true,
+            message: 'Document deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ BUSINESS NOTIFICATION ROUTES ============
+
+// Get notifications
+app.get('/api/business/notifications', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const notifications = await Notification.find({ business_id: req.user._id })
+            .sort({ created_at: -1 })
+            .limit(50);
+        
+        res.json({
+            success: true,
+            notifications: notifications.map(n => ({
+                _id: n._id,
+                title: n.title,
+                message: n.message,
+                type: n.type,
+                read: n.read,
+                created_at: n.created_at
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Mark notification as read
+app.post('/api/business/notifications/:id/read', authenticate, authorize('business'), async (req, res) => {
+    try {
+        await Notification.updateOne(
+            { _id: req.params.id, business_id: req.user._id },
+            { read: true }
+        );
+        
+        res.json({ success: true, message: 'Notification marked as read' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Mark all notifications as read
+app.post('/api/business/notifications/read-all', authenticate, authorize('business'), async (req, res) => {
+    try {
+        await Notification.updateMany(
+            { business_id: req.user._id, read: false },
+            { read: true }
+        );
+        
+        res.json({ success: true, message: 'All notifications marked as read' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ CHANGE PASSWORD ============
+app.post('/api/auth/change-password', authenticate, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Current and new password are required' });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+        }
+        
+        const user = await BusinessUser.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        
+        const isValid = await user.comparePassword(currentPassword);
+        if (!isValid) {
+            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        }
+        
+        user.password = newPassword;
+        await user.save();
+        
+        res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
