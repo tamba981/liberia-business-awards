@@ -192,6 +192,9 @@ const adminSchema = new mongoose.Schema({
     is_active: { type: Boolean, default: true },
     permissions: [{ type: String }]
 }, { timestamps: true });
+reset_password_token: { type: String },
+    reset_password_expires: { type: Date }
+}, { timestamps: true });
 
 // Business User Schema
 const businessUserSchema = new mongoose.Schema({
@@ -217,6 +220,9 @@ const businessUserSchema = new mongoose.Schema({
     lock_until: { type: Date },
     notes: { type: String },
     verified: { type: Boolean, default: false }
+}, { timestamps: true });
+reset_password_token: { type: String },
+    reset_password_expires: { type: Date }
 }, { timestamps: true });
 
 // Refresh Token Schema
@@ -1187,6 +1193,104 @@ app.post('/api/auth/change-password', authenticate, async (req, res) => {
         res.json({ success: true, message: 'Password changed successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Forgot Password - Request reset link
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+        
+        // Find user by email (check both Admin and BusinessUser)
+        let user = await Admin.findOne({ email: email.toLowerCase() });
+        let userType = 'admin';
+        
+        if (!user) {
+            user = await BusinessUser.findOne({ email: email.toLowerCase() });
+            userType = 'business';
+        }
+        
+        if (!user) {
+            // For security, don't reveal that email doesn't exist
+            return res.json({ success: true, message: 'If an account exists, a password reset link has been sent.' });
+        }
+        
+        // Generate reset token (expires in 1 hour)
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+        
+        // Store reset token in database
+        user.reset_password_token = resetToken;
+        user.reset_password_expires = resetTokenExpiry;
+        await user.save();
+        
+        // Create reset URL
+        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password.html?token=${resetToken}&type=${userType}`;
+        
+        // In production, send email here
+        console.log(`🔐 Password reset link for ${email}: ${resetUrl}`);
+        
+        // For now, return the link (in production, you'd send via email)
+        // Since you're in development, we'll return the link
+        res.json({ 
+            success: true, 
+            message: 'Password reset link has been sent to your email.',
+            resetUrl: resetUrl // Remove this in production
+        });
+        
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
+    }
+});
+
+// ============ RESET PASSWORD ENDPOINT ============
+// Reset Password - Use token to set new password
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword, userType } = req.body;
+        
+        if (!token || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Token and new password are required' });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+        }
+        
+        // Find user by reset token
+        let user;
+        if (userType === 'admin') {
+            user = await Admin.findOne({
+                reset_password_token: token,
+                reset_password_expires: { $gt: Date.now() }
+            });
+        } else {
+            user = await BusinessUser.findOne({
+                reset_password_token: token,
+                reset_password_expires: { $gt: Date.now() }
+            });
+        }
+        
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' });
+        }
+        
+        // Update password
+        user.password = newPassword;
+        user.reset_password_token = undefined;
+        user.reset_password_expires = undefined;
+        await user.save();
+        
+        res.json({ success: true, message: 'Password has been reset successfully. You can now login with your new password.' });
+        
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
     }
 });
 
