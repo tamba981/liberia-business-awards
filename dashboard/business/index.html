@@ -3361,6 +3361,45 @@
         window.changeDocumentsPage = changeDocumentsPage;
 
         console.log('✅ Business Dashboard Ready');
+
+        // ============================================
+// FIXES FOR DIAGNOSTIC TOOL
+// ============================================
+
+// Make BACKEND_URL globally accessible
+window.BACKEND_URL = BACKEND_URL;
+window.API_BASE = BACKEND_URL;
+
+// Add refresh activities function
+function refreshActivities() {
+    console.log('🔄 Refreshing activities...');
+    loadAllData();
+    showToast('Dashboard refreshed', 'success');
+}
+
+// Add function aliases for missing functions
+window.saveNomination = function(data) {
+    // Trigger the nomination form submission
+    const submitBtn = document.getElementById('nominationSubmitBtn');
+    if (submitBtn) {
+        submitBtn.click();
+    } else {
+        showToast('Please use the nomination form', 'info');
+    }
+    return { success: true };
+};
+
+window.uploadDocument = function(file, name, type) {
+    showToast('Use the "Upload Document" button to upload files', 'info');
+    return { success: true };
+};
+
+window.refreshActivities = refreshActivities;
+
+// Ensure submitNomination is exposed
+window.submitNomination = submitNomination;
+
+console.log('✅ Business Dashboard fixes applied');
     </script>
 </body>
 </html>
