@@ -1197,6 +1197,98 @@ app.post('/api/auth/change-password', authenticate, async (req, res) => {
     }
 });
 
+// ============ EMAIL SENDING FUNCTION ============
+const nodemailer = require('nodemailer');
+
+// Configure email transporter (for production)
+let emailTransporter = null;
+
+// Initialize email transporter if Gmail credentials are available
+if (process.env.GMAIL_APP_PASSWORD) {
+    emailTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'liberiabusinessawards@gmail.com',
+            pass: process.env.GMAIL_APP_PASSWORD
+        }
+    });
+    console.log('✅ Email transporter configured for Gmail');
+} else {
+    console.log('⚠️ GMAIL_APP_PASSWORD not set - Email sending will be simulated');
+}
+
+async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
+    try {
+        const subject = `Password Reset Request - Liberia Business Awards`;
+        
+        const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Password Reset - Liberia Business Awards</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .reset-btn { display: inline-block; background: #FF0000; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .warning { background: #fef2f2; padding: 15px; border-left: 4px solid #EF4444; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Liberia Business Awards</h1>
+        </div>
+        <div class="content">
+            <p>Dear ${userName || 'Valued User'},</p>
+            <p>We received a request to reset the password for your ${userType === 'admin' ? 'Administrator' : 'Business'} account.</p>
+            <div style="text-align: center;">
+                <a href="${resetUrl}" class="reset-btn">Reset Your Password</a>
+            </div>
+            <div class="warning">
+                <p><strong>⚠️ This link will expire in 1 hour.</strong></p>
+                <p>If you did not request a password reset, please ignore this email.</p>
+            </div>
+            <p>Or copy this link: ${resetUrl}</p>
+        </div>
+        <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} Liberia Business Awards. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+        
+        // If email transporter is configured, send real email
+        if (emailTransporter) {
+            const mailOptions = {
+                from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
+                to: toEmail,
+                subject: subject,
+                html: htmlBody,
+                text: `Reset your password: ${resetUrl}`
+            };
+            
+            const info = await emailTransporter.sendMail(mailOptions);
+            console.log('✅ Email sent:', info.messageId);
+            return true;
+        } else {
+            // Development mode: just log the reset URL
+            console.log('📧 DEVELOPMENT MODE - Reset link would be sent to:', toEmail);
+            console.log('🔗 Reset URL:', resetUrl);
+            return true; // Return true in development mode
+        }
+        
+    } catch (error) {
+        console.error('❌ Email sending failed:', error);
+        return false;
+    }
+}
+// ============ END OF EMAIL FUNCTION ============
+
 // Forgot Password - Request reset link with REAL EMAIL
 app.post('/api/auth/forgot-password', async (req, res) => {
     try {
