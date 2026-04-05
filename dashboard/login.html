@@ -989,11 +989,35 @@
             });
         }
 
-        function showForgotPassword() {
+        async function showForgotPassword() {
     const email = prompt('Please enter your email address to reset your password:');
     if (email && email.includes('@')) {
-        showToast('Password reset link has been sent to your email.', 'info');
-        // Future: Add API call to send reset email
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message || 'Password reset link has been sent to your email.', 'success');
+                // For development, log the reset URL
+                if (result.resetUrl) {
+                    console.log('Reset URL:', result.resetUrl);
+                    showToast('Check console for reset link (development mode)', 'info');
+                }
+            } else {
+                showToast(result.message || 'Failed to send reset link. Please try again.', 'error');
+            }
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            showToast('Cannot connect to server. Please try again later.', 'error');
+        }
     } else if (email) {
         showToast('Please enter a valid email address.', 'error');
     }
