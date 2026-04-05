@@ -493,6 +493,11 @@
                             <input type="checkbox" id="showBusinessPassword" onchange="togglePasswordVisibility('businessPassword')">
                             <label for="showBusinessPassword">Show password</label>
                         </div>
+                        <div style="text-align: right; margin-top: 5px;">
+    <a href="#" onclick="showForgotPassword()" style="color: var(--lba-red); font-size: 13px; text-decoration: none;">
+        Forgot Password?
+    </a>
+</div>
                     </div>
                     
                     <div class="error-message" id="businessError"></div>
@@ -800,78 +805,81 @@
         }
 
         // ==================== BUSINESS LOGIN ====================
-        async function handleBusinessLogin() {
-            const email = document.getElementById('businessEmail').value.trim();
-            const password = document.getElementById('businessPassword').value;
-            const errorEl = document.getElementById('businessError');
-            const successEl = document.getElementById('businessSuccess');
-            const btn = document.getElementById('businessBtn');
+         async function handleBusinessLogin() {
+    const email = document.getElementById('businessEmail').value.trim();
+    const password = document.getElementById('businessPassword').value;
+    const errorEl = document.getElementById('businessError');
+    const successEl = document.getElementById('businessSuccess');
+    const btn = document.getElementById('businessBtn');
+    
+    clearAllMessages();
+    
+    if (!email || !password) {
+        showError(errorEl, 'Please fill in all fields');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/business/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // Store authentication
+            localStorage.setItem('lba_auth_token', result.token);
+            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+            localStorage.setItem('lba_user_role', result.user.role);
             
-            clearAllMessages();
+            showSuccess(successEl, '✓ Login successful! Redirecting...');
+            console.log('✅ Business login successful');
             
-            if (!email || !password) {
-                showError(errorEl, 'Please fill in all fields');
-                return;
-            }
+            setTimeout(() => {
+                window.location.href = 'business/index.html';
+            }, 1500);
             
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/business/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    // Store authentication
-                    localStorage.setItem('lba_auth_token', result.token);
-                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-                    localStorage.setItem('lba_user_role', result.user.role);
-                    
-                    showSuccess(successEl, '✓ Login successful! Redirecting...');
-                    console.log('✅ Business login successful');
-                    
-                    // Redirect to business dashboard
-                    setTimeout(() => {
-                        window.location.href = 'business/index.html';
-                    }, 1500);
-                    
-                } else {
-                    // Handle specific status messages
-                    if (result.message.includes('pending')) {
-                        throw new Error('Your account is pending admin approval. You will be able to login once approved.');
-                    } else if (result.message.includes('rejected')) {
-                        throw new Error(result.message || 'Your business registration was rejected.');
-                    } else {
-                        throw new Error(result.message || 'Invalid business credentials');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('❌ Business login error:', error);
-                
-                let errorMessage = error.message;
-                if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Cannot connect to server. Please try again later.';
-                }
-                
-                showError(errorEl, errorMessage);
-                
-            } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }, 1000);
+        } else {
+            // Check if it's a rate limit error
+            if (response.status === 429 || (result.message && result.message.includes('Too many login attempts'))) {
+                showError(errorEl, '⚠️ Too many failed login attempts. Please wait 15 minutes before trying again.');
+            } else if (result.message && result.message.includes('locked')) {
+                showError(errorEl, result.message);
+            } else if (result.message && result.message.includes('pending')) {
+                showError(errorEl, 'Your account is pending admin approval. You will be able to login once approved.');
+            } else if (result.message && result.message.includes('rejected')) {
+                showError(errorEl, result.message || 'Your business registration was rejected.');
+            } else {
+                showError(errorEl, result.message || 'Invalid business credentials');
             }
         }
+        
+    } catch (error) {
+        console.error('❌ Business login error:', error);
+        
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to server. Please try again later.';
+        }
+        
+        showError(errorEl, errorMessage);
+        
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
 
         // ==================== BUSINESS REGISTRATION ====================
         async function handleBusinessRegistration() {
@@ -980,6 +988,30 @@
                 msg.style.display = 'none';
             });
         }
+
+        function showForgotPassword() {
+    const email = prompt('Please enter your email address to reset your password:');
+    if (email && email.includes('@')) {
+        showToast('Password reset link has been sent to your email.', 'info');
+        // Future: Add API call to send reset email
+    } else if (email) {
+        showToast('Please enter a valid email address.', 'error');
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    const colors = { error: '#EF4444', success: '#10B981', info: '#3B82F6' };
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px;
+        background: ${colors[type] || colors.info}; color: white;
+        padding: 12px 20px; border-radius: 8px; z-index: 9999;
+        animation: fadeIn 0.3s ease;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
 
         // ==================== EXPORT FUNCTIONS ====================
         window.showBusinessOptions = showBusinessOptions;
