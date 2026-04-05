@@ -181,6 +181,9 @@ async function connectToMongoDB() {
 // ============ DATABASE SCHEMAS ============
 
 // Admin Schema
+
+
+// Admin Schema (CORRECT)
 const adminSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
@@ -190,13 +193,12 @@ const adminSchema = new mongoose.Schema({
     login_attempts: { type: Number, default: 0 },
     lock_until: { type: Date },
     is_active: { type: Boolean, default: true },
-    permissions: [{ type: String }]
-}, { timestamps: true });
-reset_password_token: { type: String },
+    permissions: [{ type: String }],
+    reset_password_token: { type: String },
     reset_password_expires: { type: Date }
 }, { timestamps: true });
 
-// Business User Schema
+// Business User Schema (CORRECT)
 const businessUserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
@@ -219,9 +221,8 @@ const businessUserSchema = new mongoose.Schema({
     login_attempts: { type: Number, default: 0 },
     lock_until: { type: Date },
     notes: { type: String },
-    verified: { type: Boolean, default: false }
-}, { timestamps: true });
-reset_password_token: { type: String },
+    verified: { type: Boolean, default: false },
+    reset_password_token: { type: String },
     reset_password_expires: { type: Date }
 }, { timestamps: true });
 
