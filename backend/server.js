@@ -1190,6 +1190,43 @@ app.post('/api/auth/change-password', authenticate, async (req, res) => {
     }
 });
 
+// ============ ACCOUNT DELETION ENDPOINT  ============
+app.delete('/api/business/account', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { password } = req.body;
+        
+        if (!password) {
+            return res.status(400).json({ success: false, message: 'Password is required to delete account' });
+        }
+        
+        const business = await BusinessUser.findById(req.user._id);
+        if (!business) {
+            return res.status(404).json({ success: false, message: 'Business not found' });
+        }
+        
+        // Verify password
+        const isValid = await business.comparePassword(password);
+        if (!isValid) {
+            return res.status(401).json({ success: false, message: 'Invalid password' });
+        }
+        
+        // Delete all related data
+        await Nomination.deleteMany({ business_id: business._id });
+        await BusinessDocument.deleteMany({ business_id: business._id });
+        await Notification.deleteMany({ business_id: business._id });
+        
+        // Delete the business account
+        await BusinessUser.findByIdAndDelete(business._id);
+        
+        res.json({ 
+            success: true, 
+            message: 'Account deleted successfully' 
+        });
+    } catch (error) {
+        console.error('Account deletion error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
