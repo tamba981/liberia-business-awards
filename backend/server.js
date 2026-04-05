@@ -1197,7 +1197,7 @@ app.post('/api/auth/change-password', authenticate, async (req, res) => {
     }
 });
 
-// Forgot Password - Request reset link
+// Forgot Password - Request reset link with REAL EMAIL
 app.post('/api/auth/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
@@ -1206,18 +1206,20 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Email is required' });
         }
         
-        // Find user by email (check both Admin and BusinessUser)
+        // Find user by email
         let user = await Admin.findOne({ email: email.toLowerCase() });
         let userType = 'admin';
+        let userName = user?.name || '';
         
         if (!user) {
             user = await BusinessUser.findOne({ email: email.toLowerCase() });
             userType = 'business';
+            userName = user?.business_name || '';
         }
         
         if (!user) {
-            // For security, don't reveal that email doesn't exist
-            return res.json({ success: true, message: 'If an account exists, a password reset link has been sent.' });
+            // Security: Don't reveal that email doesn't exist
+            return res.json({ success: true, message: 'If an account exists, a password reset link has been sent to your email.' });
         }
         
         // Generate reset token (expires in 1 hour)
@@ -1229,19 +1231,26 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         user.reset_password_expires = resetTokenExpiry;
         await user.save();
         
-        // Create reset URL
-        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password.html?token=${resetToken}&type=${userType}`;
+        // Create reset URL (frontend URL)
+        const frontendUrl = process.env.FRONTEND_URL || 'https://liberiabusinessawardslr.com';
+        const resetUrl = `${frontendUrl}/reset-password.html?token=${resetToken}&type=${userType}`;
         
-        // In production, send email here
-        console.log(`🔐 Password reset link for ${email}: ${resetUrl}`);
+        // ============ SEND EMAIL USING GMAIL ============
+        const emailSent = await sendPasswordResetEmail(email, userName, resetUrl, userType);
         
-        // For now, return the link (in production, you'd send via email)
-        // Since you're in development, we'll return the link
-        res.json({ 
-            success: true, 
-            message: 'Password reset link has been sent to your email.',
-            resetUrl: resetUrl // Remove this in production
-        });
+        if (emailSent) {
+            res.json({ 
+                success: true, 
+                message: 'Password reset link has been sent to your email. Please check your inbox.' 
+            });
+        } else {
+            // Still return success for security, but log error
+            console.error(`Failed to send reset email to ${email}`);
+            res.json({ 
+                success: true, 
+                message: 'If an account exists, a password reset link has been sent to your email.' 
+            });
+        }
         
     } catch (error) {
         console.error('Forgot password error:', error);
