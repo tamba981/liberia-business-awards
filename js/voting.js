@@ -114,7 +114,7 @@ const VotingSystem = {
         this.countdownInterval = setInterval(updateCountdown, 1000);
     },
 
-    // Load businesses for voting (from manual list)
+    // Load businesses for voting (from Google Sheets manual list)
 loadBusinesses: async function(page = 1) {
     const container = document.getElementById('votingBusinessesContainer');
     if (!container) return;
@@ -129,33 +129,68 @@ loadBusinesses: async function(page = 1) {
     `;
     
     try {
-        // Use Google Sheets directly for manual business list
         const url = `${this.config.sheetsUrl}?action=getVotingBusinesses&page=${page}&limit=12&category=${this.state.currentCategory}`;
+        console.log('📡 Fetching voting businesses from:', url);
+        
         const response = await fetch(url);
         const data = await response.json();
         
-        if (data.success) {
-            this.displayBusinesses(data.businesses);
-            this.displayPagination(data.pagination);
+        console.log('📥 Response received:', data);
+        
+        // Check if we have businesses in the response
+        let businesses = [];
+        let pagination = null;
+        
+        if (data && data.businesses && Array.isArray(data.businesses)) {
+            businesses = data.businesses;
+            pagination = data.pagination;
+        } else if (data && data.success && data.businesses && Array.isArray(data.businesses)) {
+            businesses = data.businesses;
+            pagination = data.pagination;
         } else {
-            // If no data from sheets, show empty state
+            console.warn('No businesses in response, using fallback data');
+            // Only use fallback if API really fails, not just empty
+            if (data && data.error) {
+                console.error('API Error:', data.error);
+                this.loadLocalVotingBusinesses(page);
+                return;
+            }
+        }
+        
+        if (businesses.length > 0) {
+            this.displayBusinesses(businesses);
+            if (pagination) {
+                this.displayPagination(pagination);
+            } else {
+                // Create pagination from businesses array
+                this.displayPagination({
+                    page: page,
+                    pages: Math.ceil(businesses.length / 12),
+                    total: businesses.length
+                });
+            }
+        } else {
+            // No businesses from API, show empty state
             this.displayBusinesses([]);
         }
+        
     } catch (error) {
         console.error('Load businesses error:', error);
-        // Try local fallback
+        // Only fall back to local data on network error
         this.loadLocalVotingBusinesses(page);
     }
 },
 
-// Local fallback - businesses you manually add here
+// Local fallback - businesses you manually add here (EMERGENCY BACKUP ONLY)
 loadLocalVotingBusinesses: function(page = 1) {
+    console.log('⚠️ Using local fallback voting businesses');
+    
     // ============================================
-    // ✅ ADD YOUR VOTING BUSINESSES HERE MANUALLY
+    // ✅ EMERGENCY BACKUP BUSINESSES
     // ============================================
     const votingBusinesses = [
         {
-            _id: "voting_biz_001",
+            _id: "vb_001",
             business_name: "Stefix Services",
             category: "General",
             location: "Liberia",
@@ -163,24 +198,21 @@ loadLocalVotingBusinesses: function(page = 1) {
             vote_stats: { average_score: 0, total_votes: 0 }
         },
         {
-            _id: "voting_biz_002",
+            _id: "vb_002",
             business_name: "LBA OBSERVER",
             category: "General",
             location: "Liberia",
             logo: null,
             vote_stats: { average_score: 0, total_votes: 0 }
+        },
+        {
+            _id: "vb_003",
+            business_name: "Test Business",
+            category: "General",
+            location: "Liberia",
+            logo: null,
+            vote_stats: { average_score: 0, total_votes: 0 }
         }
-        // ============================================
-        // TO ADD MORE BUSINESSES, COPY THIS FORMAT:
-        // ============================================
-        // {
-        //     _id: "voting_biz_003",
-        //     business_name: "Your Business Name",
-        //     category: "Technology",
-        //     location: "Monrovia, Liberia",
-        //     logo: "/images/logos/your-logo.png",
-        //     vote_stats: { average_score: 0, total_votes: 0 }
-        // },
     ];
     
     // Filter by category
