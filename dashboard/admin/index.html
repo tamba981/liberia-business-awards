@@ -3353,53 +3353,56 @@ async function loadVotingBusinessesList() {
     const tbody = document.getElementById('votingBusinessesTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading businesses...<\/td><\/tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading businesses...</td></tr>';
     
     try {
-        // Use fetch with proper error handling
-        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=getVotingBusinesses&limit=100`;
+        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=getVotingBusinesses`;
         console.log('📡 Fetching voting businesses from:', url);
         
         const response = await fetch(url);
-        const text = await response.text();
+        const data = await response.json();
         
-        console.log('📥 Response received, length:', text.length);
+        console.log('📥 Response received:', data);
         
-        // Try to parse JSON
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (e) {
-            console.error('❌ Failed to parse JSON:', text.substring(0, 200));
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error: Invalid response from server<\/td><\/tr>';
+        // Check if we have the businesses array directly or inside data
+        let businesses = [];
+        if (data && data.businesses && Array.isArray(data.businesses)) {
+            businesses = data.businesses;
+        } else if (data && data.success && data.businesses && Array.isArray(data.businesses)) {
+            businesses = data.businesses;
+        } else if (data && Array.isArray(data)) {
+            businesses = data;
+        } else {
+            console.warn('Unexpected response format:', data);
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No businesses in voting list</td></tr>';
+            document.getElementById('votingBusinessesCount').textContent = '0';
             return;
         }
         
-        console.log('📊 Voting businesses response:', data);
-        
-        if (data.success && data.businesses && data.businesses.length > 0) {
-            tbody.innerHTML = data.businesses.map((biz, index) => `
+        if (businesses.length > 0) {
+            tbody.innerHTML = businesses.map((biz, index) => `
                 <tr>
-                    <td><strong>${escapeHtml(biz.business_name)}<\/strong><\/td>
-                    <td>${escapeHtml(biz.category)}<\/td>
-                    <td>${escapeHtml(biz.location)}<\/td>
-                    <td><span class="status-badge status-active">Active<\/span><\/td>
-                    <td>${index + 1}<\/td>
+                    <td><strong>${escapeHtml(biz.business_name)}</strong></td>
+                    <td>${escapeHtml(biz.category)}</td>
+                    <td>${escapeHtml(biz.location)}</td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                    <td>${index + 1}</td>
                     <td>
                         <button class="sheet-btn danger" onclick="removeVotingBusiness('${biz._id}')">
-                            <i class="fas fa-trash"><\/i> Remove
-                        <\/button>
-                    <\/td>
-                <\/tr>
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                    </td>
+                </tr>
             `).join('');
-            document.getElementById('votingBusinessesCount').textContent = data.businesses.length;
+            document.getElementById('votingBusinessesCount').textContent = businesses.length;
         } else {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No businesses in voting list<\/td><\/tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No businesses in voting list</td></tr>';
             document.getElementById('votingBusinessesCount').textContent = '0';
         }
     } catch (error) {
         console.error('❌ Load voting businesses error:', error);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading businesses: ' + error.message + '<\/td><\/tr>';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading businesses: ${error.message}</td></tr>`;
+        document.getElementById('votingBusinessesCount').textContent = '0';
     }
 }
 
