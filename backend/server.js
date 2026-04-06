@@ -329,6 +329,43 @@ const Nomination = mongoose.model('Nomination', nominationSchema);
 const BusinessDocument = mongoose.model('BusinessDocument', businessDocumentSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
 
+// ============ VOTE SCHEMAS ============
+const voteSchema = new mongoose.Schema({
+    business_id: { type: String, required: true },
+    business_name: { type: String, required: true },
+    category: { type: String, required: true },
+    voter_email: { type: String, required: true },
+    voter_ip: { type: String },
+    vote_value: { type: Number, default: 5, min: 1, max: 10 },
+    vote_weight: { type: Number, default: 1 },
+    is_verified: { type: Boolean, default: false },
+    is_jury: { type: Boolean, default: false },
+    source: { type: String, default: 'website' }
+}, { timestamps: true });
+
+const voteTotalSchema = new mongoose.Schema({
+    business_id: { type: String, required: true, unique: true },
+    business_name: { type: String, required: true },
+    category: { type: String, required: true },
+    total_votes: { type: Number, default: 0 },
+    average_score: { type: Number, default: 0 },
+    public_votes: { type: Number, default: 0 },
+    jury_votes: { type: Number, default: 0 },
+    rank: { type: Number, default: 0 }
+}, { timestamps: true });
+
+const voteVerificationSchema = new mongoose.Schema({
+    email: { type: String, required: true },
+    code: { type: String, required: true },
+    verified: { type: Boolean, default: false },
+    used_at: { type: Date },
+    expires_at: { type: Date, default: () => new Date(Date.now() + 30 * 60 * 1000) }
+}, { timestamps: true });
+
+const Vote = mongoose.model('Vote', voteSchema);
+const VoteTotal = mongoose.model('VoteTotal', voteTotalSchema);
+const VoteVerification = mongoose.model('VoteVerification', voteVerificationSchema);
+
 // ============ AUTH ROUTES ============
 
 // Admin Login
@@ -795,6 +832,363 @@ app.post('/api/admin/businesses/:id/reject', authenticate, authorize('admin'), a
     }
 });
 
+// ============ VOTING SYSTEM ROUTES ============
+
+// Check if voting is active
+app.get('/api/voting/status', async (req, res) => {
+    try {
+        const now = new Date();
+        const votingStart = new Date('2026-06-01');
+        const votingEnd = new Date('2026-07-30T23:59:59');
+        
+        res.json({
+            success: true,
+            isActive: now >= votingStart && now <= votingEnd,
+            startDate: votingStart,
+            endDate: votingEnd,
+            daysRemaining: Math.max(0, Math.ceil((votingEnd - now) / (1000 * 60 * 60 * 24)))
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get all businesses eligible for voting
+app.get('/api/voting/businesses', async (req, res) => {
+    try {
+        const { category, page = 1, limit = 20 } = req.query;
+        
+        let query = { status: 'approved' };
+        if (category && category !== 'all') {
+            query.business_category = category;
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const businesses = await BusinessUser.find(query)
+            .select('business_name email business_category location logo')
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        // Get vote totals for each business
+        const businessIds = businesses.map(b => b._id.toString());
+        const voteTotals = await VoteTotal.find({ business_id: { $in: businessIds } });
+        
+        const voteMap = {};
+        voteTotals.forEach(vt => {
+            voteMap[vt.business_id] = {
+                total_votes: vt.total_votes,
+                average_score: vt.average_score,
+                rank: vt.rank
+            };
+        });
+        
+        const total = await BusinessUser.countDocuments(query);
+        
+        res.json({
+            success: true,
+            businesses: businesses.map(b => ({
+                _id: b._id,
+                business_name: b.business_name,
+                category: b.business_category,
+                location: b.location,
+                logo: b.logo,
+                vote_stats: voteMap[b._id.toString()] || { total_votes: 0, average_score: 0 }
+            })),
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get leaderboard
+app.get('/api/voting/leaderboard', async (req, res) => {
+    try {
+        const { category, limit = 20 } = req.query;
+        
+        let query = {};
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        const leaders = await VoteTotal.find(query)
+            .sort({ average_score: -1, total_votes: -1 })
+            .limit(parseInt(limit));
+        
+        // Add rank
+        const leaderboard = leaders.map((leader, index) => ({
+            rank: index + 1,
+            business_id: leader.business_id,
+            business_name: leader.business_name,
+            category: leader.category,
+            total_votes: leader.total_votes,
+            average_score: leader.average_score,
+            public_votes: leader.public_votes,
+            jury_votes: leader.jury_votes
+        }));
+        
+        res.json({ success: true, leaderboard });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Cast a vote
+app.post('/api/voting/cast', [
+    body('business_id').notEmpty(),
+    body('business_name').notEmpty(),
+    body('category').notEmpty(),
+    body('vote_value').isInt({ min: 1, max: 10 }),
+    body('voter_email').isEmail()
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+        
+        const { business_id, business_name, category, vote_value, voter_email, verification_code } = req.body;
+        
+        // Check voting period
+        const now = new Date();
+        const votingStart = new Date('2026-06-01');
+        const votingEnd = new Date('2026-07-30T23:59:59');
+        
+        if (now < votingStart) {
+            return res.status(403).json({ success: false, error: 'Voting has not started yet' });
+        }
+        
+        if (now > votingEnd) {
+            return res.status(403).json({ success: false, error: 'Voting period has ended' });
+        }
+        
+        // Verify email
+        let isVerified = false;
+        if (verification_code) {
+            const verification = await VoteVerification.findOne({
+                email: voter_email,
+                code: verification_code,
+                verified: false,
+                expires_at: { $gt: now }
+            });
+            
+            if (verification) {
+                verification.verified = true;
+                verification.used_at = now;
+                await verification.save();
+                isVerified = true;
+            }
+        }
+        
+        if (!isVerified) {
+            return res.status(403).json({ success: false, error: 'Email verification required' });
+        }
+        
+        // Check for duplicate vote
+        const existingVote = await Vote.findOne({
+            business_id: business_id,
+            voter_email: voter_email
+        });
+        
+        if (existingVote) {
+            return res.status(403).json({ success: false, error: 'You have already voted for this business' });
+        }
+        
+        // Determine vote weight (jury vs public)
+        const isJury = req.user?.role === 'admin';
+        const voteWeight = isJury ? 3 : 1;
+        
+        // Save vote
+        const vote = new Vote({
+            business_id,
+            business_name,
+            category,
+            voter_email,
+            voter_ip: req.ip,
+            vote_value,
+            vote_weight: voteWeight,
+            is_verified: true,
+            is_jury: isJury
+        });
+        
+        await vote.save();
+        
+        // Update vote totals
+        await updateVoteTotals(business_id, business_name, category);
+        
+        res.json({
+            success: true,
+            message: 'Your vote has been recorded!',
+            vote_id: vote._id
+        });
+        
+    } catch (error) {
+        console.error('Cast vote error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Send verification code
+app.post('/api/voting/send-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email is required' });
+        }
+        
+        // Generate verification code
+        const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+        
+        // Save to database
+        await VoteVerification.findOneAndDelete({ email }); // Remove old
+        await VoteVerification.create({
+            email,
+            code,
+            verified: false,
+            expires_at: new Date(Date.now() + 30 * 60 * 1000)
+        });
+        
+        // In production, send actual email
+        console.log(`📧 Verification code for ${email}: ${code}`);
+        
+        res.json({
+            success: true,
+            message: 'Verification code sent to your email'
+        });
+        
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get vote statistics for a business
+app.get('/api/voting/business/:businessId/stats', async (req, res) => {
+    try {
+        const { businessId } = req.params;
+        
+        const voteTotal = await VoteTotal.findOne({ business_id: businessId });
+        const recentVotes = await Vote.find({ business_id: businessId })
+            .sort({ created_at: -1 })
+            .limit(10)
+            .select('vote_value vote_weight created_at is_jury');
+        
+        res.json({
+            success: true,
+            stats: voteTotal || {
+                business_id: businessId,
+                total_votes: 0,
+                average_score: 0,
+                public_votes: 0,
+                jury_votes: 0
+            },
+            recent_votes: recentVotes
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Admin: Get all votes
+app.get('/api/admin/votes', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { page = 1, limit = 50, business_id, status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        let query = {};
+        if (business_id) query.business_id = business_id;
+        
+        const votes = await Vote.find(query)
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await Vote.countDocuments(query);
+        
+        res.json({
+            success: true,
+            votes,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Admin: Update vote totals (recalculate)
+app.post('/api/admin/votes/recalculate', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        await recalculateAllVoteTotals();
+        res.json({ success: true, message: 'Vote totals recalculated' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Helper function to update vote totals
+async function updateVoteTotals(businessId, businessName, category) {
+    const votes = await Vote.find({ business_id: businessId });
+    
+    let totalScore = 0;
+    let voteCount = 0;
+    let publicVotes = 0;
+    let juryVotes = 0;
+    
+    votes.forEach(vote => {
+        totalScore += vote.vote_value * vote.vote_weight;
+        voteCount += vote.vote_weight;
+        if (vote.is_jury) {
+            juryVotes++;
+        } else {
+            publicVotes++;
+        }
+    });
+    
+    const averageScore = voteCount > 0 ? totalScore / voteCount : 0;
+    
+    await VoteTotal.findOneAndUpdate(
+        { business_id: businessId },
+        {
+            business_name: businessName,
+            category,
+            total_votes: voteCount,
+            average_score: averageScore,
+            public_votes: publicVotes,
+            jury_votes: juryVotes
+        },
+        { upsert: true }
+    );
+}
+
+// Helper function to recalculate all vote totals
+async function recalculateAllVoteTotals() {
+    const allBusinesses = await Vote.distinct('business_id');
+    
+    for (const businessId of allBusinesses) {
+        const business = await BusinessUser.findById(businessId);
+        if (business) {
+            await updateVoteTotals(businessId, business.business_name, business.business_category);
+        }
+    }
+    
+    // Update ranks
+    const allTotals = await VoteTotal.find().sort({ average_score: -1 });
+    for (let i = 0; i < allTotals.length; i++) {
+        allTotals[i].rank = i + 1;
+        await allTotals[i].save();
+    }
+}
 // ============ BUSINESS PROFILE ROUTES ============
 
 // Get business profile
