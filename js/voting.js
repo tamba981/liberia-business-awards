@@ -7,8 +7,8 @@ const VotingSystem = {
     config: {
         apiUrl: 'https://liberia-business-awards-production.up.railway.app/api',
         sheetsUrl: 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec',
-        votingStart: new Date('2026-06-01'),
-        votingEnd: new Date('2026-07-30T23:59:59'),
+        votingStart: new Date('2024-01-01'),
+        votingEnd: new Date('2026-12-31'),
         isActive: false
     },
     
