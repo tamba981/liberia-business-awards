@@ -34,85 +34,110 @@ const VotingSystem = {
     },
     
     // Check if voting is active
-    checkVotingStatus: async function() {
+checkVotingStatus: async function() {
+    try {
+        // First, check using local config dates (bypass API for testing)
+        const now = new Date();
+        const isLocallyActive = now >= this.config.votingStart && now <= this.config.votingEnd;
+        
+        // Try to get status from API, but fall back to local config
+        let apiActive = false;
         try {
             const response = await fetch(`${this.config.apiUrl}/voting/status`);
             const data = await response.json();
-            
-            this.config.isActive = data.isActive;
-            
-            const statusElement = document.getElementById('votingStatus');
-            const countdownElement = document.getElementById('votingCountdown');
-            
-            if (statusElement) {
-                if (this.config.isActive) {
-                    statusElement.innerHTML = `
-                        <div class="voting-active-badge">
-                            <i class="fas fa-check-circle"></i> VOTING IS OPEN!
-                        </div>
-                        <p>Cast your vote for Liberia's best businesses. Voting ends ${this.config.votingEnd.toLocaleDateString()}</p>
-                    `;
-                } else if (new Date() < this.config.votingStart) {
-                    statusElement.innerHTML = `
-                        <div class="voting-pending-badge">
-                            <i class="fas fa-clock"></i> VOTING STARTS SOON
-                        </div>
-                        <p>Voting begins June 1, 2026. Get ready to support your favorite businesses!</p>
-                    `;
-                } else {
-                    statusElement.innerHTML = `
-                        <div class="voting-closed-badge">
-                            <i class="fas fa-lock"></i> VOTING HAS CLOSED
-                        </div>
-                        <p>Thank you for participating! Winners will be announced at the awards ceremony.</p>
-                    `;
-                }
-            }
-            
-            if (countdownElement && !this.config.isActive && new Date() < this.config.votingStart) {
-                this.startCountdown();
-            }
-            
-        } catch (error) {
-            console.error('Status check failed:', error);
+            apiActive = data.isActive;
+        } catch (apiError) {
+            console.log('API status check failed, using local config');
         }
-    },
+        
+        // Use local config for testing (override API)
+        this.config.isActive = isLocallyActive;
+        
+        const statusElement = document.getElementById('votingStatus');
+        const countdownElement = document.getElementById('votingCountdown');
+        
+        if (statusElement) {
+            if (this.config.isActive) {
+                statusElement.innerHTML = `
+                    <div class="voting-active-badge">
+                        <i class="fas fa-check-circle"></i> VOTING IS OPEN!
+                    </div>
+                    <p>Cast your vote for Liberia's best businesses. Voting ends ${this.config.votingEnd.toLocaleDateString()}</p>
+                `;
+                // Hide countdown if voting is active
+                if (countdownElement) countdownElement.innerHTML = '';
+            } else if (now < this.config.votingStart) {
+                statusElement.innerHTML = `
+                    <div class="voting-pending-badge">
+                        <i class="fas fa-clock"></i> VOTING STARTS SOON
+                    </div>
+                    <p>Voting begins ${this.config.votingStart.toLocaleDateString()}. Get ready to support your favorite businesses!</p>
+                `;
+                if (countdownElement && now < this.config.votingStart) {
+                    this.startCountdown();
+                }
+            } else {
+                statusElement.innerHTML = `
+                    <div class="voting-closed-badge">
+                        <i class="fas fa-lock"></i> VOTING HAS CLOSED
+                    </div>
+                    <p>Thank you for participating! Winners will be announced at the awards ceremony.</p>
+                `;
+                if (countdownElement) countdownElement.innerHTML = '';
+            }
+        }
+        
+        console.log('📊 Voting Status:', {
+            isActive: this.config.isActive,
+            votingStart: this.config.votingStart,
+            votingEnd: this.config.votingEnd,
+            now: now
+        });
+        
+    } catch (error) {
+        console.error('Status check failed:', error);
+        // Fallback to local config
+        const now = new Date();
+        this.config.isActive = now >= this.config.votingStart && now <= this.config.votingEnd;
+    }
+},
     
     // Start countdown timer
-    startCountdown: function() {
-        const countdownElement = document.getElementById('votingCountdown');
-        if (!countdownElement) return;
+startCountdown: function() {
+    const countdownElement = document.getElementById('votingCountdown');
+    if (!countdownElement) return;
+    
+    const updateCountdown = () => {
+        const now = new Date();
+        const diff = this.config.votingStart - now;
         
-        const updateCountdown = () => {
-            const now = new Date();
-            const diff = this.config.votingStart - now;
-            
-            if (diff <= 0) {
-                clearInterval(this.countdownInterval);
-                countdownElement.innerHTML = '<span class="text-success">Voting is now OPEN!</span>';
-                this.checkVotingStatus();
-                return;
-            }
-            
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            
-            countdownElement.innerHTML = `
-                <div class="countdown-timer">
-                    <span class="countdown-number">${days}d</span>
-                    <span class="countdown-number">${hours}h</span>
-                    <span class="countdown-number">${minutes}m</span>
-                    <span class="countdown-number">${seconds}s</span>
-                </div>
-                <p class="countdown-label">Until voting opens</p>
-            `;
-        };
+        if (diff <= 0) {
+            clearInterval(this.countdownInterval);
+            countdownElement.innerHTML = '<span class="text-success">Voting is now OPEN!</span>';
+            this.checkVotingStatus();
+            return;
+        }
         
-        updateCountdown();
-        this.countdownInterval = setInterval(updateCountdown, 1000);
-    },
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        countdownElement.innerHTML = `
+            <div class="countdown-timer">
+                <span class="countdown-number">${days}d</span>
+                <span class="countdown-number">${hours}h</span>
+                <span class="countdown-number">${minutes}m</span>
+                <span class="countdown-number">${seconds}s</span>
+            </div>
+            <p class="countdown-label">Until voting opens</p>
+        `;
+    };
+    
+    updateCountdown();
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+    this.countdownInterval = setInterval(updateCountdown, 1000);
+},
 
     // Load businesses for voting (from Google Sheets manual list)
 loadBusinesses: async function(page = 1) {
