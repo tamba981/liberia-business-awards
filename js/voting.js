@@ -775,11 +775,22 @@ loadLocalVotingBusinesses: function(page = 1) {
 // SOCIAL SHARE FUNCTIONS
 // ============================================
 
+// ============================================
+// SOCIAL SHARE FUNCTIONS - DIRECT TO VOTING SECTION
+// ============================================
+
+// Get voting section URL with hash
+function getVotingSectionUrl() {
+    // Get the current URL without any existing hash
+    const baseUrl = window.location.href.split('#')[0];
+    // Add the voting section ID as hash
+    return `${baseUrl}#voting`;
+}
+
 // Share on Facebook
 function shareVotingOnFacebook() {
-    const url = encodeURIComponent(window.location.href);
-    const title = encodeURIComponent('Vote for Liberia Business Awards 2026');
-    const quote = encodeURIComponent('Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help choose the winners.');
+    const url = encodeURIComponent(getVotingSectionUrl());
+    const quote = encodeURIComponent('🗳️ Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help choose the winners of the Liberia Business Awards 2026.');
     
     window.open(
         `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`,
@@ -790,7 +801,7 @@ function shareVotingOnFacebook() {
 
 // Share on Twitter
 function shareVotingOnTwitter() {
-    const url = encodeURIComponent(window.location.href);
+    const url = encodeURIComponent(getVotingSectionUrl());
     const text = encodeURIComponent('🗳️ Vote for the best businesses in Liberia! 🇱🇷\n\nSupport local entrepreneurs and help choose the winners of the Liberia Business Awards 2026.\n\n');
     const hashtags = 'LiberiaBusinessAwards,Vote,Liberia';
     
@@ -803,7 +814,7 @@ function shareVotingOnTwitter() {
 
 // Share on LinkedIn
 function shareVotingOnLinkedIn() {
-    const url = encodeURIComponent(window.location.href);
+    const url = encodeURIComponent(getVotingSectionUrl());
     const title = encodeURIComponent('Liberia Business Awards 2026 - Voting Open');
     const summary = encodeURIComponent('Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help shape the future of Liberian business.');
     
@@ -816,7 +827,7 @@ function shareVotingOnLinkedIn() {
 
 // Share on WhatsApp
 function shareVotingOnWhatsApp() {
-    const url = encodeURIComponent(window.location.href);
+    const url = encodeURIComponent(getVotingSectionUrl());
     const text = encodeURIComponent('🗳️ Vote for Liberia Business Awards 2026!\n\nSupport local businesses and help choose the winners. Cast your vote here:');
     
     window.open(
@@ -828,11 +839,12 @@ function shareVotingOnWhatsApp() {
 
 // Share by Email
 function shareVotingByEmail() {
+    const url = getVotingSectionUrl();
     const subject = encodeURIComponent('Vote for Liberia Business Awards 2026');
     const body = encodeURIComponent(
         'Hi,\n\nI wanted to share the Liberia Business Awards voting page with you.\n\n' +
         'Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help choose the winners.\n\n' +
-        'Vote here: ' + window.location.href + '\n\n' +
+        'Vote here: ' + url + '\n\n' +
         'Voting period: June 1 - July 30, 2026\n\n' +
         'Best regards,\n' +
         document.title
@@ -843,22 +855,24 @@ function shareVotingByEmail() {
 
 // Copy voting link to clipboard
 async function copyVotingLink() {
+    const url = getVotingSectionUrl();
+    
     try {
-        await navigator.clipboard.writeText(window.location.href);
-        showCopySuccessMessage();
+        await navigator.clipboard.writeText(url);
+        showCopySuccessMessage('Voting section link copied!');
     } catch (err) {
         // Fallback for older browsers
         const textarea = document.createElement('textarea');
-        textarea.value = window.location.href;
+        textarea.value = url;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showCopySuccessMessage();
+        showCopySuccessMessage('Voting section link copied!');
     }
 }
 
-function showCopySuccessMessage() {
+function showCopySuccessMessage(message) {
     // Remove existing toast if any
     const existingToast = document.querySelector('.copy-success-toast');
     if (existingToast) existingToast.remove();
@@ -866,7 +880,7 @@ function showCopySuccessMessage() {
     // Create new toast
     const toast = document.createElement('div');
     toast.className = 'copy-success-toast';
-    toast.innerHTML = '<i class="fas fa-check-circle"></i> Link copied to clipboard!';
+    toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
     document.body.appendChild(toast);
     
     // Remove after 3 seconds
