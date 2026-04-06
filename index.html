@@ -110,6 +110,9 @@ gtag('consent', 'default', {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- External CSS -->
 <link href="external.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <!-- Voting CSS -->    
+<link href="css/voting.css" rel="stylesheet">
+    <script src="js/voting.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
 <!-- PWA Manifest & Icons -->
@@ -3191,6 +3194,121 @@ window.addEventListener('load', function() {
     </div>
 </section>
 
+ <!-- VOTING SYSTEM SECTION -->
+<section class="voting-section" id="voting">
+    <div class="container mx-auto px-4">
+        <div class="voting-header">
+            <h2><i class="fas fa-vote-yea"></i> Vote for Your Favorite Businesses</h2>
+            <p>Support Liberian businesses by casting your vote. Public voting and jury evaluation from June 1 - July 30, 2026</p>
+        </div>
+        
+        <div id="votingStatus" class="text-center mb-4"></div>
+        <div id="votingCountdown" class="text-center mb-5"></div>
+        
+        <!-- Category Filters -->
+        <div class="voting-filters">
+            <button class="category-filter-btn active" data-category="all" onclick="VotingSystem.filterByCategory('all')">All Categories</button>
+            <button class="category-filter-btn" data-category="Agriculture" onclick="VotingSystem.filterByCategory('Agriculture')">Agriculture</button>
+            <button class="category-filter-btn" data-category="Technology" onclick="VotingSystem.filterByCategory('Technology')">Technology</button>
+            <button class="category-filter-btn" data-category="Manufacturing" onclick="VotingSystem.filterByCategory('Manufacturing')">Manufacturing</button>
+            <button class="category-filter-btn" data-category="Energy" onclick="VotingSystem.filterByCategory('Energy')">Energy</button>
+            <button class="category-filter-btn" data-category="Education" onclick="VotingSystem.filterByCategory('Education')">Education</button>
+            <button class="category-filter-btn" data-category="Healthcare" onclick="VotingSystem.filterByCategory('Healthcare')">Healthcare</button>
+            <button class="category-filter-btn" data-category="Tourism" onclick="VotingSystem.filterByCategory('Tourism')">Tourism</button>
+        </div>
+        
+        <!-- Businesses Grid -->
+        <div id="votingBusinessesContainer" class="voting-grid"></div>
+        
+        <!-- Pagination -->
+        <div id="votingPagination" class="voting-pagination"></div>
+        
+        <!-- Leaderboard -->
+        <div class="leaderboard-section">
+            <h3><i class="fas fa-chart-line"></i> Current Leaderboard</h3>
+            <div id="votingLeaderboard"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Vote Modal -->
+<div id="voteModal" class="vote-modal">
+    <div class="vote-modal-content">
+        <div class="vote-modal-header">
+            <h3><i class="fas fa-vote-yea"></i> Cast Your Vote</h3>
+            <button class="vote-modal-close" onclick="VotingSystem.closeVoteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="vote-modal-body">
+            <div class="vote-business-info" id="voteBusinessInfo"></div>
+            
+            <div id="emailSection">
+                <div class="form-group">
+                    <label>Your Email Address</label>
+                    <input type="email" id="voterEmail" placeholder="Enter your email to verify your vote" required>
+                    <small>We'll send a verification code to this email</small>
+                </div>
+                <button class="btn-primary btn-block" id="sendCodeBtn" onclick="VotingSystem.sendVerificationCode()">
+                    Send Verification Code
+                </button>
+            </div>
+            
+            <div id="verificationSection" style="display: none;">
+                <div class="form-group">
+                    <label>Verification Code</label>
+                    <input type="text" id="verificationCode" placeholder="Enter the 8-digit code from your email">
+                    <small>Code expires in 5 minutes</small>
+                </div>
+                <button class="btn-primary btn-block" id="verifyCodeBtn" onclick="VotingSystem.verifyCode()">
+                    Verify & Continue
+                </button>
+                <div class="text-center mt-3">
+                    <span id="verificationTimer"></span>
+                    <button class="btn-link" id="resendCodeBtn" style="display: none;" onclick="VotingSystem.resendCode()">
+                        Resend Code
+                    </button>
+                </div>
+            </div>
+            
+            <div id="voteSection" style="display: none;">
+                <div class="form-group">
+                    <label>Rate this Business (1-10)</label>
+                    <div class="vote-slider">
+                        <input type="range" id="voteValue" min="1" max="10" value="5" oninput="VotingSystem.updateVoteValue(this.value)">
+                    </div>
+                    <div class="vote-value-display text-center">
+                        <span id="voteValueDisplay">5</span>/10
+                    </div>
+                </div>
+                
+                <div class="vote-actions">
+                    <button class="btn-secondary" onclick="VotingSystem.closeVoteModal()">Cancel</button>
+                    <button class="btn-primary" id="submitVoteBtn" onclick="VotingSystem.submitVote()">Submit Vote</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Business Details Modal -->
+<div id="businessDetailsModal" class="vote-modal">
+    <div class="vote-modal-content" style="max-width: 700px;">
+        <div class="vote-modal-header">
+            <h3><i class="fas fa-building"></i> Business Details</h3>
+            <button class="vote-modal-close" onclick="VotingSystem.closeDetailsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="vote-modal-body">
+            <div id="businessDetailsContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="votingToastContainer" class="voting-toast-container"></div>
+    
 <!-- Business Directory Section -->
 <section class="py-16 bg-white px-4">
     <div class="container mx-auto">
