@@ -113,43 +113,94 @@ const VotingSystem = {
         updateCountdown();
         this.countdownInterval = setInterval(updateCountdown, 1000);
     },
+
+    // Load businesses for voting (from manual list)
+loadBusinesses: async function(page = 1) {
+    const container = document.getElementById('votingBusinessesContainer');
+    if (!container) return;
     
-    // Load businesses for voting
-    loadBusinesses: async function(page = 1) {
-        const container = document.getElementById('votingBusinessesContainer');
-        if (!container) return;
+    this.state.currentPage = page;
+    
+    container.innerHTML = `
+        <div class="text-center py-5">
+            <i class="fas fa-spinner fa-spin fa-2x text-lba-red"></i>
+            <p class="mt-3">Loading voting businesses...</p>
+        </div>
+    `;
+    
+    try {
+        // Use Google Sheets directly for manual business list
+        const url = `${this.config.sheetsUrl}?action=getVotingBusinesses&page=${page}&limit=12&category=${this.state.currentCategory}`;
+        const response = await fetch(url);
+        const data = await response.json();
         
-        this.state.currentPage = page;
-        
-        container.innerHTML = `
-            <div class="text-center py-5">
-                <i class="fas fa-spinner fa-spin fa-2x text-lba-red"></i>
-                <p class="mt-3">Loading businesses...</p>
-            </div>
-        `;
-        
-        try {
-            const url = `${this.config.apiUrl}/voting/businesses?page=${page}&limit=12&category=${this.state.currentCategory}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.success) {
-                this.displayBusinesses(data.businesses);
-                this.displayPagination(data.pagination);
-            }
-        } catch (error) {
-            console.error('Load businesses error:', error);
-            container.innerHTML = `
-                <div class="text-center py-5">
-                    <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
-                    <p class="mt-3">Failed to load businesses. Please try again.</p>
-                    <button class="btn btn-primary mt-3" onclick="VotingSystem.loadBusinesses()">
-                        <i class="fas fa-sync-alt"></i> Retry
-                    </button>
-                </div>
-            `;
+        if (data.success) {
+            this.displayBusinesses(data.businesses);
+            this.displayPagination(data.pagination);
+        } else {
+            // If no data from sheets, show empty state
+            this.displayBusinesses([]);
         }
-    },
+    } catch (error) {
+        console.error('Load businesses error:', error);
+        // Try local fallback
+        this.loadLocalVotingBusinesses(page);
+    }
+},
+
+// Local fallback - businesses you manually add here
+loadLocalVotingBusinesses: function(page = 1) {
+    // ============================================
+    // ✅ ADD YOUR VOTING BUSINESSES HERE MANUALLY
+    // ============================================
+    const votingBusinesses = [
+        {
+            _id: "voting_biz_001",
+            business_name: "Stefix Services",
+            category: "General",
+            location: "Liberia",
+            logo: null,
+            vote_stats: { average_score: 0, total_votes: 0 }
+        },
+        {
+            _id: "voting_biz_002",
+            business_name: "LBA OBSERVER",
+            category: "General",
+            location: "Liberia",
+            logo: null,
+            vote_stats: { average_score: 0, total_votes: 0 }
+        }
+        // ============================================
+        // TO ADD MORE BUSINESSES, COPY THIS FORMAT:
+        // ============================================
+        // {
+        //     _id: "voting_biz_003",
+        //     business_name: "Your Business Name",
+        //     category: "Technology",
+        //     location: "Monrovia, Liberia",
+        //     logo: "/images/logos/your-logo.png",
+        //     vote_stats: { average_score: 0, total_votes: 0 }
+        // },
+    ];
+    
+    // Filter by category
+    let filtered = votingBusinesses;
+    if (this.state.currentCategory !== 'all') {
+        filtered = votingBusinesses.filter(b => b.category === this.state.currentCategory);
+    }
+    
+    // Paginate
+    const limit = 12;
+    const start = (page - 1) * limit;
+    const paginated = filtered.slice(start, start + limit);
+    
+    this.displayBusinesses(paginated);
+    this.displayPagination({
+        page: page,
+        pages: Math.ceil(filtered.length / limit),
+        total: filtered.length
+    });
+},
     
     // Display businesses
     displayBusinesses: function(businesses) {
