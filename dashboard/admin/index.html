@@ -1223,6 +1223,11 @@
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                     </a>
+                   <a href="#" class="menu-item" onclick="showVotingManagementModal()">
+        <i class="fas fa-vote-yea"></i>
+        <span>Voting Management</span>
+        <span class="badge" id="votingCount">0</span>
+    </a>
                     
                     <a href="#" class="menu-item" onclick="showNominationsModal()">
                         <i class="fas fa-building"></i>
@@ -2851,7 +2856,416 @@ function updateSheetStatsDisplay(data) {
             console.log('3. Check Google Sheets permissions');
             console.log('4. Test API endpoint: ' + GOOGLE_APPS_SCRIPT_URL + '?action=ping');
         }
+         // ============================================
+// VOTING MANAGEMENT FUNCTIONS
+// ============================================
 
+function showVotingManagementModal() {
+    hideAllModals();
+    
+    // Check if modal exists, create if not
+    let modal = document.getElementById('votingManagementModal');
+    if (!modal) {
+        createVotingManagementModal();
+        modal = document.getElementById('votingManagementModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    loadVotingStats();
+    loadVotingLeaderboard();
+    loadAllVotes();
+}
+
+function createVotingManagementModal() {
+    const modalHTML = `
+    <div class="modal" id="votingManagementModal">
+        <div class="modal-content" style="max-width: 1400px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-vote-yea"></i> Voting Management</h2>
+                <button class="modal-close" onclick="hideModal('votingManagementModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="totalVotes">0</h3>
+                        <p>Total Votes</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="uniqueVoters">0</h3>
+                        <p>Unique Voters</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="votesToday">0</h3>
+                        <p>Votes Today</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="businessesWithVotes">0</h3>
+                        <p>Businesses with Votes</p>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="tabs">
+                    <div class="tab active" onclick="switchVotingTab('leaderboard')">Leaderboard</div>
+                    <div class="tab" onclick="switchVotingTab('votes')">All Votes</div>
+                    <div class="tab" onclick="switchVotingTab('categories')">Categories</div>
+                    <div class="tab" onclick="switchVotingTab('settings')">Settings</div>
+                </div>
+                
+                <!-- Leaderboard Tab -->
+                <div id="votingLeaderboardTab">
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Business Name</th>
+                                    <th>Category</th>
+                                    <th>Avg Score</th>
+                                    <th>Total Votes</th>
+                                    <th>Public</th>
+                                    <th>Jury</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="votingLeaderboardBody">
+                                <tr><td colspan="8" style="text-align: center;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- All Votes Tab -->
+                <div id="votingAllVotesTab" style="display: none;">
+                    <div class="filter-controls">
+                        <div class="filter-grid">
+                            <div class="filter-group">
+                                <label>Search Business</label>
+                                <input type="text" id="voteSearch" placeholder="Search..." onkeyup="filterVotes()">
+                            </div>
+                            <div class="filter-group">
+                                <label>Filter by Type</label>
+                                <select id="voteTypeFilter" onchange="filterVotes()">
+                                    <option value="all">All</option>
+                                    <option value="public">Public Votes</option>
+                                    <option value="jury">Jury Votes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="data-table-container" style="max-height: 500px; overflow-y: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Business</th>
+                                    <th>Voter Email</th>
+                                    <th>Score</th>
+                                    <th>Type</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allVotesBody">
+                                <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="votesPagination"></div>
+                </div>
+                
+                <!-- Categories Tab -->
+                <div id="votingCategoriesTab" style="display: none;">
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Voting Open</th>
+                                    <th>Voting Close</th>
+                                    <th>Public Weight</th>
+                                    <th>Jury Weight</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="voteCategoriesBody">
+                                <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div id="votingSettingsTab" style="display: none;">
+                    <div class="sheets-container">
+                        <div class="quick-actions-panel">
+                            <h4>Voting System Controls</h4>
+                            <div class="actions-grid">
+                                <button class="action-btn" onclick="recalculateVoteTotals()">
+                                    <i class="fas fa-calculator"></i>
+                                    <div>
+                                        <strong>Recalculate Totals</strong>
+                                        <small>Update all vote calculations</small>
+                                    </div>
+                                </button>
+                                <button class="action-btn" onclick="exportVoteData()">
+                                    <i class="fas fa-download"></i>
+                                    <div>
+                                        <strong>Export Vote Data</strong>
+                                        <small>Download CSV report</small>
+                                    </div>
+                                </button>
+                                <button class="action-btn" onclick="resetVoteCache()">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <div>
+                                        <strong>Reset Cache</strong>
+                                        <small>Clear temporary data</small>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function switchVotingTab(tab) {
+    document.querySelectorAll('#votingManagementModal .tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('votingLeaderboardTab').style.display = 'none';
+    document.getElementById('votingAllVotesTab').style.display = 'none';
+    document.getElementById('votingCategoriesTab').style.display = 'none';
+    document.getElementById('votingSettingsTab').style.display = 'none';
+    
+    if (tab === 'leaderboard') {
+        document.getElementById('votingLeaderboardTab').style.display = 'block';
+        document.querySelector('#votingManagementModal .tab:first-child').classList.add('active');
+    } else if (tab === 'votes') {
+        document.getElementById('votingAllVotesTab').style.display = 'block';
+        document.querySelector('#votingManagementModal .tab:nth-child(2)').classList.add('active');
+    } else if (tab === 'categories') {
+        document.getElementById('votingCategoriesTab').style.display = 'block';
+        document.querySelector('#votingManagementModal .tab:nth-child(3)').classList.add('active');
+    } else if (tab === 'settings') {
+        document.getElementById('votingSettingsTab').style.display = 'block';
+        document.querySelector('#votingManagementModal .tab:last-child').classList.add('active');
+    }
+}
+
+async function loadVotingStats() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/voting/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('totalVotes').textContent = data.stats.totalVotes || 0;
+            document.getElementById('uniqueVoters').textContent = data.stats.uniqueVoters || 0;
+            document.getElementById('votesToday').textContent = data.stats.votesToday || 0;
+            document.getElementById('businessesWithVotes').textContent = data.stats.totalBusinessesVoted || 0;
+            document.getElementById('votingCount').textContent = data.stats.totalVotes || 0;
+        }
+    } catch (error) {
+        console.error('Load voting stats error:', error);
+    }
+}
+
+async function loadVotingLeaderboard() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/voting/leaderboard?limit=50`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        const tbody = document.getElementById('votingLeaderboardBody');
+        if (!tbody) return;
+        
+        if (data.success && data.leaderboard.length > 0) {
+            tbody.innerHTML = data.leaderboard.map(item => `
+                <tr>
+                    <td><strong>#${item.rank}</strong></td>
+                    <td>${escapeHtml(item.business_name)}</td>
+                    <td>${escapeHtml(item.category)}</td>
+                    <td><strong style="color: #FF0000;">${item.average_score.toFixed(1)}</strong>/10</td>
+                    <td>${item.total_votes}</td>
+                    <td>${item.public_votes || 0}</td>
+                    <td>${item.jury_votes || 0}</td>
+                    <td>
+                        <button class="sheet-btn secondary" onclick="viewVoteDetails('${item.business_id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No votes yet</td></tr>';
+        }
+    } catch (error) {
+        console.error('Load leaderboard error:', error);
+    }
+}
+
+async function loadAllVotes() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/votes?limit=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        const tbody = document.getElementById('allVotesBody');
+        if (!tbody) return;
+        
+        if (data.success && data.votes.length > 0) {
+            tbody.innerHTML = data.votes.map(vote => `
+                <tr>
+                    <td>${new Date(vote.created_at).toLocaleString()}</td>
+                    <td><strong>${escapeHtml(vote.business_name)}</strong></td>
+                    <td style="font-family: monospace;">${escapeHtml(vote.voter_email)}</td>
+                    <td><span style="font-weight: 800; color: #FF0000;">${vote.vote_value}</span>/10</td>
+                    <td><span class="status-badge status-${vote.is_jury ? 'active' : 'info'}">${vote.is_jury ? 'Jury' : 'Public'}</span></td>
+                    <td><small>${vote.voter_ip || '-'}</small></td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No votes yet</td></tr>';
+        }
+    } catch (error) {
+        console.error('Load votes error:', error);
+    }
+}
+
+function filterVotes() {
+    // Implement filtering
+    const search = document.getElementById('voteSearch')?.value.toLowerCase() || '';
+    const type = document.getElementById('voteTypeFilter')?.value || 'all';
+    
+    const rows = document.querySelectorAll('#allVotesBody tr');
+    rows.forEach(row => {
+        let show = true;
+        if (search && !row.textContent.toLowerCase().includes(search)) show = false;
+        if (type !== 'all') {
+            const voteType = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
+            if (type === 'public' && voteType !== 'public') show = false;
+            if (type === 'jury' && voteType !== 'jury') show = false;
+        }
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+async function recalculateVoteTotals() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/votes/recalculate`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Vote totals recalculated!', 'success');
+            loadVotingLeaderboard();
+            loadVotingStats();
+        }
+    } catch (error) {
+        showNotification('Failed to recalculate', 'error');
+    }
+}
+
+function exportVoteData() {
+    // Collect all vote data from table
+    const rows = document.querySelectorAll('#allVotesBody tr');
+    let csv = 'Date,Business,Voter Email,Score,Type,IP\n';
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 6) {
+            const date = cells[0]?.textContent || '';
+            const business = cells[1]?.textContent || '';
+            const email = cells[2]?.textContent || '';
+            const score = cells[3]?.textContent || '';
+            const type = cells[4]?.textContent || '';
+            const ip = cells[5]?.textContent || '';
+            
+            csv += `"${date}","${business}","${email}","${score}","${type}","${ip}"\n`;
+        }
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `votes_export_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showNotification('Vote data exported!', 'success');
+}
+
+function resetVoteCache() {
+    showNotification('Cache reset - reloading data...', 'info');
+    loadVotingStats();
+    loadVotingLeaderboard();
+    loadAllVotes();
+}
+
+function viewVoteDetails(businessId) {
+    showNotification(`Viewing details for business ID: ${businessId}`, 'info');
+}
+
+// Add to window
+window.showVotingManagementModal = showVotingManagementModal;
+window.switchVotingTab = switchVotingTab;
+window.filterVotes = filterVotes;
+window.recalculateVoteTotals = recalculateVoteTotals;
+window.exportVoteData = exportVoteData;
+window.resetVoteCache = resetVoteCache;
+window.viewVoteDetails = viewVoteDetails;
+
+ // ============================================
+// FIXES FOR CONSISTENCY
+// ============================================
+
+// Alias closeModal to hideModal
+window.closeModal = function(modalId) {
+    hideModal(modalId);
+};
+
+// Alias showAnnouncementModal
+window.showAnnouncementModal = function() {
+    showAnnouncementsModal();
+};
+
+// Fix generateReport to generateSheetReport
+window.generateReport = function(type, format) {
+    generateSheetReport(type, format);
+};
+
+// Ensure votingCount badge updates
+setInterval(function() {
+    const votingCountEl = document.getElementById('votingCount');
+    if (votingCountEl) {
+        const totalVotesEl = document.getElementById('totalVotes');
+        if (totalVotesEl) {
+            votingCountEl.textContent = totalVotesEl.textContent || '0';
+        }
+    }
+}, 30000);
+
+console.log('✅ Voting system fully integrated and ready!');
+     
         // ============================================
         // EXPORT TO GLOBAL SCOPE
         // ============================================
@@ -3324,6 +3738,7 @@ function updateSheetStatsDisplay(data) {
         // ============================================
 // ENHANCED BUSINESS MANAGEMENT FUNCTIONS
 // ============================================
+ 
 
 // Show business approval modal
 function showBusinessApprovalModal() {
@@ -6501,7 +6916,7 @@ window.submitNomination = submitNomination;
         </div>
         <div class="modal-body">
             <div class="stats-grid" style="margin-bottom: 30px;">
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('businesses', 'csv')">
+                 <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('businesses', 'csv')">
                     <h3>Businesses Report</h3>
                     <p>Export all businesses to CSV</p>
                 </div>
