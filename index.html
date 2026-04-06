@@ -10253,6 +10253,36 @@ window.addEventListener('load', function() {
         console.log('📊 ================================');
     }, 100);
 });
+
+// ============================================
+// VOTING SYSTEM ALIAS FIXES
+// ============================================
+
+// Alias for closeModal function used in directory modal
+window.closeModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active', 'opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        document.body.style.overflow = 'auto';
+    }
+};
+
+// Ensure VotingSystem is accessible globally
+if (typeof VotingSystem !== 'undefined') {
+    window.VotingSystem = VotingSystem;
+    console.log('✅ VotingSystem global reference set');
+}
+
+// Fix for duplicate function warnings (prevents errors)
+if (typeof initImageSlider === 'function' && typeof window._initImageSlider === 'undefined') {
+    window._initImageSlider = initImageSlider;
+}
+if (typeof initPartnersSlider === 'function' && typeof window._initPartnersSlider === 'undefined') {
+    window._initPartnersSlider = initPartnersSlider;
+}
+
+console.log('✅ Voting system frontend fixes applied');
 </script>
 
 </body>
