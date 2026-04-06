@@ -771,6 +771,119 @@ loadLocalVotingBusinesses: function(page = 1) {
     }
 };
 
+// ============================================
+// SOCIAL SHARE FUNCTIONS
+// ============================================
+
+// Share on Facebook
+function shareVotingOnFacebook() {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent('Vote for Liberia Business Awards 2026');
+    const quote = encodeURIComponent('Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help choose the winners.');
+    
+    window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`,
+        'facebook-share-dialog',
+        'width=626,height=436'
+    );
+}
+
+// Share on Twitter
+function shareVotingOnTwitter() {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent('🗳️ Vote for the best businesses in Liberia! 🇱🇷\n\nSupport local entrepreneurs and help choose the winners of the Liberia Business Awards 2026.\n\n');
+    const hashtags = 'LiberiaBusinessAwards,Vote,Liberia';
+    
+    window.open(
+        `https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtags}`,
+        'twitter-share-dialog',
+        'width=600,height=450'
+    );
+}
+
+// Share on LinkedIn
+function shareVotingOnLinkedIn() {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent('Liberia Business Awards 2026 - Voting Open');
+    const summary = encodeURIComponent('Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help shape the future of Liberian business.');
+    
+    window.open(
+        `https://www.linkedin.com/sharing/share-offsite/?url=${url}&title=${title}&summary=${summary}`,
+        'linkedin-share-dialog',
+        'width=600,height=450'
+    );
+}
+
+// Share on WhatsApp
+function shareVotingOnWhatsApp() {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent('🗳️ Vote for Liberia Business Awards 2026!\n\nSupport local businesses and help choose the winners. Cast your vote here:');
+    
+    window.open(
+        `https://api.whatsapp.com/send?text=${text}%20${url}`,
+        'whatsapp-share-dialog',
+        'width=600,height=450'
+    );
+}
+
+// Share by Email
+function shareVotingByEmail() {
+    const subject = encodeURIComponent('Vote for Liberia Business Awards 2026');
+    const body = encodeURIComponent(
+        'Hi,\n\nI wanted to share the Liberia Business Awards voting page with you.\n\n' +
+        'Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help choose the winners.\n\n' +
+        'Vote here: ' + window.location.href + '\n\n' +
+        'Voting period: June 1 - July 30, 2026\n\n' +
+        'Best regards,\n' +
+        document.title
+    );
+    
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+// Copy voting link to clipboard
+async function copyVotingLink() {
+    try {
+        await navigator.clipboard.writeText(window.location.href);
+        showCopySuccessMessage();
+    } catch (err) {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = window.location.href;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showCopySuccessMessage();
+    }
+}
+
+function showCopySuccessMessage() {
+    // Remove existing toast if any
+    const existingToast = document.querySelector('.copy-success-toast');
+    if (existingToast) existingToast.remove();
+    
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = 'copy-success-toast';
+    toast.innerHTML = '<i class="fas fa-check-circle"></i> Link copied to clipboard!';
+    document.body.appendChild(toast);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Add these to window object so they're accessible from HTML
+window.shareVotingOnFacebook = shareVotingOnFacebook;
+window.shareVotingOnTwitter = shareVotingOnTwitter;
+window.shareVotingOnLinkedIn = shareVotingOnLinkedIn;
+window.shareVotingOnWhatsApp = shareVotingOnWhatsApp;
+window.shareVotingByEmail = shareVotingByEmail;
+window.copyVotingLink = copyVotingLink;
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     VotingSystem.init();
