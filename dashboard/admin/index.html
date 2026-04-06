@@ -1228,6 +1228,11 @@
         <span>Voting Management</span>
         <span class="badge" id="votingCount">0</span>
     </a>
+                 <a href="#" class="menu-item" onclick="showVotingBusinessesModal()">
+    <i class="fas fa-list"></i>
+    <span>Voting Businesses</span>
+    <span class="badge" id="votingBusinessesCount">0</span>
+</a>
                     
                     <a href="#" class="menu-item" onclick="showNominationsModal()">
                         <i class="fas fa-building"></i>
@@ -3233,6 +3238,236 @@ window.recalculateVoteTotals = recalculateVoteTotals;
 window.exportVoteData = exportVoteData;
 window.resetVoteCache = resetVoteCache;
 window.viewVoteDetails = viewVoteDetails;
+
+     // ============================================
+// MANAGE VOTING BUSINESSES (ADD/REMOVE)
+// ============================================
+
+function showVotingBusinessesModal() {
+    hideAllModals();
+    
+    let modal = document.getElementById('votingBusinessesModal');
+    if (!modal) {
+        createVotingBusinessesModal();
+        modal = document.getElementById('votingBusinessesModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadVotingBusinessesList();
+}
+
+function createVotingBusinessesModal() {
+    const modalHTML = `
+    <div class="modal" id="votingBusinessesModal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-vote-yea"></i> Manage Voting Businesses</h2>
+                <button class="modal-close" onclick="hideModal('votingBusinessesModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; text-align: right;">
+                    <button class="sheet-btn" onclick="showAddVotingBusinessModal()">
+                        <i class="fas fa-plus"></i> Add Business to Voting
+                    </button>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Category</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Order</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="votingBusinessesTableBody">
+                            <tr><td colspan="6" style="text-align: center;">Loading...<\/td><\/tr>
+                        </tbody>
+                    <\/table>
+                <\/div>
+            <\/div>
+        <\/div>
+    <\/div>
+    
+    <div class="modal" id="addVotingBusinessModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2>Add Business to Voting</h2>
+                <button class="modal-close" onclick="hideModal('addVotingBusinessModal')">
+                    <i class="fas fa-times"><\/i>
+                <\/button>
+            <\/div>
+            <div class="modal-body">
+                <form id="addVotingBusinessForm">
+                    <div class="form-group">
+                        <label>Business Name *<\/label>
+                        <input type="text" id="vbBusinessName" class="sheet-btn secondary" style="width: 100%;" required>
+                    <\/div>
+                    <div class="form-group">
+                        <label>Category *<\/label>
+                        <select id="vbCategory" class="sheet-btn secondary" style="width: 100%;">
+                            <option value="General">General<\/option>
+                            <option value="Agriculture">Agriculture<\/option>
+                            <option value="Technology">Technology<\/option>
+                            <option value="Manufacturing">Manufacturing<\/option>
+                            <option value="Energy">Energy<\/option>
+                            <option value="Education">Education<\/option>
+                            <option value="Healthcare">Healthcare<\/option>
+                            <option value="Tourism">Tourism<\/option>
+                            <option value="Finance">Finance<\/option>
+                            <option value="Transportation">Transportation<\/option>
+                        <\/select>
+                    <\/div>
+                    <div class="form-group">
+                        <label>Location<\/label>
+                        <input type="text" id="vbLocation" class="sheet-btn secondary" style="width: 100%;" placeholder="Monrovia, Liberia">
+                    <\/div>
+                    <div class="form-group">
+                        <label>Logo URL (optional)<\/label>
+                        <input type="url" id="vbLogo" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                    <\/div>
+                    <div class="form-group">
+                        <label>Display Order (lower = higher)<\/label>
+                        <input type="number" id="vbOrder" class="sheet-btn secondary" style="width: 100%;" value="999">
+                    <\/div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addVotingBusinessModal')" style="flex: 1;">Cancel<\/button>
+                        <button type="button" class="sheet-btn" onclick="saveVotingBusiness()" style="flex: 2;">Add to Voting<\/button>
+                    <\/div>
+                <\/form>
+            <\/div>
+        <\/div>
+    <\/div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+async function loadVotingBusinessesList() {
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getVotingBusinesses&limit=100`);
+        const data = await response.json();
+        
+        const tbody = document.getElementById('votingBusinessesTableBody');
+        if (!tbody) return;
+        
+        if (data.success && data.businesses && data.businesses.length > 0) {
+            tbody.innerHTML = data.businesses.map((biz, index) => `
+                <tr>
+                    <td><strong>${escapeHtml(biz.business_name)}<\/strong></td>
+                    <td>${escapeHtml(biz.category)}<\/td>
+                    <td>${escapeHtml(biz.location)}<\/td>
+                    <td><span class="status-badge status-active">Active<\/span><\/td>
+                    <td>${index + 1}<\/td>
+                    <td>
+                        <button class="sheet-btn danger" onclick="removeVotingBusiness('${biz._id}')">
+                            <i class="fas fa-trash"><\/i> Remove
+                        <\/button>
+                    <\/td>
+                 <\/tr>
+            `).join('');
+            document.getElementById('votingBusinessesCount').textContent = data.businesses.length;
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No businesses in voting list<\/td><\/tr>';
+            document.getElementById('votingBusinessesCount').textContent = '0';
+        }
+    } catch (error) {
+        console.error('Load voting businesses error:', error);
+        const tbody = document.getElementById('votingBusinessesTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading businesses<\/td><\/tr>';
+        }
+    }
+}
+
+function showAddVotingBusinessModal() {
+    document.getElementById('addVotingBusinessForm').reset();
+    document.getElementById('addVotingBusinessModal').classList.add('active');
+}
+
+async function saveVotingBusiness() {
+    const businessData = {
+        formType: 'voting_business',
+        businessId: 'vb_' + Date.now(),
+        businessName: document.getElementById('vbBusinessName').value,
+        category: document.getElementById('vbCategory').value,
+        location: document.getElementById('vbLocation').value || 'Liberia',
+        logo: document.getElementById('vbLogo').value || '',
+        displayOrder: document.getElementById('vbOrder').value
+    };
+    
+    if (!businessData.businessName) {
+        showNotification('Business name is required', 'error');
+        return;
+    }
+    
+    const submitBtn = document.querySelector('#addVotingBusinessModal .sheet-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(businessData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Business added to voting!', 'success');
+            hideModal('addVotingBusinessModal');
+            loadVotingBusinessesList();
+            document.getElementById('addVotingBusinessForm').reset();
+        } else {
+            showNotification(result.error || 'Failed to add', 'error');
+        }
+    } catch (error) {
+        showNotification('Error adding business', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+async function removeVotingBusiness(businessId) {
+    if (!confirm('Remove this business from voting? It will no longer appear on the voting page.')) return;
+    
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                formType: 'remove_voting_business',
+                businessId: businessId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Business removed from voting', 'success');
+            loadVotingBusinessesList();
+        } else {
+            showNotification('Failed to remove', 'error');
+        }
+    } catch (error) {
+        showNotification('Error removing business', 'error');
+    }
+}
+
+// Add to window
+window.showVotingBusinessesModal = showVotingBusinessesModal;
+window.saveVotingBusiness = saveVotingBusiness;
+window.removeVotingBusiness = removeVotingBusiness;
+window.loadVotingBusinessesList = loadVotingBusinessesList;
 
  // ============================================
 // FIXES FOR CONSISTENCY
