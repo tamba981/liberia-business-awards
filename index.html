@@ -10490,6 +10490,667 @@ if (typeof initPartnersSlider === 'function' && typeof window._initPartnersSlide
 console.log('✅ Voting system frontend fixes applied');
 </script>
 
+ <!-- ============================================ -->
+<!-- WHATSAPP FLOAT BUTTON -->
+<!-- ============================================ -->
+<a href="https://wa.me/231886590302" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+    <span class="whatsapp-tooltip">Chat with us!</span>
+</a>
+
+<!-- ============================================ -->
+<!-- AI LIVE CHAT SUPPORT WIDGET -->
+<!-- ============================================ -->
+<div id="chatWidget" class="chat-widget">
+    <div class="chat-button" id="chatButton">
+        <i class="fas fa-comment-dots"></i>
+        <span class="chat-badge">1</span>
+    </div>
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar">
+                    <i class="fas fa-award"></i>
+                </div>
+                <div>
+                    <h3>Liberia Business Awards</h3>
+                    <p>Online • Usually replies instantly</p>
+                </div>
+            </div>
+            <button class="chat-close" id="chatClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">
+                    👋 Welcome to Liberia Business Awards Support!<br><br>
+                    I can help you with:<br>
+                    📌 Awards & Nominations<br>
+                    📌 Business Registration<br>
+                    📌 Voting Information<br>
+                    📌 Partnership Opportunities<br>
+                    📌 Investment in Liberia<br>
+                    📌 Upcoming Events<br><br>
+                    What would you like to know?
+                </div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+        <div class="chat-options" id="chatOptions">
+            <button class="option-btn" onclick="sendQuickReply('nomination')">🏆 Nominations</button>
+            <button class="option-btn" onclick="sendQuickReply('registration')">📝 Register Business</button>
+            <button class="option-btn" onclick="sendQuickReply('voting')">🗳️ Voting</button>
+            <button class="option-btn" onclick="sendQuickReply('partnership')">🤝 Partnership</button>
+            <button class="option-btn" onclick="sendQuickReply('investment')">💰 Investment</button>
+            <button class="option-btn" onclick="sendQuickReply('events')">📅 Events</button>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+            <button id="chatSendBtn" onclick="sendChatMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        <div class="chat-footer">
+            <p>Powered by Liberia Business Awards AI Support</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ============================================ */
+    /* WHATSAPP FLOAT BUTTON STYLES */
+    /* ============================================ */
+    .whatsapp-float {
+        position: fixed;
+        bottom: 30px;
+        left: 20px;
+        background: linear-gradient(135deg, #25D366, #128C7E);
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+        transition: all 0.3s ease;
+        z-index: 9998;
+        text-decoration: none;
+    }
+    
+    .whatsapp-float:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5);
+        color: white;
+    }
+    
+    .whatsapp-tooltip {
+        position: absolute;
+        left: 70px;
+        background: #1a202c;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .whatsapp-float:hover .whatsapp-tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* ============================================ */
+    /* CHAT WIDGET STYLES */
+    /* ============================================ */
+    .chat-widget {
+        position: fixed;
+        bottom: 30px;
+        right: 20px;
+        z-index: 9999;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .chat-button {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .chat-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(255, 0, 0, 0.5);
+    }
+    
+    .chat-button i {
+        font-size: 28px;
+        color: white;
+    }
+    
+    .chat-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #FF0000;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+    }
+    
+    .chat-container {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: 350px;
+        height: 500px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform: scale(0);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        transform-origin: bottom right;
+    }
+    
+    .chat-container.open {
+        transform: scale(1);
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .chat-header {
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+    }
+    
+    .chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .chat-avatar {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    
+    .chat-header-info h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .chat-header-info p {
+        font-size: 11px;
+        margin: 2px 0 0;
+        opacity: 0.8;
+    }
+    
+    .chat-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .chat-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+    
+    .chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .message {
+        display: flex;
+        flex-direction: column;
+        max-width: 85%;
+    }
+    
+    .message.bot {
+        align-self: flex-start;
+    }
+    
+    .message.user {
+        align-self: flex-end;
+    }
+    
+    .message-content {
+        padding: 10px 14px;
+        border-radius: 18px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    
+    .message.bot .message-content {
+        background: white;
+        color: #1a202c;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .message.user .message-content {
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .message-time {
+        font-size: 10px;
+        color: #94a3b8;
+        margin-top: 4px;
+        padding: 0 5px;
+    }
+    
+    .message.user .message-time {
+        text-align: right;
+    }
+    
+    .chat-options {
+        padding: 12px 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        border-top: 1px solid #e2e8f0;
+        background: white;
+    }
+    
+    .option-btn {
+        background: #f1f5f9;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #1a202c;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .option-btn:hover {
+        background: #FF0000;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .chat-input-container {
+        padding: 12px 15px;
+        display: flex;
+        gap: 10px;
+        border-top: 1px solid #e2e8f0;
+        background: white;
+    }
+    
+    .chat-input-container input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 25px;
+        font-size: 13px;
+        outline: none;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .chat-input-container input:focus {
+        border-color: #FF0000;
+        box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.1);
+    }
+    
+    .chat-input-container button {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .chat-input-container button:hover {
+        transform: scale(1.05);
+    }
+    
+    .chat-footer {
+        padding: 8px 15px;
+        background: #f8f9fa;
+        text-align: center;
+        font-size: 9px;
+        color: #94a3b8;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .whatsapp-float {
+            bottom: 20px;
+            left: 15px;
+            width: 50px;
+            height: 50px;
+            font-size: 26px;
+        }
+        
+        .chat-widget {
+            bottom: 20px;
+            right: 15px;
+        }
+        
+        .chat-button {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .chat-button i {
+            font-size: 24px;
+        }
+        
+        .chat-container {
+            width: 320px;
+            height: 480px;
+            bottom: 70px;
+        }
+        
+        .whatsapp-tooltip {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    // ============================================
+    // CHAT WIDGET FUNCTIONALITY
+    // ============================================
+    
+    // Liberia Business Awards Knowledge Base
+    const lbaKnowledge = {
+        // General Info
+        'about': 'The Liberia Business Awards (LBA) is the nation\'s premier recognition platform for businesses across all 18 major economic sectors. We celebrate excellence from Agriculture to Sports across Liberia.',
+        'mission': 'To recognize, celebrate, and elevate businesses and entrepreneurs that are contributing to Liberia\'s economic growth and social development.',
+        'vision': 'To become Liberia\'s leading national platform for business recognition, visibility, and private sector excellence.',
+        
+        // Nominations
+        'nomination': 'Nominations for LBA 3.0 open March 1 and close May 30 annually. You can nominate your business or another business across 72 award categories covering 18 economic sectors.',
+        'nomination process': 'To nominate a business, click the "Nominate" button on our website, fill out the nomination form with business details and the award category, then submit. Our team reviews all nominations.',
+        'nomination requirements': 'Businesses must be registered and operating in Liberia. Startups (0-3 years), SMEs, and Large Enterprises are all welcome. There is no fee for nomination.',
+        
+        // Registration
+        'registration': 'Businesses can register on our website by clicking the "Register" button. You\'ll need to provide business name, sector, contact information, and business description.',
+        'register': 'Click the "Register Your Business" button on our homepage or in the navigation menu. Fill out the registration form with your business details.',
+        'registration cost': 'Business registration is FREE! There is no cost to register your business or submit nominations.',
+        
+        // Voting
+        'voting': 'Public voting runs from June 1 to July 30 annually. You can vote for your favorite businesses using the voting section on our website. Each email can vote once per business.',
+        'vote': 'Go to the Voting section on our homepage, browse the businesses, click "Vote Now" on your chosen business, verify your email, and submit your rating from 1-10.',
+        'voting rules': 'Each person can vote once per business. You must verify your email before voting. Jury votes have additional weight in final scoring.',
+        
+        // Partnership
+        'partnership': 'We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor, Gold Sponsor, Category Sponsor, Media Partner, and Strategic Partner.',
+        'partner': 'To become a partner, click the "Partner" button on our website, fill out the partnership inquiry form, and our team will contact you with sponsorship packages.',
+        'sponsorship benefits': 'Partners get national visibility, direct access to businesses, strategic positioning, ecosystem integration, speaking opportunities, and award presentation rights.',
+        
+        // Investment
+        'investment liberia': 'Liberia offers investment opportunities in Agriculture, Mining, Oil & Gas, Manufacturing, Energy, Technology, Tourism, and more. The country has a strategic West African location with access to the ECOWAS market of 400M+ consumers.',
+        'invest': 'Contact our investment team at contact@liberiabusinessawardslr.com or call +231 886 590 302. We provide business matching, due diligence support, and government liaison services.',
+        'why invest liberia': 'Liberia has a young workforce (60% under 25), rich natural resources (iron ore, gold, diamonds, rubber), investment incentives (tax holidays, duty exemptions), and a growing economy.',
+        
+        // Events
+        'ceremony': 'The Awards Ceremony takes place on December 19 annually at 6:00 PM. Tickets go on sale November 1 - December 15.',
+        'events': 'We host live sessions throughout the year with industry leaders and past winners. Check our Live Sessions section for upcoming events.',
+        'timeline': 'Nominations: March 1 - May 30 | Voting: June 1 - July 30 | Finalists: August 1 - September 30 | Interviews: October 1 - 30 | Ceremony: December 19',
+        
+        // Contact
+        'contact': 'You can reach us at +231 886 590 302, +231 77 287 66 44, or email liberiabusinessawards@gmail.com, contact@liberiabusinessawardslr.com',
+        'support': 'Our support team is available Monday-Friday 9AM-5PM and Saturday 10AM-2PM.',
+        'email': 'Our email addresses: liberiabusinessawards@gmail.com, contact@liberiabusinessawardslr.com, info@liberiabusinessawardslr.com, nominations@liberiabusinessawardslr.com, partnerships@liberiabusinessawardslr.com',
+        
+        // Liberia Info
+        'liberia': 'Liberia is a country on the West African coast, founded in 1822 by freed American slaves. It has 15 counties, Monrovia as its capital, and a population of about 5 million people.',
+        'liberia economy': 'Liberia\'s economy is based on agriculture (rubber, palm oil, cocoa, coffee), mining (iron ore, gold, diamonds), forestry, and services. The country is rich in natural resources.',
+        'liberia business': 'Liberia offers business opportunities in agriculture, mining, energy, technology, manufacturing, construction, tourism, and financial services. The country is open for foreign investment.',
+        
+        // Help
+        'help': 'I can help you with nominations, business registration, voting, partnerships, investment opportunities, events, and general information about Liberia Business Awards.',
+        'what can you do': 'I can answer questions about LBA, help you navigate the website, explain award categories, provide nomination guidance, and share information about Liberia\'s business landscape.',
+        
+        // Default
+        'default': 'Thank you for your question. I can help you with: Nominations, Registration, Voting, Partnerships, Investment in Liberia, Events, or General Information about LBA. Could you please rephrase your question?'
+    };
+    
+    // Chat state
+    let chatOpen = false;
+    
+    // Open/close chat
+    document.getElementById('chatButton').addEventListener('click', function() {
+        const container = document.getElementById('chatContainer');
+        container.classList.toggle('open');
+        chatOpen = !chatOpen;
+        if (chatOpen) {
+            document.getElementById('chatInput').focus();
+        }
+    });
+    
+    document.getElementById('chatClose').addEventListener('click', function() {
+        document.getElementById('chatContainer').classList.remove('open');
+        chatOpen = false;
+    });
+    
+    // Send message function
+    function sendChatMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        
+        if (!message) return;
+        
+        // Add user message to chat
+        addMessage(message, 'user');
+        input.value = '';
+        
+        // Show typing indicator
+        showTypingIndicator();
+        
+        // Process and respond
+        setTimeout(() => {
+            removeTypingIndicator();
+            const response = getBotResponse(message);
+            addMessage(response, 'bot');
+        }, 500);
+    }
+    
+    // Quick reply function
+    function sendQuickReply(topic) {
+        const responses = {
+            'nomination': 'tell me about nominations',
+            'registration': 'how to register my business',
+            'voting': 'how to vote',
+            'partnership': 'partnership opportunities',
+            'investment': 'investment in liberia',
+            'events': 'upcoming events'
+        };
+        
+        const message = responses[topic];
+        if (message) {
+            addMessage(message, 'user');
+            showTypingIndicator();
+            setTimeout(() => {
+                removeTypingIndicator();
+                const response = getBotResponse(message);
+                addMessage(response, 'bot');
+            }, 500);
+        }
+    }
+    
+    // Add message to chat
+    function addMessage(text, sender) {
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        messageDiv.innerHTML = `
+            <div class="message-content">${formatMessage(text)}</div>
+            <div class="message-time">${time}</div>
+        `;
+        
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    // Format message with line breaks
+    function formatMessage(text) {
+        return text.replace(/\n/g, '<br>');
+    }
+    
+    // Show typing indicator
+    function showTypingIndicator() {
+        const messagesContainer = document.getElementById('chatMessages');
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.innerHTML = `
+            <div class="message-content">
+                <i class="fas fa-ellipsis-h"></i> typing...
+            </div>
+        `;
+        messagesContainer.appendChild(typingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    // Remove typing indicator
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+    
+    // Get bot response based on keywords
+    function getBotResponse(message) {
+        const lowerMsg = message.toLowerCase();
+        
+        // Check knowledge base for matching keywords
+        for (const [key, response] of Object.entries(lbaKnowledge)) {
+            if (lowerMsg.includes(key)) {
+                return response;
+            }
+        }
+        
+        // Check for specific keywords
+        if (lowerMsg.includes('nominate') || lowerMsg.includes('nomination')) {
+            return lbaKnowledge.nomination;
+        }
+        if (lowerMsg.includes('register') || lowerMsg.includes('registration')) {
+            return lbaKnowledge.registration;
+        }
+        if (lowerMsg.includes('vote') || lowerMsg.includes('voting')) {
+            return lbaKnowledge.voting;
+        }
+        if (lowerMsg.includes('partner') || lowerMsg.includes('sponsor')) {
+            return lbaKnowledge.partnership;
+        }
+        if (lowerMsg.includes('invest') || lowerMsg.includes('investment')) {
+            return lbaKnowledge['investment liberia'];
+        }
+        if (lowerMsg.includes('event') || lowerMsg.includes('ceremony')) {
+            return lbaKnowledge.events;
+        }
+        if (lowerMsg.includes('contact') || lowerMsg.includes('email') || lowerMsg.includes('phone')) {
+            return lbaKnowledge.contact;
+        }
+        if (lowerMsg.includes('about') || lowerMsg.includes('what is')) {
+            return lbaKnowledge.about;
+        }
+        
+        // Search the web for unknown questions (opens Google search)
+        if (lowerMsg.length > 10) {
+            const searchUrl = `https://www.google.com/search?q=liberia+business+awards+${encodeURIComponent(lowerMsg)}`;
+            return `I don't have that information in my knowledge base. 🔍\n\nYou can search online: <a href="${searchUrl}" target="_blank" style="color: #FF0000;">Click here to search Google</a>\n\nOr contact our team at +231 886 590 302 for assistance.`;
+        }
+        
+        return lbaKnowledge.default;
+    }
+    
+    // Handle enter key
+    function handleChatKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendChatMessage();
+        }
+    }
+    
+    // Add CSS for links in chat
+    const chatStyle = document.createElement('style');
+    chatStyle.textContent = `
+        .message-content a {
+            color: #FF0000;
+            text-decoration: underline;
+        }
+        .message.user .message-content a {
+            color: white;
+        }
+        .fa-ellipsis-h {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    `;
+    document.head.appendChild(chatStyle);
+</script>   
+
 </body>
 
 </html>
