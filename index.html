@@ -10491,7 +10491,7 @@ console.log('✅ Voting system frontend fixes applied');
 </script>
 
  <!-- ============================================ -->
-<!-- WHATSAPP FLOAT BUTTON - FIXED VISIBLE -->
+<!-- WHATSAPP FLOAT BUTTON -->
 <!-- ============================================ -->
 <a href="https://wa.me/231886590302" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
     <i class="fab fa-whatsapp"></i>
@@ -10499,7 +10499,7 @@ console.log('✅ Voting system frontend fixes applied');
 </a>
 
 <!-- ============================================ -->
-<!-- AI LIVE CHAT SUPPORT WIDGET - FIXED POSITION -->
+<!-- AI LIVE CHAT SUPPORT WIDGET - MVP READY -->
 <!-- ============================================ -->
 <div id="chatWidget" class="chat-widget">
     <div class="chat-button" id="chatButton">
@@ -10559,41 +10559,41 @@ console.log('✅ Voting system frontend fixes applied');
 
 <style>
     /* ============================================ */
-    /* WHATSAPP FLOAT BUTTON STYLES - VISIBLE ON ALL DEVICES */
+    /* WHATSAPP FLOAT BUTTON STYLES */
     /* ============================================ */
     .whatsapp-float {
         position: fixed;
-        bottom: 30px;
+        bottom: 100px;
         left: 20px;
         background: linear-gradient(135deg, #25D366, #128C7E);
         color: white;
-        width: 60px;
-        height: 60px;
+        width: 55px;
+        height: 55px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 32px;
-        box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+        font-size: 28px;
+        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
         transition: all 0.3s ease;
-        z-index: 9998;
+        z-index: 9997;
         text-decoration: none;
     }
     
     .whatsapp-float:hover {
         transform: scale(1.1);
-        box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5);
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
         color: white;
     }
     
     .whatsapp-tooltip {
         position: absolute;
-        left: 70px;
+        left: 65px;
         background: #1a202c;
         color: white;
         padding: 5px 12px;
         border-radius: 20px;
-        font-size: 12px;
+        font-size: 11px;
         white-space: nowrap;
         opacity: 0;
         visibility: hidden;
@@ -10607,37 +10607,37 @@ console.log('✅ Voting system frontend fixes applied');
     }
     
     /* ============================================ */
-    /* CHAT WIDGET STYLES - FIXED POSITIONING */
+    /* CHAT WIDGET STYLES - ABOVE BACK TO TOP BUTTON */
     /* ============================================ */
     .chat-widget {
         position: fixed;
-        bottom: 30px;
+        bottom: 100px;
         right: 20px;
-        z-index: 9999;
+        z-index: 9998;
         font-family: 'Poppins', sans-serif;
     }
     
     .chat-button {
-        width: 60px;
-        height: 60px;
+        width: 55px;
+        height: 55px;
         background: linear-gradient(135deg, #FF0000, #87CEEB);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
+        box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
         transition: all 0.3s ease;
         position: relative;
     }
     
     .chat-button:hover {
         transform: scale(1.1);
-        box-shadow: 0 6px 25px rgba(255, 0, 0, 0.5);
+        box-shadow: 0 6px 20px rgba(255, 0, 0, 0.5);
     }
     
     .chat-button i {
-        font-size: 28px;
+        font-size: 24px;
         color: white;
     }
     
@@ -10660,10 +10660,10 @@ console.log('✅ Voting system frontend fixes applied');
     
     .chat-container {
         position: absolute;
-        bottom: 80px;
+        bottom: 70px;
         right: 0;
         width: 350px;
-        height: 500px;
+        height: 480px;
         background: white;
         border-radius: 20px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -10732,7 +10732,7 @@ console.log('✅ Voting system frontend fixes applied');
         transition: all 0.3s;
         display: flex;
         align-items: center;
-        justify-center: center;
+        justify-content: center;
     }
     
     .chat-close:hover {
@@ -10876,31 +10876,31 @@ console.log('✅ Voting system frontend fixes applied');
     /* Mobile responsive */
     @media (max-width: 768px) {
         .whatsapp-float {
-            bottom: 20px;
+            bottom: 80px;
             left: 15px;
-            width: 50px;
-            height: 50px;
-            font-size: 26px;
+            width: 48px;
+            height: 48px;
+            font-size: 24px;
         }
         
         .chat-widget {
-            bottom: 20px;
+            bottom: 80px;
             right: 15px;
         }
         
         .chat-button {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
         }
         
         .chat-button i {
-            font-size: 24px;
+            font-size: 22px;
         }
         
         .chat-container {
-            width: 320px;
-            height: 480px;
-            bottom: 70px;
+            width: 310px;
+            height: 450px;
+            bottom: 60px;
         }
         
         .whatsapp-tooltip {
@@ -10911,7 +10911,7 @@ console.log('✅ Voting system frontend fixes applied');
 
 <script>
     // ============================================
-    // CHAT WIDGET FUNCTIONALITY
+    // CHAT WIDGET FUNCTIONALITY - MVP MODE
     // ============================================
     
     // Liberia Business Awards Knowledge Base
@@ -10988,29 +10988,26 @@ console.log('✅ Voting system frontend fixes applied');
     });
     
     // Send message function
-    function sendChatMessage() {
+    window.sendChatMessage = function() {
         const input = document.getElementById('chatInput');
         const message = input.value.trim();
         
         if (!message) return;
         
-        // Add user message to chat
         addMessage(message, 'user');
         input.value = '';
         
-        // Show typing indicator
         showTypingIndicator();
         
-        // Process and respond
         setTimeout(() => {
             removeTypingIndicator();
             const response = getBotResponse(message);
             addMessage(response, 'bot');
         }, 500);
-    }
+    };
     
     // Quick reply function
-    function sendQuickReply(topic) {
+    window.sendQuickReply = function(topic) {
         const responses = {
             'nomination': 'tell me about nominations',
             'registration': 'how to register my business',
@@ -11030,7 +11027,7 @@ console.log('✅ Voting system frontend fixes applied');
                 addMessage(response, 'bot');
             }, 500);
         }
-    }
+    };
     
     // Add message to chat
     function addMessage(text, sender) {
@@ -11114,21 +11111,21 @@ console.log('✅ Voting system frontend fixes applied');
             return lbaKnowledge.about;
         }
         
-        // Search the web for unknown questions (opens Google search)
+        // Search the web for unknown questions
         if (lowerMsg.length > 10) {
             const searchUrl = `https://www.google.com/search?q=liberia+business+awards+${encodeURIComponent(lowerMsg)}`;
-            return `I don't have that information in my knowledge base. 🔍\n\nYou can search online: <a href="${searchUrl}" target="_blank" style="color: #FF0000;">Click here to search Google</a>\n\nOr contact our team at +231 886 590 302 for assistance.`;
+            return `I don't have that information in my knowledge base. 🔍<br><br>📌 <a href="${searchUrl}" target="_blank" style="color: #FF0000;">Click here to search Google</a><br><br>Or contact our team at +231 886 590 302 for assistance.`;
         }
         
         return lbaKnowledge.default;
     }
     
     // Handle enter key
-    function handleChatKeyPress(event) {
+    window.handleChatKeyPress = function(event) {
         if (event.key === 'Enter') {
             sendChatMessage();
         }
-    }
+    };
     
     // Add CSS for links in chat
     const chatStyle = document.createElement('style');
@@ -11149,7 +11146,7 @@ console.log('✅ Voting system frontend fixes applied');
         }
     `;
     document.head.appendChild(chatStyle);
-</script>  
+</script>
 
 </body>
 
