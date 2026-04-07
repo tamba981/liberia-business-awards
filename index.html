@@ -10491,7 +10491,7 @@ console.log('✅ Voting system frontend fixes applied');
 </script>
 
  <!-- ============================================ -->
-<!-- WHATSAPP FLOAT BUTTON -->
+<!-- WHATSAPP FLOAT BUTTON - FIXED VISIBLE -->
 <!-- ============================================ -->
 <a href="https://wa.me/231886590302" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
     <i class="fab fa-whatsapp"></i>
@@ -10499,7 +10499,7 @@ console.log('✅ Voting system frontend fixes applied');
 </a>
 
 <!-- ============================================ -->
-<!-- AI LIVE CHAT SUPPORT WIDGET - ADJUSTED POSITION -->
+<!-- AI LIVE CHAT SUPPORT WIDGET - FIXED POSITION -->
 <!-- ============================================ -->
 <div id="chatWidget" class="chat-widget">
     <div class="chat-button" id="chatButton">
@@ -10559,13 +10559,61 @@ console.log('✅ Voting system frontend fixes applied');
 
 <style>
     /* ============================================ */
+    /* WHATSAPP FLOAT BUTTON STYLES - VISIBLE ON ALL DEVICES */
+    /* ============================================ */
+    .whatsapp-float {
+        position: fixed;
+        bottom: 30px;
+        left: 20px;
+        background: linear-gradient(135deg, #25D366, #128C7E);
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+        transition: all 0.3s ease;
+        z-index: 9998;
+        text-decoration: none;
+    }
+    
+    .whatsapp-float:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5);
+        color: white;
+    }
+    
+    .whatsapp-tooltip {
+        position: absolute;
+        left: 70px;
+        background: #1a202c;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .whatsapp-float:hover .whatsapp-tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* ============================================ */
     /* CHAT WIDGET STYLES - FIXED POSITIONING */
     /* ============================================ */
     .chat-widget {
         position: fixed;
-        bottom: 100px;
+        bottom: 30px;
         right: 20px;
-        z-index: 9998;
+        z-index: 9999;
         font-family: 'Poppins', sans-serif;
     }
     
@@ -10684,7 +10732,7 @@ console.log('✅ Voting system frontend fixes applied');
         transition: all 0.3s;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-center: center;
     }
     
     .chat-close:hover {
@@ -10836,7 +10884,7 @@ console.log('✅ Voting system frontend fixes applied');
         }
         
         .chat-widget {
-            bottom: 80px;
+            bottom: 20px;
             right: 15px;
         }
         
@@ -11101,7 +11149,7 @@ console.log('✅ Voting system frontend fixes applied');
         }
     `;
     document.head.appendChild(chatStyle);
-</script>   
+</script>  
 
 </body>
 
