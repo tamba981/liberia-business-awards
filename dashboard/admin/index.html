@@ -3149,24 +3149,26 @@ async function loadVotingLeaderboard() {
 
 async function loadAllVotes() {
     try {
-        // ✅ FIXED: Get all votes from Google Apps Script
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllVotes`);
+        // Use existing getVoteTotals endpoint
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getVoteTotals`);
         const data = await response.json();
         
-        console.log('📊 All votes data:', data);
+        console.log('📊 All votes data from VoteTotals:', data);
         
         const tbody = document.getElementById('allVotesBody');
         if (!tbody) return;
         
-        if (data.success && data.votes && data.votes.length > 0) {
-            tbody.innerHTML = data.votes.map(vote => `
+        if (data.success && data.totals && data.totals.length > 0) {
+            tbody.innerHTML = data.totals.map(item => `
                 <tr>
-                    <td>${new Date(vote.timestamp).toLocaleString()}</td>
-                    <td><strong>${escapeHtml(vote.businessName)}</strong></td>
-                    <td style="font-family: monospace;">${escapeHtml(vote.voterEmail)}</td>
-                    <td><span style="font-weight: 800; color: #FF0000;">${vote.voteValue}</span>/10</td>
-                    <td><span class="status-badge status-${vote.voteWeight === 3 ? 'active' : 'info'}">${vote.voteWeight === 3 ? 'Jury' : 'Public'}</span></td>
-                    <td><small>${vote.voterIP || '-'}</small></td>
+                    <td>${new Date(item.lastUpdated || item.timestamp).toLocaleString()}</td>
+                    <td><strong>${escapeHtml(item.businessName)}</strong></td>
+                    <td style="font-family: monospace;">-</td>
+                    <td><span style="font-weight: 800; color: #FF0000;">${item.averageScore.toFixed(1)}</span>/10
+                        <br><small>(${item.totalVotes} votes)</small>
+                    </td>
+                    <td><span class="status-badge status-info">Aggregated</span></td>
+                    <td><small>Public: ${item.publicVotes || 0}<br>Jury: ${item.juryVotes || 0}</small></td>
                 </tr>
             `).join('');
         } else {
