@@ -562,6 +562,13 @@ verifyCode: async function() {
     
     // Submit vote
 submitVote: async function() {
+    // ✅ FIX: Check if selectedBusiness exists
+    if (!this.state.selectedBusiness || !this.state.selectedBusiness.id) {
+        this.showToast('Please select a business to vote for', 'error');
+        this.closeVoteModal();
+        return;
+    }
+    
     const voteValue = parseInt(document.getElementById('voteValue').value);
     
     const submitBtn = document.getElementById('submitVoteBtn');
@@ -571,7 +578,13 @@ submitVote: async function() {
     submitBtn.disabled = true;
     
     try {
-        // ✅ FIXED: Call Google Apps Script
+        // ✅ FIX: Store business data locally before any potential null issues
+        const businessId = this.state.selectedBusiness.id;
+        const businessName = this.state.selectedBusiness.name;
+        const businessCategory = this.state.selectedBusiness.category;
+        const voterEmail = this.state.voterEmail;
+        const verificationCode = this.state.verificationCode;
+        
         const response = await fetch(this.config.sheetsUrl, {
             method: 'POST',
             headers: { 
@@ -579,12 +592,12 @@ submitVote: async function() {
             },
             body: new URLSearchParams({
                 formType: 'vote',
-                businessId: this.state.selectedBusiness.id,
-                businessName: this.state.selectedBusiness.name,
-                category: this.state.selectedBusiness.category,
+                businessId: businessId,
+                businessName: businessName,
+                category: businessCategory,
                 voteValue: voteValue,
-                voterEmail: this.state.voterEmail,
-                verificationCode: this.state.verificationCode,
+                voterEmail: voterEmail,
+                verificationCode: verificationCode,
                 source: 'website'
             })
         });
@@ -595,7 +608,7 @@ submitVote: async function() {
         if (data.success) {
             this.showToast(data.message, 'success');
             this.closeVoteModal();
-            this.state.votedBusinesses.push(this.state.selectedBusiness.id);
+            this.state.votedBusinesses.push(businessId);
             localStorage.setItem('votedBusinesses', JSON.stringify(this.state.votedBusinesses));
             this.loadBusinesses(this.state.currentPage);
             this.loadLeaderboard();
