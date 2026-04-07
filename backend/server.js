@@ -207,6 +207,16 @@ const voteTotalSchema = new mongoose.Schema({
 const Vote = mongoose.model('Vote', voteSchema);
 const VoteTotal = mongoose.model('VoteTotal', voteTotalSchema);
 
+// ============ VOTE VERIFICATION SCHEMA ============
+const voteVerificationSchema = new mongoose.Schema({
+    email: { type: String, required: true },
+    code: { type: String, required: true },
+    verified: { type: Boolean, default: false },
+    used_at: { type: Date },
+    expires_at: { type: Date, default: () => new Date(Date.now() + 30 * 60 * 1000) }
+}, { timestamps: true });
+
+const VoteVerification = mongoose.model('VoteVerification', voteVerificationSchema);
 
 // Admin Schema (CORRECT)
 const adminSchema = new mongoose.Schema({
@@ -354,330 +364,7 @@ const Nomination = mongoose.model('Nomination', nominationSchema);
 const BusinessDocument = mongoose.model('BusinessDocument', businessDocumentSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
 
-// ============ VOTE SCHEMAS ============
-const voteSchema = new mongoose.Schema({
-    business_id: { type: String, required: true },
-    business_name: { type: String, required: true },
-    category: { type: String, required: true },
-    voter_email: { type: String, required: true },
-    voter_ip: { type: String },
-    vote_value: { type: Number, default: 5, min: 1, max: 10 },
-    vote_weight: { type: Number, default: 1 },
-    is_verified: { type: Boolean, default: false },
-    is_jury: { type: Boolean, default: false },
-    source: { type: String, default: 'website' }
-}, { timestamps: true });
-
-const voteTotalSchema = new mongoose.Schema({
-    business_id: { type: String, required: true, unique: true },
-    business_name: { type: String, required: true },
-    category: { type: String, required: true },
-    total_votes: { type: Number, default: 0 },
-    average_score: { type: Number, default: 0 },
-    public_votes: { type: Number, default: 0 },
-    jury_votes: { type: Number, default: 0 },
-    rank: { type: Number, default: 0 }
-}, { timestamps: true });
-
-const voteVerificationSchema = new mongoose.Schema({
-    email: { type: String, required: true },
-    code: { type: String, required: true },
-    verified: { type: Boolean, default: false },
-    used_at: { type: Date },
-    expires_at: { type: Date, default: () => new Date(Date.now() + 30 * 60 * 1000) }
-}, { timestamps: true });
-
-const Vote = mongoose.model('Vote', voteSchema);
-const VoteTotal = mongoose.model('VoteTotal', voteTotalSchema);
-const VoteVerification = mongoose.model('VoteVerification', voteVerificationSchema);
-
 // ============ AUTH ROUTES ============
-
-// ============================================
-// VOTING SYSTEM API ENDPOINTS
-// ============================================
-
-// Send verification code for voting
-app.post('/api/voting/send-verification', async (req, res) => {
-    try {
-        const { email } = req.body;
-        
-        if (!email) {
-            return res.status(400).json({ success: false, error: 'Email is required' });
-        }
-        
-        // Generate 6-digit verification code
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        // Store in memory with expiration (5 minutes)
-        const expiresAt = Date.now() + 5 * 60 * 1000;
-        
-        // Use a simple in-memory store (in production, use Redis or database)
-        if (!global.voteVerifications) {
-            global.voteVerifications = new Map();
-        }
-        global.voteVerifications.set(email, { code: verificationCode, expiresAt });
-        
-        // Send email with verification code
-        const emailSent = await sendVerificationEmail(email, verificationCode);
-        
-        if (emailSent) {
-            res.json({ success: true, message: 'Verification code sent to your email' });
-        } else {
-            res.status(500).json({ success: false, error: 'Failed to send email' });
-        }
-        
-    } catch (error) {
-        console.error('Send verification error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Verify voter code
-app.post('/api/voting/verify', async (req, res) => {
-    try {
-        const { email, code } = req.body;
-        
-        if (!email || !code) {
-            return res.status(400).json({ success: false, error: 'Email and code are required' });
-        }
-        
-        const verification = global.voteVerifications?.get(email);
-        
-        if (!verification) {
-            return res.status(400).json({ success: false, error: 'No verification found. Please request a new code.' });
-        }
-        
-        if (verification.expiresAt < Date.now()) {
-            global.voteVerifications.delete(email);
-            return res.status(400).json({ success: false, error: 'Verification code has expired. Please request a new one.' });
-        }
-        
-        if (verification.code !== code) {
-            return res.status(400).json({ success: false, error: 'Invalid verification code' });
-        }
-        
-        // Mark as verified
-        global.voteVerifications.delete(email);
-        
-        res.json({ success: true, verified: true, message: 'Email verified successfully!' });
-        
-    } catch (error) {
-        console.error('Verify error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Cast a vote
-app.post('/api/voting/cast', authenticate, async (req, res) => {
-    try {
-        const { business_id, business_name, category, vote_value, voter_email, verification_code } = req.body;
-        
-        // Validate required fields
-        if (!business_id || !business_name || !vote_value || !voter_email) {
-            return res.status(400).json({ success: false, error: 'Missing required fields' });
-        }
-        
-        // Check if already voted for this business
-        const existingVote = await Vote.findOne({ business_id, voter_email });
-        if (existingVote) {
-            return res.status(400).json({ success: false, error: 'You have already voted for this business' });
-        }
-        
-        // Determine vote weight (jury vs public)
-        const isJury = req.user?.role === 'admin';
-        const voteWeight = isJury ? 3 : 1;
-        
-        // Save vote
-        const vote = new Vote({
-            business_id,
-            business_name,
-            category,
-            voter_email,
-            vote_value,
-            vote_weight: voteWeight,
-            is_jury: isJury,
-            voter_ip: req.ip
-        });
-        
-        await vote.save();
-        
-        // Update vote totals
-        await updateVoteTotals(business_id, business_name, category);
-        
-        res.json({ 
-            success: true, 
-            message: 'Your vote has been recorded!',
-            vote_id: vote._id
-        });
-        
-    } catch (error) {
-        console.error('Cast vote error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Get voting status
-app.get('/api/voting/status', async (req, res) => {
-    try {
-        const now = new Date();
-        const votingStart = new Date('2026-06-01');
-        const votingEnd = new Date('2026-07-30T23:59:59');
-        
-        res.json({
-            success: true,
-            isActive: now >= votingStart && now <= votingEnd,
-            startDate: votingStart,
-            endDate: votingEnd,
-            daysRemaining: Math.max(0, Math.ceil((votingEnd - now) / (1000 * 60 * 60 * 24)))
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Get businesses for voting (from your manual list)
-app.get('/api/voting/businesses', async (req, res) => {
-    try {
-        const { category, page = 1, limit = 12 } = req.query;
-        
-        // Fetch from your VotingBusinesses sheet via Apps Script
-        const sheetsUrl = `https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec?action=getVotingBusinesses&page=${page}&limit=${limit}&category=${category || 'all'}`;
-        
-        const response = await fetch(sheetsUrl);
-        const data = await response.json();
-        
-        if (data.success && data.businesses) {
-            // Get vote stats for each business
-            const businessesWithStats = await Promise.all(data.businesses.map(async (business) => {
-                const stats = await VoteTotal.findOne({ business_id: business._id });
-                return {
-                    ...business,
-                    vote_stats: stats || { average_score: 0, total_votes: 0 }
-                };
-            }));
-            
-            res.json({
-                success: true,
-                businesses: businessesWithStats,
-                pagination: data.pagination || { page: 1, pages: 1, total: businessesWithStats.length }
-            });
-        } else {
-            res.json({ success: true, businesses: [], pagination: { page: 1, pages: 1, total: 0 } });
-        }
-    } catch (error) {
-        console.error('Get businesses error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Get leaderboard
-app.get('/api/voting/leaderboard', async (req, res) => {
-    try {
-        const { category, limit = 10 } = req.query;
-        
-        let query = {};
-        if (category && category !== 'all') {
-            query.category = category;
-        }
-        
-        const leaders = await VoteTotal.find(query)
-            .sort({ average_score: -1, total_votes: -1 })
-            .limit(parseInt(limit));
-        
-        const leaderboard = leaders.map((leader, index) => ({
-            rank: index + 1,
-            business_id: leader.business_id,
-            business_name: leader.business_name,
-            category: leader.category,
-            total_votes: leader.total_votes,
-            average_score: leader.average_score,
-            public_votes: leader.public_votes,
-            jury_votes: leader.jury_votes
-        }));
-        
-        res.json({ success: true, leaderboard });
-    } catch (error) {
-        console.error('Leaderboard error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Helper function to send verification email
-async function sendVerificationEmail(email, code) {
-    try {
-        const subject = `Your Verification Code - Liberia Business Awards`;
-        const html = `
-            <!DOCTYPE html>
-            <html>
-            <head><meta charset="UTF-8"></head>
-            <body style="font-family: Arial, sans-serif; padding: 20px;">
-                <h2 style="color: #FF0000;">Liberia Business Awards</h2>
-                <h3>Your Verification Code</h3>
-                <p>Please use the following code to verify your email and cast your vote:</p>
-                <div style="background: #f4f4f4; padding: 15px; font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 5px;">
-                    ${code}
-                </div>
-                <p>This code expires in 5 minutes.</p>
-                <hr>
-                <p style="color: #666; font-size: 12px;">Liberia Business Awards - Recognizing Local Excellence, Celebrating National Impact</p>
-            </body>
-            </html>
-        `;
-        
-        // Use your email transporter
-        if (emailTransporter) {
-            await emailTransporter.sendMail({
-                from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
-                to: email,
-                subject: subject,
-                html: html
-            });
-        } else {
-            console.log(`📧 [DEV] Verification code for ${email}: ${code}`);
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('Email send error:', error);
-        return false;
-    }
-}
-
-// Helper function to update vote totals
-async function updateVoteTotals(businessId, businessName, category) {
-    const votes = await Vote.find({ business_id: businessId });
-    
-    let totalScore = 0;
-    let voteCount = 0;
-    let publicVotes = 0;
-    let juryVotes = 0;
-    
-    votes.forEach(vote => {
-        totalScore += vote.vote_value * vote.vote_weight;
-        voteCount += vote.vote_weight;
-        if (vote.is_jury) {
-            juryVotes++;
-        } else {
-            publicVotes++;
-        }
-    });
-    
-    const averageScore = voteCount > 0 ? totalScore / voteCount : 0;
-    
-    await VoteTotal.findOneAndUpdate(
-        { business_id: businessId },
-        {
-            business_name: businessName,
-            category,
-            total_votes: voteCount,
-            average_score: averageScore,
-            public_votes: publicVotes,
-            jury_votes: juryVotes
-        },
-        { upsert: true }
-    );
-}
 
 // Admin Login
 app.post('/api/auth/admin/login', authLimiter, async (req, res) => {
@@ -1380,6 +1067,42 @@ app.post('/api/voting/send-verification', async (req, res) => {
     }
 });
 
+// Verify verification code
+app.post('/api/voting/verify', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        
+        if (!email || !code) {
+            return res.status(400).json({ success: false, error: 'Email and code are required' });
+        }
+        
+        const verification = await VoteVerification.findOne({
+            email: email,
+            code: code,
+            verified: false,
+            expires_at: { $gt: new Date() }
+        });
+        
+        if (!verification) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired verification code' });
+        }
+        
+        // Mark as verified but don't delete yet (will be used when casting vote)
+        verification.verified = true;
+        await verification.save();
+        
+        res.json({ 
+            success: true, 
+            verified: true, 
+            message: 'Email verified successfully!' 
+        });
+        
+    } catch (error) {
+        console.error('Verify error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Get vote statistics for a business
 app.get('/api/voting/business/:businessId/stats', async (req, res) => {
     try {
@@ -1501,6 +1224,7 @@ async function recalculateAllVoteTotals() {
         await allTotals[i].save();
     }
 }
+
 // ============ BUSINESS PROFILE ROUTES ============
 
 // Get business profile
