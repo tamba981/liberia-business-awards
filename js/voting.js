@@ -430,51 +430,50 @@ loadLocalVotingBusinesses: function(page = 1) {
     
     // Send verification code
     sendVerificationCode: async function() {
-        const email = document.getElementById('voterEmail').value.trim();
+    const email = document.getElementById('voterEmail').value.trim();
+    
+    if (!email) {
+        this.showToast('Please enter your email address', 'error');
+        return;
+    }
+    
+    const sendBtn = document.getElementById('sendCodeBtn');
+    const originalText = sendBtn.innerHTML;
+    
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    sendBtn.disabled = true;
+    
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                formType: 'send_verification',
+                email: email
+            })
+        });
         
-        if (!email) {
-            this.showToast('Please enter your email address', 'error');
-            return;
+        const data = await response.json();
+        console.log('📧 Verification response:', data);
+        
+        if (data.success) {
+            this.showToast('Verification code sent to your email!', 'success');
+            // Proceed to verification step
+            document.getElementById('emailSection').style.display = 'none';
+            document.getElementById('verificationSection').style.display = 'block';
+        } else {
+            this.showToast(data.error || 'Failed to send code', 'error');
         }
-        
-        if (!this.isValidEmail(email)) {
-            this.showToast('Please enter a valid email address', 'error');
-            return;
-        }
-        
-        const sendBtn = document.getElementById('sendCodeBtn');
-        const originalText = sendBtn.innerHTML;
-        
-        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        sendBtn.disabled = true;
-        
-        try {
-            const response = await fetch(`${this.config.apiUrl}/voting/send-verification`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.state.voterEmail = email;
-                document.getElementById('emailSection').style.display = 'none';
-                document.getElementById('verificationSection').style.display = 'block';
-                this.showToast('Verification code sent to your email', 'success');
-                
-                // Start countdown
-                this.startVerificationCountdown();
-            } else {
-                this.showToast(data.error || 'Failed to send code', 'error');
-            }
-        } catch (error) {
-            this.showToast('Network error. Please try again.', 'error');
-        } finally {
-            sendBtn.innerHTML = originalText;
-            sendBtn.disabled = false;
-        }
-    },
+    } catch (error) {
+        console.error('Send verification error:', error);
+        this.showToast('Network error. Please try again.', 'error');
+    } finally {
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+    }
+},
     
     // Start verification countdown
     startVerificationCountdown: function() {
