@@ -918,12 +918,136 @@ window.addEventListener('load', function() {
 </head>
 <body class="bg-white">
     <!-- ============================================ -->
-<!-- GOOGLE TRANSLATE WIDGET - MULTI-LANGUAGE SUPPORT -->
+<!-- GOOGLE TRANSLATE WIDGET - PROFESSIONAL VERSION -->
 <!-- ============================================ -->
-<div id="google_translate_element" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 1px solid #e2e8f0;"></div>
+<div class="translate-container">
+    <div class="translate-wrapper">
+        <i class="fas fa-language translate-icon"></i>
+        <div id="google_translate_element"></div>
+    </div>
+</div>
+
+<style>
+    /* Professional Translate Widget - No Horizontal Scroll */
+    .translate-container {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+        background: white;
+        border-radius: 40px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .translate-container:hover {
+        box-shadow: 0 6px 25px rgba(255, 0, 0, 0.2);
+        border-color: #FF0000;
+    }
+    
+    .translate-wrapper {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px 8px 12px;
+        gap: 10px;
+    }
+    
+    .translate-icon {
+        font-size: 18px;
+        color: #FF0000;
+        flex-shrink: 0;
+    }
+    
+    /* Hide Google's default branding and style the select */
+    .goog-te-gadget {
+        font-family: 'Poppins', sans-serif !important;
+        font-size: 0px !important;
+        color: transparent !important;
+    }
+    
+    .goog-te-gadget .goog-te-combo {
+        margin: 0 !important;
+        padding: 8px 28px 8px 12px !important;
+        border-radius: 30px !important;
+        border: none !important;
+        background: white !important;
+        font-family: 'Poppins', sans-serif !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        color: #1a202c !important;
+        cursor: pointer !important;
+        outline: none !important;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF0000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 16px;
+        width: 140px;
+    }
+    
+    .goog-te-gadget .goog-te-combo:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
+    }
+    
+    .goog-te-gadget .goog-te-combo:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* Hide Google Translate top banner */
+    .goog-te-banner-frame.skiptranslate {
+        display: none !important;
+    }
+    
+    body {
+        top: 0px !important;
+    }
+    
+    /* Hide Google's attribution text */
+    .goog-te-gadget span {
+        display: none !important;
+    }
+    
+    /* Remove any iframe banners */
+    .skiptranslate iframe {
+        display: none !important;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .translate-container {
+            top: auto;
+            bottom: 80px;
+            right: 15px;
+        }
+        
+        .translate-wrapper {
+            padding: 6px 12px 6px 10px;
+        }
+        
+        .goog-te-gadget .goog-te-combo {
+            padding: 6px 26px 6px 10px !important;
+            font-size: 12px !important;
+            width: 125px;
+        }
+        
+        .translate-icon {
+            font-size: 14px;
+        }
+    }
+    
+    /* Desktop adjustment - no horizontal scroll */
+    @media (min-width: 769px) {
+        .translate-container {
+            top: 120px;
+            right: 30px;
+        }
+    }
+</style>
 
 <script type="text/javascript">
-    // Function to initialize Google Translate
     function googleTranslateElementInit() {
         new google.translate.TranslateElement({
             pageLanguage: 'en',
@@ -933,19 +1057,17 @@ window.addEventListener('load', function() {
         }, 'google_translate_element');
     }
     
-    // Save user's language preference
+    // Save language preference
     function saveLanguagePreference() {
-        const select = document.querySelector('.goog-te-combo');
-        if (select) {
-            const selectedLang = select.value;
-            if (selectedLang) {
-                localStorage.setItem('preferredLanguage', selectedLang);
-                console.log('🌐 Language saved:', selectedLang);
+        setTimeout(function() {
+            const select = document.querySelector('.goog-te-combo');
+            if (select && select.value) {
+                localStorage.setItem('preferredLanguage', select.value);
             }
-        }
+        }, 500);
     }
     
-    // Load saved language preference
+    // Load saved language
     function loadSavedLanguage() {
         const savedLang = localStorage.getItem('preferredLanguage');
         if (savedLang && savedLang !== 'en') {
@@ -954,15 +1076,12 @@ window.addEventListener('load', function() {
                 if (select) {
                     select.value = savedLang;
                     select.dispatchEvent(new Event('change'));
-                    console.log('🌐 Language restored:', savedLang);
                 }
-            }, 1000);
+            }, 1500);
         }
     }
     
-    // Monitor for language changes
     document.addEventListener('DOMContentLoaded', function() {
-        // Set up observer to detect when translate widget loads
         setTimeout(loadSavedLanguage, 2000);
         
         // Listen for language changes
@@ -977,62 +1096,6 @@ window.addEventListener('load', function() {
 </script>
 
 <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-<style>
-    /* Style the Google Translate widget to match your website */
-    .goog-te-banner-frame.skiptranslate {
-        display: none !important;
-    }
-    
-    body {
-        top: 0px !important;
-    }
-    
-    .goog-te-gadget {
-        font-family: 'Poppins', sans-serif !important;
-        font-size: 14px !important;
-        color: #333 !important;
-    }
-    
-    .goog-te-combo {
-        padding: 8px 12px !important;
-        border-radius: 25px !important;
-        border: 1px solid #e2e8f0 !important;
-        background: white !important;
-        font-family: 'Poppins', sans-serif !important;
-        font-size: 13px !important;
-        cursor: pointer !important;
-        outline: none !important;
-    }
-    
-    .goog-te-combo:hover {
-        border-color: #FF0000 !important;
-    }
-    
-    .goog-te-combo:focus {
-        border-color: #87CEEB !important;
-        box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
-    }
-    
-    /* Hide Google Translate top banner */
-    .skiptranslate iframe {
-        display: none !important;
-    }
-    
-    /* Fix for mobile */
-    @media (max-width: 768px) {
-        #google_translate_element {
-            bottom: 10px;
-            right: 10px;
-            padding: 5px 10px;
-        }
-        
-        .goog-te-combo {
-            font-size: 11px !important;
-            padding: 5px 8px !important;
-        }
-    }
-</style>
     <!-- Add skip link for accessibility -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-lba-red text-white px-4 py-2 rounded-lg z-50">Skip to main content</a>
     <!-- Loading Screen -->
