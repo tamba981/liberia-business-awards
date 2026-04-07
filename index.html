@@ -918,56 +918,50 @@ window.addEventListener('load', function() {
 </head>
 <body class="bg-white">
 <!-- ============================================ -->
-<!-- GOOGLE TRANSLATE WIDGET - STICKY PROFESSIONAL -->
+<!-- GOOGLE TRANSLATE WIDGET - SCROLLING PROFESSIONAL -->
 <!-- ============================================ -->
-<div class="translate-sticky-container">
-    <div class="translate-sticky-wrapper">
-        <i class="fas fa-globe translate-icon"></i>
+<div class="translate-float-container">
+    <div class="translate-float-wrapper">
+        <i class="fas fa-language translate-float-icon"></i>
         <div id="google_translate_element"></div>
-        <span class="translate-label">Language</span>
     </div>
 </div>
 
 <style>
-    /* Professional Sticky Translate Widget - Always Visible */
-    .translate-sticky-container {
-        position: sticky;
-        top: 80px;
-        z-index: 9999;
+    /* Professional Translate Widget - Floats and scrolls with page */
+    .translate-float-container {
+        position: relative;
+        z-index: 999;
         display: flex;
         justify-content: flex-end;
-        padding: 8px 20px 0 0;
         margin: 0;
+        padding: 0 20px;
         background: transparent;
+        width: 100%;
+        box-sizing: border-box;
     }
     
-    .translate-sticky-wrapper {
-        display: flex;
+    .translate-float-wrapper {
+        display: inline-flex;
         align-items: center;
         gap: 8px;
         background: white;
-        padding: 6px 16px 6px 12px;
-        border-radius: 40px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 8px 18px 8px 14px;
+        border-radius: 50px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
+        margin: 10px 0;
     }
     
-    .translate-sticky-wrapper:hover {
-        box-shadow: 0 4px 15px rgba(255, 0, 0, 0.15);
+    .translate-float-wrapper:hover {
+        box-shadow: 0 4px 15px rgba(255, 0, 0, 0.12);
         border-color: #FF0000;
     }
     
-    .translate-icon {
-        font-size: 16px;
+    .translate-float-icon {
+        font-size: 15px;
         color: #FF0000;
-    }
-    
-    .translate-label {
-        font-size: 12px;
-        font-weight: 500;
-        color: #64748b;
-        font-family: 'Poppins', sans-serif;
     }
     
     /* Style Google Translate widget */
@@ -995,7 +989,7 @@ window.addEventListener('load', function() {
         background-repeat: no-repeat;
         background-position: right 8px center;
         background-size: 14px;
-        width: 130px;
+        width: 135px;
     }
     
     .goog-te-gadget .goog-te-combo:focus {
@@ -1020,42 +1014,41 @@ window.addEventListener('load', function() {
         display: none !important;
     }
     
-    /* Mobile specific - always visible at top */
+    /* Mobile specific - scrolls with page */
     @media (max-width: 768px) {
-        .translate-sticky-container {
-            position: sticky;
-            top: 70px;
-            padding: 6px 15px 0 0;
-            z-index: 9998;
-            background: transparent;
+        .translate-float-container {
+            padding: 0 15px;
+            margin-bottom: 5px;
         }
         
-        .translate-sticky-wrapper {
-            padding: 5px 12px 5px 10px;
+        .translate-float-wrapper {
+            padding: 6px 14px 6px 12px;
             gap: 6px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(4px);
+            margin: 8px 0;
         }
         
         .goog-te-gadget .goog-te-combo {
-            padding: 4px 26px 4px 10px !important;
+            padding: 5px 26px 5px 10px !important;
             font-size: 12px !important;
-            width: 120px;
+            width: 125px;
         }
         
-        .translate-icon {
-            font-size: 14px;
-        }
-        
-        .translate-label {
-            font-size: 11px;
+        .translate-float-icon {
+            font-size: 13px;
         }
     }
     
     /* Desktop adjustment */
     @media (min-width: 769px) {
-        .translate-sticky-container {
-            top: 100px;
+        .translate-float-container {
+            position: absolute;
+            top: 20px;
+            right: 0;
+            width: auto;
+        }
+        
+        .translate-float-wrapper {
+            margin: 0;
         }
     }
 </style>
