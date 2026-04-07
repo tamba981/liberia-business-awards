@@ -917,6 +917,122 @@ window.addEventListener('load', function() {
 </script>
 </head>
 <body class="bg-white">
+    <!-- ============================================ -->
+<!-- GOOGLE TRANSLATE WIDGET - MULTI-LANGUAGE SUPPORT -->
+<!-- ============================================ -->
+<div id="google_translate_element" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 1px solid #e2e8f0;"></div>
+
+<script type="text/javascript">
+    // Function to initialize Google Translate
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'en,fr,es,pt,ar,zh-CN,de,it,ru,sw',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+        }, 'google_translate_element');
+    }
+    
+    // Save user's language preference
+    function saveLanguagePreference() {
+        const select = document.querySelector('.goog-te-combo');
+        if (select) {
+            const selectedLang = select.value;
+            if (selectedLang) {
+                localStorage.setItem('preferredLanguage', selectedLang);
+                console.log('🌐 Language saved:', selectedLang);
+            }
+        }
+    }
+    
+    // Load saved language preference
+    function loadSavedLanguage() {
+        const savedLang = localStorage.getItem('preferredLanguage');
+        if (savedLang && savedLang !== 'en') {
+            setTimeout(function() {
+                const select = document.querySelector('.goog-te-combo');
+                if (select) {
+                    select.value = savedLang;
+                    select.dispatchEvent(new Event('change'));
+                    console.log('🌐 Language restored:', savedLang);
+                }
+            }, 1000);
+        }
+    }
+    
+    // Monitor for language changes
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up observer to detect when translate widget loads
+        setTimeout(loadSavedLanguage, 2000);
+        
+        // Listen for language changes
+        setInterval(function() {
+            const select = document.querySelector('.goog-te-combo');
+            if (select && !select.hasAttribute('data-listener')) {
+                select.setAttribute('data-listener', 'true');
+                select.addEventListener('change', saveLanguagePreference);
+            }
+        }, 1000);
+    });
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+<style>
+    /* Style the Google Translate widget to match your website */
+    .goog-te-banner-frame.skiptranslate {
+        display: none !important;
+    }
+    
+    body {
+        top: 0px !important;
+    }
+    
+    .goog-te-gadget {
+        font-family: 'Poppins', sans-serif !important;
+        font-size: 14px !important;
+        color: #333 !important;
+    }
+    
+    .goog-te-combo {
+        padding: 8px 12px !important;
+        border-radius: 25px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: white !important;
+        font-family: 'Poppins', sans-serif !important;
+        font-size: 13px !important;
+        cursor: pointer !important;
+        outline: none !important;
+    }
+    
+    .goog-te-combo:hover {
+        border-color: #FF0000 !important;
+    }
+    
+    .goog-te-combo:focus {
+        border-color: #87CEEB !important;
+        box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
+    }
+    
+    /* Hide Google Translate top banner */
+    .skiptranslate iframe {
+        display: none !important;
+    }
+    
+    /* Fix for mobile */
+    @media (max-width: 768px) {
+        #google_translate_element {
+            bottom: 10px;
+            right: 10px;
+            padding: 5px 10px;
+        }
+        
+        .goog-te-combo {
+            font-size: 11px !important;
+            padding: 5px 8px !important;
+        }
+    }
+</style>
     <!-- Add skip link for accessibility -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-lba-red text-white px-4 py-2 rounded-lg z-50">Skip to main content</a>
     <!-- Loading Screen -->
