@@ -429,11 +429,16 @@ loadLocalVotingBusinesses: function(page = 1) {
     },
     
     // Send verification code
-    sendVerificationCode: async function() {
+sendVerificationCode: async function() {
     const email = document.getElementById('voterEmail').value.trim();
     
     if (!email) {
         this.showToast('Please enter your email address', 'error');
+        return;
+    }
+    
+    if (!this.isValidEmail(email)) {
+        this.showToast('Please enter a valid email address', 'error');
         return;
     }
     
@@ -444,7 +449,8 @@ loadLocalVotingBusinesses: function(page = 1) {
     sendBtn.disabled = true;
     
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+        // ✅ FIXED: Use this.config.sheetsUrl instead of undefined GOOGLE_APPS_SCRIPT_URL
+        const response = await fetch(this.config.sheetsUrl, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -459,10 +465,12 @@ loadLocalVotingBusinesses: function(page = 1) {
         console.log('📧 Verification response:', data);
         
         if (data.success) {
+            this.state.voterEmail = email;
             this.showToast('Verification code sent to your email!', 'success');
             // Proceed to verification step
             document.getElementById('emailSection').style.display = 'none';
             document.getElementById('verificationSection').style.display = 'block';
+            this.startVerificationCountdown();
         } else {
             this.showToast(data.error || 'Failed to send code', 'error');
         }
