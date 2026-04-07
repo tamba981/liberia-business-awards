@@ -278,31 +278,52 @@ loadLocalVotingBusinesses: function(page = 1) {
         
         container.innerHTML = html;
     },
-    
+
     // Load leaderboard
-    loadLeaderboard: async function() {
-        const container = document.getElementById('votingLeaderboard');
-        if (!container) return;
+loadLeaderboard: async function() {
+    const container = document.getElementById('votingLeaderboard');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading leaderboard...</div>';
+    
+    try {
+        // ✅ FIXED: Get vote totals from Google Apps Script instead of Railway API
+        const response = await fetch(`${this.config.sheetsUrl}?action=getVoteTotals`);
+        const data = await response.json();
         
-        container.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading leaderboard...</div>';
+        console.log('📊 Leaderboard data:', data);
         
-        try {
-            const response = await fetch(`${this.config.apiUrl}/voting/leaderboard?limit=10`);
-            const data = await response.json();
+        if (data.success && data.totals && data.totals.length > 0) {
+            // Sort by average score (highest first)
+            const sortedTotals = [...data.totals].sort((a, b) => b.averageScore - a.averageScore);
             
-            if (data.success && data.leaderboard.length > 0) {
+            // Add rank and filter out businesses with zero votes
+            const leaderboard = sortedTotals
+                .filter(item => item.totalVotes > 0)
+                .map((item, index) => ({
+                    rank: index + 1,
+                    business_name: item.businessName,
+                    category: item.category,
+                    total_votes: item.totalVotes,
+                    average_score: item.averageScore,
+                    public_votes: item.publicVotes,
+                    jury_votes: item.juryVotes
+                }));
+            
+            if (leaderboard.length > 0) {
                 container.innerHTML = `
                     <div class="leaderboard-list">
-                        ${data.leaderboard.map((item, index) => `
+                        ${leaderboard.map(item => `
                             <div class="leaderboard-item rank-${item.rank}">
                                 <div class="leaderboard-rank">#${item.rank}</div>
                                 <div class="leaderboard-info">
                                     <div class="leaderboard-name">${this.escapeHtml(item.business_name)}</div>
-                                    <div class="leaderboard-category">${item.category}</div>
+                                    <div class="leaderboard-category">${this.escapeHtml(item.category)}</div>
                                 </div>
                                 <div class="leaderboard-score">
                                     <span class="score-number">${item.average_score.toFixed(1)}</span>
                                     <span class="score-max">/10</span>
+                                    <div class="leaderboard-votes">${item.total_votes} votes</div>
                                 </div>
                             </div>
                         `).join('')}
@@ -311,11 +332,14 @@ loadLocalVotingBusinesses: function(page = 1) {
             } else {
                 container.innerHTML = '<p class="text-center text-muted">No votes yet. Be the first to vote!</p>';
             }
-        } catch (error) {
-            console.error('Load leaderboard error:', error);
-            container.innerHTML = '<p class="text-center text-muted">Leaderboard temporarily unavailable</p>';
+        } else {
+            container.innerHTML = '<p class="text-center text-muted">No votes yet. Be the first to vote!</p>';
         }
-    },
+    } catch (error) {
+        console.error('Load leaderboard error:', error);
+        container.innerHTML = '<p class="text-center text-muted">Leaderboard temporarily unavailable</p>';
+    }
+},
     
     // Open vote modal
     openVoteModal: function(businessId, businessName, category) {
@@ -546,98 +570,266 @@ submitVote: async function() {
     },
     
     // Show business details
-    showBusinessDetails: async function(businessId) {
-        const modal = document.getElementById('businessDetailsModal');
-        const content = document.getElementById('businessDetailsContent');
+showBusinessDetails: async function(businessId) {
+    const modal = document.getElementById('businessDetailsModal');
+    const content = document.getElementById('businessDetailsContent');
+    
+    content.innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading details...</p></div>';
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    try {
+        // ✅ FIXED: Get business details from Google Apps Script, not Railway API
+        // First, get the business basic info from voting businesses list
+        const businessesResponse = await fetch(`${this.config.sheetsUrl}?action=getVotingBusinesses&page=1&limit=100`);
+        const businessesData = await businessesResponse.json();
         
-        content.innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading details...</p></div>';
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        try {
-            const response = await fetch(`${this.config.apiUrl}/voting/business/${businessId}/stats`);
-            const data = await response.json();
-            
-            const businessesResponse = await fetch(`${this.config.apiUrl}/voting/businesses?page=1&limit=100`);
-            const businessesData = await businessesResponse.json();
-            const business = businessesData.businesses?.find(b => b._id === businessId);
-            
-            if (business || data.success) {
-                const stats = data.stats || {};
-                const votes = data.recent_votes || [];
-                
-                content.innerHTML = `
-                    <div class="business-details">
-                        <div class="details-header">
-                            <div class="details-logo">
-                                ${business?.logo ? 
-                                    `<img src="${business.logo}" alt="${business?.business_name}">` : 
-                                    `<div class="logo-placeholder large">${business?.business_name?.charAt(0) || 'B'}</div>`
-                                }
-                            </div>
-                            <div class="details-info">
-                                <h2>${this.escapeHtml(business?.business_name || 'Business')}</h2>
-                                <p><i class="fas fa-tag"></i> ${business?.category || stats.category || 'General'}</p>
-                                <p><i class="fas fa-map-marker-alt"></i> ${business?.location || 'Liberia'}</p>
-                            </div>
-                        </div>
-                        
-                        <div class="details-stats">
-                            <div class="stat-box">
-                                <div class="stat-value">${stats.average_score?.toFixed(1) || '0.0'}</div>
-                                <div class="stat-label">Average Score</div>
-                                <div class="stat-max">out of 10</div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="stat-value">${stats.total_votes || 0}</div>
-                                <div class="stat-label">Total Votes</div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="stat-value">${stats.public_votes || 0}</div>
-                                <div class="stat-label">Public Votes</div>
-                            </div>
-                            <div class="stat-box">
-                                <div class="stat-value">${stats.jury_votes || 0}</div>
-                                <div class="stat-label">Jury Votes</div>
-                            </div>
-                        </div>
-                        
-                        <div class="details-recent-votes">
-                            <h4>Recent Votes</h4>
-                            ${votes.length > 0 ? `
-                                <div class="recent-votes-list">
-                                    ${votes.map(v => `
-                                        <div class="recent-vote-item">
-                                            <span class="vote-date">${new Date(v.created_at).toLocaleDateString()}</span>
-                                            <span class="vote-rating">${v.vote_value}/10</span>
-                                            <span class="vote-type ${v.is_jury ? 'jury' : 'public'}">${v.is_jury ? 'Jury' : 'Public'}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : '<p class="text-muted">No votes yet</p>'}
-                        </div>
-                        
-                        <div class="details-actions">
-                            ${!this.state.votedBusinesses.includes(businessId) ? `
-                                <button class="btn-vote large" onclick="VotingSystem.closeDetailsModal(); VotingSystem.openVoteModal('${businessId}', '${this.escapeHtml(business?.business_name || 'Business')}', '${business?.category || 'General'}')">
-                                    <i class="fas fa-vote-yea"></i> Vote for this Business
-                                </button>
-                            ` : ''}
-                            <button class="btn-close" onclick="VotingSystem.closeDetailsModal()">Close</button>
-                        </div>
-                    </div>
-                `;
-            }
-        } catch (error) {
-            content.innerHTML = `
-                <div class="text-center py-5">
-                    <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
-                    <p class="mt-3">Failed to load business details</p>
-                    <button class="btn btn-primary mt-3" onclick="VotingSystem.showBusinessDetails('${businessId}')">Retry</button>
-                </div>
-            `;
+        let business = null;
+        if (businessesData && businessesData.businesses && Array.isArray(businessesData.businesses)) {
+            business = businessesData.businesses.find(b => b._id === businessId);
         }
-    },
+        
+        // Get vote stats from Google Apps Script (VoteTotals sheet)
+        const totalsResponse = await fetch(`${this.config.sheetsUrl}?action=getVoteTotals`);
+        const totalsData = await totalsResponse.json();
+        
+        // Find stats for this business
+        let stats = {
+            average_score: 0,
+            total_votes: 0,
+            public_votes: 0,
+            jury_votes: 0
+        };
+        
+        if (totalsData && totalsData.success && totalsData.totals) {
+            const businessStats = totalsData.totals.find(t => t.businessId === businessId);
+            if (businessStats) {
+                stats = {
+                    average_score: businessStats.averageScore || 0,
+                    total_votes: businessStats.totalVotes || 0,
+                    public_votes: businessStats.publicVotes || 0,
+                    jury_votes: businessStats.juryVotes || 0
+                };
+            }
+        }
+        
+        // Get recent votes from Google Apps Script (Votes sheet)
+        const votesResponse = await fetch(`${this.config.sheetsUrl}?action=getBusinessVotes&businessId=${businessId}`);
+        const votesData = await votesResponse.json();
+        
+        let recentVotes = [];
+        if (votesData && votesData.success && votesData.votes) {
+            recentVotes = votesData.votes;
+        }
+        
+        const businessName = business?.business_name || 'Business';
+        const businessCategory = business?.category || 'General';
+        const businessLocation = business?.location || 'Liberia';
+        const businessLogo = business?.logo || null;
+        
+        content.innerHTML = `
+            <div class="business-details">
+                <div class="details-header">
+                    <div class="details-logo">
+                        ${businessLogo ? 
+                            `<img src="${businessLogo}" alt="${businessName}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;">` : 
+                            `<div class="logo-placeholder large" style="width: 80px; height: 80px; background: linear-gradient(135deg, #FF0000, #87CEEB); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white;">${businessName.charAt(0)}</div>`
+                        }
+                    </div>
+                    <div class="details-info">
+                        <h2>${this.escapeHtml(businessName)}</h2>
+                        <p><i class="fas fa-tag"></i> ${this.escapeHtml(businessCategory)}</p>
+                        <p><i class="fas fa-map-marker-alt"></i> ${this.escapeHtml(businessLocation)}</p>
+                    </div>
+                </div>
+                
+                <div class="details-stats">
+                    <div class="stat-box">
+                        <div class="stat-value">${stats.average_score.toFixed(1)}</div>
+                        <div class="stat-label">Average Score</div>
+                        <div class="stat-max">out of 10</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${stats.total_votes}</div>
+                        <div class="stat-label">Total Votes</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${stats.public_votes}</div>
+                        <div class="stat-label">Public Votes</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${stats.jury_votes}</div>
+                        <div class="stat-label">Jury Votes</div>
+                    </div>
+                </div>
+                
+                <div class="details-recent-votes">
+                    <h4>Recent Votes</h4>
+                    ${recentVotes.length > 0 ? `
+                        <div class="recent-votes-list">
+                            ${recentVotes.slice(0, 10).map(v => `
+                                <div class="recent-vote-item">
+                                    <span class="vote-date">${new Date(v.timestamp).toLocaleDateString()}</span>
+                                    <span class="vote-rating">${v.voteValue}/10</span>
+                                    <span class="vote-type ${v.voteWeight === 3 ? 'jury' : 'public'}">${v.voteWeight === 3 ? 'Jury' : 'Public'}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="text-muted" style="text-align: center; padding: 20px;">No votes yet</p>'}
+                </div>
+                
+                <div class="details-actions">
+                    ${!this.state.votedBusinesses.includes(businessId) ? `
+                        <button class="btn-vote large" onclick="VotingSystem.closeDetailsModal(); VotingSystem.openVoteModal('${businessId}', '${this.escapeHtml(businessName)}', '${this.escapeHtml(businessCategory)}')">
+                            <i class="fas fa-vote-yea"></i> Vote for this Business
+                        </button>
+                    ` : ''}
+                    <button class="btn-close" onclick="VotingSystem.closeDetailsModal()">Close</button>
+                </div>
+            </div>
+        `;
+        
+        // Add CSS for the details modal
+        const style = document.createElement('style');
+        style.textContent = `
+            .business-details {
+                padding: 20px;
+            }
+            .details-header {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 25px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .details-info h2 {
+                font-size: 1.5rem;
+                margin-bottom: 8px;
+            }
+            .details-info p {
+                color: #64748b;
+                margin: 5px 0;
+            }
+            .details-info p i {
+                width: 25px;
+                color: #FF0000;
+            }
+            .details-stats {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px;
+                margin-bottom: 25px;
+            }
+            .stat-box {
+                text-align: center;
+                padding: 15px;
+                background: #f8fafc;
+                border-radius: 12px;
+            }
+            .stat-value {
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: #FF0000;
+            }
+            .stat-label {
+                font-size: 0.75rem;
+                color: #64748b;
+                margin-top: 5px;
+            }
+            .stat-max {
+                font-size: 0.7rem;
+                color: #94a3b8;
+            }
+            .details-recent-votes {
+                margin-bottom: 25px;
+            }
+            .details-recent-votes h4 {
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+            .recent-votes-list {
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            .recent-vote-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 0;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .vote-date {
+                font-size: 0.75rem;
+                color: #64748b;
+            }
+            .vote-rating {
+                font-weight: 700;
+                color: #FF0000;
+            }
+            .vote-type {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+                border-radius: 20px;
+            }
+            .vote-type.public {
+                background: #DBEAFE;
+                color: #1D4ED8;
+            }
+            .vote-type.jury {
+                background: #FEF3C7;
+                color: #D97706;
+            }
+            .details-actions {
+                display: flex;
+                gap: 15px;
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #e2e8f0;
+            }
+            .btn-vote.large {
+                flex: 2;
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            .btn-close {
+                flex: 1;
+                background: #f1f5f9;
+                border: none;
+                padding: 12px;
+                border-radius: 12px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            .btn-close:hover {
+                background: #e2e8f0;
+            }
+            @media (max-width: 600px) {
+                .details-header {
+                    flex-direction: column;
+                    text-align: center;
+                }
+                .details-stats {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .details-actions {
+                    flex-direction: column;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+    } catch (error) {
+        console.error('Show business details error:', error);
+        content.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                <p class="mt-3">Failed to load business details</p>
+                <p class="text-muted mt-2">${error.message}</p>
+                <button class="btn btn-primary mt-3" onclick="VotingSystem.showBusinessDetails('${businessId}')" style="background: #FF0000; color: white; border: none; padding: 10px 20px; border-radius: 8px; margin-top: 15px; cursor: pointer;">Retry</button>
+            </div>
+        `;
+    }
+},
     
     // Filter by category
     filterByCategory: function(category) {
