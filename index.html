@@ -917,49 +917,60 @@ window.addEventListener('load', function() {
 </script>
 </head>
 <body class="bg-white">
-    <!-- ============================================ -->
-<!-- GOOGLE TRANSLATE WIDGET - STICKY ON ALL DEVICES -->
 <!-- ============================================ -->
-<div class="translate-container">
-    <div class="translate-wrapper">
-        <i class="fas fa-language translate-icon"></i>
+<!-- GOOGLE TRANSLATE WIDGET - STICKY PROFESSIONAL -->
+<!-- ============================================ -->
+<div class="translate-sticky-container">
+    <div class="translate-sticky-wrapper">
+        <i class="fas fa-globe translate-icon"></i>
         <div id="google_translate_element"></div>
+        <span class="translate-label">Language</span>
     </div>
 </div>
 
 <style>
-    /* Professional Translate Widget - STICKY (scrolls with user) */
-    .translate-container {
-        position: fixed;
-        top: 100px;
-        right: 20px;
+    /* Professional Sticky Translate Widget - Always Visible */
+    .translate-sticky-container {
+        position: sticky;
+        top: 80px;
         z-index: 9999;
+        display: flex;
+        justify-content: flex-end;
+        padding: 8px 20px 0 0;
+        margin: 0;
+        background: transparent;
+    }
+    
+    .translate-sticky-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         background: white;
+        padding: 6px 16px 6px 12px;
         border-radius: 40px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(255, 0, 0, 0.2);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
     }
     
-    .translate-container:hover {
-        box-shadow: 0 6px 25px rgba(255, 0, 0, 0.2);
+    .translate-sticky-wrapper:hover {
+        box-shadow: 0 4px 15px rgba(255, 0, 0, 0.15);
         border-color: #FF0000;
     }
     
-    .translate-wrapper {
-        display: flex;
-        align-items: center;
-        padding: 8px 16px 8px 12px;
-        gap: 10px;
-    }
-    
     .translate-icon {
-        font-size: 18px;
+        font-size: 16px;
         color: #FF0000;
-        flex-shrink: 0;
     }
     
-    /* Hide Google's default branding and style the select */
+    .translate-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #64748b;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    /* Style Google Translate widget */
     .goog-te-gadget {
         font-family: 'Poppins', sans-serif !important;
         font-size: 0px !important;
@@ -968,12 +979,12 @@ window.addEventListener('load', function() {
     
     .goog-te-gadget .goog-te-combo {
         margin: 0 !important;
-        padding: 8px 28px 8px 12px !important;
+        padding: 6px 28px 6px 12px !important;
         border-radius: 30px !important;
         border: none !important;
-        background: white !important;
+        background: transparent !important;
         font-family: 'Poppins', sans-serif !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         font-weight: 500 !important;
         color: #1a202c !important;
         cursor: pointer !important;
@@ -982,18 +993,14 @@ window.addEventListener('load', function() {
         -webkit-appearance: none;
         background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF0000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
         background-repeat: no-repeat;
-        background-position: right 10px center;
-        background-size: 16px;
-        width: 140px;
+        background-position: right 8px center;
+        background-size: 14px;
+        width: 130px;
     }
     
     .goog-te-gadget .goog-te-combo:focus {
         outline: none;
-        box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
-    }
-    
-    .goog-te-gadget .goog-te-combo:hover {
-        background-color: #f8f9fa;
+        box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.1);
     }
     
     /* Hide Google Translate top banner */
@@ -1005,71 +1012,50 @@ window.addEventListener('load', function() {
         top: 0px !important;
     }
     
-    /* Hide Google's attribution text */
     .goog-te-gadget span {
         display: none !important;
     }
     
-    /* Remove any iframe banners */
     .skiptranslate iframe {
         display: none !important;
     }
     
-    /* ========== STICKY ON MOBILE - SCROLLS WITH USER ========== */
+    /* Mobile specific - always visible at top */
     @media (max-width: 768px) {
-        .translate-container {
-            position: fixed;
-            top: auto;
-            bottom: 20px;
-            right: 15px;
-            left: auto;
-            /* Add slight transparency on mobile for better visibility */
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(5px);
+        .translate-sticky-container {
+            position: sticky;
+            top: 70px;
+            padding: 6px 15px 0 0;
+            z-index: 9998;
+            background: transparent;
         }
         
-        .translate-wrapper {
-            padding: 6px 12px 6px 10px;
+        .translate-sticky-wrapper {
+            padding: 5px 12px 5px 10px;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
         }
         
         .goog-te-gadget .goog-te-combo {
-            padding: 6px 26px 6px 10px !important;
+            padding: 4px 26px 4px 10px !important;
             font-size: 12px !important;
-            width: 125px;
+            width: 120px;
         }
         
         .translate-icon {
             font-size: 14px;
         }
+        
+        .translate-label {
+            font-size: 11px;
+        }
     }
     
     /* Desktop adjustment */
     @media (min-width: 769px) {
-        .translate-container {
-            top: 120px;
-            right: 30px;
-        }
-    }
-    
-    /* For very small screens (under 400px) */
-    @media (max-width: 480px) {
-        .translate-container {
-            bottom: 15px;
-            right: 10px;
-        }
-        
-        .translate-wrapper {
-            padding: 5px 10px 5px 8px;
-        }
-        
-        .goog-te-gadget .goog-te-combo {
-            padding: 5px 24px 5px 8px !important;
-            font-size: 11px !important;
-            width: 115px;
-        }
-        
-        .translate-icon {
-            font-size: 12px;
+        .translate-sticky-container {
+            top: 100px;
         }
     }
 </style>
@@ -1088,7 +1074,7 @@ window.addEventListener('load', function() {
     function saveLanguagePreference() {
         setTimeout(function() {
             const select = document.querySelector('.goog-te-combo');
-            if (select && select.value) {
+            if (select && select.value && select.value !== 'en') {
                 localStorage.setItem('preferredLanguage', select.value);
             }
         }, 500);
