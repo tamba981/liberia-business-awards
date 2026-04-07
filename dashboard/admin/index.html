@@ -5014,17 +5014,45 @@ function showUsersModal() {
 
 async function loadUsers() {
     try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // ✅ FIXED: Get users from Google Apps Script instead of Railway API
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSystemUsers`);
         const data = await response.json();
         
-        if (data.success) {
-            displayUsers(data.users);
+        console.log('📊 System Users data from Google Sheets:', data);
+        
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+        
+        if (data.success && data.users && data.users.length > 0) {
+            tbody.innerHTML = data.users.map(user => `
+                <tr>
+                    <td><strong>${escapeHtml(user.fullName)}</strong></td>
+                    <td>${escapeHtml(user.email)}</td>
+                    <td><span class="status-badge" style="background: ${user.role === 'admin' ? '#8B5CF6' : '#3B82F6'}20; color: ${user.role === 'admin' ? '#8B5CF6' : '#3B82F6'}">${user.role}</span></td>
+                    <td><span class="status-badge status-${user.status === 'active' ? 'active' : 'pending'}">${user.status}</span></td>
+                    <td>${user.timestamp ? new Date(user.timestamp).toLocaleDateString() : '-'}</td>
+                    <td>
+                        <button class="sheet-btn secondary" onclick="editUser('${user.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="sheet-btn ${user.status === 'active' ? 'warning' : 'success'}" onclick="toggleUserStatus('${user.id}')">
+                            ${user.status === 'active' ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button class="sheet-btn danger" onclick="deleteUser('${user.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No users found</td></tr>';
         }
     } catch (error) {
         console.error('Error loading users:', error);
+        const tbody = document.getElementById('usersTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading users</td></tr>';
+        }
     }
 }
 
@@ -5100,19 +5128,23 @@ async function saveUser() {
     if (password) data.password = password;
     
     try {
-        const token = localStorage.getItem('lba_auth_token');
-        const url = id 
-            ? `${API_BASE.replace('/api', '')}/api/admin/system-users/${id}`
-            : `${API_BASE.replace('/api', '')}/api/admin/system-users`;
-        const method = id ? 'PUT' : 'POST';
+        // ✅ FIXED: Save to Google Apps Script
+        const formData = new URLSearchParams();
+        formData.append('formType', 'system_user');
+        formData.append('fullName', data.fullName);
+        formData.append('email', data.email);
+        formData.append('role', data.role);
+        formData.append('status', data.status);
+        if (data.password) formData.append('password', data.password);
+        formData.append('source', 'dashboard');
+        formData.append('timestamp', new Date().toISOString());
         
-        const response = await fetch(url, {
-            method,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: JSON.stringify(data)
+            body: formData
         });
         
         const result = await response.json();
@@ -5120,11 +5152,12 @@ async function saveUser() {
         if (result.success) {
             showNotification(id ? 'User updated!' : 'User created!', 'success');
             hideModal('addUserModal');
-            loadUsers();
+            loadUsers(); // Refresh the list
         } else {
             showNotification(result.error || 'Error saving user', 'error');
         }
     } catch (error) {
+        console.error('Error saving user:', error);
         showNotification('Error saving user', 'error');
     }
 }
