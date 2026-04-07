@@ -504,48 +504,54 @@ sendVerificationCode: async function() {
     },
     
     // Verify code
-    verifyCode: async function() {
-        const code = document.getElementById('verificationCode').value.trim();
+verifyCode: async function() {
+    const code = document.getElementById('verificationCode').value.trim();
+    
+    if (!code) {
+        this.showToast('Please enter the verification code', 'error');
+        return;
+    }
+    
+    const verifyBtn = document.getElementById('verifyCodeBtn');
+    const originalText = verifyBtn.innerHTML;
+    
+    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+    verifyBtn.disabled = true;
+    
+    try {
+        // ✅ FIXED: Call Google Apps Script, not Railway API
+        const response = await fetch(this.config.sheetsUrl, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                formType: 'verify_voter',
+                email: this.state.voterEmail,
+                code: code
+            })
+        });
         
-        if (!code) {
-            this.showToast('Please enter the verification code', 'error');
-            return;
+        const data = await response.json();
+        console.log('🔐 Verification response:', data);
+        
+        if (data.success && data.verified) {
+            this.state.isVerified = true;
+            this.state.verificationCode = code;
+            document.getElementById('verificationSection').style.display = 'none';
+            document.getElementById('voteSection').style.display = 'block';
+            this.showToast('Email verified! You can now vote.', 'success');
+        } else {
+            this.showToast(data.error || 'Invalid verification code', 'error');
         }
-        
-        const verifyBtn = document.getElementById('verifyCodeBtn');
-        const originalText = verifyBtn.innerHTML;
-        
-        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-        verifyBtn.disabled = true;
-        
-        try {
-            const response = await fetch(`${this.config.apiUrl}/voting/verify`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    email: this.state.voterEmail, 
-                    code: code 
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success && data.verified) {
-                this.state.isVerified = true;
-                this.state.verificationCode = code;
-                document.getElementById('verificationSection').style.display = 'none';
-                document.getElementById('voteSection').style.display = 'block';
-                this.showToast('Email verified! You can now vote.', 'success');
-            } else {
-                this.showToast(data.error || 'Invalid verification code', 'error');
-            }
-        } catch (error) {
-            this.showToast('Verification failed. Please try again.', 'error');
-        } finally {
-            verifyBtn.innerHTML = originalText;
-            verifyBtn.disabled = false;
-        }
-    },
+    } catch (error) {
+        console.error('Verification error:', error);
+        this.showToast('Verification failed. Please try again.', 'error');
+    } finally {
+        verifyBtn.innerHTML = originalText;
+        verifyBtn.disabled = false;
+    }
+},
     
     // Resend code
     resendCode: function() {
@@ -555,48 +561,55 @@ sendVerificationCode: async function() {
     },
     
     // Submit vote
-    submitVote: async function() {
-        const voteValue = parseInt(document.getElementById('voteValue').value);
+submitVote: async function() {
+    const voteValue = parseInt(document.getElementById('voteValue').value);
+    
+    const submitBtn = document.getElementById('submitVoteBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    submitBtn.disabled = true;
+    
+    try {
+        // ✅ FIXED: Call Google Apps Script
+        const response = await fetch(this.config.sheetsUrl, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                formType: 'vote',
+                businessId: this.state.selectedBusiness.id,
+                businessName: this.state.selectedBusiness.name,
+                category: this.state.selectedBusiness.category,
+                voteValue: voteValue,
+                voterEmail: this.state.voterEmail,
+                verificationCode: this.state.verificationCode,
+                source: 'website'
+            })
+        });
         
-        const submitBtn = document.getElementById('submitVoteBtn');
-        const originalText = submitBtn.innerHTML;
+        const data = await response.json();
+        console.log('🗳️ Vote submission response:', data);
         
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-        submitBtn.disabled = true;
-        
-        try {
-            const response = await fetch(`${this.config.apiUrl}/voting/cast`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    business_id: this.state.selectedBusiness.id,
-                    business_name: this.state.selectedBusiness.name,
-                    category: this.state.selectedBusiness.category,
-                    vote_value: voteValue,
-                    voter_email: this.state.voterEmail,
-                    verification_code: this.state.verificationCode
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showToast(data.message, 'success');
-                this.closeVoteModal();
-                this.state.votedBusinesses.push(this.state.selectedBusiness.id);
-                localStorage.setItem('votedBusinesses', JSON.stringify(this.state.votedBusinesses));
-                this.loadBusinesses(this.state.currentPage);
-                this.loadLeaderboard();
-            } else {
-                this.showToast(data.error || 'Failed to submit vote', 'error');
-            }
-        } catch (error) {
-            this.showToast('Network error. Please try again.', 'error');
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+        if (data.success) {
+            this.showToast(data.message, 'success');
+            this.closeVoteModal();
+            this.state.votedBusinesses.push(this.state.selectedBusiness.id);
+            localStorage.setItem('votedBusinesses', JSON.stringify(this.state.votedBusinesses));
+            this.loadBusinesses(this.state.currentPage);
+            this.loadLeaderboard();
+        } else {
+            this.showToast(data.error || 'Failed to submit vote', 'error');
         }
-    },
+    } catch (error) {
+        console.error('Submit vote error:', error);
+        this.showToast('Network error. Please try again.', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+},
     
     // Load voted businesses from localStorage
     loadVotedBusinesses: function() {
