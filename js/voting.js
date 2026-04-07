@@ -7,9 +7,8 @@ const VotingSystem = {
     config: {
         apiUrl: 'https://liberia-business-awards-production.up.railway.app/api',
         sheetsUrl: 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec',
-        votingStart: new Date('2026-04-01'),
-        votingEnd: new Date('2026-12-31'),
-        isActive: false
+        // Voting is ALWAYS open - date check removed
+        isActive: true
     },
     
     // State
@@ -26,119 +25,42 @@ const VotingSystem = {
     // Initialize voting system
     init: function() {
         console.log('🎯 Voting System Initializing...');
-        this.checkVotingStatus();
+        this.displayVotingPeriodMessage();
         this.loadLeaderboard();
         this.loadBusinesses();
         this.setupEventListeners();
         this.loadVotedBusinesses();
     },
     
-    // Check if voting is active
-checkVotingStatus: async function() {
-    try {
-        // First, check using local config dates (bypass API for testing)
-        const now = new Date();
-        const isLocallyActive = now >= this.config.votingStart && now <= this.config.votingEnd;
-        
-        // Try to get status from API, but fall back to local config
-        let apiActive = false;
-        try {
-            const response = await fetch(`${this.config.apiUrl}/voting/status`);
-            const data = await response.json();
-            apiActive = data.isActive;
-        } catch (apiError) {
-            console.log('API status check failed, using local config');
-        }
-        
-        // Use local config for testing (override API)
-        this.config.isActive = isLocallyActive;
+    // Display voting period message (auto-updates year)
+    displayVotingPeriodMessage: function() {
+        const currentYear = new Date().getFullYear();
+        const votingStart = `June 1, ${currentYear}`;
+        const votingEnd = `July 30, ${currentYear}`;
         
         const statusElement = document.getElementById('votingStatus');
         const countdownElement = document.getElementById('votingCountdown');
         
         if (statusElement) {
-            if (this.config.isActive) {
-                statusElement.innerHTML = `
-                    <div class="voting-active-badge">
-                        <i class="fas fa-check-circle"></i> VOTING IS OPEN!
-                    </div>
-                    <p>Cast your vote for Liberia's best businesses. Voting ends ${this.config.votingEnd.toLocaleDateString()}</p>
-                `;
-                // Hide countdown if voting is active
-                if (countdownElement) countdownElement.innerHTML = '';
-            } else if (now < this.config.votingStart) {
-                statusElement.innerHTML = `
-                    <div class="voting-pending-badge">
-                        <i class="fas fa-clock"></i> VOTING STARTS SOON
-                    </div>
-                    <p>Voting begins ${this.config.votingStart.toLocaleDateString()}. Get ready to support your favorite businesses!</p>
-                `;
-                if (countdownElement && now < this.config.votingStart) {
-                    this.startCountdown();
-                }
-            } else {
-                statusElement.innerHTML = `
-                    <div class="voting-closed-badge">
-                        <i class="fas fa-lock"></i> VOTING HAS CLOSED
-                    </div>
-                    <p>Thank you for participating! Winners will be announced at the awards ceremony.</p>
-                `;
-                if (countdownElement) countdownElement.innerHTML = '';
-            }
+            statusElement.innerHTML = `
+                <div class="voting-active-badge">
+                    <i class="fas fa-check-circle"></i> VOTING IS OPEN!
+                </div>
+                <p>Support Liberian businesses by casting your vote. Public voting and jury evaluation from ${votingStart} - ${votingEnd}, ANNUALLY</p>
+            `;
         }
         
-        console.log('📊 Voting Status:', {
-            isActive: this.config.isActive,
-            votingStart: this.config.votingStart,
-            votingEnd: this.config.votingEnd,
-            now: now
+        if (countdownElement) {
+            countdownElement.innerHTML = '';
+        }
+        
+        console.log('📊 Voting Period:', {
+            start: votingStart,
+            end: votingEnd,
+            isActive: true
         });
-        
-    } catch (error) {
-        console.error('Status check failed:', error);
-        // Fallback to local config
-        const now = new Date();
-        this.config.isActive = now >= this.config.votingStart && now <= this.config.votingEnd;
-    }
-},
+    },
     
-    // Start countdown timer
-startCountdown: function() {
-    const countdownElement = document.getElementById('votingCountdown');
-    if (!countdownElement) return;
-    
-    const updateCountdown = () => {
-        const now = new Date();
-        const diff = this.config.votingStart - now;
-        
-        if (diff <= 0) {
-            clearInterval(this.countdownInterval);
-            countdownElement.innerHTML = '<span class="text-success">Voting is now OPEN!</span>';
-            this.checkVotingStatus();
-            return;
-        }
-        
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
-        countdownElement.innerHTML = `
-            <div class="countdown-timer">
-                <span class="countdown-number">${days}d</span>
-                <span class="countdown-number">${hours}h</span>
-                <span class="countdown-number">${minutes}m</span>
-                <span class="countdown-number">${seconds}s</span>
-            </div>
-            <p class="countdown-label">Until voting opens</p>
-        `;
-    };
-    
-    updateCountdown();
-    if (this.countdownInterval) clearInterval(this.countdownInterval);
-    this.countdownInterval = setInterval(updateCountdown, 1000);
-},
-
     // Load businesses for voting (from Google Sheets manual list)
 loadBusinesses: async function(page = 1) {
     const container = document.getElementById('votingBusinessesContainer');
@@ -269,6 +191,7 @@ loadLocalVotingBusinesses: function(page = 1) {
                 <div class="text-center py-5">
                     <i class="fas fa-building fa-2x text-muted"></i>
                     <p class="mt-3">No businesses found in this category.</p>
+                    <p class="mt-2 text-muted">Add businesses to the VotingBusinesses sheet to enable voting.</p>
                 </div>
             `;
             return;
@@ -308,13 +231,9 @@ loadLocalVotingBusinesses: function(page = 1) {
                             <div class="already-voted-badge">
                                 <i class="fas fa-check-circle"></i> You voted for this business
                             </div>
-                        ` : this.config.isActive ? `
+                        ` : `
                             <button class="btn-vote" onclick="VotingSystem.openVoteModal('${business._id}', '${this.escapeHtml(business.business_name)}', '${business.category || 'General'}')">
                                 <i class="fas fa-vote-yea"></i> Vote Now
-                            </button>
-                        ` : `
-                            <button class="btn-vote disabled" disabled>
-                                <i class="fas fa-lock"></i> Voting Closed
                             </button>
                         `}
                         <button class="btn-details" onclick="VotingSystem.showBusinessDetails('${business._id}')">
@@ -400,11 +319,7 @@ loadLocalVotingBusinesses: function(page = 1) {
     
     // Open vote modal
     openVoteModal: function(businessId, businessName, category) {
-        if (!this.config.isActive) {
-            this.showToast('Voting is currently closed', 'warning');
-            return;
-        }
-        
+        // REMOVED date check - voting is always open
         this.state.selectedBusiness = { id: businessId, name: businessName, category: category };
         
         const modal = document.getElementById('voteModal');
@@ -449,7 +364,6 @@ sendVerificationCode: async function() {
     sendBtn.disabled = true;
     
     try {
-        // ✅ FIXED: Use this.config.sheetsUrl instead of undefined GOOGLE_APPS_SCRIPT_URL
         const response = await fetch(this.config.sheetsUrl, {
             method: 'POST',
             headers: { 
@@ -519,7 +433,6 @@ verifyCode: async function() {
     verifyBtn.disabled = true;
     
     try {
-        // ✅ FIXED: Call Google Apps Script, not Railway API
         const response = await fetch(this.config.sheetsUrl, {
             method: 'POST',
             headers: { 
@@ -562,7 +475,6 @@ verifyCode: async function() {
     
     // Submit vote
 submitVote: async function() {
-    // ✅ FIX: Check if selectedBusiness exists
     if (!this.state.selectedBusiness || !this.state.selectedBusiness.id) {
         this.showToast('Please select a business to vote for', 'error');
         this.closeVoteModal();
@@ -578,7 +490,6 @@ submitVote: async function() {
     submitBtn.disabled = true;
     
     try {
-        // ✅ FIX: Store business data locally before any potential null issues
         const businessId = this.state.selectedBusiness.id;
         const businessName = this.state.selectedBusiness.name;
         const businessCategory = this.state.selectedBusiness.category;
@@ -647,7 +558,6 @@ submitVote: async function() {
             const response = await fetch(`${this.config.apiUrl}/voting/business/${businessId}/stats`);
             const data = await response.json();
             
-            // Also need business basic info - fetch from businesses endpoint
             const businessesResponse = await fetch(`${this.config.apiUrl}/voting/businesses?page=1&limit=100`);
             const businessesData = await businessesResponse.json();
             const business = businessesData.businesses?.find(b => b._id === businessId);
@@ -708,7 +618,7 @@ submitVote: async function() {
                         </div>
                         
                         <div class="details-actions">
-                            ${this.config.isActive && !this.state.votedBusinesses.includes(businessId) ? `
+                            ${!this.state.votedBusinesses.includes(businessId) ? `
                                 <button class="btn-vote large" onclick="VotingSystem.closeDetailsModal(); VotingSystem.openVoteModal('${businessId}', '${this.escapeHtml(business?.business_name || 'Business')}', '${business?.category || 'General'}')">
                                     <i class="fas fa-vote-yea"></i> Vote for this Business
                                 </button>
@@ -734,7 +644,6 @@ submitVote: async function() {
         this.state.currentCategory = category;
         this.loadBusinesses(1);
         
-        // Update active button
         document.querySelectorAll('.category-filter-btn').forEach(btn => {
             btn.classList.remove('active');
             if (btn.dataset.category === category) {
@@ -772,7 +681,6 @@ submitVote: async function() {
     
     // Setup event listeners
     setupEventListeners: function() {
-        // Close modals on background click
         document.getElementById('voteModal')?.addEventListener('click', (e) => {
             if (e.target === document.getElementById('voteModal')) {
                 this.closeVoteModal();
@@ -785,7 +693,6 @@ submitVote: async function() {
             }
         });
         
-        // Escape key to close
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeVoteModal();
@@ -833,22 +740,14 @@ submitVote: async function() {
 // SOCIAL SHARE FUNCTIONS
 // ============================================
 
-// ============================================
-// SOCIAL SHARE FUNCTIONS - DIRECT TO VOTING SECTION
-// ============================================
-
-// Get voting section URL with hash
 function getVotingSectionUrl() {
-    // Get the current URL without any existing hash
     const baseUrl = window.location.href.split('#')[0];
-    // Add the voting section ID as hash
     return `${baseUrl}#voting`;
 }
 
-// Share on Facebook
 function shareVotingOnFacebook() {
     const url = encodeURIComponent(getVotingSectionUrl());
-    const quote = encodeURIComponent('🗳️ Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help choose the winners of the Liberia Business Awards 2026.');
+    const quote = encodeURIComponent('🗳️ Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help choose the winners of the Liberia Business Awards.');
     
     window.open(
         `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${quote}`,
@@ -857,10 +756,10 @@ function shareVotingOnFacebook() {
     );
 }
 
-// Share on Twitter
 function shareVotingOnTwitter() {
     const url = encodeURIComponent(getVotingSectionUrl());
-    const text = encodeURIComponent('🗳️ Vote for the best businesses in Liberia! 🇱🇷\n\nSupport local entrepreneurs and help choose the winners of the Liberia Business Awards 2026.\n\n');
+    const currentYear = new Date().getFullYear();
+    const text = encodeURIComponent(`🗳️ Vote for the best businesses in Liberia! 🇱🇷\n\nSupport local entrepreneurs and help choose the winners of the Liberia Business Awards ${currentYear}.\n\n`);
     const hashtags = 'LiberiaBusinessAwards,Vote,Liberia';
     
     window.open(
@@ -870,10 +769,10 @@ function shareVotingOnTwitter() {
     );
 }
 
-// Share on LinkedIn
 function shareVotingOnLinkedIn() {
     const url = encodeURIComponent(getVotingSectionUrl());
-    const title = encodeURIComponent('Liberia Business Awards 2026 - Voting Open');
+    const currentYear = new Date().getFullYear();
+    const title = encodeURIComponent(`Liberia Business Awards ${currentYear} - Voting Open`);
     const summary = encodeURIComponent('Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help shape the future of Liberian business.');
     
     window.open(
@@ -883,10 +782,9 @@ function shareVotingOnLinkedIn() {
     );
 }
 
-// Share on WhatsApp
 function shareVotingOnWhatsApp() {
     const url = encodeURIComponent(getVotingSectionUrl());
-    const text = encodeURIComponent('🗳️ Vote for Liberia Business Awards 2026!\n\nSupport local businesses and help choose the winners. Cast your vote here:');
+    const text = encodeURIComponent('🗳️ Vote for Liberia Business Awards!\n\nSupport local businesses and help choose the winners. Cast your vote here:');
     
     window.open(
         `https://api.whatsapp.com/send?text=${text}%20${url}`,
@@ -895,15 +793,15 @@ function shareVotingOnWhatsApp() {
     );
 }
 
-// Share by Email
 function shareVotingByEmail() {
     const url = getVotingSectionUrl();
-    const subject = encodeURIComponent('Vote for Liberia Business Awards 2026');
+    const currentYear = new Date().getFullYear();
+    const subject = encodeURIComponent(`Vote for Liberia Business Awards ${currentYear}`);
     const body = encodeURIComponent(
         'Hi,\n\nI wanted to share the Liberia Business Awards voting page with you.\n\n' +
         'Cast your vote for the best businesses in Liberia! Support local entrepreneurs and help choose the winners.\n\n' +
         'Vote here: ' + url + '\n\n' +
-        'Voting period: June 1 - July 30, 2026\n\n' +
+        'Voting period: June 1 - July 30, ' + currentYear + '\n\n' +
         'Best regards,\n' +
         document.title
     );
@@ -911,7 +809,6 @@ function shareVotingByEmail() {
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
-// Copy voting link to clipboard
 async function copyVotingLink() {
     const url = getVotingSectionUrl();
     
@@ -919,7 +816,6 @@ async function copyVotingLink() {
         await navigator.clipboard.writeText(url);
         showCopySuccessMessage('Voting section link copied!');
     } catch (err) {
-        // Fallback for older browsers
         const textarea = document.createElement('textarea');
         textarea.value = url;
         document.body.appendChild(textarea);
@@ -931,24 +827,20 @@ async function copyVotingLink() {
 }
 
 function showCopySuccessMessage(message) {
-    // Remove existing toast if any
     const existingToast = document.querySelector('.copy-success-toast');
     if (existingToast) existingToast.remove();
     
-    // Create new toast
     const toast = document.createElement('div');
     toast.className = 'copy-success-toast';
     toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
     document.body.appendChild(toast);
     
-    // Remove after 3 seconds
     setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// Add these to window object so they're accessible from HTML
 window.shareVotingOnFacebook = shareVotingOnFacebook;
 window.shareVotingOnTwitter = shareVotingOnTwitter;
 window.shareVotingOnLinkedIn = shareVotingOnLinkedIn;
