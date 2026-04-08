@@ -217,13 +217,12 @@ loadLocalVotingBusinesses: function(page = 1) {
                             <p><i class="fas fa-map-marker-alt"></i> ${business.location || 'Liberia'}</p>
                         </div>
                         <div class="vote-stats">
-                            <div class="vote-score">
-                                <span class="score-value">${avgScore.toFixed(1)}</span>
-                                <span class="score-label">/10</span>
-                            </div>
-                            <div class="vote-count">
-                                <i class="fas fa-users"></i> ${voteCount} votes
-                            </div>
+                        <div class="vote-score">
+                        <span class="score-value">${avgScore * voteCount}</span>
+                        <span class="score-label">points</span>
+                        </div>
+                        <div class="vote-count">
+                        <i class="fas fa-users"></i> ${voteCount} votes
                         </div>
                     </div>
                     <div class="voting-card-footer">
@@ -280,6 +279,7 @@ loadLocalVotingBusinesses: function(page = 1) {
     },
 
     // Load leaderboard
+    // Load leaderboard - SHOWING TOTAL SCORES, NOT AVERAGES
 loadLeaderboard: async function() {
     const container = document.getElementById('votingLeaderboard');
     if (!container) return;
@@ -287,28 +287,36 @@ loadLeaderboard: async function() {
     container.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading leaderboard...</div>';
     
     try {
-        // ✅ FIXED: Get vote totals from Google Apps Script instead of Railway API
+        // Get vote totals from Google Apps Script
         const response = await fetch(`${this.config.sheetsUrl}?action=getVoteTotals`);
         const data = await response.json();
         
         console.log('📊 Leaderboard data:', data);
         
         if (data.success && data.totals && data.totals.length > 0) {
-            // Sort by average score (highest first)
-            const sortedTotals = [...data.totals].sort((a, b) => b.averageScore - a.averageScore);
+            // ✅ FIXED: Sort by totalScore (sum of all votes) instead of averageScore
+            // First, calculate totalScore for each business
+            const totalsWithSum = data.totals.map(item => ({
+                ...item,
+                totalScore: item.averageScore * item.totalVotes  // Calculate total sum
+            }));
             
-            // Add rank and filter out businesses with zero votes
-            const leaderboard = sortedTotals
+            // Sort by totalScore (highest first)
+            const sortedTotals = [...totalsWithSum]
                 .filter(item => item.totalVotes > 0)
-                .map((item, index) => ({
-                    rank: index + 1,
-                    business_name: item.businessName,
-                    category: item.category,
-                    total_votes: item.totalVotes,
-                    average_score: item.averageScore,
-                    public_votes: item.publicVotes,
-                    jury_votes: item.juryVotes
-                }));
+                .sort((a, b) => b.totalScore - a.totalScore);
+            
+            // Add rank
+            const leaderboard = sortedTotals.map((item, index) => ({
+                rank: index + 1,
+                business_name: item.businessName,
+                category: item.category,
+                total_votes: item.totalVotes,
+                total_score: item.totalScore,  // This is the SUM of all votes
+                average_score: item.averageScore,
+                public_votes: item.publicVotes,
+                jury_votes: item.juryVotes
+            }));
             
             if (leaderboard.length > 0) {
                 container.innerHTML = `
@@ -321,8 +329,8 @@ loadLeaderboard: async function() {
                                     <div class="leaderboard-category">${this.escapeHtml(item.category)}</div>
                                 </div>
                                 <div class="leaderboard-score">
-                                    <span class="score-number">${item.average_score.toFixed(1)}</span>
-                                    <span class="score-max">/10</span>
+                                    <span class="score-number">${item.total_score}</span>
+                                    <span class="score-max">points</span>
                                     <div class="leaderboard-votes">${item.total_votes} votes</div>
                                 </div>
                             </div>
