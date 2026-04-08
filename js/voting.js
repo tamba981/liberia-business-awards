@@ -62,6 +62,7 @@ const VotingSystem = {
     },
     
     // Load businesses for voting (from Google Sheets manual list)
+   // Load businesses for voting (from Google Sheets manual list)
 loadBusinesses: async function(page = 1) {
     const container = document.getElementById('votingBusinessesContainer');
     if (!container) return;
@@ -96,7 +97,6 @@ loadBusinesses: async function(page = 1) {
             pagination = data.pagination;
         } else {
             console.warn('No businesses in response, using fallback data');
-            // Only use fallback if API really fails, not just empty
             if (data && data.error) {
                 console.error('API Error:', data.error);
                 this.loadLocalVotingBusinesses(page);
@@ -105,11 +105,33 @@ loadBusinesses: async function(page = 1) {
         }
         
         if (businesses.length > 0) {
-            this.displayBusinesses(businesses);
+            // ✅ FIXED: Fetch vote totals separately to get actual vote counts
+            const totalsResponse = await fetch(`${this.config.sheetsUrl}?action=getVoteTotals`);
+            const totalsData = await totalsResponse.json();
+            
+            // Create a map of businessId to vote stats
+            const voteStatsMap = {};
+            if (totalsData.success && totalsData.totals) {
+                totalsData.totals.forEach(total => {
+                    voteStatsMap[total.businessId] = {
+                        average_score: total.averageScore || 0,
+                        total_votes: total.totalVotes || 0
+                    };
+                });
+            }
+            
+            // Merge vote stats into businesses
+            const businessesWithStats = businesses.map(business => ({
+                ...business,
+                vote_stats: voteStatsMap[business._id] || { average_score: 0, total_votes: 0 }
+            }));
+            
+            console.log('📊 Businesses with vote stats:', businessesWithStats);
+            
+            this.displayBusinesses(businessesWithStats);
             if (pagination) {
                 this.displayPagination(pagination);
             } else {
-                // Create pagination from businesses array
                 this.displayPagination({
                     page: page,
                     pages: Math.ceil(businesses.length / 12),
@@ -117,13 +139,11 @@ loadBusinesses: async function(page = 1) {
                 });
             }
         } else {
-            // No businesses from API, show empty state
             this.displayBusinesses([]);
         }
         
     } catch (error) {
         console.error('Load businesses error:', error);
-        // Only fall back to local data on network error
         this.loadLocalVotingBusinesses(page);
     }
 },
@@ -217,14 +237,14 @@ loadLocalVotingBusinesses: function(page = 1) {
                             <p><i class="fas fa-map-marker-alt"></i> ${business.location || 'Liberia'}</p>
                         </div>
                         <div class="vote-stats">
-                        <div class="vote-score">
-                        <span class="score-value">${avgScore * voteCount}</span>
-                        <span class="score-label">points</span>
-                        </div>
-                        <div class="vote-count">
-                        <i class="fas fa-users"></i> ${voteCount} votes
-                        </div>
-                    </div>
+    <div class="vote-score">
+        <span class="score-value">${(avgScore * voteCount).toFixed(0)}</span>
+        <span class="score-label">points</span>
+    </div>
+    <div class="vote-count">
+        <i class="fas fa-users"></i> ${voteCount} votes
+    </div>
+</div>
                     <div class="voting-card-footer">
                         ${hasVoted ? `
                             <div class="already-voted-badge">
