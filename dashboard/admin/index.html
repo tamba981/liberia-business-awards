@@ -3328,7 +3328,7 @@ function createVotingBusinessesModal() {
     <\/div>
     
     <div class="modal" id="addVotingBusinessModal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
                 <h2>Add Business to Voting</h2>
                 <button class="modal-close" onclick="hideModal('addVotingBusinessModal')">
@@ -3341,33 +3341,209 @@ function createVotingBusinessesModal() {
                         <label>Business Name *<\/label>
                         <input type="text" id="vbBusinessName" class="sheet-btn secondary" style="width: 100%;" required>
                     <\/div>
+                    
+                    <!-- FULL CATEGORY DROPDOWN - ALL 72+ CATEGORIES -->
                     <div class="form-group">
-                        <label>Category *<\/label>
-                        <select id="vbCategory" class="sheet-btn secondary" style="width: 100%;">
-                            <option value="General">General<\/option>
-                            <option value="Agriculture">Agriculture<\/option>
-                            <option value="Technology">Technology<\/option>
-                            <option value="Manufacturing">Manufacturing<\/option>
-                            <option value="Energy">Energy<\/option>
-                            <option value="Education">Education<\/option>
-                            <option value="Healthcare">Healthcare<\/option>
-                            <option value="Tourism">Tourism<\/option>
-                            <option value="Finance">Finance<\/option>
-                            <option value="Transportation">Transportation<\/option>
-                        <\/select>
+                        <label>Award Category *<\/label>
+                        <select id="vbCategory" class="sheet-btn secondary" style="width: 100%;" required>
+                            <option value="">Select Category</option>
+                            
+                            <!-- ========== TIER 1: STARTUP AWARDS ========== -->
+                            <optgroup label="🚀 STARTUP AWARDS (0-3 Years)">
+                                <option value="Startup of the Year">Startup of the Year</option>
+                                <option value="Tech Startup of the Year">Tech Startup of the Year</option>
+                                <option value="Innovative Startup Award">Innovative Startup Award</option>
+                                <option value="Rising Startup Founder">Rising Startup Founder</option>
+                            </optgroup>
+                            
+                            <!-- ========== TIER 2: SME AWARDS ========== -->
+                            <optgroup label="📈 SME AWARDS">
+                                <option value="SME of the Year">SME of the Year</option>
+                                <option value="Fast-Growing SME">Fast-Growing SME</option>
+                                <option value="SME Innovation Award">SME Innovation Award</option>
+                                <option value="SME Export Excellence">SME Export Excellence</option>
+                            </optgroup>
+                            
+                            <!-- ========== TIER 3: LARGE ENTERPRISE AWARDS ========== -->
+                            <optgroup label="🏢 LARGE ENTERPRISE AWARDS">
+                                <option value="Large Enterprise of the Year">Large Enterprise of the Year</option>
+                                <option value="Corporate Excellence Award">Corporate Excellence Award</option>
+                                <option value="Industry Leader Award">Industry Leader Award</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 1: Agriculture ========== -->
+                            <optgroup label="🌾 Agriculture Sector">
+                                <option value="Agriculture Company of the Year">Agriculture Company of the Year</option>
+                                <option value="Agro-Processing Company of the Year">Agro-Processing Company of the Year</option>
+                                <option value="Fisheries & Aquaculture Excellence">Fisheries & Aquaculture Excellence</option>
+                                <option value="Sustainable Agriculture Leadership">Sustainable Agriculture Leadership</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 2: Mining ========== -->
+                            <optgroup label="⛏️ Mining & Extractives Sector">
+                                <option value="Mining Company of the Year">Mining Company of the Year</option>
+                                <option value="Diamond & Gemstone Excellence">Diamond & Gemstone Excellence</option>
+                                <option value="Quarrying & Construction Materials">Quarrying & Construction Materials</option>
+                                <option value="Environmental Stewardship in Mining">Environmental Stewardship in Mining</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 3: Oil & Gas ========== -->
+                            <optgroup label="🛢️ Oil & Gas Sector">
+                                <option value="Petroleum Exploration Excellence">Petroleum Exploration Excellence</option>
+                                <option value="Fuel Distribution Company of the Year">Fuel Distribution Company of the Year</option>
+                                <option value="Oil Storage & Logistics Excellence">Oil Storage & Logistics Excellence</option>
+                                <option value="Safety & Compliance Leadership">Safety & Compliance Leadership</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 4: Manufacturing ========== -->
+                            <optgroup label="🏭 Manufacturing & Industrial Sector">
+                                <option value="Manufacturing Company of the Year">Manufacturing Company of the Year</option>
+                                <option value="Food & Beverage Production Excellence">Food & Beverage Production Excellence</option>
+                                <option value="Construction Materials Manufacturing">Construction Materials Manufacturing</option>
+                                <option value="Industrial Innovation Award">Industrial Innovation Award</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 5: Construction ========== -->
+                            <optgroup label="🏗️ Construction & Real Estate Sector">
+                                <option value="Construction Company of the Year">Construction Company of the Year</option>
+                                <option value="Real Estate Development Excellence">Real Estate Development Excellence</option>
+                                <option value="Infrastructure Project of the Year">Infrastructure Project of the Year</option>
+                                <option value="Architectural Innovation Award">Architectural Innovation Award</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 6: Energy ========== -->
+                            <optgroup label="⚡ Energy & Utilities Sector">
+                                <option value="Energy Company of the Year">Energy Company of the Year</option>
+                                <option value="Water & Sanitation Excellence">Water & Sanitation Excellence</option>
+                                <option value="Renewable Energy Innovation">Renewable Energy Innovation</option>
+                                <option value="Utilities Management Excellence">Utilities Management Excellence</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 7: Transportation ========== -->
+                            <optgroup label="🚚 Transportation & Logistics Sector">
+                                <option value="Logistics Company of the Year">Logistics Company of the Year</option>
+                                <option value="Aviation Services Excellence">Aviation Services Excellence</option>
+                                <option value="Port & Terminal Operations Excellence">Port & Terminal Operations Excellence</option>
+                                <option value="Road Transport Excellence">Road Transport Excellence</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 8: ICT ========== -->
+                            <optgroup label="💻 Information & Communications Technology">
+                                <option value="Telecom Company of the Year">Telecom Company of the Year</option>
+                                <option value="IT Solutions Provider of the Year">IT Solutions Provider of the Year</option>
+                                <option value="Internet Service Excellence">Internet Service Excellence</option>
+                                <option value="Tech Startup of the Year">Tech Startup of the Year</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 9: Financial Services ========== -->
+                            <optgroup label="💰 Financial Services Sector">
+                                <option value="Bank of the Year">Bank of the Year</option>
+                                <option value="Microfinance Institution of the Year">Microfinance Institution of the Year</option>
+                                <option value="Insurance Company of the Year">Insurance Company of the Year</option>
+                                <option value="Investment & Capital Markets Excellence">Investment & Capital Markets Excellence</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 10: Education ========== -->
+                            <optgroup label="📚 Education Sector">
+                                <option value="Educational Institution of the Year">Educational Institution of the Year</option>
+                                <option value="Vocational Training Excellence">Vocational Training Excellence</option>
+                                <option value="EdTech Innovation Award">EdTech Innovation Award</option>
+                                <option value="Academic Excellence Award">Academic Excellence Award</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 11: Health ========== -->
+                            <optgroup label="🏥 Health Sector">
+                                <option value="Healthcare Provider of the Year">Healthcare Provider of the Year</option>
+                                <option value="Pharmaceutical Company of the Year">Pharmaceutical Company of the Year</option>
+                                <option value="Medical Services Excellence">Medical Services Excellence</option>
+                                <option value="Public Health Initiative of the Year">Public Health Initiative of the Year</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 12: Tourism ========== -->
+                            <optgroup label="🏨 Tourism & Hospitality Sector">
+                                <option value="Hotel of the Year">Hotel of the Year</option>
+                                <option value="Restaurant & Culinary Excellence">Restaurant & Culinary Excellence</option>
+                                <option value="Travel Services Company of the Year">Travel Services Company of the Year</option>
+                                <option value="Eco-Tourism Innovation Award">Eco-Tourism Innovation Award</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 13: Trade ========== -->
+                            <optgroup label="🛍️ Trade & Commerce Sector">
+                                <option value="Export Company of the Year">Export Company of the Year</option>
+                                <option value="Retail Excellence Award">Retail Excellence Award</option>
+                                <option value="Wholesale Distributor of the Year">Wholesale Distributor of the Year</option>
+                                <option value="Market Innovation Award">Market Innovation Award</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 14: Public Sector ========== -->
+                            <optgroup label="🏛️ Public Sector & Government Services">
+                                <option value="Public Service Excellence Award">Public Service Excellence Award</option>
+                                <option value="Government Partnership Initiative">Government Partnership Initiative</option>
+                                <option value="Public Enterprise of the Year">Public Enterprise of the Year</option>
+                                <option value="Civic Engagement Excellence">Civic Engagement Excellence</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 15: Civil Society ========== -->
+                            <optgroup label="🤝 Civil Society & Nonprofit Sector">
+                                <option value="NGO of the Year">NGO of the Year</option>
+                                <option value="Community Initiative Award">Community Initiative Award</option>
+                                <option value="International Development Partner">International Development Partner</option>
+                                <option value="Social Impact Leadership">Social Impact Leadership</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 16: Media ========== -->
+                            <optgroup label="📺 Media & Communications Sector">
+                                <option value="Media House of the Year">Media House of the Year</option>
+                                <option value="Journalism Excellence Award">Journalism Excellence Award</option>
+                                <option value="Advertising & Marketing Agency of the Year">Advertising & Marketing Agency of the Year</option>
+                                <option value="Digital Media Innovation">Digital Media Innovation</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 17: Arts & Culture ========== -->
+                            <optgroup label="🎨 Arts, Culture & Creative Industry">
+                                <option value="Creative Arts Company of the Year">Creative Arts Company of the Year</option>
+                                <option value="Entertainment & Performance Excellence">Entertainment & Performance Excellence</option>
+                                <option value="Fashion & Design Innovation">Fashion & Design Innovation</option>
+                                <option value="Film & Media Production Excellence">Film & Media Production Excellence</option>
+                            </optgroup>
+                            
+                            <!-- ========== SECTOR 18: Sports ========== -->
+                            <optgroup label="⚽ Sports & Recreation Sector">
+                                <option value="Sports Club of the Year">Sports Club of the Year</option>
+                                <option value="Sports Development Initiative">Sports Development Initiative</option>
+                                <option value="Fitness & Recreation Center of the Year">Fitness & Recreation Center of the Year</option>
+                                <option value="Athletic Excellence Award">Athletic Excellence Award</option>
+                            </optgroup>
+                            
+                            <!-- ========== NATIONAL LEADERSHIP AWARDS ========== -->
+                            <optgroup label="👑 NATIONAL LEADERSHIP AWARDS">
+                                <option value="CEO of the Year">CEO of the Year</option>
+                                <option value="Entrepreneur of the Year">Entrepreneur of the Year</option>
+                                <option value="Woman Entrepreneur of the Year">Woman Entrepreneur of the Year</option>
+                                <option value="Young Entrepreneur of the Year">Young Entrepreneur of the Year (Under 35)</option>
+                                <option value="Business Innovation Leader">Business Innovation Leader</option>
+                                <option value="Sustainability Champion">Sustainability Champion</option>
+                                <option value="CSR Excellence Award">CSR Excellence Award</option>
+                                <option value="Overall Company of the Year">Overall Company of the Year</option>
+                            </optgroup>
+                        </select>
                     <\/div>
+                    
                     <div class="form-group">
                         <label>Location<\/label>
                         <input type="text" id="vbLocation" class="sheet-btn secondary" style="width: 100%;" placeholder="Monrovia, Liberia">
                     <\/div>
+                    
                     <div class="form-group">
                         <label>Logo URL (optional)<\/label>
                         <input type="url" id="vbLogo" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
                     <\/div>
+                    
                     <div class="form-group">
                         <label>Display Order (lower = higher)<\/label>
                         <input type="number" id="vbOrder" class="sheet-btn secondary" style="width: 100%;" value="999">
                     <\/div>
+                    
                     <div style="display: flex; gap: 10px; margin-top: 20px;">
                         <button type="button" class="sheet-btn warning" onclick="hideModal('addVotingBusinessModal')" style="flex: 1;">Cancel<\/button>
                         <button type="button" class="sheet-btn" onclick="saveVotingBusiness()" style="flex: 2;">Add to Voting<\/button>
@@ -3380,7 +3556,6 @@ function createVotingBusinessesModal() {
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
-
 async function loadVotingBusinessesList() {
     const tbody = document.getElementById('votingBusinessesTableBody');
     if (!tbody) return;
