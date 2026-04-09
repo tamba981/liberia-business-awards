@@ -11342,10 +11342,9 @@ console.log('✅ Voting system frontend fixes applied');
         }
     }
 </style>
-
 <script>
 <!-- ============================================ -->
-<!-- AI LIVE CHAT SUPPORT WIDGET - COMPLETE MVP -->
+<!-- AI LIVE CHAT SUPPORT WIDGET - COMPLETE -->
 <!-- ============================================ -->
 <div id="chatWidget" class="chat-widget">
     <div class="chat-button" id="chatButton">
@@ -11921,24 +11920,39 @@ console.log('✅ Voting system frontend fixes applied');
     // ============ CHAT STATE ============
     let chatOpen = false;
     
-    // ============ OPEN/CLOSE CHAT ============
-    document.getElementById('chatButton').addEventListener('click', function() {
-        const container = document.getElementById('chatContainer');
-        container.classList.toggle('open');
-        chatOpen = !chatOpen;
-        if (chatOpen) {
-            document.getElementById('chatInput').focus();
+    // Wait for DOM to be fully loaded before attaching event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatButton = document.getElementById('chatButton');
+        const chatClose = document.getElementById('chatClose');
+        const chatContainer = document.getElementById('chatContainer');
+        
+        if (chatButton) {
+            chatButton.addEventListener('click', function() {
+                if (chatContainer) {
+                    chatContainer.classList.toggle('open');
+                    chatOpen = !chatOpen;
+                    if (chatOpen) {
+                        const chatInput = document.getElementById('chatInput');
+                        if (chatInput) chatInput.focus();
+                    }
+                }
+            });
         }
-    });
-    
-    document.getElementById('chatClose').addEventListener('click', function() {
-        document.getElementById('chatContainer').classList.remove('open');
-        chatOpen = false;
+        
+        if (chatClose) {
+            chatClose.addEventListener('click', function() {
+                if (chatContainer) {
+                    chatContainer.classList.remove('open');
+                    chatOpen = false;
+                }
+            });
+        }
     });
     
     // ============ SEND MESSAGE ============
     window.sendChatMessage = function() {
         const input = document.getElementById('chatInput');
+        if (!input) return;
         const message = input.value.trim();
         
         if (!message) return;
@@ -11984,6 +11998,8 @@ console.log('✅ Voting system frontend fixes applied');
     // ============ ADD MESSAGE TO CHAT ============
     function addMessage(text, sender) {
         const messagesContainer = document.getElementById('chatMessages');
+        if (!messagesContainer) return;
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}`;
         
@@ -12006,6 +12022,8 @@ console.log('✅ Voting system frontend fixes applied');
     // ============ TYPING INDICATOR ============
     function showTypingIndicator() {
         const messagesContainer = document.getElementById('chatMessages');
+        if (!messagesContainer) return;
+        
         const typingDiv = document.createElement('div');
         typingDiv.className = 'message bot';
         typingDiv.id = 'typingIndicator';
@@ -12083,6 +12101,8 @@ console.log('✅ Voting system frontend fixes applied');
         }
     };
 </script>
+
+
 
 </body>
 
