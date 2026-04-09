@@ -10911,20 +10911,21 @@ console.log('✅ Voting system frontend fixes applied');
 
 <script>
     // ============================================
-    // CHAT WIDGET FUNCTIONALITY - MVP MODE
+    // ADVANCED CHAT WIDGET - WEBSITE INTEGRATED + GOOGLE SEARCH
     // ============================================
     
-    // Liberia Business Awards Knowledge Base
+    // ============ COMPREHENSIVE KNOWLEDGE BASE FROM YOUR WEBSITE ============
     const lbaKnowledge = {
         // General Info
-        'about': 'The Liberia Business Awards (LBA) is the nation\'s premier recognition platform for businesses across all 18 major economic sectors. We celebrate excellence from Agriculture to Sports across Liberia.',
+        'about': 'The Liberia Business Awards (LBA) is the nation\'s premier recognition platform for businesses across all 18 major economic sectors. We celebrate excellence from Agriculture to Sports across Liberia. Founded to recognize, connect, and elevate businesses across Liberia.',
         'mission': 'To recognize, celebrate, and elevate businesses and entrepreneurs that are contributing to Liberia\'s economic growth and social development.',
         'vision': 'To become Liberia\'s leading national platform for business recognition, visibility, and private sector excellence.',
         
         // Nominations
-        'nomination': 'Nominations for LBA 3.0 open March 1 and close May 30 annually. You can nominate your business or another business across 72 award categories covering 18 economic sectors.',
+        'nomination': 'Nominations for LBA open March 1 and close May 30 annually at 5:59 PM. You can nominate your business or another business across 72 award categories covering 18 economic sectors. Nominations are FREE!',
         'nomination process': 'To nominate a business, click the "Nominate" button on our website, fill out the nomination form with business details and the award category, then submit. Our team reviews all nominations.',
         'nomination requirements': 'Businesses must be registered and operating in Liberia. Startups (0-3 years), SMEs, and Large Enterprises are all welcome. There is no fee for nomination.',
+        'nomination tips': '5 tips to strengthen your nomination: 1) Highlight measurable achievements, 2) Show community impact, 3) Provide clear evidence, 4) Tell your unique story, 5) Get supporting letters.',
         
         // Registration
         'registration': 'Businesses can register on our website by clicking the "Register" button. You\'ll need to provide business name, sector, contact information, and business description.',
@@ -10932,41 +10933,63 @@ console.log('✅ Voting system frontend fixes applied');
         'registration cost': 'Business registration is FREE! There is no cost to register your business or submit nominations.',
         
         // Voting
-        'voting': 'Public voting runs from June 1 to July 30 annually. You can vote for your favorite businesses using the voting section on our website. Each email can vote once per business.',
+        'voting': 'Public voting runs from June 1 to July 30 annually. You can vote for your favorite businesses using the voting section on our website. Each email can vote once per business. Voting ends July 30.',
         'vote': 'Go to the Voting section on our homepage, browse the businesses, click "Vote Now" on your chosen business, verify your email, and submit your rating from 1-10.',
         'voting rules': 'Each person can vote once per business. You must verify your email before voting. Jury votes have additional weight in final scoring.',
+        'voting leaderboard': 'The leaderboard shows businesses ranked by average vote score. Votes are calculated from public and jury votes.',
         
         // Partnership
         'partnership': 'We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor, Gold Sponsor, Category Sponsor, Media Partner, and Strategic Partner.',
         'partner': 'To become a partner, click the "Partner" button on our website, fill out the partnership inquiry form, and our team will contact you with sponsorship packages.',
         'sponsorship benefits': 'Partners get national visibility, direct access to businesses, strategic positioning, ecosystem integration, speaking opportunities, and award presentation rights.',
+        'lead sponsor': 'The Lead Sponsor is our exclusive primary partner. Benefits include premium branding across all platforms, strategic involvement in planning, speaking opportunities, award presentation rights, nationwide media exposure, and direct access to participating businesses.',
         
         // Investment
         'investment liberia': 'Liberia offers investment opportunities in Agriculture, Mining, Oil & Gas, Manufacturing, Energy, Technology, Tourism, and more. The country has a strategic West African location with access to the ECOWAS market of 400M+ consumers.',
         'invest': 'Contact our investment team at contact@liberiabusinessawardslr.com or call +231 886 590 302. We provide business matching, due diligence support, and government liaison services.',
-        'why invest liberia': 'Liberia has a young workforce (60% under 25), rich natural resources (iron ore, gold, diamonds, rubber), investment incentives (tax holidays, duty exemptions), and a growing economy.',
+        'why invest liberia': 'Liberia has a young workforce (60% under 25), rich natural resources (iron ore, gold, diamonds, rubber), investment incentives (tax holidays, duty exemptions), and a growing economy. $1.2B+ GDP growth potential.',
+        'investment sectors': 'High-growth sectors include: Agriculture & Agro-processing, Mining & Natural Resources, Renewable Energy, Technology & Innovation, Manufacturing, Tourism & Hospitality.',
         
         // Events
         'ceremony': 'The Awards Ceremony takes place on December 19 annually at 6:00 PM. Tickets go on sale November 1 - December 15.',
         'events': 'We host live sessions throughout the year with industry leaders and past winners. Check our Live Sessions section for upcoming events.',
         'timeline': 'Nominations: March 1 - May 30 | Voting: June 1 - July 30 | Finalists: August 1 - September 30 | Interviews: October 1 - 30 | Ceremony: December 19',
+        'tickets': 'Ticket sales run from November 1 to December 15. Get your tickets early for the premier business event of the year!',
         
         // Contact
         'contact': 'You can reach us at +231 886 590 302, +231 77 287 66 44, or email liberiabusinessawards@gmail.com, contact@liberiabusinessawardslr.com',
         'support': 'Our support team is available Monday-Friday 9AM-5PM and Saturday 10AM-2PM.',
         'email': 'Our email addresses: liberiabusinessawards@gmail.com, contact@liberiabusinessawardslr.com, info@liberiabusinessawardslr.com, nominations@liberiabusinessawardslr.com, partnerships@liberiabusinessawardslr.com',
+        'phone': 'Call us at +231 886 590 302 or +231 77 287 66 44',
+        'address': 'Monrovia, Liberia',
         
         // Liberia Info
         'liberia': 'Liberia is a country on the West African coast, founded in 1822 by freed American slaves. It has 15 counties, Monrovia as its capital, and a population of about 5 million people.',
         'liberia economy': 'Liberia\'s economy is based on agriculture (rubber, palm oil, cocoa, coffee), mining (iron ore, gold, diamonds), forestry, and services. The country is rich in natural resources.',
         'liberia business': 'Liberia offers business opportunities in agriculture, mining, energy, technology, manufacturing, construction, tourism, and financial services. The country is open for foreign investment.',
+        'liberia counties': 'Liberia has 15 counties: Bomi, Bong, Gbarpolu, Grand Bassa, Grand Cape Mount, Grand Gedeh, Grand Kru, Lofa, Margibi, Maryland, Montserrado, Nimba, Rivercess, River Gee, Sinoe.',
+        
+        // Categories
+        'categories': 'We have 72 award categories across 18 economic sectors. These include Startup Awards, SME Awards, Large Enterprise Awards, Sector Awards (Agriculture, Mining, Oil & Gas, Manufacturing, Construction, Energy, Transportation, ICT, Financial Services, Education, Health, Tourism, Trade, Public Sector, Civil Society, Media, Arts & Culture, Sports), and National Leadership Awards.',
+        'sectors': 'The 18 economic sectors are: Agriculture, Mining, Oil & Gas, Manufacturing, Construction, Energy, Transportation, ICT, Financial Services, Education, Health, Tourism, Trade, Public Sector, Civil Society, Media, Arts & Culture, and Sports.',
+        'startup awards': 'Startup Awards are for businesses operating 0-3 years. Categories include Startup of the Year, Tech Startup of the Year, Innovative Startup Award, and Rising Startup Founder.',
+        'sme awards': 'SME Awards are for Small and Medium Enterprises. Categories include SME of the Year, Fast-Growing SME, SME Innovation Award, and SME Export Excellence.',
+        'enterprise awards': 'Large Enterprise Awards are for established corporations. Categories include Large Enterprise of the Year, Corporate Excellence Award, and Industry Leader Award.',
+        'leadership awards': 'National Leadership Awards include CEO of the Year, Entrepreneur of the Year, Woman Entrepreneur of the Year, Young Entrepreneur of the Year, Business Innovation Leader, Sustainability Champion, CSR Excellence Award, and Overall Company of the Year.',
+        
+        // Featured Businesses
+        'j-palm': 'J-Palm Liberia won the Sustainable Agriculture Award for Kernel Fresh products. Founded in 2011 by Mahmud Johnson, they transform sustainable palm oil production into premium Liberian-made products while empowering local communities. They employ 200+ people and work with 500+ smallholder farmers.',
+        'annita': 'Annita won the Digital Innovation & Pan-African Impact Award. Founded in 2020 by Christopher O. Fallah, it\'s Liberia\'s first startup platform integrating e-commerce, fintech, and AI to help MSMEs scale across Africa. Featured at the Intra-African Trade Fair 2025.',
+        'gonet academy': 'Gonet Academy won the Education & Professional Development Award. Founded in 2021 by Mohammed Kerkulah, they have certified 500+ professionals across 12 cohorts, empowering Liberia\'s next generation with professional development, mentorship, and digital skills training.',
+        
+        // Stats
+        'stats': 'Liberia Business Awards 3.0 covers 18 economic sectors, has recognized 500+ businesses, works with 1500+ entrepreneurs, offers 72 award categories, and has 6+ partners. We have participation from businesses across all 15 counties of Liberia.',
+        'impact': 'LBA has nationwide impact across all 15 counties, inclusive representation of SMEs and large enterprises, and reflects the true diversity of Liberia\'s economy.',
         
         // Help
-        'help': 'I can help you with nominations, business registration, voting, partnerships, investment opportunities, events, and general information about Liberia Business Awards.',
-        'what can you do': 'I can answer questions about LBA, help you navigate the website, explain award categories, provide nomination guidance, and share information about Liberia\'s business landscape.',
-        
-        // Default
-        'default': 'Thank you for your question. I can help you with: Nominations, Registration, Voting, Partnerships, Investment in Liberia, Events, or General Information about LBA. Could you please rephrase your question?'
+        'help': 'I can help you with nominations, business registration, voting, partnerships, investment opportunities, events, award categories, and general information about Liberia Business Awards.',
+        'what can you do': 'I can answer questions about LBA, help you navigate the website, explain award categories, provide nomination guidance, share information about Liberia\'s business landscape, and direct you to the right resources.',
+        'how to use': 'You can ask me questions like "How do I nominate my business?", "What are the voting rules?", "Tell me about partnership opportunities", or "What sectors can I invest in Liberia?"'
     };
     
     // Chat state
@@ -11003,18 +11026,20 @@ console.log('✅ Voting system frontend fixes applied');
             removeTypingIndicator();
             const response = getBotResponse(message);
             addMessage(response, 'bot');
-        }, 500);
+        }, 600);
     };
     
     // Quick reply function
     window.sendQuickReply = function(topic) {
         const responses = {
-            'nomination': 'tell me about nominations',
-            'registration': 'how to register my business',
-            'voting': 'how to vote',
-            'partnership': 'partnership opportunities',
-            'investment': 'investment in liberia',
-            'events': 'upcoming events'
+            'nomination': 'How do I nominate a business?',
+            'registration': 'How do I register my business?',
+            'voting': 'How does voting work?',
+            'partnership': 'Tell me about partnership opportunities',
+            'investment': 'What are the investment opportunities in Liberia?',
+            'events': 'What upcoming events do you have?',
+            'categories': 'What award categories are available?',
+            'contact': 'How can I contact you?'
         };
         
         const message = responses[topic];
@@ -11046,9 +11071,12 @@ console.log('✅ Voting system frontend fixes applied');
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
     
-    // Format message with line breaks
+    // Format message with line breaks and links
     function formatMessage(text) {
-        return text.replace(/\n/g, '<br>');
+        // Convert URLs to clickable links
+        let formatted = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #FF0000;">$1</a>');
+        formatted = formatted.replace(/\n/g, '<br>');
+        return formatted;
     }
     
     // Show typing indicator
@@ -11074,50 +11102,73 @@ console.log('✅ Voting system frontend fixes applied');
         }
     }
     
-    // Get bot response based on keywords
+    // Advanced response function with better matching
     function getBotResponse(message) {
         const lowerMsg = message.toLowerCase();
         
-        // Check knowledge base for matching keywords
-        for (const [key, response] of Object.entries(lbaKnowledge)) {
-            if (lowerMsg.includes(key)) {
-                return response;
+        // Check for greetings
+        if (lowerMsg.match(/^(hi|hello|hey|greetings|good morning|good afternoon|good evening)/)) {
+            return "👋 Hello! Welcome to Liberia Business Awards Support. How can I help you today? You can ask me about nominations, registration, voting, partnerships, investment opportunities, events, or award categories!";
+        }
+        
+        // Check for thanks
+        if (lowerMsg.match(/thanks|thank you|appreciate/)) {
+            return "You're very welcome! 😊 Is there anything else I can help you with?";
+        }
+        
+        // Check for goodbye
+        if (lowerMsg.match(/bye|goodbye|see you|farewell/)) {
+            return "Thank you for chatting with us! Have a great day! 👋 Feel free to come back if you have more questions.";
+        }
+        
+        // Comprehensive keyword matching
+        const keywordMap = [
+            { keywords: ['nominate', 'nomination', 'award nomination', 'how to nominate'], response: lbaKnowledge.nomination },
+            { keywords: ['register', 'registration', 'sign up', 'business registration'], response: lbaKnowledge.registration },
+            { keywords: ['vote', 'voting', 'how to vote', 'cast vote'], response: lbaKnowledge.voting },
+            { keywords: ['partner', 'sponsor', 'partnership', 'sponsorship'], response: lbaKnowledge.partnership },
+            { keywords: ['invest', 'investment', 'investor', 'investing'], response: lbaKnowledge['investment liberia'] },
+            { keywords: ['event', 'ceremony', 'awards night', 'tickets'], response: lbaKnowledge.events },
+            { keywords: ['contact', 'email', 'phone', 'reach', 'call'], response: lbaKnowledge.contact },
+            { keywords: ['about', 'what is lba', 'tell me about'], response: lbaKnowledge.about },
+            { keywords: ['mission', 'vision', 'goal'], response: lbaKnowledge.mission },
+            { keywords: ['category', 'categories', 'award categories', 'sector'], response: lbaKnowledge.categories },
+            { keywords: ['sectors', 'economic sectors'], response: lbaKnowledge.sectors },
+            { keywords: ['startup', 'startups'], response: lbaKnowledge['startup awards'] },
+            { keywords: ['sme', 'small business', 'medium enterprise'], response: lbaKnowledge['sme awards'] },
+            { keywords: ['enterprise', 'large business', 'corporation'], response: lbaKnowledge['enterprise awards'] },
+            { keywords: ['ceo', 'entrepreneur', 'leadership'], response: lbaKnowledge['leadership awards'] },
+            { keywords: ['j-palm', 'jpalm'], response: lbaKnowledge['j-palm'] },
+            { keywords: ['annita'], response: lbaKnowledge.annita },
+            { keywords: ['gonet', 'academy'], response: lbaKnowledge['gonet academy'] },
+            { keywords: ['liberia', 'country', 'west africa'], response: lbaKnowledge.liberia },
+            { keywords: ['economy', 'economic', 'gdp'], response: lbaKnowledge['liberia economy'] },
+            { keywords: ['statistics', 'stats', 'numbers', 'impact'], response: lbaKnowledge.stats },
+            { keywords: ['deadline', 'close', 'opening'], response: lbaKnowledge.timeline },
+            { keywords: ['free', 'cost', 'price', 'fee'], response: lbaKnowledge['registration cost'] },
+            { keywords: ['counties', '15 counties'], response: lbaKnowledge['liberia counties'] },
+            { keywords: ['timeline', 'schedule', 'dates'], response: lbaKnowledge.timeline },
+            { keywords: ['live session', 'webinar'], response: lbaKnowledge.events },
+            { keywords: ['leaderboard', 'ranking'], response: lbaKnowledge['voting leaderboard'] }
+        ];
+        
+        // Check keyword matches
+        for (const item of keywordMap) {
+            for (const keyword of item.keywords) {
+                if (lowerMsg.includes(keyword)) {
+                    return item.response;
+                }
             }
         }
         
-        // Check for specific keywords
-        if (lowerMsg.includes('nominate') || lowerMsg.includes('nomination')) {
-            return lbaKnowledge.nomination;
-        }
-        if (lowerMsg.includes('register') || lowerMsg.includes('registration')) {
-            return lbaKnowledge.registration;
-        }
-        if (lowerMsg.includes('vote') || lowerMsg.includes('voting')) {
-            return lbaKnowledge.voting;
-        }
-        if (lowerMsg.includes('partner') || lowerMsg.includes('sponsor')) {
-            return lbaKnowledge.partnership;
-        }
-        if (lowerMsg.includes('invest') || lowerMsg.includes('investment')) {
-            return lbaKnowledge['investment liberia'];
-        }
-        if (lowerMsg.includes('event') || lowerMsg.includes('ceremony')) {
-            return lbaKnowledge.events;
-        }
-        if (lowerMsg.includes('contact') || lowerMsg.includes('email') || lowerMsg.includes('phone')) {
-            return lbaKnowledge.contact;
-        }
-        if (lowerMsg.includes('about') || lowerMsg.includes('what is')) {
-            return lbaKnowledge.about;
-        }
-        
-        // Search the web for unknown questions
-        if (lowerMsg.length > 10) {
+        // Check if message is long enough for Google search
+        if (lowerMsg.length > 8) {
             const searchUrl = `https://www.google.com/search?q=liberia+business+awards+${encodeURIComponent(lowerMsg)}`;
-            return `I don't have that information in my knowledge base. 🔍<br><br>📌 <a href="${searchUrl}" target="_blank" style="color: #FF0000;">Click here to search Google</a><br><br>Or contact our team at +231 886 590 302 for assistance.`;
+            const currentYear = new Date().getFullYear();
+            return `📚 I don't have that specific information in my knowledge base yet.\n\n🔍 You can search online: <a href="${searchUrl}" target="_blank" style="color: #FF0000;">Click here to search Google</a>\n\n📞 Or contact our team directly:\n• Call: +231 886 590 302\n• Email: liberiabusinessawards@gmail.com\n\n💡 Try asking me about:\n• Nominations & Registration\n• Voting Rules & Process\n• Partnership Opportunities\n• Investment in Liberia\n• Award Categories & Sectors\n• Upcoming Events\n• Contact Information`;
         }
         
-        return lbaKnowledge.default;
+        return lbaKnowledge.help;
     }
     
     // Handle enter key
@@ -11127,7 +11178,7 @@ console.log('✅ Voting system frontend fixes applied');
         }
     };
     
-    // Add CSS for links in chat
+    // Add CSS for enhanced chat
     const chatStyle = document.createElement('style');
     chatStyle.textContent = `
         .message-content a {
@@ -11144,8 +11195,49 @@ console.log('✅ Voting system frontend fixes applied');
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        /* Quick reply buttons styling */
+        .chat-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 15px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+        }
+        .option-btn {
+            background: #f1f5f9;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #1a202c;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .option-btn:hover {
+            background: #FF0000;
+            color: white;
+            transform: translateY(-2px);
+        }
+        /* Message improvements */
+        .message.bot .message-content {
+            background: white;
+            color: #1a202c;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            line-height: 1.5;
+        }
+        .message.user .message-content {
+            background: linear-gradient(135deg, #FF0000, #87CEEB);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
     `;
     document.head.appendChild(chatStyle);
+    
+    console.log('✅ Advanced Chat Widget Loaded - Knowledge base integrated with website content!');
 </script>
 
 </body>
