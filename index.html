@@ -11344,81 +11344,584 @@ console.log('✅ Voting system frontend fixes applied');
 </style>
 
 <script>
+<!-- ============================================ -->
+<!-- AI LIVE CHAT SUPPORT WIDGET - COMPLETE MVP -->
+<!-- ============================================ -->
+<div id="chatWidget" class="chat-widget">
+    <div class="chat-button" id="chatButton">
+        <i class="fas fa-comment-dots"></i>
+        <span class="chat-badge">1</span>
+    </div>
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar">
+                    <i class="fas fa-award"></i>
+                </div>
+                <div>
+                    <h3>Liberia Business Awards</h3>
+                    <p>Online • Support Team</p>
+                </div>
+            </div>
+            <button class="chat-close" id="chatClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">
+                    👋 Welcome to Liberia Business Awards Support!<br><br>
+                    I can help you with:<br>
+                    📌 Awards & Nominations<br>
+                    📌 Business Registration<br>
+                    📌 Voting Information<br>
+                    📌 Partnership Opportunities<br>
+                    📌 Investment in Liberia<br>
+                    📌 Upcoming Events<br><br>
+                    What would you like to know?
+                </div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+        <div class="chat-options" id="chatOptions">
+            <button class="option-btn" onclick="sendQuickReply('nomination')">🏆 Nominations</button>
+            <button class="option-btn" onclick="sendQuickReply('registration')">📝 Register</button>
+            <button class="option-btn" onclick="sendQuickReply('voting')">🗳️ Voting</button>
+            <button class="option-btn" onclick="sendQuickReply('partnership')">🤝 Partnership</button>
+            <button class="option-btn" onclick="sendQuickReply('investment')">💰 Investment</button>
+            <button class="option-btn" onclick="sendQuickReply('events')">📅 Events</button>
+            <button class="option-btn" onclick="sendQuickReply('categories')">🏆 Categories</button>
+            <button class="option-btn" onclick="sendQuickReply('sectors')">📊 18 Sectors</button>
+            <button class="option-btn" onclick="sendQuickReply('contact')">📞 Contact</button>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+            <button id="chatSendBtn" onclick="sendChatMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        <div class="chat-footer">
+            <p>Powered by Liberia Business Awards AI Support</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ============================================ */
+    /* CHAT WIDGET STYLES - FULLY RESPONSIVE */
+    /* ============================================ */
+    .chat-widget {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        z-index: 9998;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .chat-button {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .chat-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(255, 0, 0, 0.5);
+    }
+    
+    .chat-button i {
+        font-size: 28px;
+        color: white;
+    }
+    
+    .chat-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #FF0000;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+    }
+    
+    .chat-container {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: 380px;
+        height: 550px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform: scale(0);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        transform-origin: bottom right;
+    }
+    
+    .chat-container.open {
+        transform: scale(1);
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .chat-header {
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        padding: 18px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .chat-avatar {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+    
+    .chat-header-info h3 {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        color: white;
+    }
+    
+    .chat-header-info p {
+        font-size: 11px;
+        margin: 3px 0 0;
+        opacity: 0.85;
+        color: white;
+    }
+    
+    .chat-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .chat-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+    
+    .chat-messages {
+        flex: 1;
+        padding: 18px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .message {
+        display: flex;
+        flex-direction: column;
+        max-width: 85%;
+    }
+    
+    .message.bot {
+        align-self: flex-start;
+    }
+    
+    .message.user {
+        align-self: flex-end;
+    }
+    
+    .message-content {
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 13px;
+        line-height: 1.5;
+        word-wrap: break-word;
+    }
+    
+    .message.bot .message-content {
+        background: white;
+        color: #1a202c;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .message.user .message-content {
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .message-time {
+        font-size: 10px;
+        color: #94a3b8;
+        margin-top: 4px;
+        padding: 0 5px;
+    }
+    
+    .message.user .message-time {
+        text-align: right;
+    }
+    
+    .chat-options {
+        padding: 12px 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        border-top: 1px solid #e2e8f0;
+        background: white;
+        flex-shrink: 0;
+    }
+    
+    .option-btn {
+        background: #f1f5f9;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 25px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #1a202c;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .option-btn:hover {
+        background: #FF0000;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .chat-input-container {
+        padding: 12px 15px;
+        display: flex;
+        gap: 10px;
+        border-top: 1px solid #e2e8f0;
+        background: white;
+        flex-shrink: 0;
+    }
+    
+    .chat-input-container input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 30px;
+        font-size: 13px;
+        outline: none;
+        font-family: 'Poppins', sans-serif;
+        background: #f8fafc;
+    }
+    
+    .chat-input-container input:focus {
+        border-color: #FF0000;
+        background: white;
+        box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.1);
+    }
+    
+    .chat-input-container input::placeholder {
+        color: #94a3b8;
+    }
+    
+    .chat-input-container button {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .chat-input-container button:hover {
+        transform: scale(1.05);
+    }
+    
+    .chat-footer {
+        padding: 8px 15px;
+        background: #f8f9fa;
+        text-align: center;
+        font-size: 10px;
+        color: #94a3b8;
+        border-top: 1px solid #e2e8f0;
+        flex-shrink: 0;
+    }
+    
+    /* Message content links */
+    .message-content a {
+        color: #FF0000;
+        text-decoration: underline;
+    }
+    
+    .message.user .message-content a {
+        color: white;
+    }
+    
+    /* Typing indicator animation */
+    .fa-ellipsis-h {
+        animation: pulseChat 1.5s infinite;
+    }
+    
+    @keyframes pulseChat {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    /* Scrollbar styling */
+    .chat-messages::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-track {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: #FF0000;
+        border-radius: 10px;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .chat-widget {
+            bottom: 80px;
+            right: 15px;
+        }
+        
+        .chat-button {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .chat-button i {
+            font-size: 24px;
+        }
+        
+        .chat-container {
+            width: 340px;
+            height: 500px;
+            bottom: 70px;
+            right: -5px;
+        }
+        
+        .chat-header {
+            padding: 14px 16px;
+        }
+        
+        .chat-avatar {
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+        }
+        
+        .chat-header-info h3 {
+            font-size: 14px;
+        }
+        
+        .chat-options {
+            padding: 10px 12px;
+        }
+        
+        .option-btn {
+            padding: 6px 12px;
+            font-size: 11px;
+        }
+        
+        .chat-input-container {
+            padding: 10px 12px;
+        }
+        
+        .chat-input-container input {
+            padding: 10px 14px;
+            font-size: 12px;
+        }
+        
+        .chat-input-container button {
+            width: 40px;
+            height: 40px;
+        }
+    }
+    
+    /* Small mobile */
+    @media (max-width: 480px) {
+        .chat-container {
+            width: 300px;
+            height: 480px;
+            right: -10px;
+        }
+        
+        .chat-messages {
+            padding: 12px;
+        }
+        
+        .message-content {
+            padding: 10px 14px;
+            font-size: 12px;
+        }
+        
+        .chat-options {
+            gap: 6px;
+        }
+        
+        .option-btn {
+            padding: 5px 10px;
+            font-size: 10px;
+        }
+    }
+</style>
+
+<script>
     // ============================================
-    // ADVANCED CHAT WIDGET - COMPLETE KNOWLEDGE BASE
+    // ADVANCED CHAT WIDGET - COMPLETE MVP
     // ============================================
     
-    // Comprehensive Knowledge Base
+    // ============ COMPREHENSIVE KNOWLEDGE BASE ============
     const lbaKnowledge = {
         // General Info
         'about': 'The Liberia Business Awards (LBA) is the nation\'s premier recognition platform for businesses across all 18 major economic sectors. We celebrate excellence from Agriculture to Sports across Liberia.',
         'mission': 'To recognize, celebrate, and elevate businesses and entrepreneurs that are contributing to Liberia\'s economic growth and social development.',
         'vision': 'To become Liberia\'s leading national platform for business recognition, visibility, and private sector excellence.',
         
-        // 18 Economic Sectors
-        '18 sectors': 'Liberia has 18 major economic sectors: 1. Agriculture, 2. Mining & Extractives, 3. Oil & Gas, 4. Manufacturing & Industrial, 5. Construction & Real Estate, 6. Energy & Utilities, 7. Transportation & Logistics, 8. ICT, 9. Financial Services, 10. Education, 11. Health, 12. Tourism & Hospitality, 13. Trade & Commerce, 14. Public Sector, 15. Civil Society & Nonprofit, 16. Media & Communications, 17. Arts, Culture & Creative, 18. Sports & Recreation.',
-        'agriculture sector': 'Agriculture Sector covers farming, livestock, fisheries, forestry, and agro-processing. Categories: Agriculture Company of the Year, Agro-Processing Company of the Year, Fisheries & Aquaculture Excellence.',
-        'mining sector': 'Mining & Extractives covers minerals, quarrying, and natural resources. Categories: Mining Company of the Year, Diamond & Gemstone Excellence, Environmental Stewardship in Mining.',
-        'manufacturing sector': 'Manufacturing & Industrial covers production, processing, and industrial excellence. Categories: Manufacturing Company of the Year, Food & Beverage Production Excellence, Industrial Innovation Award.',
-        'technology sector': 'ICT sector covers digital innovation and tech solutions. Categories: Telecom Company of the Year, IT Solutions Provider of the Year, Tech Startup of the Year.',
-        'financial sector': 'Financial Services covers banking, insurance, and investment. Categories: Bank of the Year, Microfinance Institution of the Year, Insurance Company of the Year.',
-        'tourism sector': 'Tourism & Hospitality covers travel, accommodation, and cultural experiences. Categories: Hotel of the Year, Restaurant & Culinary Excellence, Eco-Tourism Innovation Award.',
-        'sports sector': 'Sports & Recreation covers athletics, fitness, and sports development. Categories: Sports Club of the Year, Sports Development Initiative, Athletic Excellence Award.',
+        // Award Categories (18 Sectors)
+        'agriculture sector': '🌾 The Agriculture Sector recognizes excellence in farming, livestock, fisheries, forestry, and agro-processing. Categories: Agriculture Company of the Year, Agro-Processing Company of the Year, Fisheries & Aquaculture Excellence, Sustainable Agriculture Leadership.',
+        'mining sector': '⛏️ The Mining & Extractives Sector celebrates excellence in minerals, quarrying, and natural resources. Categories: Mining Company of the Year, Diamond & Gemstone Excellence, Quarrying & Construction Materials, Environmental Stewardship in Mining.',
+        'oil and gas sector': '🛢️ The Oil & Gas Sector awards excellence in petroleum exploration, storage, and fuel distribution. Categories: Petroleum Exploration Excellence, Fuel Distribution Company of the Year, Oil Storage & Logistics Excellence, Safety & Compliance Leadership.',
+        'manufacturing sector': '🏭 The Manufacturing & Industrial Sector recognizes industrial innovation and manufacturing excellence. Categories: Manufacturing Company of the Year, Food & Beverage Production Excellence, Construction Materials Manufacturing, Industrial Innovation Award.',
+        'construction sector': '🏗️ The Construction & Real Estate Sector celebrates infrastructure, building, and property development. Categories: Construction Company of the Year, Real Estate Development Excellence, Infrastructure Project of the Year, Architectural Innovation Award.',
+        'energy sector': '⚡ The Energy & Utilities Sector awards excellence in power, water, and essential services. Categories: Energy Company of the Year, Water & Sanitation Excellence, Renewable Energy Innovation, Utilities Management Excellence.',
+        'transportation sector': '🚚 The Transportation & Logistics Sector recognizes ports, shipping, and supply chain management. Categories: Logistics Company of the Year, Aviation Services Excellence, Port & Terminal Operations Excellence, Road Transport Excellence.',
+        'ict sector': '💻 The ICT sector celebrates digital transformation and tech innovation. Categories: Telecom Company of the Year, IT Solutions Provider of the Year, Internet Service Excellence, Tech Startup of the Year.',
+        'financial services sector': '💰 The Financial Services sector recognizes banking, microfinance, insurance, and investment. Categories: Bank of the Year, Microfinance Institution of the Year, Insurance Company of the Year, Investment & Capital Markets Excellence.',
+        'education sector': '📚 The Education Sector awards excellence in learning and training institutions. Categories: Educational Institution of the Year, Vocational Training Excellence, EdTech Innovation Award, Academic Excellence Award.',
+        'health sector': '🏥 The Health Sector recognizes healthcare delivery, pharmaceuticals, and public health initiatives. Categories: Healthcare Provider of the Year, Pharmaceutical Company of the Year, Medical Services Excellence, Public Health Initiative of the Year.',
+        'tourism sector': '🏨 The Tourism & Hospitality sector celebrates travel, accommodation, and cultural experiences. Categories: Hotel of the Year, Restaurant & Culinary Excellence, Travel Services Company of the Year, Eco-Tourism Innovation Award.',
+        'trade sector': '🛍️ The Trade & Commerce sector awards import, export, and market innovation. Categories: Export Company of the Year, Retail Excellence Award, Wholesale Distributor of the Year, Market Innovation Award.',
+        'public sector': '🏛️ The Public Sector & Government Services recognizes public administration and service delivery. Categories: Public Service Excellence Award, Government Partnership Initiative, Public Enterprise of the Year, Civic Engagement Excellence.',
+        'civil society sector': '🤝 The Civil Society & Nonprofit sector celebrates community development and social impact. Categories: NGO of the Year, Community Initiative Award, International Development Partner, Social Impact Leadership.',
+        'media sector': '📺 The Media & Communications sector awards broadcasting, journalism, and digital media. Categories: Media House of the Year, Journalism Excellence Award, Advertising & Marketing Agency of the Year, Digital Media Innovation.',
+        'arts sector': '🎨 The Arts, Culture & Creative Industry recognizes creative expression and cultural heritage. Categories: Creative Arts Company of the Year, Entertainment & Performance Excellence, Fashion & Design Innovation, Film & Media Production Excellence.',
+        'sports sector': '⚽ The Sports & Recreation sector celebrates athletics, fitness, and sports development. Categories: Sports Club of the Year, Sports Development Initiative, Fitness & Recreation Center of the Year, Athletic Excellence Award.',
+        
+        // National Leadership Awards
+        'ceo of the year': '👑 CEO of the Year celebrates outstanding leadership and business vision.',
+        'entrepreneur of the year': '🚀 Entrepreneur of the Year recognizes exceptional entrepreneurial achievement and impact.',
+        'woman entrepreneur of the year': '💪 Woman Entrepreneur of the Year honors outstanding female leaders driving business excellence.',
+        'young entrepreneur of the year': '🌟 Young Entrepreneur of the Year recognizes outstanding entrepreneurs under 35 years old.',
+        'business innovation leader': '💡 Business Innovation Leader honors pioneers of new ideas transforming industries.',
+        'sustainability champion': '🌱 Sustainability Champion celebrates environmental and social responsibility excellence.',
+        'csr excellence award': '🤲 CSR Excellence Award recognizes outstanding corporate social responsibility impact.',
+        'overall company of the year': '🏆 Overall Company of the Year is the highest honor for overall business excellence.',
+        
+        // Startup Awards
+        'startup of the year': '🚀 Startup of the Year honors the most outstanding new business demonstrating exceptional potential (0-3 years).',
+        'tech startup of the year': '💻 Tech Startup of the Year recognizes innovative technology startups making waves in the digital space.',
+        'innovative startup award': '💡 Innovative Startup Award celebrates the most creative and disruptive business model or solution.',
+        'rising startup founder': '⭐ Rising Startup Founder honors exceptional founders showing strong leadership and vision.',
+        
+        // SME Awards
+        'sme of the year': '📈 SME of the Year recognizes outstanding small or medium enterprises demonstrating excellence.',
+        'fast-growing sme': '📊 Fast-Growing SME celebrates the most impressive growth in revenue, employment, or market reach.',
+        'sme innovation award': '🔬 SME Innovation Award honors the most innovative SME introducing new products, services, or processes.',
+        'sme export excellence': '🌍 SME Export Excellence recognizes SMEs successfully exporting Liberian products or services internationally.',
+        
+        // Large Enterprise Awards
+        'large enterprise of the year': '🏢 Large Enterprise of the Year honors leading corporations demonstrating exceptional performance and impact.',
+        'corporate excellence award': '⭐ Corporate Excellence Award recognizes outstanding corporate governance, innovation, and community impact.',
+        'industry leader award': '🏆 Industry Leader Award celebrates market leaders setting benchmarks for excellence in their sector.',
         
         // Nominations
-        'nomination': 'Nominations for LBA open March 1 and close May 30 annually. You can nominate your business or another business across 72 award categories covering 18 economic sectors.',
-        'nomination process': 'To nominate a business, click the "Nominate" button on our website, fill out the nomination form with business details and the award category, then submit. Our team reviews all nominations.',
-        'nomination requirements': 'Businesses must be registered and operating in Liberia. Startups (0-3 years), SMEs, and Large Enterprises are all welcome. There is no fee for nomination.',
+        'nomination': '📋 Nominations for LBA open March 1 and close May 30 annually. You can nominate your business or another business across 72 award categories covering 18 economic sectors. No fee required!',
+        'nomination process': '✅ To nominate a business, click the "Nominate" button on our website, fill out the nomination form with business details and the award category, then submit. Our team reviews all nominations.',
+        'nomination requirements': '📝 Businesses must be registered and operating in Liberia. Startups (0-3 years), SMEs, and Large Enterprises are all welcome. There is no fee for nomination.',
         
         // Registration
-        'registration': 'Businesses can register on our website by clicking the "Register" button. You\'ll need to provide business name, sector, contact information, and business description.',
-        'register': 'Click the "Register Your Business" button on our homepage or in the navigation menu. Fill out the registration form with your business details.',
-        'registration cost': 'Business registration is FREE! There is no cost to register your business or submit nominations.',
+        'registration': '📝 Businesses can register on our website by clicking the "Register" button. You\'ll need to provide business name, sector, contact information, and business description.',
+        'register': '🔘 Click the "Register Your Business" button on our homepage or in the navigation menu. Fill out the registration form with your business details.',
+        'registration cost': '💰 Business registration is FREE! There is no cost to register your business or submit nominations.',
         
         // Voting
-        'voting': 'Public voting runs from June 1 to July 30 annually. You can vote for your favorite businesses using the voting section on our website. Each email can vote once per business.',
-        'vote': 'Go to the Voting section on our homepage, browse the businesses, click "Vote Now" on your chosen business, verify your email, and submit your rating from 1-10.',
-        'voting rules': 'Each person can vote once per business. You must verify your email before voting. Jury votes have additional weight in final scoring.',
+        'voting': '🗳️ Public voting runs from June 1 to July 30 annually. You can vote for your favorite businesses using the voting section on our website. Each email can vote once per business.',
+        'vote': '✅ Go to the Voting section on our homepage, browse the businesses, click "Vote Now" on your chosen business, verify your email, and submit your rating from 1-10.',
+        'voting rules': '📏 Each person can vote once per business. You must verify your email before voting. Jury votes have additional weight in final scoring.',
         
         // Partnership
-        'partnership': 'We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor, Gold Sponsor, Category Sponsor, Media Partner, and Strategic Partner.',
-        'partner': 'To become a partner, click the "Partner" button on our website, fill out the partnership inquiry form, and our team will contact you with sponsorship packages.',
-        'sponsorship benefits': 'Partners get national visibility, direct access to businesses, strategic positioning, ecosystem integration, speaking opportunities, and award presentation rights.',
+        'partnership': '🤝 We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor, Gold Sponsor, Category Sponsor, Media Partner, and Strategic Partner.',
+        'partner': '🔘 To become a partner, click the "Partner" button on our website, fill out the partnership inquiry form, and our team will contact you with sponsorship packages.',
+        'sponsorship benefits': '✨ Partners get national visibility, direct access to businesses, strategic positioning, ecosystem integration, speaking opportunities, and award presentation rights.',
         
         // Investment
-        'investment liberia': 'Liberia offers investment opportunities in Agriculture, Mining, Oil & Gas, Manufacturing, Energy, Technology, Tourism, and more. The country has a strategic West African location with access to the ECOWAS market of 400M+ consumers.',
-        'invest': 'Contact our investment team at contact@liberiabusinessawardslr.com or call +231 886 590 302.',
-        'why invest liberia': 'Liberia has a young workforce (60% under 25), rich natural resources (iron ore, gold, diamonds, rubber), investment incentives (tax holidays, duty exemptions), and a growing economy.',
+        'investment liberia': '💰 Liberia offers investment opportunities in Agriculture, Mining, Oil & Gas, Manufacturing, Energy, Technology, Tourism, and more. Access to ECOWAS market of 400M+ consumers.',
+        'invest': '📞 Contact our investment team at contact@liberiabusinessawardslr.com or call +231 886 590 302. We provide business matching, due diligence support, and government liaison services.',
+        'why invest liberia': '📈 Liberia has a young workforce (60% under 25), rich natural resources (iron ore, gold, diamonds, rubber), investment incentives (tax holidays, duty exemptions), and a growing economy.',
         
         // Events
-        'ceremony': 'The Awards Ceremony takes place on December 19 annually at 6:00 PM. Tickets go on sale November 1 - December 15.',
-        'events': 'We host live sessions throughout the year with industry leaders and past winners. Check our Live Sessions section for upcoming events.',
-        'timeline': 'Nominations: March 1 - May 30 | Voting: June 1 - July 30 | Finalists: August 1 - September 30 | Interviews: October 1 - 30 | Ceremony: December 19',
+        'ceremony': '🎉 The Awards Ceremony takes place on December 19 annually at 6:00 PM. Tickets go on sale November 1 - December 15.',
+        'events': '📅 We host live sessions throughout the year with industry leaders and past winners. Check our Live Sessions section for upcoming events.',
+        'timeline': '📅 Nominations: March 1 - May 30 | Voting: June 1 - July 30 | Finalists: August 1 - September 30 | Interviews: October 1 - 30 | Ceremony: December 19',
         
         // Contact
-        'contact': 'You can reach us at +231 886 590 302, +231 77 287 66 44, or email liberiabusinessawards@gmail.com',
-        'support': 'Our support team is available Monday-Friday 9AM-5PM and Saturday 10AM-2PM.',
+        'contact': '📞 You can reach us at +231 886 590 302, +231 77 287 66 44, or email liberiabusinessawards@gmail.com',
+        'support': '🕐 Our support team is available Monday-Friday 9AM-5PM and Saturday 10AM-2PM.',
+        'email': '📧 Our email addresses: liberiabusinessawards@gmail.com, contact@liberiabusinessawardslr.com, info@liberiabusinessawardslr.com, nominations@liberiabusinessawardslr.com, partnerships@liberiabusinessawardslr.com',
         
         // Liberia Info
-        'liberia': 'Liberia is a country on the West African coast, founded in 1822 by freed American slaves. It has 15 counties, Monrovia as its capital, and a population of about 5 million people.',
-        'liberia economy': 'Liberia\'s economy is based on agriculture (rubber, palm oil, cocoa, coffee), mining (iron ore, gold, diamonds), forestry, and services.',
-        '15 counties': 'Liberia has 15 counties: Bomi, Bong, Gbarpolu, Grand Bassa, Grand Cape Mount, Grand Gedeh, Grand Kru, Lofa, Margibi, Maryland, Montserrado, Nimba, Rivercess, River Gee, and Sinoe.',
-        'monrovia': 'Monrovia is the capital city of Liberia, named after U.S. President James Monroe. It is the country\'s largest city and economic center.',
+        'liberia': '🇱🇷 Liberia is a country on the West African coast, founded in 1822 by freed American slaves. It has 15 counties, Monrovia as its capital, and a population of about 5 million people.',
+        'liberia economy': '📊 Liberia\'s economy is based on agriculture (rubber, palm oil, cocoa, coffee), mining (iron ore, gold, diamonds), forestry, and services.',
+        'liberia business': '💼 Liberia offers business opportunities in agriculture, mining, energy, technology, manufacturing, construction, tourism, and financial services.',
         
         // Help
-        'help': 'I can help you with nominations, business registration, voting, partnerships, investment opportunities, events, award categories, and general information about Liberia Business Awards.',
-        
-        // Categories
-        'categories': 'We have 72 award categories across 5 tiers: Startup Awards (4), SME Awards (4), Large Enterprise Awards (3), Sector Awards (18 sectors × 4 sub-categories = 72), and National Leadership Awards (8).',
+        'help': '💡 I can help you with nominations, business registration, voting, partnerships, investment opportunities, events, and general information about Liberia Business Awards.',
+        'what can you do': '🤖 I can answer questions about LBA, help you navigate the website, explain award categories, provide nomination guidance, and share information about Liberia\'s business landscape.',
         
         // Default
-        'default': 'Thank you for your question. I can help you with: Nominations, Registration, Voting, Partnerships, Investment in Liberia, Events, Award Categories (72 across 18 sectors), or General Information. Please rephrase your question.'
+        'default': 'Thank you for your question. I can help you with: Nominations, Registration, Voting, Partnerships, Investment in Liberia, Events, or General Information about LBA. Could you please rephrase your question?'
     };
     
+    // ============ CHAT STATE ============
     let chatOpen = false;
-    let conversationHistory = [];
     
-    // Open/close chat
+    // ============ OPEN/CLOSE CHAT ============
     document.getElementById('chatButton').addEventListener('click', function() {
         const container = document.getElementById('chatContainer');
         container.classList.toggle('open');
@@ -11433,7 +11936,7 @@ console.log('✅ Voting system frontend fixes applied');
         chatOpen = false;
     });
     
-    // Send message
+    // ============ SEND MESSAGE ============
     window.sendChatMessage = function() {
         const input = document.getElementById('chatInput');
         const message = input.value.trim();
@@ -11442,7 +11945,6 @@ console.log('✅ Voting system frontend fixes applied');
         
         addMessage(message, 'user');
         input.value = '';
-        conversationHistory.push({ role: 'user', content: message });
         
         showTypingIndicator();
         
@@ -11450,22 +11952,21 @@ console.log('✅ Voting system frontend fixes applied');
             removeTypingIndicator();
             const response = getSmartResponse(message);
             addMessage(response, 'bot');
-            conversationHistory.push({ role: 'bot', content: response });
         }, 500);
     };
     
-    // Quick reply
+    // ============ QUICK REPLY ============
     window.sendQuickReply = function(topic) {
         const responses = {
-            'nomination': 'How do I nominate a business for the awards?',
-            'registration': 'How can I register my business?',
-            'voting': 'How does the voting process work?',
-            'partnership': 'Tell me about partnership opportunities',
-            'investment': 'What investment opportunities are available in Liberia?',
-            'events': 'What upcoming events do you have?',
-            'categories': 'What award categories are available?',
+            'nomination': 'How do I nominate a business?',
+            'registration': 'How to register my business?',
+            'voting': 'How to vote?',
+            'partnership': 'Partnership opportunities',
+            'investment': 'Investment in Liberia',
+            'events': 'Upcoming events',
+            'categories': 'Tell me about award categories',
             'sectors': 'What are the 18 economic sectors?',
-            'contact': 'How can I contact the Liberia Business Awards?'
+            'contact': 'Contact information'
         };
         
         const message = responses[topic];
@@ -11480,7 +11981,7 @@ console.log('✅ Voting system frontend fixes applied');
         }
     };
     
-    // Add message
+    // ============ ADD MESSAGE TO CHAT ============
     function addMessage(text, sender) {
         const messagesContainer = document.getElementById('chatMessages');
         const messageDiv = document.createElement('div');
@@ -11497,98 +11998,85 @@ console.log('✅ Voting system frontend fixes applied');
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
     
+    // ============ FORMAT MESSAGE ============
     function formatMessage(text) {
         return text.replace(/\n/g, '<br>');
     }
     
+    // ============ TYPING INDICATOR ============
     function showTypingIndicator() {
         const messagesContainer = document.getElementById('chatMessages');
         const typingDiv = document.createElement('div');
         typingDiv.className = 'message bot';
         typingDiv.id = 'typingIndicator';
-        typingDiv.innerHTML = `<div class="message-content"><i class="fas fa-ellipsis-h"></i> typing...</div>`;
+        typingDiv.innerHTML = `
+            <div class="message-content">
+                <i class="fas fa-ellipsis-h"></i> typing...
+            </div>
+        `;
         messagesContainer.appendChild(typingDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
     
     function removeTypingIndicator() {
         const indicator = document.getElementById('typingIndicator');
-        if (indicator) indicator.remove();
+        if (indicator) {
+            indicator.remove();
+        }
     }
     
+    // ============ SMART RESPONSE ============
     function getSmartResponse(message) {
         const lowerMsg = message.toLowerCase();
         
-        // Check knowledge base
+        // Check knowledge base for exact matches
         for (const [key, response] of Object.entries(lbaKnowledge)) {
             if (lowerMsg.includes(key)) {
                 return response;
             }
         }
         
-        // Keyword mapping
-        if (lowerMsg.includes('nominate') || lowerMsg.includes('nomination')) return lbaKnowledge.nomination;
-        if (lowerMsg.includes('register')) return lbaKnowledge.registration;
-        if (lowerMsg.includes('vote') || lowerMsg.includes('voting')) return lbaKnowledge.voting;
-        if (lowerMsg.includes('partner')) return lbaKnowledge.partnership;
-        if (lowerMsg.includes('invest')) return lbaKnowledge['investment liberia'];
-        if (lowerMsg.includes('event') || lowerMsg.includes('ceremony')) return lbaKnowledge.events;
-        if (lowerMsg.includes('contact') || lowerMsg.includes('email') || lowerMsg.includes('phone')) return lbaKnowledge.contact;
-        if (lowerMsg.includes('category')) return lbaKnowledge.categories;
-        if (lowerMsg.includes('sector')) return lbaKnowledge['18 sectors'];
-        if (lowerMsg.includes('county')) return lbaKnowledge['15 counties'];
+        // Check for specific keywords
+        if (lowerMsg.includes('nominate') || lowerMsg.includes('nomination')) {
+            return lbaKnowledge.nomination;
+        }
+        if (lowerMsg.includes('register') || lowerMsg.includes('registration')) {
+            return lbaKnowledge.registration;
+        }
+        if (lowerMsg.includes('vote') || lowerMsg.includes('voting')) {
+            return lbaKnowledge.voting;
+        }
+        if (lowerMsg.includes('partner') || lowerMsg.includes('sponsor')) {
+            return lbaKnowledge.partnership;
+        }
+        if (lowerMsg.includes('invest') || lowerMsg.includes('investment')) {
+            return lbaKnowledge['investment liberia'];
+        }
+        if (lowerMsg.includes('event') || lowerMsg.includes('ceremony')) {
+            return lbaKnowledge.events;
+        }
+        if (lowerMsg.includes('contact') || lowerMsg.includes('email') || lowerMsg.includes('phone')) {
+            return lbaKnowledge.contact;
+        }
+        if (lowerMsg.includes('about') || lowerMsg.includes('what is')) {
+            return lbaKnowledge.about;
+        }
         
-        // Web search fallback
+        // Check for sector questions
+        if (lowerMsg.includes('sector') || lowerMsg.includes('category')) {
+            return 'We have 72 award categories across 18 economic sectors:\n\n🌾 Agriculture | ⛏️ Mining | 🛢️ Oil & Gas | 🏭 Manufacturing | 🏗️ Construction | ⚡ Energy | 🚚 Transport | 💻 ICT | 💰 Finance | 📚 Education | 🏥 Health | 🏨 Tourism | 🛍️ Trade | 🏛️ Public | 🤝 Civil Society | 📺 Media | 🎨 Arts | ⚽ Sports\n\nWhich sector interests you?';
+        }
+        
+        // Search the web for unknown questions
         if (lowerMsg.length > 10) {
             const searchUrl = `https://www.google.com/search?q=liberia+business+awards+${encodeURIComponent(lowerMsg)}`;
-            return `🔍 I don't have that in my knowledge base yet.<br><br>📌 <a href="${searchUrl}" target="_blank" style="color: #FF0000;">Click here to search Google</a><br><br>📞 Or call us at +231 886 590 302 for assistance.`;
+            return `🔍 I don't have that information in my knowledge base yet.\n\n📌 <a href="${searchUrl}" target="_blank" style="color: #FF0000;">Click here to search Google</a>\n\n📞 Or contact our team at +231 886 590 302 for assistance.`;
         }
         
         return lbaKnowledge.default;
     }
     
-    // Reset conversation
-    window.resetChatConversation = function() {
-        const messagesContainer = document.getElementById('chatMessages');
-        messagesContainer.innerHTML = `
-            <div class="message bot">
-                <div class="message-content">
-                    👋 <strong>Welcome back to Liberia Business Awards Support!</strong><br><br>
-                    I can help you with:<br>
-                    📌 Awards & Nominations<br>
-                    📌 Business Registration<br>
-                    📌 Voting Information<br>
-                    📌 Partnership Opportunities<br>
-                    📌 Investment in Liberia<br>
-                    📌 72 Award Categories & 18 Sectors<br><br>
-                    <em>How can I assist you today?</em>
-                </div>
-                <div class="message-time">Just now</div>
-            </div>
-        `;
-        conversationHistory = [];
-        showNotification('Conversation reset!', 'info');
-    };
-    
-    function showNotification(message, type) {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 100px;
-            right: 20px;
-            background: #10B981;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 12px;
-            z-index: 10000;
-            animation: fadeInUp 0.3s ease;
-        `;
-        toast.innerHTML = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-    
+    // ============ HANDLE ENTER KEY ============
     window.handleChatKeyPress = function(event) {
         if (event.key === 'Enter') {
             sendChatMessage();
