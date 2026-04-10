@@ -10677,24 +10677,25 @@ console.log('✅ Voting system frontend fixes applied');
     }
     
     .chat-container {
-        position: absolute;
-        bottom: 80px;
-        right: 0;
-        width: 400px;
-        height: 500px;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transform: scale(0);
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        transform-origin: bottom right;
-        border: 1px solid rgba(255, 0, 0, 0.2);
-    }
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: min(400px, 90vw);
+    height: min(600px, 70vh);
+    max-height: calc(100vh - 120px);
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform-origin: bottom right;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+}
     
     .chat-container.open {
         transform: scale(1);
@@ -10956,75 +10957,24 @@ console.log('✅ Voting system frontend fixes applied');
     }
     
     /* Mobile responsive */
-    @media (max-width: 768px) {
-        .whatsapp-float {
-            bottom: 20px;
-            left: 15px;
-            width: 50px;
-            height: 50px;
-            font-size: 26px;
-        }
-        
-        .chat-widget {
-            bottom: 20px;
-            right: 15px;
-        }
-        
-        .chat-button {
-            width: 50px;
-            height: 50px;
-        }
-        
-        .chat-button i {
-            font-size: 24px;
-        }
-        
-        .chat-container {
-            width: 350px;
-            height: 520px;
-            bottom: 70px;
-            right: -5px;
-        }
-        
-        .chat-header {
-            padding: 14px 16px;
-        }
-        
-        .chat-avatar {
-            width: 38px;
-            height: 38px;
-            font-size: 18px;
-        }
-        
-        .chat-header-info h3 {
-            font-size: 14px;
-        }
-        
-        .chat-options {
-            padding: 10px 12px;
-        }
-        
-        .option-btn {
-            padding: 5px 10px;
-            font-size: 10px;
-        }
-        
-        .whatsapp-tooltip {
-            display: none;
-        }
+   @media (max-width: 768px) {
+    .chat-container {
+        width: min(350px, 90vw);
+        height: min(550px, 65vh);
+        max-height: calc(100vh - 100px);
+        bottom: 70px;
+        right: -5px;
     }
-    
-    @media (max-width: 480px) {
-        .chat-container {
-            width: 320px;
-            height: 500px;
-            right: -10px;
-        }
-        
-        .chat-messages {
-            padding: 15px;
-        }
+}
+
+@media (max-width: 480px) {
+    .chat-container {
+        width: min(320px, 92vw);
+        height: min(500px, 60vh);
+        max-height: calc(100vh - 80px);
+        right: -10px;
     }
+}
 </style>
 
 <script>
