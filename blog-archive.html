@@ -12,7 +12,6 @@
         body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); color: #333; line-height: 1.7; min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .blog-header { background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); padding: 60px 40px; border-radius: 25px; color: white; text-align: center; margin-bottom: 40px; position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(255, 0, 0, 0.15); }
-        .blog-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.1)" d="M0,0 L100,0 L100,100 Z"></path></svg>'); background-size: cover; }
         .back-btn { background: white; color: #FF0000; padding: 12px 25px; border: none; border-radius: 50px; font-weight: 600; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2); margin-bottom: 30px; position: relative; z-index: 10; }
         .back-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255, 0, 0, 0.3); }
         h1 { font-family: 'Montserrat', sans-serif; font-size: 48px; font-weight: 800; margin-bottom: 15px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); position: relative; z-index: 10; }
@@ -30,7 +29,7 @@
         .category-btn { padding: 10px 20px; background: #f1f5f9; border: none; border-radius: 10px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
         .category-btn:hover, .category-btn.active { background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); color: white; transform: translateY(-2px); }
         .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px; margin: 40px 0; }
-        .blog-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; border: 1px solid #f1f5f9; cursor: pointer; }
+        .blog-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; border: 1px solid #f1f5f9; cursor: pointer; display: block; }
         .blog-card:hover { transform: translateY(-15px); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15); }
         .blog-card.featured { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
         .featured-badge { position: absolute; top: 20px; left: 20px; background: linear-gradient(45deg, #FF0000, #87CEEB); color: white; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 1px; z-index: 2; }
@@ -43,7 +42,7 @@
         .blog-title { font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 15px; line-height: 1.4; color: #1a202c; }
         .blog-card.featured .blog-title { font-size: 28px; }
         .blog-excerpt { color: #64748b; margin-bottom: 20px; line-height: 1.8; }
-        .blog-meta { display: flex; gap: 20px; margin-bottom: 20px; color: #94a3b8; font-size: 14px; }
+        .blog-meta { display: flex; gap: 20px; margin-bottom: 20px; color: #94a3b8; font-size: 14px; flex-wrap: wrap; }
         .meta-item { display: flex; align-items: center; gap: 6px; }
         .read-btn { display: inline-flex; align-items: center; gap: 8px; color: #FF0000; font-weight: 600; text-decoration: none; padding: 10px 0; position: relative; }
         .read-btn::after { content: ''; position: absolute; bottom: 8px; left: 0; width: 0; height: 2px; background: #FF0000; transition: width 0.3s ease; }
@@ -64,9 +63,19 @@
         .newsletter-input { width: 100%; padding: 15px; border: none; border-radius: 10px; margin-bottom: 15px; font-size: 16px; }
         .subscribe-btn { width: 100%; padding: 15px; background: white; color: #FF0000; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; }
         .subscribe-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); }
-        .pagination { display: flex; justify-content: center; gap: 10px; margin: 60px 0 40px; }
-        .page-btn { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: white; border: 2px solid #e2e8f0; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-        .page-btn:hover, .page-btn.active { background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); color: white; border-color: transparent; }
+        .load-more-container { text-align: center; margin: 40px 0; }
+        .load-more-btn { background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 15px 40px; border: none; border-radius: 50px; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px; }
+        .load-more-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(255, 0, 0, 0.3); }
+        .search-results-header { margin: 20px 0 30px; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: none; }
+        .search-results-header.active { display: block; }
+        .search-results-count { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 700; color: #1a202c; margin-bottom: 10px; }
+        .search-results-query { color: #FF0000; font-weight: 600; background: #fef2f2; padding: 5px 10px; border-radius: 5px; margin: 0 5px; }
+        .clear-search-btn { background: #f1f5f9; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; cursor: pointer; margin-top: 10px; transition: all 0.3s ease; }
+        .clear-search-btn:hover { background: #e2e8f0; }
+        .no-results { text-align: center; padding: 60px 20px; background: white; border-radius: 20px; grid-column: 1 / -1; display: none; }
+        .no-results.active { display: block; }
+        .no-results-icon { font-size: 60px; color: #e2e8f0; margin-bottom: 20px; }
+        .highlight { background-color: #fffacd; padding: 0 2px; border-radius: 3px; }
         .footer-cta { background: white; padding: 50px; border-radius: 20px; text-align: center; margin: 60px 0; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); }
         .footer-cta h2 { font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; margin-bottom: 20px; color: #1a202c; }
         .footer-cta p { color: #64748b; max-width: 600px; margin: 0 auto 30px; font-size: 18px; }
@@ -76,75 +85,12 @@
         .secondary-btn { background: white; color: #FF0000; padding: 15px 35px; border: 2px solid #FF0000; border-radius: 15px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s ease; }
         .secondary-btn:hover { background: #fff5f5; transform: translateY(-3px); }
         
-        /* Search Results Styling */
-        .search-results-header { 
-            margin: 20px 0 30px; 
-            padding: 20px; 
-            background: white; 
-            border-radius: 15px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
-            display: none;
-        }
-        .search-results-header.active { display: block; }
-        .search-results-count { 
-            font-family: 'Montserrat', sans-serif; 
-            font-size: 20px; 
-            font-weight: 700; 
-            color: #1a202c; 
-            margin-bottom: 10px; 
-        }
-        .search-results-query { 
-            color: #FF0000; 
-            font-weight: 600; 
-            background: #fef2f2; 
-            padding: 5px 10px; 
-            border-radius: 5px; 
-            margin: 0 5px; 
-        }
-        .clear-search-btn { 
-            background: #f1f5f9; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 8px; 
-            font-weight: 500; 
-            cursor: pointer; 
-            margin-top: 10px; 
-            transition: all 0.3s ease; 
-        }
-        .clear-search-btn:hover { 
-            background: #e2e8f0; 
-        }
-        .no-results { 
-            text-align: center; 
-            padding: 60px 20px; 
-            background: white; 
-            border-radius: 20px; 
-            grid-column: 1 / -1; 
-            display: none; 
-        }
-        .no-results.active { display: block; }
-        .no-results-icon { 
-            font-size: 60px; 
-            color: #e2e8f0; 
-            margin-bottom: 20px; 
-        }
-        .highlight { 
-            background-color: #fffacd; 
-            padding: 0 2px; 
-            border-radius: 3px; 
-        }
-        
         @media (max-width: 992px) { .layout-container { grid-template-columns: 1fr; } .sidebar { position: static; } .blog-card.featured { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { .container { padding: 15px; } .blog-header { padding: 40px 20px; } h1 { font-size: 36px; } .search-section { flex-direction: column; align-items: stretch; } .search-box { min-width: auto; } .blog-grid { grid-template-columns: 1fr; } .stats-bar { gap: 20px; } .stat-number { font-size: 24px; } }
         
-        /* Animation Keyframes */
         @keyframes highlight {
             0% { transform: translateY(10px); opacity: 0.8; }
             100% { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -161,7 +107,7 @@
             
             <div class="stats-bar">
                 <div class="stat-item">
-                    <div class="stat-number" id="totalArticles">25+</div>
+                    <div class="stat-number" id="totalArticles">15</div>
                     <div class="stat-label">Articles</div>
                 </div>
                 <div class="stat-item">
@@ -183,7 +129,7 @@
         <div class="search-section">
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="Search articles, tips, and insights..." onkeyup="performSearch()" id="searchInput">
+                <input type="text" class="search-input" placeholder="Search articles, tips, and insights... (Press / to focus)" id="searchInput" onkeyup="performSearch()">
             </div>
             
             <div class="category-filter">
@@ -197,7 +143,7 @@
 
         <!-- Search Results Header -->
         <div class="search-results-header" id="searchResultsHeader">
-            <div class="search-results-count" id="searchResultsCount">Showing <span id="resultsCount">0</span> results for "<span id="searchQueryText" class="search-results-query"></span>"</div>
+            <div class="search-results-count">Showing <span id="resultsCount">0</span> results for "<span id="searchQueryText" class="search-results-query"></span>"</div>
             <div style="color: #64748b; font-size: 14px; margin-bottom: 10px;">Click on any article to read it, or try a different search term.</div>
             <button class="clear-search-btn" onclick="clearSearch()">
                 <i class="fas fa-times"></i> Clear Search
@@ -254,194 +200,13 @@
                     </div>
                 </div>
 
-                <!-- Blog Grid -->
-                <div class="blog-grid" id="blogGrid">
-                    <!-- Article 1 -->
-                    <div class="blog-card" data-category="nomination" onclick="openArticle('nomination-tips.html')">
-                        <div class="blog-image">
-                            <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Nomination Tips">
-                        </div>
-                        <div class="blog-content">
-                            <div class="blog-category">
-                                <i class="fas fa-lightbulb"></i> Nomination Tips
-                            </div>
-                            <h3 class="blog-title">5 Expert Tips to Strengthen Your Award Nomination</h3>
-                            <p class="blog-excerpt">Learn how to make your business stand out from the competition with proven strategies from award-winning entrepreneurs.</p>
-                            
-                            <div class="blog-meta">
-                                <div class="meta-item">
-                                    <i class="far fa-calendar"></i>
-                                    <span>March 15, 2026</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-clock"></i>
-                                    <span>10 min read</span>
-                                </div>
-                            </div>
-                            
-                            <a href="nomination-tips.html" class="read-btn" onclick="event.stopPropagation(); openArticle('nomination-tips.html')">
-                                Read Article <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Article 2 -->
-                    <div class="blog-card" data-category="judges" onclick="openArticle('meet-judges.html')">
-                        <div class="blog-image">
-                            <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Meet the Judges">
-                        </div>
-                        <div class="blog-content">
-                            <div class="blog-category">
-                                <i class="fas fa-users"></i> Judging Insights
-                            </div>
-                            <h3 class="blog-title">Meet the Judges: Industry Leaders Share Insights</h3>
-                            <p class="blog-excerpt">Get to know the distinguished panel of experts who will evaluate this year's nominations and learn what they're looking for.</p>
-                            
-                            <div class="blog-meta">
-                                <div class="meta-item">
-                                    <i class="far fa-calendar"></i>
-                                    <span>February 28, 2026</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-clock"></i>
-                                    <span>8 min read</span>
-                                </div>
-                            </div>
-                            
-                            <a href="meet-judges.html" class="read-btn" onclick="event.stopPropagation(); openArticle('meet-judges.html')">
-                                Read Article <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Article 3 -->
-                    <div class="blog-card" data-category="industry" onclick="openArticle('lba-impact.html')">
-                        <div class="blog-image">
-                            <img src="https://images.unsplash.com/photo-1556761175-4ac5e51e1f2f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="LBA Impact">
-                        </div>
-                        <div class="blog-content">
-                            <div class="blog-category">
-                                <i class="fas fa-chart-line"></i> Industry News
-                            </div>
-                            <h3 class="blog-title">The Economic Impact of LBA on Liberia's Business Landscape</h3>
-                            <p class="blog-excerpt">How the Liberia Business Awards are driving economic growth and creating opportunities for businesses nationwide.</p>
-                            
-                            <div class="blog-meta">
-                                <div class="meta-item">
-                                    <i class="far fa-calendar"></i>
-                                    <span>February 10, 2026</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-clock"></i>
-                                    <span>15 min read</span>
-                                </div>
-                            </div>
-                            
-                            <a href="lba-impact.html" class="read-btn" onclick="event.stopPropagation(); openArticle('lba-impact.html')">
-                                Read Article <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Article 4 -->
-                    <div class="blog-card" data-category="success" onclick="openArticle('women-entrepreneurs.html')">
-                        <div class="blog-image">
-                            <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Women Entrepreneurs">
-                        </div>
-                        <div class="blog-content">
-                            <div class="blog-category">
-                                <i class="fas fa-female"></i> Success Stories
-                            </div>
-                            <h3 class="blog-title">Liberian Women Entrepreneurs Breaking Barriers</h3>
-                            <p class="blog-excerpt">Inspiring stories of female business leaders who are transforming industries and creating new opportunities.</p>
-                            
-                            <div class="blog-meta">
-                                <div class="meta-item">
-                                    <i class="far fa-calendar"></i>
-                                    <span>January 25, 2026</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-clock"></i>
-                                    <span>12 min read</span>
-                                </div>
-                            </div>
-                            
-                            <a href="women-entrepreneurs.html" class="read-btn" onclick="event.stopPropagation(); openArticle('women-entrepreneurs.html')">
-                                Read Article <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Article 5 -->
-                    <div class="blog-card" data-category="industry" onclick="openArticle('digital-transformation.html')">
-                        <div class="blog-image">
-                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Digital Transformation">
-                        </div>
-                        <div class="blog-content">
-                            <div class="blog-category">
-                                <i class="fas fa-laptop-code"></i> Industry News
-                            </div>
-                            <h3 class="blog-title">Digital Transformation in Liberian Businesses: Success Stories</h3>
-                            <p class="blog-excerpt">How local businesses are leveraging technology to innovate, scale, and compete in the digital age.</p>
-                            
-                            <div class="blog-meta">
-                                <div class="meta-item">
-                                    <i class="far fa-calendar"></i>
-                                    <span>January 15, 2026</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-clock"></i>
-                                    <span>14 min read</span>
-                                </div>
-                            </div>
-                            
-                            <a href="digital-transformation.html" class="read-btn" onclick="event.stopPropagation(); openArticle('digital-transformation.html')">
-                                Read Article <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Article 6 -->
-                    <div class="blog-card" data-category="nomination" onclick="openArticle('sustainable-business.html')">
-                        <div class="blog-image">
-                            <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Sustainable Business">
-                        </div>
-                        <div class="blog-content">
-                            <div class="blog-category">
-                                <i class="fas fa-leaf"></i> Nomination Tips
-                            </div>
-                            <h3 class="blog-title">Building a Sustainable Business: What Judges Look For</h3>
-                            <p class="blog-excerpt">Learn how to incorporate sustainability into your business model and impress the LBA judging panel.</p>
-                            
-                            <div class="blog-meta">
-                                <div class="meta-item">
-                                    <i class="far fa-calendar"></i>
-                                    <span>January 5, 2026</span>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-clock"></i>
-                                    <span>11 min read</span>
-                                </div>
-                            </div>
-                            
-                            <a href="sustainable-business.html" class="read-btn" onclick="event.stopPropagation(); openArticle('sustainable-business.html')">
-                                Read Article <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Example of a new article that would be automatically searchable -->
-                    <!-- You can add more articles like this and they'll be searchable -->
-                </div>
-
-                <!-- Pagination -->
-                <div class="pagination">
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn">4</button>
-                    <button class="page-btn">
-                        <i class="fas fa-chevron-right"></i>
+                <!-- Blog Grid - All articles will be populated by JavaScript -->
+                <div class="blog-grid" id="blogGrid"></div>
+                
+                <!-- Load More Button -->
+                <div class="load-more-container" id="loadMoreContainer">
+                    <button class="load-more-btn" onclick="loadMoreArticles()">
+                        <i class="fas fa-arrow-down"></i> Load More Articles
                     </button>
                 </div>
             </div>
@@ -451,43 +216,8 @@
                 <!-- Popular Posts -->
                 <div class="sidebar-section">
                     <h3 class="sidebar-title">Most Popular</h3>
-                    <ul class="popular-posts">
-                        <li class="popular-post" onclick="openArticle('success-stories.html')">
-                            <div class="popular-image">
-                                <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Success Stories">
-                            </div>
-                            <div class="popular-content">
-                                <h4>How Winning an LBA Transformed Businesses</h4>
-                                <span>Feb 15, 2026</span>
-                            </div>
-                        </li>
-                        <li class="popular-post" onclick="openArticle('nomination-tips.html')">
-                            <div class="popular-image">
-                                <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Nomination Tips">
-                            </div>
-                            <div class="popular-content">
-                                <h4>5 Expert Tips for Award Nominations</h4>
-                                <span>Mar 15, 2026</span>
-                            </div>
-                        </li>
-                        <li class="popular-post" onclick="openArticle('meet-judges.html')">
-                            <div class="popular-image">
-                                <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Meet Judges">
-                            </div>
-                            <div class="popular-content">
-                                <h4>Meet the LBA Judges Panel</h4>
-                                <span>Feb 28, 2026</span>
-                            </div>
-                        </li>
-                        <li class="popular-post" onclick="openArticle('women-entrepreneurs.html')">
-                            <div class="popular-image">
-                                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Women Entrepreneurs">
-                            </div>
-                            <div class="popular-content">
-                                <h4>Women Entrepreneurs Breaking Barriers</h4>
-                                <span>Jan 25, 2026</span>
-                            </div>
-                        </li>
+                    <ul class="popular-posts" id="popularPosts">
+                        <!-- Populated by JavaScript -->
                     </ul>
                 </div>
 
@@ -503,21 +233,21 @@
                 <div class="sidebar-section">
                     <h3 class="sidebar-title">Categories</h3>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <button class="category-btn" onclick="filterByCategory('nomination')" style="justify-content: space-between; display: flex; align-items: center;">
+                        <button class="category-btn" onclick="filterByCategory('nomination')" style="justify-content: space-between; display: flex; align-items: center; width: 100%;">
                             <span>Nomination Tips</span>
-                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px;" id="nominationCount">8</span>
+                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px;" id="nominationCount">0</span>
                         </button>
-                        <button class="category-btn" onclick="filterByCategory('success')" style="justify-content: space-between; display: flex; align-items: center;">
+                        <button class="category-btn" onclick="filterByCategory('success')" style="justify-content: space-between; display: flex; align-items: center; width: 100%;">
                             <span>Success Stories</span>
-                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px;" id="successCount">12</span>
+                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px;" id="successCount">0</span>
                         </button>
-                        <button class="category-btn" onclick="filterByCategory('judges')" style="justify-content: space-between; display: flex; align-items: center;">
+                        <button class="category-btn" onclick="filterByCategory('judges')" style="justify-content: space-between; display: flex; align-items: center; width: 100%;">
                             <span>Judging Insights</span>
-                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px;" id="judgesCount">5</span>
+                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px;" id="judgesCount">0</span>
                         </button>
-                        <button class="category-btn" onclick="filterByCategory('industry')" style="justify-content: space-between; display: flex; align-items: center;">
+                        <button class="category-btn" onclick="filterByCategory('industry')" style="justify-content: space-between; display: flex; align-items: center; width: 100%;">
                             <span>Industry News</span>
-                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px;" id="industryCount">10</span>
+                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 10px; font-size: 12px;" id="industryCount">0</span>
                         </button>
                     </div>
                 </div>
@@ -540,339 +270,465 @@
     </div>
 
     <script>
-        // Main navigation functions
-        function goBack() {
-            window.location.href = 'index.html';
-        }
-
-        function openArticle(url) {
-            window.location.href = url;
-        }
-
-        // Blog Search Data - This would typically come from a database or API
-        // In a real implementation, this would be dynamically loaded
+        // ============================================
+        // COMPLETE BLOG DATA - 15+ ARTICLES
+        // ============================================
         const blogData = [
+            // Featured (Index 0)
             {
                 id: 1,
+                title: "How Winning an LBA Transformed These Businesses",
+                excerpt: "Discover the incredible journeys of past winners and learn how the Liberia Business Awards catapulted their growth and recognition. Real stories, real impact.",
+                category: "success",
+                date: "February 15, 2026",
+                readTime: "12 min read",
+                views: "5.2K",
+                image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                url: "success-stories.html",
+                featured: true
+            },
+            {
+                id: 2,
                 title: "5 Expert Tips to Strengthen Your Award Nomination",
                 excerpt: "Learn how to make your business stand out from the competition with proven strategies from award-winning entrepreneurs.",
                 category: "nomination",
                 date: "March 15, 2026",
                 readTime: "10 min read",
+                views: "3.8K",
                 image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
                 url: "nomination-tips.html"
             },
             {
-                id: 2,
+                id: 3,
                 title: "Meet the Judges: Industry Leaders Share Insights",
                 excerpt: "Get to know the distinguished panel of experts who will evaluate this year's nominations and learn what they're looking for.",
                 category: "judges",
                 date: "February 28, 2026",
                 readTime: "8 min read",
+                views: "4.2K",
                 image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
                 url: "meet-judges.html"
             },
             {
-                id: 3,
+                id: 4,
                 title: "The Economic Impact of LBA on Liberia's Business Landscape",
                 excerpt: "How the Liberia Business Awards are driving economic growth and creating opportunities for businesses nationwide.",
                 category: "industry",
                 date: "February 10, 2026",
                 readTime: "15 min read",
+                views: "2.9K",
                 image: "https://images.unsplash.com/photo-1556761175-4ac5e51e1f2f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
                 url: "lba-impact.html"
             },
             {
-                id: 4,
+                id: 5,
                 title: "Liberian Women Entrepreneurs Breaking Barriers",
                 excerpt: "Inspiring stories of female business leaders who are transforming industries and creating new opportunities.",
                 category: "success",
                 date: "January 25, 2026",
                 readTime: "12 min read",
+                views: "6.1K",
                 image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
                 url: "women-entrepreneurs.html"
             },
             {
-                id: 5,
+                id: 6,
                 title: "Digital Transformation in Liberian Businesses: Success Stories",
                 excerpt: "How local businesses are leveraging technology to innovate, scale, and compete in the digital age.",
                 category: "industry",
                 date: "January 15, 2026",
                 readTime: "14 min read",
+                views: "3.5K",
                 image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
                 url: "digital-transformation.html"
             },
             {
-                id: 6,
+                id: 7,
                 title: "Building a Sustainable Business: What Judges Look For",
                 excerpt: "Learn how to incorporate sustainability into your business model and impress the LBA judging panel.",
                 category: "nomination",
                 date: "January 5, 2026",
                 readTime: "11 min read",
+                views: "2.7K",
                 image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
                 url: "sustainable-business.html"
             },
             {
-                id: 7,
-                title: "How Winning an LBA Transformed These Businesses",
-                excerpt: "Discover the incredible journeys of past winners and learn how the Liberia Business Awards catapulted their growth and recognition.",
+                id: 8,
+                title: "From Startup to Success: The Journey of Liberia's Best SMEs",
+                excerpt: "Inspirational stories of small and medium enterprises that have grown into market leaders through dedication and innovation.",
                 category: "success",
-                date: "February 15, 2026",
-                readTime: "12 min read",
-                image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                url: "success-stories.html",
-                featured: true
+                date: "December 20, 2025",
+                readTime: "18 min read",
+                views: "4.5K",
+                image: "https://images.unsplash.com/photo-1556740758-90de374c12ad?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                url: "success-stories.html"
+            },
+            {
+                id: 9,
+                title: "How to Prepare a Winning Nomination Package",
+                excerpt: "Step-by-step guide to creating a compelling nomination that captures the attention of judges.",
+                category: "nomination",
+                date: "December 10, 2025",
+                readTime: "9 min read",
+                views: "3.2K",
+                image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                url: "nomination-tips.html"
+            },
+            {
+                id: 10,
+                title: "The Future of Liberian Agriculture: Innovation and Growth",
+                excerpt: "How agribusinesses are revolutionizing farming practices and contributing to food security.",
+                category: "industry",
+                date: "November 28, 2025",
+                readTime: "13 min read",
+                views: "2.1K",
+                image: "https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                url: "lba-impact.html"
+            },
+            {
+                id: 11,
+                title: "Meet the 2025 Grand Jury: Distinguished Leaders",
+                excerpt: "An exclusive look at the experts who determine the winners of the Liberia Business Awards.",
+                category: "judges",
+                date: "November 15, 2025",
+                readTime: "7 min read",
+                views: "3.9K",
+                image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                url: "meet-judges.html"
+            },
+            {
+                id: 12,
+                title: "Marketing Strategies That Won Awards",
+                excerpt: "Learn from past winners about the marketing approaches that helped them stand out.",
+                category: "nomination",
+                date: "November 5, 2025",
+                readTime: "10 min read",
+                views: "2.8K",
+                image: "https://images.unsplash.com/photo-1533750349088-cd871a92f312?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                url: "nomination-tips.html"
+            },
+            {
+                id: 13,
+                title: "Young Entrepreneurs Shaping Liberia's Future",
+                excerpt: "Meet the innovative young business leaders who are creating jobs and driving change.",
+                category: "success",
+                date: "October 22, 2025",
+                readTime: "11 min read",
+                views: "5.8K",
+                image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                url: "success-stories.html"
+            },
+            {
+                id: 14,
+                title: "Understanding the 18 Economic Sectors of Liberia",
+                excerpt: "A comprehensive guide to the diverse industries driving Liberia's economy forward.",
+                category: "industry",
+                date: "October 10, 2025",
+                readTime: "20 min read",
+                views: "4.1K",
+                image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                url: "lba-impact.html"
+            },
+            {
+                id: 15,
+                title: "Interview with Last Year's CEO of the Year",
+                excerpt: "Exclusive insights from the leader who took home the top prize at LBA 2025.",
+                category: "success",
+                date: "September 28, 2025",
+                readTime: "16 min read",
+                views: "7.2K",
+                image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                url: "success-stories.html"
             }
         ];
 
-        // Search functionality
+        // Global variables
         let currentSearchTerm = '';
         let currentCategory = 'all';
         let searchTimeout;
+        let visibleCount = 6;
+        let allArticlesRendered = false;
 
-        function performSearch() {
-            clearTimeout(searchTimeout);
-            
-            // Debounce the search to improve performance
-            searchTimeout = setTimeout(() => {
-                const searchInput = document.getElementById('searchInput');
-                const searchTerm = searchInput.value.trim().toLowerCase();
-                currentSearchTerm = searchTerm;
-                
-                // Update URL without page reload for shareable searches
-                updateURLWithSearch(searchTerm);
-                
-                // Hide/show search results header
-                const searchResultsHeader = document.getElementById('searchResultsHeader');
-                const noResultsMessage = document.getElementById('noResultsMessage');
-                
-                if (searchTerm.length > 0) {
-                    searchResultsHeader.classList.add('active');
-                    document.getElementById('searchQueryText').textContent = searchTerm;
-                } else {
-                    searchResultsHeader.classList.remove('active');
-                    noResultsMessage.classList.remove('active');
-                }
-                
-                filterArticles();
-            }, 300); // 300ms debounce
-        }
+        // Navigation functions
+        function goBack() { window.location.href = 'index.html'; }
+        function openArticle(url) { window.location.href = url; }
+        function goToNomination() { window.location.href = 'index.html#categories'; }
+        function goToCategories() { window.location.href = 'index.html#categories'; }
 
-        function filterArticles() {
-            const searchTerm = currentSearchTerm;
-            const category = currentCategory;
+        // Render blog articles
+        function renderArticles() {
+            const container = document.getElementById('blogGrid');
+            if (!container) return;
             
-            // Get all regular blog cards (excluding featured)
-            const articles = document.querySelectorAll('.blog-card:not(.featured)');
-            let visibleCount = 0;
-            
-            articles.forEach(article => {
-                const title = article.querySelector('.blog-title').textContent.toLowerCase();
-                const excerpt = article.querySelector('.blog-excerpt').textContent.toLowerCase();
-                const articleCategory = article.getAttribute('data-category');
+            // Filter articles based on search and category
+            let filtered = blogData.filter(article => {
+                if (article.featured) return false; // Skip featured, it's rendered separately
                 
-                // Check if article matches search term AND category
-                const matchesSearch = searchTerm.length === 0 || 
-                    title.includes(searchTerm) || 
-                    excerpt.includes(searchTerm);
+                const matchesSearch = currentSearchTerm === '' || 
+                    article.title.toLowerCase().includes(currentSearchTerm) ||
+                    article.excerpt.toLowerCase().includes(currentSearchTerm);
                 
-                const matchesCategory = category === 'all' || articleCategory === category;
+                const matchesCategory = currentCategory === 'all' || article.category === currentCategory;
                 
-                if (matchesSearch && matchesCategory) {
-                    article.style.display = 'block';
-                    
-                    // Highlight search terms in title and excerpt
-                    if (searchTerm.length > 0) {
-                        highlightText(article.querySelector('.blog-title'), searchTerm);
-                        highlightText(article.querySelector('.blog-excerpt'), searchTerm);
-                    } else {
-                        removeHighlights(article);
-                    }
-                    
-                    // Add animation
-                    article.style.animation = 'none';
-                    setTimeout(() => {
-                        article.style.animation = 'highlight 0.5s ease';
-                    }, 10);
-                    
-                    visibleCount++;
-                } else {
-                    article.style.display = 'none';
-                }
+                return matchesSearch && matchesCategory;
             });
             
-            // Update search results count
-            const searchResultsCount = document.getElementById('searchResultsCount');
-            const resultsCountSpan = document.getElementById('resultsCount');
-            resultsCountSpan.textContent = visibleCount;
+            // Sort by date (newest first)
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            // Handle featured article visibility
+            // Update counts
+            const totalResults = filtered.length;
+            document.getElementById('resultsCount').textContent = totalResults;
+            document.getElementById('totalArticles').textContent = blogData.length;
+            
+            // Show/hide search results header
+            const searchHeader = document.getElementById('searchResultsHeader');
+            if (currentSearchTerm) {
+                searchHeader.classList.add('active');
+                document.getElementById('searchQueryText').textContent = currentSearchTerm;
+            } else {
+                searchHeader.classList.remove('active');
+            }
+            
+            // Show/hide no results
+            const noResults = document.getElementById('noResultsMessage');
+            if (totalResults === 0 && (currentSearchTerm || currentCategory !== 'all')) {
+                noResults.classList.add('active');
+            } else {
+                noResults.classList.remove('active');
+            }
+            
+            // Update category counts in sidebar
+            updateCategoryCounts();
+            
+            // Update popular posts sidebar
+            updatePopularPosts();
+            
+            // Determine how many to show
+            const toShow = filtered.slice(0, visibleCount);
+            const hasMore = filtered.length > visibleCount;
+            
+            // Show/hide load more button
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+            if (loadMoreContainer) {
+                loadMoreContainer.style.display = hasMore ? 'block' : 'none';
+            }
+            
+            // Render articles
+            if (toShow.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = toShow.map(article => `
+                <div class="blog-card" data-category="${article.category}" onclick="openArticle('${article.url}')" data-title="${article.title.toLowerCase()}" data-excerpt="${article.excerpt.toLowerCase()}">
+                    <div class="blog-image">
+                        <img src="${article.image}" alt="${article.title}" loading="lazy">
+                    </div>
+                    <div class="blog-content">
+                        <div class="blog-category">
+                            <i class="fas ${getCategoryIcon(article.category)}"></i> ${getCategoryName(article.category)}
+                        </div>
+                        <h3 class="blog-title">${highlightText(article.title, currentSearchTerm)}</h3>
+                        <p class="blog-excerpt">${highlightText(article.excerpt, currentSearchTerm)}</p>
+                        <div class="blog-meta">
+                            <div class="meta-item">
+                                <i class="far fa-calendar"></i>
+                                <span>${article.date}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="far fa-clock"></i>
+                                <span>${article.readTime}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-eye"></i>
+                                <span>${article.views} views</span>
+                            </div>
+                        </div>
+                        <a href="${article.url}" class="read-btn" onclick="event.stopPropagation(); openArticle('${article.url}')">
+                            Read Article <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Update featured article visibility based on filters
+            updateFeaturedArticle();
+        }
+        
+        // Update featured article visibility
+        function updateFeaturedArticle() {
             const featuredArticle = document.querySelector('.blog-card.featured');
-            const featuredCategory = featuredArticle.getAttribute('data-category');
-            const featuredTitle = featuredArticle.querySelector('.blog-title').textContent.toLowerCase();
-            const featuredExcerpt = featuredArticle.querySelector('.blog-excerpt').textContent.toLowerCase();
+            if (!featuredArticle) return;
             
-            const featuredMatchesSearch = searchTerm.length === 0 || 
-                featuredTitle.includes(searchTerm) || 
-                featuredExcerpt.includes(searchTerm);
+            const featuredData = blogData.find(a => a.featured === true);
+            if (!featuredData) return;
             
-            const featuredMatchesCategory = category === 'all' || featuredCategory === category;
+            const matchesSearch = currentSearchTerm === '' || 
+                featuredData.title.toLowerCase().includes(currentSearchTerm) ||
+                featuredData.excerpt.toLowerCase().includes(currentSearchTerm);
             
-            if (featuredMatchesSearch && featuredMatchesCategory) {
+            const matchesCategory = currentCategory === 'all' || featuredData.category === currentCategory;
+            
+            if (matchesSearch && matchesCategory) {
                 featuredArticle.style.display = 'grid';
-                if (searchTerm.length > 0) {
-                    highlightText(featuredArticle.querySelector('.blog-title'), searchTerm);
-                    highlightText(featuredArticle.querySelector('.blog-excerpt'), searchTerm);
+                
+                // Update content to reflect search highlighting
+                if (currentSearchTerm) {
+                    const titleEl = featuredArticle.querySelector('.blog-title');
+                    const excerptEl = featuredArticle.querySelector('.blog-excerpt');
+                    if (titleEl && excerptEl) {
+                        titleEl.innerHTML = highlightText(featuredData.title, currentSearchTerm);
+                        excerptEl.innerHTML = highlightText(featuredData.excerpt, currentSearchTerm);
+                    }
                 } else {
-                    removeHighlights(featuredArticle);
+                    const titleEl = featuredArticle.querySelector('.blog-title');
+                    const excerptEl = featuredArticle.querySelector('.blog-excerpt');
+                    if (titleEl && excerptEl) {
+                        titleEl.innerHTML = featuredData.title;
+                        excerptEl.innerHTML = featuredData.excerpt;
+                    }
                 }
             } else {
                 featuredArticle.style.display = 'none';
             }
-            
-            // Show/hide no results message
-            const noResultsMessage = document.getElementById('noResultsMessage');
-            const totalVisible = visibleCount + (featuredArticle.style.display !== 'none' ? 1 : 0);
-            
-            if (totalVisible === 0 && (searchTerm.length > 0 || category !== 'all')) {
-                noResultsMessage.classList.add('active');
-                searchResultsHeader.classList.add('active');
-            } else {
-                noResultsMessage.classList.remove('active');
-            }
-            
-            // Update article count in header
-            updateArticleCounts();
         }
-
-        // Highlight search terms in text
-        function highlightText(element, searchTerm) {
-            if (!element || !searchTerm) return;
-            
-            const text = element.textContent;
+        
+        // Helper functions
+        function getCategoryIcon(category) {
+            const icons = {
+                nomination: 'fa-lightbulb',
+                success: 'fa-trophy',
+                judges: 'fa-users',
+                industry: 'fa-chart-line'
+            };
+            return icons[category] || 'fa-newspaper';
+        }
+        
+        function getCategoryName(category) {
+            const names = {
+                nomination: 'Nomination Tips',
+                success: 'Success Stories',
+                judges: 'Judging Insights',
+                industry: 'Industry News'
+            };
+            return names[category] || 'Article';
+        }
+        
+        function highlightText(text, searchTerm) {
+            if (!searchTerm || searchTerm.length < 2) return text;
             const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            const highlighted = text.replace(regex, '<span class="highlight">$1</span>');
-            
-            // Store original text if not already stored
-            if (!element.dataset.originalText) {
-                element.dataset.originalText = text;
-            }
-            
-            element.innerHTML = highlighted;
+            return text.replace(regex, '<span class="highlight">$1</span>');
         }
-
-        // Remove highlights from text
-        function removeHighlights(article) {
-            const titleElement = article.querySelector('.blog-title');
-            const excerptElement = article.querySelector('.blog-excerpt');
-            
-            if (titleElement && titleElement.dataset.originalText) {
-                titleElement.textContent = titleElement.dataset.originalText;
-            }
-            
-            if (excerptElement && excerptElement.dataset.originalText) {
-                excerptElement.textContent = excerptElement.dataset.originalText;
-            }
-        }
-
-        // Category filtering
-        function filterByCategory(category) {
-            // Update active button
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Find the button that was clicked
-            const buttons = document.querySelectorAll(`.category-btn[data-category="${category}"]`);
-            if (buttons.length > 0) {
-                buttons[0].classList.add('active');
-            }
-            
-            currentCategory = category;
-            
-            // Clear search if switching categories
-            if (currentSearchTerm.length > 0 && category !== 'all') {
-                document.getElementById('searchInput').value = '';
-                currentSearchTerm = '';
-                document.getElementById('searchResultsHeader').classList.remove('active');
-            }
-            
-            filterArticles();
-        }
-
-        // Clear search
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            currentSearchTerm = '';
-            document.getElementById('searchResultsHeader').classList.remove('active');
-            document.getElementById('noResultsMessage').classList.remove('active');
-            
-            // Reset category to "All"
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector('.category-btn[data-category="all"]').classList.add('active');
-            currentCategory = 'all';
-            
-            filterArticles();
-            
-            // Clear URL parameters
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        // Update article counts in UI
-        function updateArticleCounts() {
-            const articles = document.querySelectorAll('.blog-card:not(.featured)');
-            const featuredArticle = document.querySelector('.blog-card.featured');
-            
-            // Count articles by category
+        
+        function updateCategoryCounts() {
             const counts = {
-                nomination: 0,
-                success: 0,
-                judges: 0,
-                industry: 0,
-                total: articles.length + (featuredArticle.style.display !== 'none' ? 1 : 0)
+                nomination: blogData.filter(a => a.category === 'nomination').length,
+                success: blogData.filter(a => a.category === 'success').length,
+                judges: blogData.filter(a => a.category === 'judges').length,
+                industry: blogData.filter(a => a.category === 'industry').length
             };
             
-            // Count visible articles by category
-            articles.forEach(article => {
-                if (article.style.display !== 'none') {
-                    const category = article.getAttribute('data-category');
-                    if (counts[category] !== undefined) {
-                        counts[category]++;
-                    }
-                }
-            });
-            
-            // Update category counts in sidebar
             document.getElementById('nominationCount').textContent = counts.nomination;
             document.getElementById('successCount').textContent = counts.success;
             document.getElementById('judgesCount').textContent = counts.judges;
             document.getElementById('industryCount').textContent = counts.industry;
-            
-            // Update total articles in header
-            document.getElementById('totalArticles').textContent = counts.total + '+';
         }
-
-        // Update URL with search parameters for sharing
-        function updateURLWithSearch(searchTerm) {
-            if (searchTerm.length > 0 || currentCategory !== 'all') {
-                const params = new URLSearchParams();
-                if (searchTerm.length > 0) {
-                    params.set('q', searchTerm);
-                }
-                if (currentCategory !== 'all') {
-                    params.set('category', currentCategory);
-                }
-                
-                const newURL = `${window.location.pathname}?${params.toString()}`;
-                window.history.replaceState({}, '', newURL);
-            } else {
-                window.history.replaceState({}, '', window.location.pathname);
+        
+        function updatePopularPosts() {
+            // Get top 5 most viewed articles
+            const popular = [...blogData]
+                .filter(a => !a.featured)
+                .sort((a, b) => parseInt(b.views) - parseInt(a.views))
+                .slice(0, 4);
+            
+            const container = document.getElementById('popularPosts');
+            if (container) {
+                container.innerHTML = popular.map(post => `
+                    <li class="popular-post" onclick="openArticle('${post.url}')">
+                        <div class="popular-image">
+                            <img src="${post.image}" alt="${post.title}">
+                        </div>
+                        <div class="popular-content">
+                            <h4>${post.title}</h4>
+                            <span>${post.date}</span>
+                        </div>
+                    </li>
+                `).join('');
             }
         }
-
-        // Load search parameters from URL on page load
+        
+        function loadMoreArticles() {
+            visibleCount += 6;
+            renderArticles();
+        }
+        
+        // Search and filter functions
+        function performSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchInput = document.getElementById('searchInput');
+                currentSearchTerm = searchInput.value.trim().toLowerCase();
+                visibleCount = 6; // Reset visible count on new search
+                renderArticles();
+                updateURLWithSearch();
+            }, 300);
+        }
+        
+        function filterByCategory(category) {
+            currentCategory = category;
+            visibleCount = 6;
+            
+            // Update active button styling
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-category') === category) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Clear search input when filtering by category
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput.value) {
+                searchInput.value = '';
+                currentSearchTerm = '';
+            }
+            
+            renderArticles();
+            updateURLWithSearch();
+        }
+        
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            currentSearchTerm = '';
+            visibleCount = 6;
+            renderArticles();
+            
+            // Reset category to 'all' if not already
+            if (currentCategory !== 'all') {
+                currentCategory = 'all';
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-category') === 'all') {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            updateURLWithSearch();
+            document.getElementById('searchInput').focus();
+        }
+        
+        function updateURLWithSearch() {
+            const params = new URLSearchParams();
+            if (currentSearchTerm) params.set('q', currentSearchTerm);
+            if (currentCategory !== 'all') params.set('category', currentCategory);
+            
+            const newURL = params.toString() ? `${window.location.pathname}?${params}` : window.location.pathname;
+            window.history.replaceState({}, '', newURL);
+        }
+        
         function loadSearchFromURL() {
             const params = new URLSearchParams(window.location.search);
             const searchParam = params.get('q');
@@ -881,73 +737,72 @@
             if (searchParam) {
                 document.getElementById('searchInput').value = searchParam;
                 currentSearchTerm = searchParam.toLowerCase();
-                document.getElementById('searchResultsHeader').classList.add('active');
-                document.getElementById('searchQueryText').textContent = searchParam;
             }
             
             if (categoryParam && ['nomination', 'success', 'judges', 'industry'].includes(categoryParam)) {
                 currentCategory = categoryParam;
                 document.querySelectorAll('.category-btn').forEach(btn => {
                     btn.classList.remove('active');
+                    if (btn.getAttribute('data-category') === categoryParam) {
+                        btn.classList.add('active');
+                    }
                 });
-                document.querySelector(`.category-btn[data-category="${categoryParam}"]`).classList.add('active');
             }
             
-            // Apply filters if there are URL parameters
-            if (searchParam || categoryParam) {
-                filterArticles();
-            }
+            renderArticles();
         }
-
+        
         // Newsletter subscription
         function subscribeNewsletter() {
-            const email = document.getElementById('newsletterEmail').value;
-            if (email && email.includes('@')) {
-                alert('Thank you for subscribing to the Liberia Business Awards newsletter!');
-                document.getElementById('newsletterEmail').value = '';
-                
-                // Send to Google Sheet (if you set up the same form handler)
-                const formData = new URLSearchParams();
-                formData.append('email', email);
-                formData.append('formType', 'newsletter');
-                formData.append('source', 'blog_archive');
-                
-                fetch('https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec', {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: formData
-                });
-            } else {
-                alert('Please enter a valid email address.');
+            const email = document.getElementById('newsletterEmail').value.trim();
+            if (!email) {
+                alert('Please enter your email address.');
+                return;
             }
+            if (!email.includes('@') || !email.includes('.')) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+            
+            alert('Thank you for subscribing to the Liberia Business Awards newsletter!');
+            document.getElementById('newsletterEmail').value = '';
+            
+            // Send to Google Apps Script
+            const formData = new URLSearchParams();
+            formData.append('email', email);
+            formData.append('formType', 'newsletter');
+            formData.append('source', 'blog_archive');
+            
+            fetch('https://script.google.com/macros/s/AKfycbxiEGmyxP0IYMMfp7WZH0UmLYCfKnZGCjtS64cdqOXpizL0g-hNmnRDiLitTQEy0eZD/exec', {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            }).catch(err => console.log('Newsletter signup error:', err));
         }
-
-        // Navigation from CTA buttons
-        function goToNomination() {
-            window.location.href = 'index.html#categories';
-        }
-
-        function goToCategories() {
-            window.location.href = 'index.html#categories';
-        }
-
-        // Animation on load
+        
+        // Initialize on load
         document.addEventListener('DOMContentLoaded', function() {
-            // Load search parameters from URL
+            renderArticles();
             loadSearchFromURL();
             
-            // Update article counts on initial load
-            updateArticleCounts();
-
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + F or / to focus search
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+                if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+                if (e.key === 'Escape') {
+                    clearSearch();
+                }
+            });
+            
             // Animate cards on scroll
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -955,67 +810,15 @@
                         entry.target.style.transform = 'translateY(0)';
                     }
                 });
-            }, observerOptions);
-
-            // Animate blog cards
-            document.querySelectorAll('.blog-card').forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(30px)';
-                card.style.transition = `all 0.6s ease ${index * 0.1}s`;
-                observer.observe(card);
-            });
-
-            // Animate sidebar sections
-            document.querySelectorAll('.sidebar-section').forEach((section, index) => {
-                section.style.opacity = '0';
-                section.style.transform = 'translateX(20px)';
-                section.style.transition = `all 0.6s ease ${index * 0.2}s`;
-                observer.observe(section);
-            });
-
-            // Handle keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                // Ctrl/Cmd + F to focus search
-                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-                    e.preventDefault();
-                    document.getElementById('searchInput').focus();
-                }
-                // Escape to clear search
-                if (e.key === 'Escape') {
-                    clearSearch();
-                    document.getElementById('searchInput').focus();
-                }
-                // Slash (/) to focus search
-                if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                    e.preventDefault();
-                    document.getElementById('searchInput').focus();
-                }
-            });
-
-            // Add search input hint
-            const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('focus', function() {
-                this.setAttribute('placeholder', 'Type to search articles... Press / to focus anytime');
-            });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
             
-            searchInput.addEventListener('blur', function() {
-                this.setAttribute('placeholder', 'Search articles, tips, and insights...');
+            document.querySelectorAll('.blog-card, .sidebar-section').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'all 0.6s ease';
+                observer.observe(el);
             });
         });
-
-        // Function to dynamically add new blog articles (for demonstration)
-        // In a real implementation, this would be handled by your CMS or backend
-        function addNewBlogArticle(articleData) {
-            // This function shows how new articles would be made searchable
-            // In practice, you would add the article to your blogData array
-            // and regenerate the blog grid or use AJAX to fetch articles
-            
-            blogData.push(articleData);
-            console.log('New article added to search index:', articleData.title);
-            
-            // Update UI to reflect new article count
-            updateArticleCounts();
-        }
     </script>
 </body>
 </html>
