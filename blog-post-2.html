@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meet the Judges: Industry Leaders Share Insights - Liberia Business Awards</title>
+    <meta name="description" content="Meet the distinguished panel of judges for Liberia Business Awards 3.0. Industry leaders and experts evaluating nominations for Liberia's premier business awards.">
+    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         * {
             margin: 0;
@@ -101,6 +104,7 @@
             border-bottom: 2px solid #e2e8f0;
             position: relative;
             z-index: 10;
+            flex-wrap: wrap;
         }
         
         .meta-item {
@@ -170,6 +174,13 @@
             justify-content: center;
             border: 5px solid white;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .judge-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .judge-avatar i {
@@ -212,6 +223,7 @@
         .detail-item i {
             color: #FF0000;
             margin-top: 3px;
+            min-width: 20px;
         }
         
         .quote-box {
@@ -308,6 +320,13 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .quote-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .quote-avatar i {
@@ -467,7 +486,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header-gradient">
-            <button class="back-btn" onclick="goBack()">
+            <button class="back-btn" onclick="goBackToMainSite()">
                 <i class="fas fa-arrow-left"></i> Back to Main Site
             </button>
             
@@ -495,7 +514,7 @@
 
         <!-- Content -->
         <div class="content">
-            <p class="lead" style="font-size: 20px; color: #4a5568; margin-bottom: 40px; font-weight: 500;">
+            <p style="font-size: 20px; color: #4a5568; margin-bottom: 40px; font-weight: 500;">
                 Get to know the distinguished panel of experts who will evaluate nominations for Liberia Business Awards 3.0. These industry leaders bring decades of experience and unique perspectives to ensure the most deserving businesses receive recognition.
             </p>
 
@@ -506,12 +525,14 @@
             </h2>
 
             <div class="judges-grid">
-                <!-- Judge 1 -->
+                <!-- Judge 1 - Chair of Judges -->
                 <div class="judge-card">
                     <div class="judge-header">
                         <div class="judge-badge">Chair of Judges</div>
                         <div class="judge-avatar">
-                            <i class="fas fa-user-tie"></i>
+                            <img src="images/judges/dr-maria-johnson.jpg" 
+                                 alt="Dr. Maria Johnson - Chair of Judges"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Dr.+Maria+Johnson&background=FF0000&color=fff&length=2&bold=true';">
                         </div>
                         <h3 class="judge-name">Dr. Maria Johnson</h3>
                         <div class="judge-role">Former Minister of Commerce</div>
@@ -546,12 +567,14 @@
                     </div>
                 </div>
 
-                <!-- Judge 2 -->
+                <!-- Judge 2 - Innovation Expert -->
                 <div class="judge-card">
                     <div class="judge-header">
                         <div class="judge-badge">Innovation Expert</div>
                         <div class="judge-avatar">
-                            <i class="fas fa-lightbulb"></i>
+                            <img src="images/judges/james-roberts.jpg" 
+                                 alt="James T. Roberts - Innovation Expert"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=James+Roberts&background=87CEEB&color=fff&length=2&bold=true';">
                         </div>
                         <h3 class="judge-name">James T. Roberts</h3>
                         <div class="judge-role">Tech Entrepreneur & Mentor</div>
@@ -586,12 +609,14 @@
                     </div>
                 </div>
 
-                <!-- Judge 3 -->
+                <!-- Judge 3 - SME Specialist -->
                 <div class="judge-card">
                     <div class="judge-header">
                         <div class="judge-badge">SME Specialist</div>
                         <div class="judge-avatar">
-                            <i class="fas fa-chart-line"></i>
+                            <img src="images/judges/sarah-mensah.jpg" 
+                                 alt="Sarah Mensah - SME Specialist"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Sarah+Mensah&background=FF0000&color=fff&length=2&bold=true';">
                         </div>
                         <h3 class="judge-name">Sarah Mensah</h3>
                         <div class="judge-role">Women in Business Liberia Founder</div>
@@ -626,13 +651,14 @@
                     </div>
                 </div>
 
-                <!-- Additional Judges -->
-                <!-- Judge 4 -->
+                <!-- Judge 4 - Sustainability Expert -->
                 <div class="judge-card">
                     <div class="judge-header">
                         <div class="judge-badge">Sustainability Expert</div>
                         <div class="judge-avatar">
-                            <i class="fas fa-leaf"></i>
+                            <img src="images/judges/dr-samuel-cole.jpg" 
+                                 alt="Dr. Samuel Cole - Sustainability Expert"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Dr.+Samuel+Cole&background=87CEEB&color=fff&length=2&bold=true';">
                         </div>
                         <h3 class="judge-name">Dr. Samuel Cole</h3>
                         <div class="judge-role">Environmental Economist</div>
@@ -653,6 +679,13 @@
                                     Sustainability, environmental impact, green innovation
                                 </div>
                             </div>
+                            <div class="detail-item">
+                                <i class="fas fa-graduation-cap"></i>
+                                <div>
+                                    <strong>Qualifications:</strong><br>
+                                    PhD in Environmental Economics, Oxford University
+                                </div>
+                            </div>
                         </div>
                         <div class="quote-box">
                             "True business success includes environmental stewardship. I evaluate how businesses balance profit with planet, creating solutions that benefit both Liberia's economy and environment."
@@ -660,12 +693,14 @@
                     </div>
                 </div>
 
-                <!-- Judge 5 -->
+                <!-- Judge 5 - Finance Specialist -->
                 <div class="judge-card">
                     <div class="judge-header">
                         <div class="judge-badge">Finance Specialist</div>
                         <div class="judge-avatar">
-                            <i class="fas fa-chart-pie"></i>
+                            <img src="images/judges/patricia-barclay.jpg" 
+                                 alt="Patricia Barclay - Finance Specialist"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Patricia+Barclay&background=FF0000&color=fff&length=2&bold=true';">
                         </div>
                         <h3 class="judge-name">Patricia Barclay</h3>
                         <div class="judge-role">Chief Investment Officer</div>
@@ -684,6 +719,13 @@
                                 <div>
                                     <strong>Focus Areas:</strong><br>
                                     Financial performance, investment readiness, risk management
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-graduation-cap"></i>
+                                <div>
+                                    <strong>Qualifications:</strong><br>
+                                    CFA Charterholder, MSc in Finance
                                 </div>
                             </div>
                         </div>
@@ -764,7 +806,9 @@
                     </h3>
                     <div class="judge-quote">
                         <div class="quote-avatar">
-                            <i class="fas fa-user-tie"></i>
+                            <img src="images/judges/dr-maria-johnson.jpg" 
+                                 alt="Dr. Maria Johnson"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Dr.+Maria+Johnson&background=FF0000&color=fff&length=2&bold=true';">
                         </div>
                         <div>
                             <p style="font-size: 18px; font-style: italic; color: #4a5568; margin-bottom: 10px;">
@@ -782,7 +826,9 @@
                     </h3>
                     <div class="judge-quote">
                         <div class="quote-avatar">
-                            <i class="fas fa-lightbulb"></i>
+                            <img src="images/judges/james-roberts.jpg" 
+                                 alt="James T. Roberts"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=James+Roberts&background=87CEEB&color=fff&length=2&bold=true';">
                         </div>
                         <div>
                             <p style="font-size: 18px; font-style: italic; color: #4a5568; margin-bottom: 10px;">
@@ -800,7 +846,9 @@
                     </h3>
                     <div class="judge-quote">
                         <div class="quote-avatar">
-                            <i class="fas fa-chart-line"></i>
+                            <img src="images/judges/sarah-mensah.jpg" 
+                                 alt="Sarah Mensah"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Sarah+Mensah&background=FF0000&color=fff&length=2&bold=true';">
                         </div>
                         <div>
                             <p style="font-size: 18px; font-style: italic; color: #4a5568; margin-bottom: 10px;">
@@ -823,10 +871,10 @@
                         <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">1</div>
                         <div>
                             <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Nomination Period</h4>
-                            <p style="color: #64748b; font-size: 14px;">February 1 - March 15, 2026</p>
+                            <p style="color: #64748b; font-size: 14px;">March 1 - May 30, 2026</p>
                         </div>
                     </div>
-                    <p>All nominations must be submitted through the official LBA portal by midnight on March 15.</p>
+                    <p>All nominations must be submitted through the official LBA portal by May 30 at 5:59 PM.</p>
                 </div>
 
                 <div class="timeline-item">
@@ -834,7 +882,7 @@
                         <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #87CEEB 0%, #FF0000 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">2</div>
                         <div>
                             <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Initial Screening</h4>
-                            <p style="color: #64748b; font-size: 14px;">March 16 - 20, 2026</p>
+                            <p style="color: #64748b; font-size: 14px;">June 1 - 15, 2026</p>
                         </div>
                     </div>
                     <p>Technical committee verifies eligibility and completeness of all nominations.</p>
@@ -844,8 +892,19 @@
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
                         <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">3</div>
                         <div>
-                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Judges Evaluation</h4>
-                            <p style="color: #64748b; font-size: 14px;">March 21 - April 10, 2026</p>
+                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Public Voting</h4>
+                            <p style="color: #64748b; font-size: 14px;">June 1 - July 30, 2026</p>
+                        </div>
+                    </div>
+                    <p>Public voting runs alongside jury evaluation. Each vote counts toward final score.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #87CEEB 0%, #FF0000 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">4</div>
+                        <div>
+                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Jury Evaluation</h4>
+                            <p style="color: #64748b; font-size: 14px;">June 1 - July 30, 2026</p>
                         </div>
                     </div>
                     <p>Panel judges independently review and score nominations based on established criteria.</p>
@@ -853,13 +912,24 @@
 
                 <div class="timeline-item">
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #87CEEB 0%, #FF0000 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">4</div>
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">5</div>
                         <div>
-                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Deliberation & Selection</h4>
-                            <p style="color: #64748b; font-size: 14px;">April 11 - 20, 2026</p>
+                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Final Deliberation</h4>
+                            <p style="color: #64748b; font-size: 14px;">August 1 - September 30, 2026</p>
                         </div>
                     </div>
                     <p>Judges meet to discuss top nominations and finalize award recipients.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #87CEEB 0%, #FF0000 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">6</div>
+                        <div>
+                            <h4 style="font-family: 'Montserrat', sans-serif; font-size: 20px; margin: 0;">Awards Ceremony</h4>
+                            <p style="color: #64748b; font-size: 14px;">December 19, 2026</p>
+                        </div>
+                    </div>
+                    <p>Winners announced at the grand awards ceremony at 6:00 PM.</p>
                 </div>
             </div>
 
@@ -871,11 +941,11 @@
                 <p style="font-size: 18px; margin-bottom: 30px; max-width: 800px; margin-left: auto; margin-right: auto;">
                     Use these insights from our expert judges to craft a compelling nomination that showcases your business excellence.
                 </p>
-                <button class="cta-btn" onclick="goBack()">
-                    <i class="fas fa-award"></i> Submit Your Nomination Now
+                <button class="cta-btn" onclick="goToNomination()">
+                    <i class="fas fa-award"></i> Submit Your Nomination
                 </button>
                 <p style="margin-top: 20px; font-size: 14px; opacity: 0.9;">
-                    <i class="fas fa-exclamation-circle"></i> Deadline: March 15, 2026 | Early bird submissions get priority review
+                    <i class="fas fa-exclamation-circle"></i> Nominations Open: March 1 - May 30, 2026
                 </p>
             </div>
 
@@ -889,12 +959,26 @@
     </div>
 
     <script>
-        function goBack() {
-            // Always redirect to main site
-            window.location.href = 'index.html'; // Make sure this is your actual main page URL
+        // ============================================
+        // NAVIGATION FUNCTIONS
+        // ============================================
+        
+        function goBackToMainSite() {
+            if (document.referrer && (document.referrer.includes('liberiabusinessawardslr.com') || document.referrer.includes('index.html'))) {
+                window.history.back();
+            } else {
+                window.location.href = 'index.html';
+            }
         }
-
-        // Add hover effects to judge cards
+        
+        function goToNomination() {
+            window.location.href = 'index.html#categories';
+        }
+        
+        // ============================================
+        // SCROLL ANIMATIONS
+        // ============================================
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Animate judge cards on scroll
             const observerOptions = {
@@ -907,6 +991,7 @@
                     if (entry.isIntersecting) {
                         entry.target.style.opacity = '1';
                         entry.target.style.transform = 'translateY(0)';
+                        observer.unobserve(entry.target);
                     }
                 });
             }, observerOptions);
@@ -934,6 +1019,25 @@
                 item.style.transition = `all 0.6s ease ${index * 0.2}s`;
                 observer.observe(item);
             });
+            
+            // Animate tip cards
+            document.querySelectorAll('.tip-card').forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = `all 0.6s ease ${index * 0.15}s`;
+                observer.observe(card);
+            });
+        });
+        
+        // ============================================
+        // KEYBOARD SHORTCUTS
+        // ============================================
+        
+        document.addEventListener('keydown', function(e) {
+            // Escape key to go back
+            if (e.key === 'Escape') {
+                goBackToMainSite();
+            }
         });
     </script>
 </body>
