@@ -8,11 +8,11 @@
 <script src="/dashboard/security-monitor.js"></script>
 <meta name="csrf-token" content="">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
      <!-- CRITICAL: Authentication check - MUST be first script -->
     <script>
+        // IMMEDIATE AUTHENTICATION CHECK - NO PHP NEEDED
         (function() {
             const token = localStorage.getItem('lba_auth_token');
             const userRole = localStorage.getItem('lba_user_role');
@@ -23,10 +23,29 @@
                 localStorage.removeItem('lba_user_data');
                 localStorage.removeItem('lba_user_role');
                 window.location.replace('../login.html');
+                return;
             }
+            
+            // Verify token with backend
+            fetch('https://liberia-business-awards-production.up.railway.app/api/auth/verify', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (!response.ok) throw new Error('Invalid token');
+                return response.json();
+            }).then(data => {
+                if (!data.success || data.user.role !== 'business') {
+                    throw new Error('Not business user');
+                }
+            }).catch(() => {
+                localStorage.clear();
+                window.location.replace('../login.html');
+            });
         })();
     </script>
-    
     <script src="../auth-check.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
