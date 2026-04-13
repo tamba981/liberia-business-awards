@@ -1,11 +1,29 @@
+# /dashboard/admin/.htaccess
+
 # Force HTML files to be processed as PHP
 AddType application/x-httpd-php .html .htm
 
-# OR if using PHP-FPM:
+# If the above doesn't work, try this instead (uncomment if needed):
 # AddHandler application/x-httpd-php .html .htm
 
-# /dashboard/admin/.htaccess
 RewriteEngine On
+
+# Session timeout - 60 minutes
+RewriteRule .* - [E=HTTPS:on]
+
+# Block direct access to PHP files
+<FilesMatch "\.(php|inc)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Allow auth-check.php specifically
+<Files "auth-check.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Authentication check - redirect to login if not authenticated
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [QSA,L]
@@ -20,4 +38,16 @@ RewriteRule ^(.*)$ /dashboard/login.html [L,R=302]
     Header set X-Content-Type-Options "nosniff"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
 </IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
