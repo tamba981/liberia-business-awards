@@ -1,0 +1,131 @@
+# ============================================
+# ADVANCED SECURITY HEADERS
+# ============================================
+
+<IfModule mod_headers.c>
+    # Prevent Clickjacking
+    Header always append X-Frame-Options "SAMEORIGIN"
+    
+    # Enable XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Prevent MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Strict Transport Security (HSTS) - Force HTTPS
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    
+    # Content Security Policy (CSP) - Prevent XSS and injection attacks
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://script.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://liberia-business-awards-production.up.railway.app https://script.google.com; frame-ancestors 'none';"
+    
+    # Referrer Policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Permissions Policy (Feature Policy)
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
+    
+    # Disable FLoC tracking
+    Header set Permissions-Policy "interest-cohort=()"
+    
+    # Cache Control for sensitive pages
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    
+    # Remove server information
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
+
+# ============================================
+# PREVENT COMMON ATTACKS
+# ============================================
+
+# Block SQL Injection attempts
+RewriteCond %{QUERY_STRING} (union|select|insert|delete|update|drop|create|alter|exec|system|script|javascript|iframe) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# Block XSS attempts
+RewriteCond %{QUERY_STRING} (<|>|%3C|%3E|script|javascript|onclick|onload|alert|prompt|confirm) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# Block path traversal attempts
+RewriteCond %{QUERY_STRING} (\.\./|\.\.%2F|%2E%2E%2F|%252E%252E%252F) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# Block null byte injection
+RewriteCond %{QUERY_STRING} (\\0|%00|%u0000) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# ============================================
+# PROTECT SENSITIVE FILES
+# ============================================
+
+# Block access to hidden files
+RedirectMatch 403 /\..*$
+
+# Block access to backup files
+<FilesMatch "\.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Block access to composer files
+<FilesMatch "composer\.(json|lock|phar)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect .env file
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect .htaccess itself
+<Files ".htaccess">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ============================================
+# PREVENT HOTLINKING (Image Theft)
+# ============================================
+
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^https://(www\.)?liberiabusinessawardslr\.com [NC]
+RewriteRule \.(jpg|jpeg|png|gif|webp|svg|ico)$ - [F,L]
+
+# ============================================
+# RATE LIMITING (Prevent Brute Force)
+# ============================================
+
+# Track IP addresses
+RewriteEngine On
+RewriteCond %{REQUEST_URI} /login\.html [OR]
+RewriteCond %{REQUEST_URI} /api/auth/ [NC]
+RewriteCond %{REMOTE_ADDR} !^127\.0\.0\.1
+RewriteRule ^ - [E=REQ_RATE:1]
+
+# ============================================
+# BLOCK KNOWN BAD BOTS AND USER AGENTS
+# ============================================
+
+SetEnvIfNoCase User-Agent "sqlmap" bad_bot
+SetEnvIfNoCase User-Agent "nikto" bad_bot
+SetEnvIfNoCase User-Agent "wpscan" bad_bot
+SetEnvIfNoCase User-Agent "dirbuster" bad_bot
+SetEnvIfNoCase User-Agent "python" bad_bot
+SetEnvIfNoCase User-Agent "curl" bad_bot
+SetEnvIfNoCase User-Agent "wget" bad_bot
+SetEnvIfNoCase User-Agent "gobuster" bad_bot
+SetEnvIfNoCase User-Agent "hydra" bad_bot
+SetEnvIfNoCase User-Agent "masscan" bad_bot
+SetEnvIfNoCase User-Agent "nmap" bad_bot
+SetEnvIfNoCase User-Agent "zgrab" bad_bot
+SetEnvIfNoCase User-Agent "burp" bad_bot
+SetEnvIfNoCase User-Agent "zap" bad_bot
+
+<Limit GET POST PUT DELETE>
+    Order Allow,Deny
+    Allow from all
+    Deny from env=bad_bot
+</Limit>
