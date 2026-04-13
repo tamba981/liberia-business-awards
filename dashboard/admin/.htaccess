@@ -1,0 +1,17 @@
+# /dashboard/admin/.htaccess
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [QSA,L]
+
+# Block direct access to dashboard without authentication
+RewriteCond %{HTTP_COOKIE} !lba_auth_token [NC]
+RewriteRule ^(.*)$ /dashboard/login.html [L,R=302]
+
+# Additional security headers
+<IfModule mod_headers.c>
+    Header set X-Frame-Options "DENY"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
