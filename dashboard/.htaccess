@@ -1,11 +1,11 @@
 # ============================================
-# SIMPLE WORKING .HTACCESS
+# NO PHP NEEDED - PURE HTML SOLUTION
 # ============================================
 
 RewriteEngine On
 
 # ============================================
-# SECURITY HEADERS
+# SECURITY HEADERS (These work without PHP)
 # ============================================
 
 <IfModule mod_headers.c>
@@ -13,13 +13,14 @@ RewriteEngine On
     Header set X-Content-Type-Options "nosniff"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
 </IfModule>
 
 # ============================================
-# BLOCK SQL INJECTION
+# BLOCK SQL INJECTION ATTEMPTS
 # ============================================
 
-RewriteCond %{QUERY_STRING} (union|select|insert|delete|drop|create|alter|exec|script|<|>|javascript|\.\./) [NC]
+RewriteCond %{QUERY_STRING} (union|select|insert|delete|update|drop|create|alter|exec|script|<|>|javascript|\.\./) [NC]
 RewriteRule .* - [F,L]
 
 # ============================================
@@ -30,7 +31,16 @@ RewriteCond %{HTTP_USER_AGENT} (sqlmap|nikto|curl|wget|gobuster|hydra|burp|zap) 
 RewriteRule .* - [F,L]
 
 # ============================================
-# SPA ROUTING (DO NOT BLOCK PHP FILES)
+# BLOCK DIRECT ACCESS TO FOLDERS
+# ============================================
+
+RewriteCond %{REQUEST_URI} ^/dashboard/admin/ [OR]
+RewriteCond %{REQUEST_URI} ^/dashboard/business/
+RewriteCond %{HTTP_COOKIE} !lba_auth_token [NC]
+RewriteRule ^ /dashboard/login.html [L,R=302]
+
+# ============================================
+# SPA ROUTING
 # ============================================
 
 RewriteCond %{REQUEST_FILENAME} !-f
