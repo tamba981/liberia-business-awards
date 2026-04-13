@@ -1,46 +1,90 @@
 <?php
 // /dashboard/admin/auth-check.php
+
+// ============================================
+// PREVENT CACHING - NO FLASH, NO STORED PAGES
+// ============================================
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
+header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+
+// ============================================
+// START SESSION
+// ============================================
 session_start();
 
-// Check if user is authenticated
-if (!isset($_SESSION['lba_admin_authenticated']) || $_SESSION['lba_admin_authenticated'] !== true) {
-    // Check for valid token in Authorization header or cookie
+// ============================================
+// CHECK IF ALREADY AUTHENTICATED (SKIP TOKEN VERIFICATION)
+// ============================================
+if (isset($_SESSION['lba_admin_authenticated']) && $_SESSION['lba_admin_authenticated'] === true) {
+    // Already authenticated, no need to verify token again
+    return;
+}
+
+// ============================================
+// GET TOKEN FROM COOKIE OR AUTHORIZATION HEADER
+// ============================================
+$token = null;
+
+// Check cookie first (more reliable for .htaccess redirects)
+if (isset($_COOKIE['lba_auth_token'])) {
+    $token = $_COOKIE['lba_auth_token'];
+}
+
+// Then check Authorization header
+if (!$token) {
     $headers = getallheaders();
-    $token = null;
-    
     if (isset($headers['Authorization'])) {
         $token = str_replace('Bearer ', '', $headers['Authorization']);
-    } elseif (isset($_COOKIE['lba_auth_token'])) {
-        $token = $_COOKIE['lba_auth_token'];
     }
-    
-    if (!$token) {
-        header('Location: /dashboard/login.html');
-        exit();
-    }
-    
-    // Verify token with your backend
-    $ch = curl_init('https://liberia-business-awards-production.up.railway.app/api/auth/verify');
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $token]);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    if ($httpCode !== 200) {
-        header('Location: /dashboard/login.html');
-        exit();
-    }
-    
-    $data = json_decode($response, true);
-    if (!$data['success'] || $data['user']['role'] !== 'admin') {
-        header('Location: /dashboard/login.html');
-        exit();
-    }
-    
-    $_SESSION['lba_admin_authenticated'] = true;
-    $_SESSION['lba_admin_email'] = $data['user']['email'];
 }
+
+// No token found - redirect to login
+if (!$token) {
+    header('Location: /dashboard/login.html');
+    exit();
+}
+
+// ============================================
+// VERIFY TOKEN WITH BACKEND
+// ============================================
+$ch = curl_init('https://liberia-business-awards-production.up.railway.app/api/auth/verify');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $token]);
+curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Required for some hosting environments
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+// Token invalid - clear and redirect
+if ($httpCode !== 200) {
+    // Clear invalid cookie
+    setcookie('lba_auth_token', '', time() - 3600, '/');
+    header('Location: /dashboard/login.html');
+    exit();
+}
+
+$data = json_decode($response, true);
+
+// Check if user is admin
+if (!$data['success'] || $data['user']['role'] !== 'admin') {
+    header('Location: /dashboard/login.html');
+    exit();
+}
+
+// ============================================
+// SET SESSION AND RENEW COOKIE
+// ============================================
+$_SESSION['lba_admin_authenticated'] = true;
+$_SESSION['lba_admin_email'] = $data['user']['email'];
+$_SESSION['lba_admin_name'] = $data['user']['name'] ?? 'Administrator';
+
+// Renew the cookie (extends expiration)
+setcookie('lba_auth_token', $token, time() + (60 * 60), '/', '', true, true);
+
+// Optional: Store user data in session for quick access
+$_SESSION['lba_user_data'] = $data['user'];
 ?>
