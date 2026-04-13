@@ -1,0 +1,67 @@
+# /dashboard/business/.htaccess
+
+# Force HTML files to be processed as PHP
+AddType application/x-httpd-php .html .htm
+
+RewriteEngine On
+
+# ============================================
+# AUTHENTICATION CHECKS - MUST BE FIRST!
+# ============================================
+
+# Block direct access to dashboard without authentication (CHECK COOKIE FIRST)
+RewriteCond %{HTTP_COOKIE} !lba_auth_token [NC]
+RewriteRule ^(.*)$ /dashboard/login.html [L,R=302]
+
+# Also check for PHP session
+RewriteCond %{REQUEST_COOKIE} !PHPSESSID [NC]
+RewriteCond %{HTTP_COOKIE} !lba_auth_token [NC]
+RewriteRule ^(.*)$ /dashboard/login.html [L,R=302]
+
+# ============================================
+# FILE PROTECTION
+# ============================================
+
+# Block direct access to PHP files (except auth-check.php)
+<FilesMatch "\.(php|inc)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Allow auth-check.php specifically
+<Files "auth-check.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# ============================================
+# ROUTING - AFTER AUTHENTICATION
+# ============================================
+
+# Then allow access to index.html for SPA routing
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+
+# ============================================
+# SECURITY HEADERS
+# ============================================
+
+<IfModule mod_headers.c>
+    Header set X-Frame-Options "DENY"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
