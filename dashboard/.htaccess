@@ -1,93 +1,66 @@
 # ============================================
-# ADVANCED SECURITY HEADERS
+# FORCE APACHE TO PROCESS THIS FILE
+# ============================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+</IfModule>
+
+# ============================================
+# SECURITY HEADERS (MUST BE FIRST)
 # ============================================
 
 <IfModule mod_headers.c>
-    # Prevent Clickjacking
-    Header always append X-Frame-Options "SAMEORIGIN"
-    
-    # Enable XSS Protection
-    Header set X-XSS-Protection "1; mode=block"
-    
-    # Prevent MIME type sniffing
+    Header set X-Frame-Options "DENY"
     Header set X-Content-Type-Options "nosniff"
-    
-    # Strict Transport Security (HSTS) - Force HTTPS
-    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-    
-    # Content Security Policy (CSP) - Prevent XSS and injection attacks
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://script.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://liberia-business-awards-production.up.railway.app https://script.google.com; frame-ancestors 'none';"
-    
-    # Referrer Policy
+    Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
-    
-    # Permissions Policy (Feature Policy)
-    Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
-    
-    # Disable FLoC tracking
-    Header set Permissions-Policy "interest-cohort=()"
-    
-    # Cache Control for sensitive pages
-    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
-    
-    # Remove server information
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://script.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self' https://liberia-business-awards-production.up.railway.app https://script.google.com;"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header unset Server
     Header unset X-Powered-By
 </IfModule>
 
 # ============================================
-# PREVENT COMMON ATTACKS
+# PREVENT DIRECT ACCESS TO PHP FILES
 # ============================================
 
-# Block SQL Injection attempts
-RewriteCond %{QUERY_STRING} (union|select|insert|delete|update|drop|create|alter|exec|system|script|javascript|iframe) [NC]
-RewriteRule ^(.*)$ - [F,L]
+<FilesMatch "\.(php|inc|log|ini)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
 
-# Block XSS attempts
-RewriteCond %{QUERY_STRING} (<|>|%3C|%3E|script|javascript|onclick|onload|alert|prompt|confirm) [NC]
-RewriteRule ^(.*)$ - [F,L]
+<Files "auth-check.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
 
-# Block path traversal attempts
-RewriteCond %{QUERY_STRING} (\.\./|\.\.%2F|%2E%2E%2F|%252E%252E%252F) [NC]
-RewriteRule ^(.*)$ - [F,L]
+# ============================================
+# BLOCK SQL INJECTION
+# ============================================
 
-# Block null byte injection
-RewriteCond %{QUERY_STRING} (\\0|%00|%u0000) [NC]
-RewriteRule ^(.*)$ - [F,L]
+RewriteCond %{QUERY_STRING} (union|select|insert|delete|update|drop|create|alter|exec|script) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|>|%3C|%3E|javascript|onclick|alert) [NC,OR]
+RewriteCond %{QUERY_STRING} (\.\./|\.\.%2F) [NC]
+RewriteRule .* - [F,L]
 
 # ============================================
 # PROTECT SENSITIVE FILES
 # ============================================
 
-# Block access to hidden files
 RedirectMatch 403 /\..*$
-
-# Block access to backup files
-<FilesMatch "\.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Block access to composer files
-<FilesMatch "composer\.(json|lock|phar)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Protect .env file
-<Files ".env">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Protect .htaccess itself
-<Files ".htaccess">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
+RedirectMatch 403 \.(bak|config|sql|log|sh|inc)$
 
 # ============================================
-# PREVENT HOTLINKING (Image Theft)
+# BLOCK BAD BOTS
+# ============================================
+
+RewriteCond %{HTTP_USER_AGENT} (sqlmap|nikto|wpscan|dirbuster|curl|wget|gobuster|hydra|masscan|nmap|burp|zap) [NC]
+RewriteRule .* - [F,L]
+
+# ============================================
+# PREVENT HOTLINKING
 # ============================================
 
 RewriteCond %{HTTP_REFERER} !^$
@@ -95,37 +68,9 @@ RewriteCond %{HTTP_REFERER} !^https://(www\.)?liberiabusinessawardslr\.com [NC]
 RewriteRule \.(jpg|jpeg|png|gif|webp|svg|ico)$ - [F,L]
 
 # ============================================
-# RATE LIMITING (Prevent Brute Force)
+# ROUTING FOR SPA
 # ============================================
 
-# Track IP addresses
-RewriteEngine On
-RewriteCond %{REQUEST_URI} /login\.html [OR]
-RewriteCond %{REQUEST_URI} /api/auth/ [NC]
-RewriteCond %{REMOTE_ADDR} !^127\.0\.0\.1
-RewriteRule ^ - [E=REQ_RATE:1]
-
-# ============================================
-# BLOCK KNOWN BAD BOTS AND USER AGENTS
-# ============================================
-
-SetEnvIfNoCase User-Agent "sqlmap" bad_bot
-SetEnvIfNoCase User-Agent "nikto" bad_bot
-SetEnvIfNoCase User-Agent "wpscan" bad_bot
-SetEnvIfNoCase User-Agent "dirbuster" bad_bot
-SetEnvIfNoCase User-Agent "python" bad_bot
-SetEnvIfNoCase User-Agent "curl" bad_bot
-SetEnvIfNoCase User-Agent "wget" bad_bot
-SetEnvIfNoCase User-Agent "gobuster" bad_bot
-SetEnvIfNoCase User-Agent "hydra" bad_bot
-SetEnvIfNoCase User-Agent "masscan" bad_bot
-SetEnvIfNoCase User-Agent "nmap" bad_bot
-SetEnvIfNoCase User-Agent "zgrab" bad_bot
-SetEnvIfNoCase User-Agent "burp" bad_bot
-SetEnvIfNoCase User-Agent "zap" bad_bot
-
-<Limit GET POST PUT DELETE>
-    Order Allow,Deny
-    Allow from all
-    Deny from env=bad_bot
-</Limit>
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
