@@ -3,15 +3,29 @@
 # Force HTML files to be processed as PHP
 AddType application/x-httpd-php .html .htm
 
-# If the above doesn't work, try this instead (uncomment if needed):
-# AddHandler application/x-httpd-php .html .htm
-
 RewriteEngine On
 
 # Session timeout - 60 minutes
 RewriteRule .* - [E=HTTPS:on]
 
-# Block direct access to PHP files
+# ============================================
+# AUTHENTICATION CHECKS - MUST BE FIRST!
+# ============================================
+
+# Block direct access to dashboard without authentication (CHECK COOKIE FIRST)
+RewriteCond %{HTTP_COOKIE} !lba_auth_token [NC]
+RewriteRule ^(.*)$ /dashboard/login.html [L,R=302]
+
+# Also check for PHP session (if using PHP auth)
+RewriteCond %{REQUEST_COOKIE} !PHPSESSID [NC]
+RewriteCond %{HTTP_COOKIE} !lba_auth_token [NC]
+RewriteRule ^(.*)$ /dashboard/login.html [L,R=302]
+
+# ============================================
+# FILE PROTECTION
+# ============================================
+
+# Block direct access to PHP files (except auth-check.php)
 <FilesMatch "\.(php|inc)$">
     Order Deny,Allow
     Deny from all
@@ -23,16 +37,19 @@ RewriteRule .* - [E=HTTPS:on]
     Allow from all
 </Files>
 
-# Authentication check - redirect to login if not authenticated
+# ============================================
+# ROUTING - AFTER AUTHENTICATION
+# ============================================
+
+# Then allow access to index.html for SPA routing
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.html [QSA,L]
+RewriteRule ^ index.html [L]
 
-# Block direct access to dashboard without authentication
-RewriteCond %{HTTP_COOKIE} !lba_auth_token [NC]
-RewriteRule ^(.*)$ /dashboard/login.html [L,R=302]
+# ============================================
+# SECURITY HEADERS
+# ============================================
 
-# Additional security headers
 <IfModule mod_headers.c>
     Header set X-Frame-Options "DENY"
     Header set X-Content-Type-Options "nosniff"
