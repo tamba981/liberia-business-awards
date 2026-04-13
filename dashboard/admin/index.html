@@ -12,7 +12,7 @@
 <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 
-    <!-- CRITICAL: Authentication check - MUST be first script -->
+        <!-- CRITICAL: Authentication check - MUST be first script -->
     <script>
         // BLOCK PAGE IMMEDIATELY if not authenticated
         (function() {
@@ -28,6 +28,25 @@
                 // Redirect to login
                 window.location.replace('../login.html');
             }
+            
+            // Verify token with backend
+            fetch('https://liberia-business-awards-production.up.railway.app/api/auth/verify', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (!response.ok) throw new Error('Invalid token');
+                return response.json();
+            }).then(data => {
+                if (!data.success || data.user.role !== 'admin') {
+                    throw new Error('Not admin');
+                }
+            }).catch(() => {
+                localStorage.clear();
+                window.location.replace('../login.html');
+            });
         })();
     </script>
     
