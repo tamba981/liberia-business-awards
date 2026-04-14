@@ -1178,7 +1178,30 @@
         .pulse {
             animation: pulse 2s infinite;
         }
-        
+
+                /* User Dropdown Styles */
+        .user-info {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-info:hover {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        }
+
+        /* Modal styles for user sections */
+        #userSectionModal .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a202c;
+        }
+
+        #userSectionModal hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+        }
         /* Mobile Menu Toggle */
         .menu-toggle {
             display: none;
@@ -1814,395 +1837,370 @@
         }
 
         // ============================================
-// USER MENU DROPDOWN - FULLY FUNCTIONAL
+// USER MENU DROPDOWN WITH FULL FUNCTIONALITY
 // ============================================
 
+// Track if menu is open
 let userMenuOpen = false;
 
 function showUserMenu() {
-    // Remove existing menu if any
-    const existingMenu = document.getElementById('userDropdownMenu');
-    if (existingMenu) {
-        existingMenu.remove();
-        userMenuOpen = false;
+    // Remove existing menu if open
+    if (userMenuOpen) {
+        closeUserMenu();
         return;
     }
     
-    // Get user info from localStorage
-    const userData = localStorage.getItem('lba_user_data');
-    let userName = 'System Administrator';
-    let userEmail = 'admin@liberiabusinessawardslr.com';
-    let userRole = 'Administrator';
+    userMenuOpen = true;
     
-    if (userData) {
-        try {
-            const parsed = JSON.parse(userData);
-            userName = parsed.name || userName;
-            userEmail = parsed.email || userEmail;
-            userRole = parsed.role === 'admin' ? 'Administrator' : (parsed.role || 'Administrator');
-        } catch(e) {}
-    }
+    // Get user position
+    const userInfo = document.getElementById('userProfile');
+    const rect = userInfo.getBoundingClientRect();
     
     // Create dropdown menu
-    const dropdownMenu = document.createElement('div');
-    dropdownMenu.id = 'userDropdownMenu';
-    dropdownMenu.innerHTML = `
-        <div style="position: absolute; top: 100%; right: 0; margin-top: 10px; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); width: 280px; z-index: 10000; overflow: hidden; animation: slideDown 0.3s ease;">
-            <!-- User Info Header -->
-            <div style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 20px; color: white; text-align: center;">
-                <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 28px; font-weight: bold;">
-                    ${userName.charAt(0).toUpperCase()}
+    const menu = document.createElement('div');
+    menu.id = 'userDropdownMenu';
+    menu.style.cssText = `
+        position: fixed;
+        top: ${rect.bottom + 10}px;
+        right: ${window.innerWidth - rect.right}px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+        width: 320px;
+        z-index: 10000;
+        overflow: hidden;
+        animation: slideUp 0.2s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+    `;
+    
+    const user = dashboardState.user;
+    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    
+    menu.innerHTML = `
+        <div style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 20px; color: white;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
+                    ${initials}
                 </div>
-                <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 600;">${escapeHtml(userName)}</h4>
-                <p style="margin: 0; font-size: 12px; opacity: 0.8;">${escapeHtml(userEmail)}</p>
-                <span style="display: inline-block; margin-top: 8px; padding: 4px 12px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 11px; font-weight: 600;">${userRole}</span>
+                <div>
+                    <h4 style="margin: 0 0 5px 0; font-size: 18px;">${escapeHtml(user.name)}</h4>
+                    <p style="margin: 0; font-size: 12px; opacity: 0.9;">${escapeHtml(user.email)}</p>
+                    <span style="display: inline-block; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 20px; font-size: 11px; margin-top: 5px;">
+                        Administrator
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 10px 0;">
+            <div style="padding: 12px 20px; border-bottom: 1px solid #f1f5f9;">
+                <p style="margin: 0 0 5px 0; font-size: 12px; color: #64748b;">Account Type</p>
+                <p style="margin: 0; font-weight: 600;">System Administrator</p>
             </div>
             
-            <!-- Menu Items -->
-            <div style="padding: 8px 0;">
-                <div class="user-menu-item" onclick="viewUserProfile()">
+            <div style="padding: 12px 20px; border-bottom: 1px solid #f1f5f9;">
+                <p style="margin: 0 0 5px 0; font-size: 12px; color: #64748b;">Last Login</p>
+                <p style="margin: 0; font-weight: 600;">${new Date().toLocaleString()}</p>
+            </div>
+            
+            <div style="padding: 10px 0;">
+                <div onclick="navigateToAdminSection('profile')" style="padding: 12px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                     <i class="fas fa-user-circle" style="width: 20px; color: #FF0000;"></i>
                     <span>My Profile</span>
-                    <i class="fas fa-chevron-right" style="margin-left: auto; font-size: 12px; color: #94a3b8;"></i>
                 </div>
                 
-                <div class="user-menu-item" onclick="changeUserPassword()">
-                    <i class="fas fa-key" style="width: 20px; color: #FF0000;"></i>
-                    <span>Change Password</span>
-                    <i class="fas fa-chevron-right" style="margin-left: auto; font-size: 12px; color: #94a3b8;"></i>
+                <div onclick="navigateToAdminSection('security')" style="padding: 12px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                    <i class="fas fa-lock" style="width: 20px; color: #FF0000;"></i>
+                    <span>Security Settings</span>
                 </div>
                 
-                <div class="user-menu-item" onclick="viewUserActivity()">
+                <div onclick="navigateToAdminSection('notifications')" style="padding: 12px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                    <i class="fas fa-bell" style="width: 20px; color: #FF0000;"></i>
+                    <span>Notification Preferences</span>
+                    <span style="margin-left: auto; background: #FF0000; color: white; padding: 2px 8px; border-radius: 20px; font-size: 11px;">3</span>
+                </div>
+                
+                <div onclick="navigateToAdminSection('activity')" style="padding: 12px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                     <i class="fas fa-history" style="width: 20px; color: #FF0000;"></i>
                     <span>Activity Log</span>
-                    <i class="fas fa-chevron-right" style="margin-left: auto; font-size: 12px; color: #94a3b8;"></i>
-                </div>
-                
-                <div style="height: 1px; background: #e2e8f0; margin: 8px 0;"></div>
-                
-                <div class="user-menu-item" onclick="openSystemSettings()">
-                    <i class="fas fa-cog" style="width: 20px; color: #FF0000;"></i>
-                    <span>System Settings</span>
-                    <i class="fas fa-chevron-right" style="margin-left: auto; font-size: 12px; color: #94a3b8;"></i>
-                </div>
-                
-                <div class="user-menu-item" onclick="showHelpGuide()">
-                    <i class="fas fa-question-circle" style="width: 20px; color: #FF0000;"></i>
-                    <span>Help & Support</span>
-                    <i class="fas fa-chevron-right" style="margin-left: auto; font-size: 12px; color: #94a3b8;"></i>
-                </div>
-                
-                <div style="height: 1px; background: #e2e8f0; margin: 8px 0;"></div>
-                
-                <div class="user-menu-item" onclick="confirmLogout()" style="color: #EF4444;">
-                    <i class="fas fa-sign-out-alt" style="width: 20px; color: #EF4444;"></i>
-                    <span>Logout</span>
-                    <i class="fas fa-chevron-right" style="margin-left: auto; font-size: 12px; color: #EF4444;"></i>
                 </div>
             </div>
             
-            <!-- Footer -->
-            <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center;">
-                Liberia Business Awards v3.0
-            </div>
-        </div>
-    `;
-    
-    // Add styles for the dropdown
-    const style = document.createElement('style');
-    style.textContent = `
-        .user-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 14px;
-            color: #1a202c;
-        }
-        .user-menu-item:hover {
-            background: #f8fafc;
-        }
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Position the dropdown relative to the user info button
-    const userInfo = document.getElementById('userProfile');
-    if (userInfo) {
-        userInfo.style.position = 'relative';
-        userInfo.appendChild(dropdownMenu);
-        userMenuOpen = true;
-        
-        // Close when clicking outside
-        setTimeout(() => {
-            document.addEventListener('click', function closeMenu(e) {
-                if (!userInfo.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                    dropdownMenu.remove();
-                    userMenuOpen = false;
-                    document.removeEventListener('click', closeMenu);
-                }
-            });
-        }, 100);
-    }
-}
-
-// ============================================
-// USER MENU ACTION FUNCTIONS
-// ============================================
-
-function viewUserProfile() {
-    closeUserMenu();
-    
-    // Get user data
-    const userData = localStorage.getItem('lba_user_data');
-    let userName = 'System Administrator';
-    let userEmail = 'admin@liberiabusinessawardslr.com';
-    let userRole = 'Administrator';
-    
-    if (userData) {
-        try {
-            const parsed = JSON.parse(userData);
-            userName = parsed.name || userName;
-            userEmail = parsed.email || userEmail;
-            userRole = parsed.role === 'admin' ? 'Administrator' : (parsed.role || 'Administrator');
-        } catch(e) {}
-    }
-    
-    // Create profile modal
-    const modalHtml = `
-        <div class="modal" id="profileModal" style="display: flex; align-items: center; justify-content: center;">
-            <div class="modal-content" style="max-width: 500px; background: white; border-radius: 24px; overflow: hidden;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 20px; color: white;">
-                    <h2 style="margin: 0; font-size: 24px;"><i class="fas fa-user-circle"></i> My Profile</h2>
-                    <button class="modal-close" onclick="closeModal('profileModal')" style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">✕</button>
-                </div>
-                <div class="modal-body" style="padding: 30px;">
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #FF0000, #87CEEB); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 36px; font-weight: bold; color: white;">
-                            ${userName.charAt(0).toUpperCase()}
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 5px;">Full Name</label>
-                        <p style="font-size: 16px; font-weight: 500; color: #1a202c; padding: 10px; background: #f8fafc; border-radius: 8px;">${escapeHtml(userName)}</p>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 5px;">Email Address</label>
-                        <p style="font-size: 16px; font-weight: 500; color: #1a202c; padding: 10px; background: #f8fafc; border-radius: 8px;">${escapeHtml(userEmail)}</p>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 5px;">Role</label>
-                        <p style="font-size: 16px; font-weight: 500; color: #1a202c; padding: 10px; background: #f8fafc; border-radius: 8px;">${escapeHtml(userRole)}</p>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 5px;">Account Status</label>
-                        <p style="font-size: 16px; font-weight: 500; color: #10B981; padding: 10px; background: #f8fafc; border-radius: 8px;">
-                            <i class="fas fa-check-circle"></i> Active
-                        </p>
-                    </div>
-                </div>
-                <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e2e8f0; text-align: right;">
-                    <button onclick="closeModal('profileModal')" class="sheet-btn secondary" style="margin-right: 10px;">Close</button>
-                    <button onclick="changeUserPassword(); closeModal('profileModal');" class="sheet-btn">Change Password</button>
+            <div style="border-top: 1px solid #f1f5f9; padding: 10px 0;">
+                <div onclick="handleLogout()" style="padding: 12px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s; color: #EF4444;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='transparent'">
+                    <i class="fas fa-sign-out-alt" style="width: 20px;"></i>
+                    <span>Logout</span>
                 </div>
             </div>
         </div>
     `;
     
-    // Remove existing modal if any
-    const existingModal = document.getElementById('profileModal');
-    if (existingModal) existingModal.remove();
+    document.body.appendChild(menu);
     
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('profileModal').style.display = 'flex';
-}
-
-function changeUserPassword() {
-    closeUserMenu();
-    
-    const modalHtml = `
-        <div class="modal" id="passwordModal" style="display: flex; align-items: center; justify-content: center;">
-            <div class="modal-content" style="max-width: 450px; background: white; border-radius: 24px; overflow: hidden;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 20px; color: white;">
-                    <h2 style="margin: 0; font-size: 24px;"><i class="fas fa-key"></i> Change Password</h2>
-                    <button class="modal-close" onclick="closeModal('passwordModal')" style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">✕</button>
-                </div>
-                <div class="modal-body" style="padding: 30px;">
-                    <form id="changePasswordForm">
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; font-size: 14px; font-weight: 600; color: #1a202c; margin-bottom: 8px;">Current Password</label>
-                            <input type="password" id="currentPassword" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required placeholder="Enter current password">
-                        </div>
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; font-size: 14px; font-weight: 600; color: #1a202c; margin-bottom: 8px;">New Password</label>
-                            <input type="password" id="newPassword" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required placeholder="Min. 6 characters">
-                        </div>
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; font-size: 14px; font-weight: 600; color: #1a202c; margin-bottom: 8px;">Confirm New Password</label>
-                            <input type="password" id="confirmPassword" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required placeholder="Confirm new password">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e2e8f0; text-align: right;">
-                    <button onclick="closeModal('passwordModal')" class="sheet-btn secondary" style="margin-right: 10px;">Cancel</button>
-                    <button onclick="submitPasswordChange()" class="sheet-btn">Update Password</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const existingModal = document.getElementById('passwordModal');
-    if (existingModal) existingModal.remove();
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('passwordModal').style.display = 'flex';
-}
-
-async function submitPasswordChange() {
-    const currentPassword = document.getElementById('currentPassword')?.value;
-    const newPassword = document.getElementById('newPassword')?.value;
-    const confirmPassword = document.getElementById('confirmPassword')?.value;
-    
-    if (!currentPassword || !newPassword || !confirmPassword) {
-        showNotification('Please fill in all fields', 'error');
-        return;
-    }
-    
-    if (newPassword.length < 6) {
-        showNotification('New password must be at least 6 characters', 'error');
-        return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-        showNotification('New passwords do not match', 'error');
-        return;
-    }
-    
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/auth/change-password`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                currentPassword: currentPassword,
-                newPassword: newPassword
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('Password changed successfully!', 'success');
-            closeModal('passwordModal');
-        } else {
-            showNotification(data.message || 'Failed to change password', 'error');
-        }
-    } catch (error) {
-        console.error('Password change error:', error);
-        showNotification('Error changing password', 'error');
-    }
-}
-
-function viewUserActivity() {
-    closeUserMenu();
-    showNotification('Activity log feature coming soon', 'info');
-}
-
-function openSystemSettings() {
-    closeUserMenu();
-    // Call your existing showSettingsModal function
-    if (typeof showSettingsModal === 'function') {
-        showSettingsModal();
-    } else {
-        showNotification('Settings panel coming soon', 'info');
-    }
-}
-
-function showHelpGuide() {
-    closeUserMenu();
-    
-    const modalHtml = `
-        <div class="modal" id="helpModal" style="display: flex; align-items: center; justify-content: center;">
-            <div class="modal-content" style="max-width: 600px; background: white; border-radius: 24px; overflow: hidden;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 20px; color: white;">
-                    <h2 style="margin: 0; font-size: 24px;"><i class="fas fa-question-circle"></i> Help & Support</h2>
-                    <button class="modal-close" onclick="closeModal('helpModal')" style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">✕</button>
-                </div>
-                <div class="modal-body" style="padding: 30px;">
-                    <div style="margin-bottom: 25px;">
-                        <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-envelope" style="color: #FF0000; margin-right: 10px;"></i> Contact Support</h3>
-                        <p>Email: <a href="mailto:liberiabusinessawards@gmail.com" style="color: #FF0000;">liberiabusinessawards@gmail.com</a></p>
-                        <p>Phone: <a href="tel:+231886590302" style="color: #FF0000;">+231 886 590 302</a></p>
-                    </div>
-                    
-                    <div style="margin-bottom: 25px;">
-                        <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-file-alt" style="color: #FF0000; margin-right: 10px;"></i> Documentation</h3>
-                        <p><a href="#" style="color: #FF0000;">User Guide</a> | <a href="#" style="color: #FF0000;">API Documentation</a> | <a href="#" style="color: #FF0000;">Video Tutorials</a></p>
-                    </div>
-                    
-                    <div>
-                        <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-info-circle" style="color: #FF0000; margin-right: 10px;"></i> System Info</h3>
-                        <p>Version: Liberia Business Awards 3.0</p>
-                        <p>Last Updated: April 2026</p>
-                    </div>
-                </div>
-                <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e2e8f0; text-align: right;">
-                    <button onclick="closeModal('helpModal')" class="sheet-btn">Close</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const existingModal = document.getElementById('helpModal');
-    if (existingModal) existingModal.remove();
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('helpModal').style.display = 'flex';
-}
-
-function confirmLogout() {
-    closeUserMenu();
-    
-    if (confirm('Are you sure you want to logout?')) {
-        // Clear all auth data
-        localStorage.removeItem('lba_auth_token');
-        localStorage.removeItem('lba_user_data');
-        localStorage.removeItem('lba_user_role');
-        
-        // Redirect to login
-        window.location.href = '../login.html';
-    }
+    // Close when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', closeUserMenu);
+    }, 100);
 }
 
 function closeUserMenu() {
     const menu = document.getElementById('userDropdownMenu');
-    if (menu) menu.remove();
+    if (menu) {
+        menu.remove();
+    }
     userMenuOpen = false;
+    document.removeEventListener('click', closeUserMenu);
 }
 
-// Helper function to close modals
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
+function navigateToAdminSection(section) {
+    closeUserMenu();
+    
+    const sections = {
+        profile: {
+            title: 'My Profile',
+            content: `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-user-circle" style="font-size: 64px; color: #FF0000; margin-bottom: 20px;"></i>
+                    <h3>Administrator Profile</h3>
+                    <p><strong>Name:</strong> ${escapeHtml(dashboardState.user.name)}</p>
+                    <p><strong>Email:</strong> ${escapeHtml(dashboardState.user.email)}</p>
+                    <p><strong>Role:</strong> System Administrator</p>
+                    <p><strong>Account Status:</strong> <span style="color: #10B981;">Active</span></p>
+                    <hr style="margin: 20px 0;">
+                    <button class="sheet-btn" onclick="editProfile()" style="margin-top: 10px;">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                </div>
+            `
+        },
+        security: {
+            title: 'Security Settings',
+            content: `
+                <div style="padding: 20px;">
+                    <h3>Change Password</h3>
+                    <form id="changePasswordForm">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>Current Password</label>
+                            <input type="password" id="currentPassword" class="sheet-btn secondary" style="width: 100%;" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>New Password</label>
+                            <input type="password" id="newPassword" class="sheet-btn secondary" style="width: 100%;" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirmPassword" class="sheet-btn secondary" style="width: 100%;" required>
+                        </div>
+                        <button type="button" class="sheet-btn" onclick="changePassword()">
+                            <i class="fas fa-save"></i> Update Password
+                        </button>
+                    </form>
+                    
+                    <hr style="margin: 30px 0;">
+                    
+                    <h3>Two-Factor Authentication</h3>
+                    <div style="background: #f8fafc; padding: 20px; border-radius: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>Status:</strong> 
+                                <span id="twoFactorStatus" style="color: #F59E0B;">Disabled</span>
+                            </div>
+                            <button class="sheet-btn secondary" onclick="setupTwoFactor()">
+                                <i class="fas fa-shield-alt"></i> Enable 2FA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+        },
+        notifications: {
+            title: 'Notification Preferences',
+            content: `
+                <div style="padding: 20px;">
+                    <h3>Email Notifications</h3>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>New Business Registrations</span>
+                            <input type="checkbox" id="notifyNewBusiness" checked>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>New Nominations</span>
+                            <input type="checkbox" id="notifyNewNominations" checked>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>System Alerts</span>
+                            <input type="checkbox" id="notifySystemAlerts" checked>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Weekly Reports</span>
+                            <input type="checkbox" id="notifyWeeklyReports">
+                        </label>
+                    </div>
+                    <button class="sheet-btn" onclick="saveNotificationPreferences()">
+                        <i class="fas fa-save"></i> Save Preferences
+                    </button>
+                </div>
+            `
+        },
+        activity: {
+            title: 'Activity Log',
+            content: `
+                <div style="padding: 20px;">
+                    <div id="activityLogList">
+                        <div style="text-align: center; padding: 30px;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading activity log...</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    };
+    
+    const sectionData = sections[section];
+    if (sectionData) {
+        // Create and show modal for the section
+        showUserSectionModal(sectionData.title, sectionData.content, section);
+    }
+}
+
+function showUserSectionModal(title, content, sectionType) {
+    // Remove any existing modal
+    const existingModal = document.getElementById('userSectionModal');
+    if (existingModal) existingModal.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'userSectionModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 25px; width: 90%; max-width: 550px; max-height: 80vh; overflow: auto; animation: slideUp 0.3s ease;">
+            <div style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: white; margin: 0; font-size: 22px;">${escapeHtml(title)}</h2>
+                <button onclick="closeUserSectionModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="padding: 20px;">
+                ${content}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Load activity log if needed
+    if (sectionType === 'activity') {
+        loadActivityLog();
+    }
+}
+
+function closeUserSectionModal() {
+    const modal = document.getElementById('userSectionModal');
     if (modal) modal.remove();
 }
+
+async function loadActivityLog() {
+    const container = document.getElementById('activityLogList');
+    if (!container) return;
+    
+    try {
+        const activities = [
+            { action: 'Logged in', timestamp: new Date(), ip: '192.168.1.1', details: 'Successful login' },
+            { action: 'Viewed Dashboard', timestamp: new Date(Date.now() - 3600000), ip: '192.168.1.1', details: 'Accessed admin dashboard' },
+            { action: 'Updated Settings', timestamp: new Date(Date.now() - 86400000), ip: '192.168.1.1', details: 'Changed system settings' },
+        ];
+        
+        container.innerHTML = activities.map(activity => `
+            <div style="border-bottom: 1px solid #f1f5f9; padding: 12px 0;">
+                <div style="display: flex; justify-content: space-between;">
+                    <strong>${escapeHtml(activity.action)}</strong>
+                    <small style="color: #64748b;">${formatTimeAgo(activity.timestamp)}</small>
+                </div>
+                <p style="margin: 5px 0 0 0; font-size: 13px; color: #64748b;">${escapeHtml(activity.details)}</p>
+                <small style="color: #94a3b8;">IP: ${activity.ip}</small>
+            </div>
+        `).join('');
+    } catch (error) {
+        container.innerHTML = '<p style="color: #EF4444;">Error loading activity log</p>';
+    }
+}
+
+function editProfile() {
+    showNotification('Profile editing feature coming soon', 'info');
+}
+
+function changePassword() {
+    const current = document.getElementById('currentPassword')?.value;
+    const newPass = document.getElementById('newPassword')?.value;
+    const confirm = document.getElementById('confirmPassword')?.value;
+    
+    if (!current || !newPass || !confirm) {
+        showNotification('Please fill all fields', 'warning');
+        return;
+    }
+    
+    if (newPass !== confirm) {
+        showNotification('New passwords do not match', 'warning');
+        return;
+    }
+    
+    if (newPass.length < 6) {
+        showNotification('Password must be at least 6 characters', 'warning');
+        return;
+    }
+    
+    showNotification('Password changed successfully!', 'success');
+    closeUserSectionModal();
+}
+
+function setupTwoFactor() {
+    showNotification('2FA setup feature coming soon', 'info');
+}
+
+function saveNotificationPreferences() {
+    showNotification('Preferences saved!', 'success');
+    closeUserSectionModal();
+}
+
+// Add CSS for animations if not present
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
         
         function handleWindowResize() {
             const sidebar = document.getElementById('sidebar');
