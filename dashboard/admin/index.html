@@ -3310,20 +3310,190 @@ function createVotingBusinessesModal() {
                         <input type="text" id="vbBusinessName" class="sheet-btn secondary" style="width: 100%;" required>
                     <\/div>
                     <div class="form-group">
-                        <label>Category *<\/label>
-                        <select id="vbCategory" class="sheet-btn secondary" style="width: 100%;">
-                            <option value="General">General<\/option>
-                            <option value="Agriculture">Agriculture<\/option>
-                            <option value="Technology">Technology<\/option>
-                            <option value="Manufacturing">Manufacturing<\/option>
-                            <option value="Energy">Energy<\/option>
-                            <option value="Education">Education<\/option>
-                            <option value="Healthcare">Healthcare<\/option>
-                            <option value="Tourism">Tourism<\/option>
-                            <option value="Finance">Finance<\/option>
-                            <option value="Transportation">Transportation<\/option>
-                        <\/select>
-                    <\/div>
+    <label>Award Category *</label>
+    <select id="vbCategory" class="sheet-btn secondary" style="width: 100%; color: #1a202c; background-color: white;" required>
+        <option value="" style="color: #1a202c; background-color: white;">Select Category</option>
+        
+        <!-- ========== TIER 1: STARTUP AWARDS ========== -->
+        <optgroup label="🚀 STARTUP AWARDS (0-3 Years)" style="color: #1a202c; font-weight: bold;">
+            <option value="Startup of the Year" style="color: #1a202c;">Startup of the Year</option>
+            <option value="Tech Startup of the Year" style="color: #1a202c;">Tech Startup of the Year</option>
+            <option value="Innovative Startup Award" style="color: #1a202c;">Innovative Startup Award</option>
+            <option value="Rising Startup Founder" style="color: #1a202c;">Rising Startup Founder</option>
+        </optgroup>
+        
+        <!-- ========== TIER 2: SME AWARDS ========== -->
+        <optgroup label="📈 SME AWARDS" style="color: #1a202c; font-weight: bold;">
+            <option value="SME of the Year" style="color: #1a202c;">SME of the Year</option>
+            <option value="Fast-Growing SME" style="color: #1a202c;">Fast-Growing SME</option>
+            <option value="SME Innovation Award" style="color: #1a202c;">SME Innovation Award</option>
+            <option value="SME Export Excellence" style="color: #1a202c;">SME Export Excellence</option>
+        </optgroup>
+        
+        <!-- ========== TIER 3: LARGE ENTERPRISE AWARDS ========== -->
+        <optgroup label="🏢 LARGE ENTERPRISE AWARDS" style="color: #1a202c; font-weight: bold;">
+            <option value="Large Enterprise of the Year" style="color: #1a202c;">Large Enterprise of the Year</option>
+            <option value="Corporate Excellence Award" style="color: #1a202c;">Corporate Excellence Award</option>
+            <option value="Industry Leader Award" style="color: #1a202c;">Industry Leader Award</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 1: Agriculture ========== -->
+        <optgroup label="🌾 Agriculture Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Agriculture Company of the Year" style="color: #1a202c;">Agriculture Company of the Year</option>
+            <option value="Agro-Processing Company of the Year" style="color: #1a202c;">Agro-Processing Company of the Year</option>
+            <option value="Fisheries & Aquaculture Excellence" style="color: #1a202c;">Fisheries & Aquaculture Excellence</option>
+            <option value="Sustainable Agriculture Leadership" style="color: #1a202c;">Sustainable Agriculture Leadership</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 2: Mining ========== -->
+        <optgroup label="⛏️ Mining & Extractives Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Mining Company of the Year" style="color: #1a202c;">Mining Company of the Year</option>
+            <option value="Diamond & Gemstone Excellence" style="color: #1a202c;">Diamond & Gemstone Excellence</option>
+            <option value="Quarrying & Construction Materials" style="color: #1a202c;">Quarrying & Construction Materials</option>
+            <option value="Environmental Stewardship in Mining" style="color: #1a202c;">Environmental Stewardship in Mining</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 3: Oil & Gas ========== -->
+        <optgroup label="🛢️ Oil & Gas Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Petroleum Exploration Excellence" style="color: #1a202c;">Petroleum Exploration Excellence</option>
+            <option value="Fuel Distribution Company of the Year" style="color: #1a202c;">Fuel Distribution Company of the Year</option>
+            <option value="Oil Storage & Logistics Excellence" style="color: #1a202c;">Oil Storage & Logistics Excellence</option>
+            <option value="Safety & Compliance Leadership" style="color: #1a202c;">Safety & Compliance Leadership</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 4: Manufacturing ========== -->
+        <optgroup label="🏭 Manufacturing & Industrial Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Manufacturing Company of the Year" style="color: #1a202c;">Manufacturing Company of the Year</option>
+            <option value="Food & Beverage Production Excellence" style="color: #1a202c;">Food & Beverage Production Excellence</option>
+            <option value="Construction Materials Manufacturing" style="color: #1a202c;">Construction Materials Manufacturing</option>
+            <option value="Industrial Innovation Award" style="color: #1a202c;">Industrial Innovation Award</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 5: Construction ========== -->
+        <optgroup label="🏗️ Construction & Real Estate Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Construction Company of the Year" style="color: #1a202c;">Construction Company of the Year</option>
+            <option value="Real Estate Development Excellence" style="color: #1a202c;">Real Estate Development Excellence</option>
+            <option value="Infrastructure Project of the Year" style="color: #1a202c;">Infrastructure Project of the Year</option>
+            <option value="Architectural Innovation Award" style="color: #1a202c;">Architectural Innovation Award</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 6: Energy ========== -->
+        <optgroup label="⚡ Energy & Utilities Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Energy Company of the Year" style="color: #1a202c;">Energy Company of the Year</option>
+            <option value="Water & Sanitation Excellence" style="color: #1a202c;">Water & Sanitation Excellence</option>
+            <option value="Renewable Energy Innovation" style="color: #1a202c;">Renewable Energy Innovation</option>
+            <option value="Utilities Management Excellence" style="color: #1a202c;">Utilities Management Excellence</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 7: Transportation ========== -->
+        <optgroup label="🚚 Transportation & Logistics Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Logistics Company of the Year" style="color: #1a202c;">Logistics Company of the Year</option>
+            <option value="Aviation Services Excellence" style="color: #1a202c;">Aviation Services Excellence</option>
+            <option value="Port & Terminal Operations Excellence" style="color: #1a202c;">Port & Terminal Operations Excellence</option>
+            <option value="Road Transport Excellence" style="color: #1a202c;">Road Transport Excellence</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 8: ICT ========== -->
+        <optgroup label="💻 Information & Communications Technology" style="color: #1a202c; font-weight: bold;">
+            <option value="Telecom Company of the Year" style="color: #1a202c;">Telecom Company of the Year</option>
+            <option value="IT Solutions Provider of the Year" style="color: #1a202c;">IT Solutions Provider of the Year</option>
+            <option value="Internet Service Excellence" style="color: #1a202c;">Internet Service Excellence</option>
+            <option value="Tech Startup of the Year" style="color: #1a202c;">Tech Startup of the Year</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 9: Financial Services ========== -->
+        <optgroup label="💰 Financial Services Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Bank of the Year" style="color: #1a202c;">Bank of the Year</option>
+            <option value="Microfinance Institution of the Year" style="color: #1a202c;">Microfinance Institution of the Year</option>
+            <option value="Insurance Company of the Year" style="color: #1a202c;">Insurance Company of the Year</option>
+            <option value="Investment & Capital Markets Excellence" style="color: #1a202c;">Investment & Capital Markets Excellence</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 10: Education ========== -->
+        <optgroup label="📚 Education Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Educational Institution of the Year" style="color: #1a202c;">Educational Institution of the Year</option>
+            <option value="Vocational Training Excellence" style="color: #1a202c;">Vocational Training Excellence</option>
+            <option value="EdTech Innovation Award" style="color: #1a202c;">EdTech Innovation Award</option>
+            <option value="Academic Excellence Award" style="color: #1a202c;">Academic Excellence Award</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 11: Health ========== -->
+        <optgroup label="🏥 Health Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Healthcare Provider of the Year" style="color: #1a202c;">Healthcare Provider of the Year</option>
+            <option value="Pharmaceutical Company of the Year" style="color: #1a202c;">Pharmaceutical Company of the Year</option>
+            <option value="Medical Services Excellence" style="color: #1a202c;">Medical Services Excellence</option>
+            <option value="Public Health Initiative of the Year" style="color: #1a202c;">Public Health Initiative of the Year</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 12: Tourism ========== -->
+        <optgroup label="🏨 Tourism & Hospitality Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Hotel of the Year" style="color: #1a202c;">Hotel of the Year</option>
+            <option value="Restaurant & Culinary Excellence" style="color: #1a202c;">Restaurant & Culinary Excellence</option>
+            <option value="Travel Services Company of the Year" style="color: #1a202c;">Travel Services Company of the Year</option>
+            <option value="Eco-Tourism Innovation Award" style="color: #1a202c;">Eco-Tourism Innovation Award</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 13: Trade ========== -->
+        <optgroup label="🛍️ Trade & Commerce Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Export Company of the Year" style="color: #1a202c;">Export Company of the Year</option>
+            <option value="Retail Excellence Award" style="color: #1a202c;">Retail Excellence Award</option>
+            <option value="Wholesale Distributor of the Year" style="color: #1a202c;">Wholesale Distributor of the Year</option>
+            <option value="Market Innovation Award" style="color: #1a202c;">Market Innovation Award</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 14: Public Sector ========== -->
+        <optgroup label="🏛️ Public Sector & Government Services" style="color: #1a202c; font-weight: bold;">
+            <option value="Public Service Excellence Award" style="color: #1a202c;">Public Service Excellence Award</option>
+            <option value="Government Partnership Initiative" style="color: #1a202c;">Government Partnership Initiative</option>
+            <option value="Public Enterprise of the Year" style="color: #1a202c;">Public Enterprise of the Year</option>
+            <option value="Civic Engagement Excellence" style="color: #1a202c;">Civic Engagement Excellence</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 15: Civil Society ========== -->
+        <optgroup label="🤝 Civil Society & Nonprofit Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="NGO of the Year" style="color: #1a202c;">NGO of the Year</option>
+            <option value="Community Initiative Award" style="color: #1a202c;">Community Initiative Award</option>
+            <option value="International Development Partner" style="color: #1a202c;">International Development Partner</option>
+            <option value="Social Impact Leadership" style="color: #1a202c;">Social Impact Leadership</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 16: Media ========== -->
+        <optgroup label="📺 Media & Communications Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Media House of the Year" style="color: #1a202c;">Media House of the Year</option>
+            <option value="Journalism Excellence Award" style="color: #1a202c;">Journalism Excellence Award</option>
+            <option value="Advertising & Marketing Agency of the Year" style="color: #1a202c;">Advertising & Marketing Agency of the Year</option>
+            <option value="Digital Media Innovation" style="color: #1a202c;">Digital Media Innovation</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 17: Arts & Culture ========== -->
+        <optgroup label="🎨 Arts, Culture & Creative Industry" style="color: #1a202c; font-weight: bold;">
+            <option value="Creative Arts Company of the Year" style="color: #1a202c;">Creative Arts Company of the Year</option>
+            <option value="Entertainment & Performance Excellence" style="color: #1a202c;">Entertainment & Performance Excellence</option>
+            <option value="Fashion & Design Innovation" style="color: #1a202c;">Fashion & Design Innovation</option>
+            <option value="Film & Media Production Excellence" style="color: #1a202c;">Film & Media Production Excellence</option>
+        </optgroup>
+        
+        <!-- ========== SECTOR 18: Sports ========== -->
+        <optgroup label="⚽ Sports & Recreation Sector" style="color: #1a202c; font-weight: bold;">
+            <option value="Sports Club of the Year" style="color: #1a202c;">Sports Club of the Year</option>
+            <option value="Sports Development Initiative" style="color: #1a202c;">Sports Development Initiative</option>
+            <option value="Fitness & Recreation Center of the Year" style="color: #1a202c;">Fitness & Recreation Center of the Year</option>
+            <option value="Athletic Excellence Award" style="color: #1a202c;">Athletic Excellence Award</option>
+        </optgroup>
+        
+        <!-- ========== NATIONAL LEADERSHIP AWARDS ========== -->
+        <optgroup label="👑 NATIONAL LEADERSHIP AWARDS" style="color: #1a202c; font-weight: bold;">
+            <option value="CEO of the Year" style="color: #1a202c;">CEO of the Year</option>
+            <option value="Entrepreneur of the Year" style="color: #1a202c;">Entrepreneur of the Year</option>
+            <option value="Woman Entrepreneur of the Year" style="color: #1a202c;">Woman Entrepreneur of the Year</option>
+            <option value="Young Entrepreneur of the Year" style="color: #1a202c;">Young Entrepreneur of the Year (Under 35)</option>
+            <option value="Business Innovation Leader" style="color: #1a202c;">Business Innovation Leader</option>
+            <option value="Sustainability Champion" style="color: #1a202c;">Sustainability Champion</option>
+            <option value="CSR Excellence Award" style="color: #1a202c;">CSR Excellence Award</option>
+            <option value="Overall Company of the Year" style="color: #1a202c;">Overall Company of the Year</option>
+        </optgroup>
+    </select>
+</div>
                     <div class="form-group">
                         <label>Location<\/label>
                         <input type="text" id="vbLocation" class="sheet-btn secondary" style="width: 100%;" placeholder="Monrovia, Liberia">
