@@ -3066,89 +3066,124 @@ function switchVotingTab(tab) {
     }
 }
 
+// ============================================
+// FIXED: VOTING MANAGEMENT FUNCTIONS - USING GOOGLE APPS SCRIPT
+// ============================================
+
 async function loadVotingStats() {
     try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/voting/stats`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // ✅ FIXED: Get stats from Google Apps Script
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getVotingStats`);
         const data = await response.json();
         
-        if (data.success) {
+        console.log('📊 Voting stats from Google Sheets:', data);
+        
+        if (data.success && data.stats) {
             document.getElementById('totalVotes').textContent = data.stats.totalVotes || 0;
             document.getElementById('uniqueVoters').textContent = data.stats.uniqueVoters || 0;
             document.getElementById('votesToday').textContent = data.stats.votesToday || 0;
             document.getElementById('businessesWithVotes').textContent = data.stats.totalBusinessesVoted || 0;
             document.getElementById('votingCount').textContent = data.stats.totalVotes || 0;
+        } else {
+            console.warn('No stats data received from Google Sheets');
+            // Set default values
+            document.getElementById('totalVotes').textContent = '0';
+            document.getElementById('uniqueVoters').textContent = '0';
+            document.getElementById('votesToday').textContent = '0';
+            document.getElementById('businessesWithVotes').textContent = '0';
+            document.getElementById('votingCount').textContent = '0';
         }
     } catch (error) {
         console.error('Load voting stats error:', error);
+        // Set default values on error
+        document.getElementById('totalVotes').textContent = '0';
+        document.getElementById('uniqueVoters').textContent = '0';
+        document.getElementById('votesToday').textContent = '0';
+        document.getElementById('businessesWithVotes').textContent = '0';
+        document.getElementById('votingCount').textContent = '0';
     }
 }
 
 async function loadVotingLeaderboard() {
     try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/voting/leaderboard?limit=50`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // ✅ FIXED: Get leaderboard from Google Apps Script (VoteTotals sheet)
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getVoteTotals`);
         const data = await response.json();
+        
+        console.log('📊 Leaderboard data from Google Sheets:', data);
         
         const tbody = document.getElementById('votingLeaderboardBody');
         if (!tbody) return;
         
-        if (data.success && data.leaderboard.length > 0) {
-            tbody.innerHTML = data.leaderboard.map(item => `
-                <tr>
-                    <td><strong>#${item.rank}</strong></td>
-                    <td>${escapeHtml(item.business_name)}</td>
-                    <td>${escapeHtml(item.category)}</td>
-                    <td><strong style="color: #FF0000;">${item.average_score.toFixed(1)}</strong>/10</td>
-                    <td>${item.total_votes}</td>
-                    <td>${item.public_votes || 0}</td>
-                    <td>${item.jury_votes || 0}</td>
-                    <td>
-                        <button class="sheet-btn secondary" onclick="viewVoteDetails('${item.business_id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+        if (data.success && data.totals && data.totals.length > 0) {
+            // Sort by average score (highest first) and filter out zero votes
+            const sortedTotals = [...data.totals]
+                .filter(item => item.totalVotes > 0)
+                .sort((a, b) => b.averageScore - a.averageScore);
+            
+            if (sortedTotals.length > 0) {
+                tbody.innerHTML = sortedTotals.map((item, index) => `
+                    <tr>
+                        <td><strong>#${index + 1}</strong></td>
+                        <td>${escapeHtml(item.businessName)}</strong></td>
+                        <td>${escapeHtml(item.category)}</strong></td>
+                        <td><strong style="color: #FF0000;">${item.averageScore.toFixed(1)}</strong>/10</strong></td>
+                        <td>${item.totalVotes}</strong></td>
+                        <td>${item.publicVotes || 0}</strong></td>
+                        <td>${item.juryVotes || 0}</strong></td>
+                        <td>
+                            <button class="sheet-btn secondary" onclick="viewVoteDetails('${item.businessId}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </strong>
+                    </strong>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No votes yet</td></tr>';
+            }
         } else {
             tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No votes yet</td></tr>';
         }
     } catch (error) {
         console.error('Load leaderboard error:', error);
+        const tbody = document.getElementById('votingLeaderboardBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Error loading leaderboard</td></tr>';
+        }
     }
 }
 
 async function loadAllVotes() {
     try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/admin/votes?limit=100`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // ✅ FIXED: Get all votes from Google Apps Script (Votes sheet)
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllVotes`);
         const data = await response.json();
+        
+        console.log('📊 All votes data from Google Sheets:', data);
         
         const tbody = document.getElementById('allVotesBody');
         if (!tbody) return;
         
-        if (data.success && data.votes.length > 0) {
+        if (data.success && data.votes && data.votes.length > 0) {
             tbody.innerHTML = data.votes.map(vote => `
                 <tr>
-                    <td>${new Date(vote.created_at).toLocaleString()}</td>
-                    <td><strong>${escapeHtml(vote.business_name)}</strong></td>
-                    <td style="font-family: monospace;">${escapeHtml(vote.voter_email)}</td>
-                    <td><span style="font-weight: 800; color: #FF0000;">${vote.vote_value}</span>/10</td>
-                    <td><span class="status-badge status-${vote.is_jury ? 'active' : 'info'}">${vote.is_jury ? 'Jury' : 'Public'}</span></td>
-                    <td><small>${vote.voter_ip || '-'}</small></td>
-                </tr>
+                    <td>${new Date(vote.timestamp).toLocaleString()}</strong></td>
+                    <td><strong>${escapeHtml(vote.business_name)}</strong></strong></td>
+                    <td style="font-family: monospace;">${escapeHtml(vote.voter_email)}</strong></td>
+                    <td><span style="font-weight: 800; color: #FF0000;">${vote.vote_value}</span>/10</strong></td>
+                    <td><span class="status-badge status-${vote.is_jury ? 'active' : 'info'}">${vote.is_jury ? 'Jury' : 'Public'}</span></strong></td>
+                    <td><small>${vote.voter_ip || '-'}</small></strong></td>
+                </strong>
             `).join('');
         } else {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No votes yet</td></tr>';
         }
     } catch (error) {
-        console.error('Load votes error:', error);
+        console.error('Load all votes error:', error);
+        const tbody = document.getElementById('allVotesBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Error loading votes</td></tr>';
+        }
     }
 }
 
