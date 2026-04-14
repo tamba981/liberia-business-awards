@@ -2,59 +2,6 @@
 // LIBERIA BUSINESS AWARDS - PRODUCTION SYSTEM V5.0
 // ============================================
 
-// ==========================================
-// SECURITY MIDDLEWARE
-// ==========================================
-app.use((req, res, next) => {
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    next();
-});
-
-// Simple rate limiting (add before your routes)
-const requestCounts = new Map();
-
-app.use((req, res, next) => {
-    const ip = req.ip || req.connection.remoteAddress;
-    const now = Date.now();
-    const windowMs = 60 * 1000;
-    const maxRequests = 60;
-    
-    if (!requestCounts.has(ip)) {
-        requestCounts.set(ip, { count: 1, resetTime: now + windowMs });
-        return next();
-    }
-    
-    const record = requestCounts.get(ip);
-    
-    if (now > record.resetTime) {
-        record.count = 1;
-        record.resetTime = now + windowMs;
-        return next();
-    }
-    
-    if (record.count >= maxRequests) {
-        return res.status(429).json({ error: 'Too many requests' });
-    }
-    
-    record.count++;
-    next();
-});
-
-// Block malicious request patterns
-app.use((req, res, next) => {
-    const malicious = ['../', '..\\', '%00', 'union', 'select', 'insert', 'delete', 'drop', 'exec', 'script'];
-    if (malicious.some(pattern => req.url.toLowerCase().includes(pattern))) {
-        console.log(`🚨 Blocked malicious request: ${req.url}`);
-        return res.status(403).send('Forbidden');
-    }
-    next();
-});
-
 console.log('🚀 Liberia Business Awards - Production System Starting...');
 
 const express = require('express');
