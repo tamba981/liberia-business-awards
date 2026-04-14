@@ -64,6 +64,33 @@ app.get('/test', (req, res) => {
     });
 });
 
+// ============ KEEP-ALIVE ENDPOINT ============
+// For uptime monitoring services to keep the server awake
+app.get('/api/keep-alive', (req, res) => {
+    res.json({ 
+        status: 'alive', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
+});
+
+// ============ AUTO SELF-PING (KEEPS SERVER AWAKE) ============
+// This pings itself every 4 minutes to prevent sleep
+// Only works if the server is already awake, but helps once it's running
+setInterval(async () => {
+    try {
+        const response = await fetch(`http://localhost:${PORT}/api/keep-alive`);
+        if (response.ok) {
+            console.log('🔄 Self keep-alive ping sent at', new Date().toISOString());
+        }
+    } catch (error) {
+        // Silently fail - this is just a backup
+        // console.log('⚠️ Self keep-alive ping failed');
+    }
+}, 4 * 60 * 1000); // Every 4 minutes 
+
 app.get('/', (req, res) => {
     res.json({
         service: 'Liberia Business Awards API',
@@ -72,6 +99,8 @@ app.get('/', (req, res) => {
         port: PORT
     });
 });
+
+
 
 // ============ ENVIRONMENT VARIABLES ============
 const MONGODB_URI = process.env.MONGODB_URI;
