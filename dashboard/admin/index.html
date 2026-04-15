@@ -5081,7 +5081,7 @@ async function createBusinessAccount() {
     }
 }
 
-// Enhanced view business details
+// Enhanced view business details - WITH DELETE BUTTON
 async function viewBusinessDetails(id) {
     hideAllModals();
     
@@ -5162,7 +5162,7 @@ async function viewBusinessDetails(id) {
                         </div>
                     ` : ''}
                     
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
                         ${business.status === 'pending' ? `
                             <button class="sheet-btn" style="background: #10B981; flex: 1;" onclick="approveBusiness('${business._id}')">
                                 <i class="fas fa-check"></i> Approve Business
@@ -5173,6 +5173,10 @@ async function viewBusinessDetails(id) {
                         ` : business.status === 'rejected' ? `
                             <button class="sheet-btn" style="background: #10B981; flex: 1;" onclick="approveBusiness('${business._id}')">
                                 <i class="fas fa-check"></i> Approve Business
+                            </button>
+                        ` : business.status === 'approved' ? `
+                            <button class="sheet-btn danger" style="background: #EF4444; flex: 1;" onclick="deleteBusinessAccount('${business._id}', '${escapeHtml(business.business_name)}')">
+                                <i class="fas fa-trash"></i> Delete Business
                             </button>
                         ` : ''}
                         <button class="sheet-btn secondary" onclick="hideModal('businessDetailsModal')">
