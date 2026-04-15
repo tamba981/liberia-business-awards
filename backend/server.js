@@ -126,65 +126,13 @@ const authLimiter = rateLimit({
     message: { success: false, message: 'Too many login attempts. Please try again later.' }
 });
 
-// API Rate Limiter
-const apiLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 60, // 60 requests per minute
-    message: { success: false, message: 'Too many requests. Please slow down.' }
-});
-
-// ============ SECURITY MIDDLEWARE ============
+// ============ MIDDLEWARE ============
 app.set('trust proxy', 1);
-
-// Security headers
-app.use((req, res, next) => {
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.removeHeader('X-Powered-By');
-    next();
-});
 
 app.use(helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
 }));
-
-// Input sanitization (prevent SQL injection & XSS)
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
-
-app.use(mongoSanitize());
-app.use(xss());
-
-// Anti-cloning / Bot detection
-app.use((req, res, next) => {
-    const suspiciousAgents = ['python', 'curl', 'wget', 'go-http-client', 'java', 'perl', 'ruby', 'php', 'scrapy', 'bot', 'crawler', 'spider', 'scrape'];
-    const userAgent = req.headers['user-agent'] || '';
-    
-    const isSuspicious = suspiciousAgents.some(agent => userAgent.toLowerCase().includes(agent.toLowerCase()));
-    
-    if (isSuspicious) {
-        console.log(`⚠️ Blocked suspicious user agent: ${userAgent}`);
-        return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-    
-    // Block if no referer for API calls (except login/register)
-    if (!req.headers.referer && !req.url.includes('/login') && !req.url.includes('/register') && !req.url.includes('/keep-alive') && !req.url.includes('/health')) {
-        if (!req.headers.authorization) {
-            console.log(`⚠️ Blocked request without referer: ${req.method} ${req.url}`);
-            return res.status(403).json({ success: false, message: 'Invalid request origin' });
-        }
-    }
-    
-    next();
-});
-
-// Apply rate limiting to API routes
-app.use('/api/', apiLimiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/business/login', authLimiter);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
