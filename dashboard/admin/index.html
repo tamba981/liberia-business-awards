@@ -5255,14 +5255,8 @@ function exportBusinesses() {
 // DELETE BUSINESS ACCOUNT (COMPLETE REMOVAL)
 // ============================================
 async function deleteBusinessAccount(businessId, businessName) {
-    // Show confirmation dialog
-    if (!confirm(`⚠️ PERMANENT DELETE\n\nAre you ABSOLUTELY sure you want to delete "${businessName}"?\n\nThis will permanently remove:\n• Business account\n• All nominations\n• All documents\n• All notifications\n\nThis action CANNOT be undone!`)) {
-        return;
-    }
-    
-    // Second confirmation for safety
-    const confirmText = prompt(`Type "DELETE" to confirm deletion of ${businessName}:`);
-    if (confirmText !== 'DELETE') {
+    // Single confirmation dialog (no typing required)
+    if (!confirm(`⚠️ PERMANENT DELETE\n\nAre you ABSOLUTELY sure you want to delete "${businessName}"?\n\nThis will permanently remove:\n• Business account\n• All nominations\n• All documents\n• All notifications\n\nThis action CANNOT be undone!\n\nClick OK to permanently delete this business.`)) {
         showNotification('Deletion cancelled', 'info');
         return;
     }
