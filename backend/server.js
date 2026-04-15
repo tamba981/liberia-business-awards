@@ -1893,6 +1893,33 @@ app.delete('/api/business/account', authenticate, authorize('business'), async (
         res.status(500).json({ success: false, message: error.message });
     }
 });
+
+// Import security middleware
+const security = require('./middleware/advanced-security.js');
+
+// Apply global security
+app.use(security.securityHeaders);
+app.use(security.antiCloningProtection);
+app.use(security.auditLog);
+app.use(security.sessionProtection);
+
+// Apply to all API routes
+app.use('/api/', security.apiLimiter);
+app.use('/api/auth/login', security.loginLimiter);
+
+// Input sanitization
+app.use(require('express-mongo-sanitize')());
+app.use(require('xss-clean')());
+app.use(helmet());
+
+// Session cleanup (run every hour)
+setInterval(async () => {
+    if (req.db) {
+        await req.db.collection('sessions').deleteMany({
+            expiresAt: { $lt: Date.now() }
+        });
+    }
+}, 60 * 60 * 1000);
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
