@@ -922,14 +922,42 @@ window.addEventListener('load', function() {
 (function() {
     'use strict';
     
-    // Block console access
-    const noop = function() {};
+    // Store original console for admin debug mode
+    const originalConsole = {};
     const consoleMethods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table', 'group', 'groupEnd'];
-    consoleMethods.forEach(m => { 
+    
+    // Store originals before disabling
+    consoleMethods.forEach(m => {
         if (window.console && window.console[m]) {
-            window.console[m] = noop;
+            originalConsole[m] = window.console[m];
         }
     });
+    
+    // Check for admin debug mode FIRST
+    const isAdminDebug = (window.location.hostname === 'liberiabusinessawardslr.com' || window.location.hostname === 'localhost') && 
+        (localStorage.getItem('admin_debug') === 'true' || 
+         sessionStorage.getItem('admin_debug') === 'true' ||
+         document.cookie.includes('admin_debug=true') ||
+         window.location.search.includes('debug=true'));
+    
+    if (isAdminDebug) {
+        // Admin debug mode - KEEP console functional
+        consoleMethods.forEach(m => {
+            if (window.console && originalConsole[m]) {
+                window.console[m] = originalConsole[m];
+            }
+        });
+        console.log('🔓 Admin debug mode enabled - Console active');
+        console.log('🛡️ Security features still active (right-click blocked, shortcuts blocked)');
+    } else {
+        // Normal users - DISABLE console
+        const noop = function() {};
+        consoleMethods.forEach(m => { 
+            if (window.console && window.console[m]) {
+                window.console[m] = noop;
+            }
+        });
+    }
     
     // Block right-click
     document.addEventListener('contextmenu', function(e) {
@@ -939,6 +967,7 @@ window.addEventListener('load', function() {
     
     // Block developer tools shortcuts
     document.addEventListener('keydown', function(e) {
+        // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U, Ctrl+S
         if (e.key === 'F12' || 
             (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
             (e.ctrlKey && (e.key === 'u' || e.key === 's')) ||
@@ -948,33 +977,46 @@ window.addEventListener('load', function() {
         }
     });
     
-    // Detect dev tools
-    let devToolsOpen = false;
-    Object.defineProperty(window, 'outerWidth', {
-        get: function() {
-            devToolsOpen = true;
-            return window.innerWidth;
-        },
-        set: function() {}
-    });
-    
-    function detectDebugger() {
-        const start = performance.now();
-        debugger;
-        const end = performance.now();
-        if (end - start > 100) devToolsOpen = true;
+    // Detect dev tools (only for non-admin users)
+    if (!isAdminDebug) {
+        let devToolsOpen = false;
+        
+        // Method 1: Check via width/height difference
+        function detectDevTools() {
+            const widthDiff = window.outerWidth - window.innerWidth;
+            const heightDiff = window.outerHeight - window.innerHeight;
+            if (widthDiff > 100 || heightDiff > 100) {
+                devToolsOpen = true;
+            }
+        }
+        
+        // Method 2: Check via debugger statement timing
+        function detectDebugger() {
+            const start = performance.now();
+            debugger;
+            const end = performance.now();
+            if (end - start > 100) {
+                devToolsOpen = true;
+            }
+        }
+        
+        setInterval(function() {
+            detectDevTools();
+            detectDebugger();
+            if (devToolsOpen) {
+                // Clear sensitive data
+                try { 
+                    localStorage.clear(); 
+                    sessionStorage.clear(); 
+                } catch(e) {}
+                // Show warning and reload
+                document.body.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:#1a202c;color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:999999;"><i class="fas fa-shield-alt" style="font-size:64px;color:#FF0000;margin-bottom:20px;"></i><h1>Developer Tools Detected</h1><p>Please close developer tools to continue.</p><button onclick="location.reload()" style="background:#FF0000;color:white;border:none;padding:10px 30px;border-radius:5px;cursor:pointer;margin-top:20px;">Reload Page</button></div>';
+            }
+            devToolsOpen = false;
+        }, 1000);
     }
     
-    setInterval(function() {
-        detectDebugger();
-        if (devToolsOpen) {
-            try { localStorage.clear(); sessionStorage.clear(); } catch(e) {}
-            document.body.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:#1a202c;color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:999999;"><i class="fas fa-shield-alt" style="font-size:64px;color:#FF0000;margin-bottom:20px;"></i><h1>Developer Tools Detected</h1><p>Please close developer tools to continue.</p><button onclick="location.reload()" style="background:#FF0000;color:white;border:none;padding:10px 30px;border-radius:5px;cursor:pointer;">Reload Page</button></div>';
-        }
-        devToolsOpen = false;
-    }, 1000);
-    
-    // Prevent code injection
+    // Prevent code injection (only allow scripts from trusted domains)
     const originalCreateElement = document.createElement;
     document.createElement = function(tagName) {
         const element = originalCreateElement.call(document, tagName);
@@ -982,8 +1024,18 @@ window.addEventListener('load', function() {
             const originalSetAttribute = element.setAttribute;
             element.setAttribute = function(name, value) {
                 if (name.toLowerCase() === 'src') {
-                    const allowedDomains = [window.location.origin, 'https://cdnjs.cloudflare.com', 'https://unpkg.com', 'https://fonts.googleapis.com', 'https://www.googletagmanager.com'];
-                    if (!allowedDomains.some(d => value.startsWith(d))) return;
+                    const allowedDomains = [
+                        window.location.origin,
+                        'https://cdnjs.cloudflare.com',
+                        'https://unpkg.com',
+                        'https://fonts.googleapis.com',
+                        'https://www.googletagmanager.com',
+                        'https://translate.google.com'
+                    ];
+                    if (!allowedDomains.some(d => value.startsWith(d))) {
+                        console.warn('Blocked script from:', value);
+                        return;
+                    }
                 }
                 originalSetAttribute.call(this, name, value);
             };
@@ -991,33 +1043,17 @@ window.addEventListener('load', function() {
         return element;
     };
     
-    // Anti-clickjacking
+    // Anti-clickjacking (prevent embedding in iframes)
     if (window.self !== window.top) {
         window.top.location = window.self.location;
     }
     
-    console.log('🛡️ Frontend security active');
+    // Only log if admin debug mode is on
+    if (isAdminDebug && originalConsole.log) {
+        originalConsole.log('🛡️ Frontend security active (Admin Debug Mode)');
+    }
 })();
-
-if (window.location.hostname === 'liberiabusinessawardslr.com' && 
-    (localStorage.getItem('admin_debug') === 'true' || 
-     sessionStorage.getItem('admin_debug') === 'true' ||
-     document.cookie.includes('admin_debug=true'))) {
-    
-    // Re-enable console for admin debugging
-    const consoleMethods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table'];
-    consoleMethods.forEach(m => {
-        if (window.console && window.console[m]) {
-            // Store original if not already stored
-            if (!window._originalConsole) {
-                window._originalConsole = {};
-                window._originalConsole[m] = window.console[m];
-            }
-            window.console[m] = window._originalConsole[m];
-        }
-    });
-    console.log('🔓 Admin debug mode enabled - Console restored');
-}
+</script>
 <!-- ============================================ -->
 <!-- GOOGLE TRANSLATE WIDGET - SCROLLABLE VERSION -->
 <!-- ============================================ -->
