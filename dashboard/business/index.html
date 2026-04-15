@@ -8,6 +8,42 @@
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+         <!-- CRITICAL: Authentication check - MUST be first script -->
+    <script>
+        // IMMEDIATE AUTHENTICATION CHECK - NO PHP NEEDED
+        (function() {
+            const token = localStorage.getItem('lba_auth_token');
+            const userRole = localStorage.getItem('lba_user_role');
+            
+            // Check if user is business
+            if (!token || userRole !== 'business') {
+                localStorage.removeItem('lba_auth_token');
+                localStorage.removeItem('lba_user_data');
+                localStorage.removeItem('lba_user_role');
+                window.location.replace('../login.html');
+                return;
+            }
+            
+            // Verify token with backend
+            fetch('https://liberia-business-awards-production.up.railway.app/api/auth/verify', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (!response.ok) throw new Error('Invalid token');
+                return response.json();
+            }).then(data => {
+                if (!data.success || data.user.role !== 'business') {
+                    throw new Error('Not business user');
+                }
+            }).catch(() => {
+                localStorage.clear();
+                window.location.replace('../login.html');
+            });
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Dashboard - Liberia Business Awards</title>
