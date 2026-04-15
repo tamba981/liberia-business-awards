@@ -917,6 +917,88 @@ window.addEventListener('load', function() {
 </script>
 </head>
 <body class="bg-white">
+<!-- ============ ANTI-CONSOLE SECURITY (FRONTEND PROTECTION) ============ -->
+<script>
+(function() {
+    'use strict';
+    
+    // Block console access
+    const noop = function() {};
+    const consoleMethods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table', 'group', 'groupEnd'];
+    consoleMethods.forEach(m => { 
+        if (window.console && window.console[m]) {
+            window.console[m] = noop;
+        }
+    });
+    
+    // Block right-click
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Block developer tools shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+            (e.ctrlKey && (e.key === 'u' || e.key === 's')) ||
+            (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'J'))) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Detect dev tools
+    let devToolsOpen = false;
+    Object.defineProperty(window, 'outerWidth', {
+        get: function() {
+            devToolsOpen = true;
+            return window.innerWidth;
+        },
+        set: function() {}
+    });
+    
+    function detectDebugger() {
+        const start = performance.now();
+        debugger;
+        const end = performance.now();
+        if (end - start > 100) devToolsOpen = true;
+    }
+    
+    setInterval(function() {
+        detectDebugger();
+        if (devToolsOpen) {
+            try { localStorage.clear(); sessionStorage.clear(); } catch(e) {}
+            document.body.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:#1a202c;color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:999999;"><i class="fas fa-shield-alt" style="font-size:64px;color:#FF0000;margin-bottom:20px;"></i><h1>Developer Tools Detected</h1><p>Please close developer tools to continue.</p><button onclick="location.reload()" style="background:#FF0000;color:white;border:none;padding:10px 30px;border-radius:5px;cursor:pointer;">Reload Page</button></div>';
+        }
+        devToolsOpen = false;
+    }, 1000);
+    
+    // Prevent code injection
+    const originalCreateElement = document.createElement;
+    document.createElement = function(tagName) {
+        const element = originalCreateElement.call(document, tagName);
+        if (tagName.toLowerCase() === 'script') {
+            const originalSetAttribute = element.setAttribute;
+            element.setAttribute = function(name, value) {
+                if (name.toLowerCase() === 'src') {
+                    const allowedDomains = [window.location.origin, 'https://cdnjs.cloudflare.com', 'https://unpkg.com', 'https://fonts.googleapis.com', 'https://www.googletagmanager.com'];
+                    if (!allowedDomains.some(d => value.startsWith(d))) return;
+                }
+                originalSetAttribute.call(this, name, value);
+            };
+        }
+        return element;
+    };
+    
+    // Anti-clickjacking
+    if (window.self !== window.top) {
+        window.top.location = window.self.location;
+    }
+    
+    console.log('🛡️ Frontend security active');
+})();
+</script>
 <!-- ============================================ -->
 <!-- GOOGLE TRANSLATE WIDGET - SCROLLABLE VERSION -->
 <!-- ============================================ -->
@@ -11082,6 +11164,7 @@ console.log('✅ Voting system frontend fixes applied');
         });
     });
 </script>
+
 
 
 </body>
