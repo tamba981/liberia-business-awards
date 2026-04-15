@@ -1309,5 +1309,77 @@ async function handleBusinessRegistration() {
 }
  </script>
 
+<!-- Anti-CSRF + Anti-Brute Force -->
+<script>
+(function() {
+    // Generate and store CSRF token
+    let csrfToken = localStorage.getItem('csrf_token');
+    if (!csrfToken) {
+        csrfToken = [...Array(32)].map(() => Math.random().toString(36)[2]).join('');
+        localStorage.setItem('csrf_token', csrfToken);
+    }
+    
+    // Add CSRF token to all forms
+    document.querySelectorAll('form').forEach(form => {
+        if (!form.querySelector('input[name="_csrf"]')) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_csrf';
+            input.value = csrfToken;
+            form.appendChild(input);
+        }
+    });
+    
+    // Track login attempts
+    let loginAttempts = 0;
+    const maxAttempts = 5;
+    let lockoutTime = null;
+    
+    function checkLockout() {
+        if (lockoutTime && Date.now() < lockoutTime) {
+            const remaining = Math.ceil((lockoutTime - Date.now()) / 1000);
+            const message = `Too many failed attempts. Try again in ${remaining} seconds.`;
+            alert(message);
+            return false;
+        }
+        if (lockoutTime && Date.now() >= lockoutTime) {
+            lockoutTime = null;
+            loginAttempts = 0;
+        }
+        return true;
+    }
+    
+    function recordFailedAttempt() {
+        loginAttempts++;
+        if (loginAttempts >= maxAttempts) {
+            lockoutTime = Date.now() + (15 * 60 * 1000); // 15 minute lockout
+            alert('Account temporarily locked. Try again in 15 minutes.');
+        }
+    }
+    
+    // Intercept login form submission
+    const originalSubmit = window.handleAdminLogin || window.handleBusinessLogin;
+    if (originalSubmit) {
+        const wrappedSubmit = async function() {
+            if (!checkLockout()) return;
+            
+            try {
+                const result = await originalSubmit.apply(this, arguments);
+                if (result && !result.success) {
+                    recordFailedAttempt();
+                }
+                return result;
+            } catch (e) {
+                recordFailedAttempt();
+                throw e;
+            }
+        };
+        
+        if (window.handleAdminLogin) window.handleAdminLogin = wrappedSubmit;
+        if (window.handleBusinessLogin) window.handleBusinessLogin = wrappedSubmit;
+    }
+})();
+</script>
+
 </body>
 </html>
