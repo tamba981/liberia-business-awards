@@ -4710,7 +4710,7 @@ function displayBusinesses(businesses) {
                     <span class="status-badge status-${statusClass}">${statusText}</span>
                 </td>
                 <td>
-                    <div style="display: flex; gap: 5px;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                         ${business.status === 'pending' ? `
                             <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approveBusiness('${business._id}')">
                                 <i class="fas fa-check"></i> Approve
@@ -4723,7 +4723,9 @@ function displayBusinesses(businesses) {
                                 <i class="fas fa-check"></i> Approve
                             </button>
                         ` : business.status === 'approved' ? `
-                            <span class="status-badge status-active">✓ Approved</span>
+                            <button class="sheet-btn danger" style="background: #EF4444; padding: 6px 12px;" onclick="deleteBusinessAccount('${business._id}', '${escapeHtml(business.business_name)}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
                         ` : ''}
                         <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="viewBusinessDetails('${business._id}')">
                             <i class="fas fa-eye"></i> View
@@ -4735,6 +4737,7 @@ function displayBusinesses(businesses) {
     }).join('');
 }
 
+        
 // Reject business with email AND SMS notification
 async function rejectBusiness(id) {
     const reason = prompt('Enter rejection reason:');
@@ -5244,6 +5247,57 @@ function exportBusinesses() {
     showNotification('Businesses exported successfully', 'success');
 }
 
+// ============================================
+// DELETE BUSINESS ACCOUNT (COMPLETE REMOVAL)
+// ============================================
+async function deleteBusinessAccount(businessId, businessName) {
+    // Show confirmation dialog
+    if (!confirm(`⚠️ PERMANENT DELETE\n\nAre you ABSOLUTELY sure you want to delete "${businessName}"?\n\nThis will permanently remove:\n• Business account\n• All nominations\n• All documents\n• All notifications\n\nThis action CANNOT be undone!`)) {
+        return;
+    }
+    
+    // Second confirmation for safety
+    const confirmText = prompt(`Type "DELETE" to confirm deletion of ${businessName}:`);
+    if (confirmText !== 'DELETE') {
+        showNotification('Deletion cancelled', 'info');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            showNotification('Authentication required', 'error');
+            return;
+        }
+        
+        showNotification('Deleting business account...', 'info');
+        
+        // Call the delete API endpoint
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${businessId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`✅ "${businessName}" has been permanently deleted`, 'success');
+            
+            // Refresh the business list
+            loadBusinesses();
+            updateBusinessStats();
+        } else {
+            throw new Error(data.message || data.error || 'Failed to delete business');
+        }
+        
+    } catch (error) {
+        console.error('Delete business error:', error);
+        showNotification(`❌ Failed to delete: ${error.message}`, 'error');
+    }
+}
 // ============================================
 // ANNOUNCEMENTS MANAGEMENT
 // ============================================
