@@ -1895,6 +1895,47 @@ app.delete('/api/business/account', authenticate, authorize('business'), async (
 });
 
 
+// ============================================
+// DELETE BUSINESS ACCOUNT (COMPLETE REMOVAL)
+// ============================================
+app.delete('/api/admin/businesses/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const businessId = req.params.id;
+        
+        // Find the business first
+        const business = await BusinessUser.findById(businessId);
+        if (!business) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Business not found' 
+            });
+        }
+        
+        console.log(`🗑️ Admin ${req.user.email} deleting business: ${business.business_name} (${business.email})`);
+        
+        // Delete all related data
+        await Nomination.deleteMany({ business_id: businessId });
+        await BusinessDocument.deleteMany({ business_id: businessId });
+        await Notification.deleteMany({ business_id: businessId });
+        await RefreshToken.deleteMany({ user_id: businessId, user_type: 'business' });
+        
+        // Delete the business account
+        await BusinessUser.findByIdAndDelete(businessId);
+        
+        res.json({
+            success: true,
+            message: `Business "${business.business_name}" has been permanently deleted`
+        });
+        
+    } catch (error) {
+        console.error('Delete business error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Failed to delete business'
+        });
+    }
+});
+
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
