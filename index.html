@@ -6881,17 +6881,17 @@ function submitRegistrationForm() {
 }
 
  // ============================================
-// ✅ NOMINATION FORM SUBMISSION - FIXED WITH CORRECT URL
+// FIXED NOMINATION FORM SUBMISSION
 // ============================================
 function submitNominationForm() {
     console.log('🏆 Submitting nomination form...');
     
-    // Get the correct URL from your config
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec'; // <-- USE THIS EXACT URL
+    // Get the correct Google Apps Script URL
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
     
-    // Get form data
+    // Get form data - MATCHING YOUR EXACT FIELD NAMES
     const formData = {
-        formType: 'nomination',
+        formType: 'nomination',  // This tells Apps Script to use Nominations sheet
         nominationType: document.getElementById('nomination-type')?.value || '',
         county: document.getElementById('county')?.value || '',
         africaCountry: document.getElementById('africa-country')?.value || '',
@@ -6906,18 +6906,38 @@ function submitNominationForm() {
     };
     
     // Validate required fields
-    if (!formData.businessName || !formData.category || !formData.yourName || !formData.yourEmail) {
-        showNotification('⚠️ Please fill in all required fields', 'error');
+    if (!formData.businessName) {
+        showNotification('⚠️ Please enter a business name', 'error');
+        return false;
+    }
+    
+    if (!formData.category) {
+        showNotification('⚠️ Please select an award category', 'error');
+        return false;
+    }
+    
+    if (!formData.yourName) {
+        showNotification('⚠️ Please enter your name', 'error');
+        return false;
+    }
+    
+    if (!formData.yourEmail) {
+        showNotification('⚠️ Please enter your email', 'error');
         return false;
     }
     
     // Show loading state
     const submitBtn = document.getElementById('nominate-submit-btn');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+    let originalText = '';
+    if (submitBtn) {
+        originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+    }
     
-    // Create form data
+    console.log('📤 Sending nomination data:', formData);
+    
+    // Create URL encoded form data
     const formBody = new URLSearchParams();
     Object.keys(formData).forEach(key => {
         if (formData[key]) {
@@ -6926,17 +6946,17 @@ function submitNominationForm() {
     });
     
     // Submit to Google Apps Script
-    fetch(APPS_SCRIPT_URL, {  // <-- USING THE CORRECT URL VARIABLE
+    fetch(APPS_SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors',
+        mode: 'no-cors',  // This is important for CORS
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formBody
     })
     .then(() => {
-        // Show success message
-        showNotification('✅ Thank you! Your nomination has been submitted successfully. We will contact you soon.', 'success');
+        console.log('✅ Nomination submitted successfully');
+        showNotification('✅ Thank you! Your nomination has been submitted successfully!', 'success');
         
         // Reset form
         const form = document.querySelector('#nominateModal form');
@@ -6957,14 +6977,16 @@ function submitNominationForm() {
         showNotification('⚠️ There was an error submitting your nomination. Please try again.', 'error');
     })
     .finally(() => {
-        setTimeout(() => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }, 3000);
+        if (submitBtn) {
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }, 2000);
+        }
     });
     
-    return false;
-}       
+    return true;
+}
 
 // Partnership Form
 function submitPartnershipForm() {
