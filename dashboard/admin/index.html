@@ -8,43 +8,6 @@
 <meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-        <!-- CRITICAL: Authentication check - MUST be first script -->
-    <script>
-        // BLOCK PAGE IMMEDIATELY if not authenticated
-        (function() {
-            const token = localStorage.getItem('lba_auth_token');
-            const userRole = localStorage.getItem('lba_user_role');
-            
-            // Check if user is admin
-            if (!token || userRole !== 'admin') {
-                // Clear any stale data
-                localStorage.removeItem('lba_auth_token');
-                localStorage.removeItem('lba_user_data');
-                localStorage.removeItem('lba_user_role');
-                // Redirect to login
-                window.location.replace('../login.html');
-            }
-            
-            // Verify token with backend
-            fetch('https://liberia-business-awards-production.up.railway.app/api/auth/verify', {
-                method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => {
-                if (!response.ok) throw new Error('Invalid token');
-                return response.json();
-            }).then(data => {
-                if (!data.success || data.user.role !== 'admin') {
-                    throw new Error('Not admin');
-                }
-            }).catch(() => {
-                localStorage.clear();
-                window.location.replace('../login.html');
-            });
-        })();
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Liberia Business Awards</title>
