@@ -933,7 +933,7 @@ window.addEventListener('load', function() {
         }
     });
     
-    // Check for admin debug mode FIRST
+    // Check for admin debug mode
     const isAdminDebug = (window.location.hostname === 'liberiabusinessawardslr.com' || window.location.hostname === 'localhost') && 
         (localStorage.getItem('admin_debug') === 'true' || 
          sessionStorage.getItem('admin_debug') === 'true' ||
@@ -948,7 +948,7 @@ window.addEventListener('load', function() {
             }
         });
         console.log('🔓 Admin debug mode enabled - Console active');
-        console.log('🛡️ Security features still active (right-click blocked, shortcuts blocked)');
+        console.log('🛡️ Security features active (right-click blocked, shortcuts blocked)');
     } else {
         // Normal users - DISABLE console
         const noop = function() {};
@@ -977,44 +977,7 @@ window.addEventListener('load', function() {
         }
     });
     
-    // Detect dev tools (only for non-admin users)
-    if (!isAdminDebug) {
-        let devToolsOpen = false;
-        
-        // Method 1: Check via width/height difference
-        function detectDevTools() {
-            const widthDiff = window.outerWidth - window.innerWidth;
-            const heightDiff = window.outerHeight - window.innerHeight;
-            if (widthDiff > 100 || heightDiff > 100) {
-                devToolsOpen = true;
-            }
-        }
-        
-        // Method 2: Check via debugger statement timing
-        function detectDebugger() {
-            const start = performance.now();
-            debugger;
-            const end = performance.now();
-            if (end - start > 100) {
-                devToolsOpen = true;
-            }
-        }
-        
-        setInterval(function() {
-            detectDevTools();
-            detectDebugger();
-            if (devToolsOpen) {
-                // Clear sensitive data
-                try { 
-                    localStorage.clear(); 
-                    sessionStorage.clear(); 
-                } catch(e) {}
-                // Show warning and reload
-                document.body.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:#1a202c;color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:999999;"><i class="fas fa-shield-alt" style="font-size:64px;color:#FF0000;margin-bottom:20px;"></i><h1>Developer Tools Detected</h1><p>Please close developer tools to continue.</p><button onclick="location.reload()" style="background:#FF0000;color:white;border:none;padding:10px 30px;border-radius:5px;cursor:pointer;margin-top:20px;">Reload Page</button></div>';
-            }
-            devToolsOpen = false;
-        }, 1000);
-    }
+    // REMOVED: Aggressive dev tools detection that was causing false positives
     
     // Prevent code injection (only allow scripts from trusted domains)
     const originalCreateElement = document.createElement;
@@ -1033,7 +996,7 @@ window.addEventListener('load', function() {
                         'https://translate.google.com'
                     ];
                     if (!allowedDomains.some(d => value.startsWith(d))) {
-                        console.warn('Blocked script from:', value);
+                        if (originalConsole.warn) originalConsole.warn('Blocked script from:', value);
                         return;
                     }
                 }
