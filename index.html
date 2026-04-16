@@ -1,4 +1,4 @@
- <head>
+    <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -7443,48 +7443,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initImageSlider();
     initPartnersSlider();
 
-    // ============================================
-    // ✅ HANDLE URL HASH SCROLLING (For Directory Share Links)
-    // ============================================
-    function handleHashScroll() {
-        // Check if there's a hash in the URL
-        if (window.location.hash) {
-            const hash = window.location.hash;
-            const targetElement = document.querySelector(hash);
-            
-            if (targetElement) {
-                // Small delay to ensure page is fully loaded
-                setTimeout(() => {
-                    // Get the element's position
-                    const elementPosition = targetElement.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - 100; // 100px offset for header
-                
-                    // Smooth scroll to the element
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                    });
-                    
-                    // Optional: Add a highlight effect to the element
-                    targetElement.style.transition = 'background-color 0.5s ease';
-                    targetElement.style.backgroundColor = '#fef3c7'; // Light yellow highlight
-                    setTimeout(() => {
-                        targetElement.style.backgroundColor = '';
-                    }, 1500);
-                    
-                    console.log(`✅ Scrolled to: ${hash}`);
-                }, 500);
-            }
-        }
-    }
-    
-    // Call hash scroll handler
-    handleHashScroll();
-    
-    // Also handle it if the hash changes while on the page (for dynamic navigation)
-    window.addEventListener('hashchange', function() {
-        handleHashScroll();
-    });
 
     // ============================================
 // ✅ SAFE DIRECTORY FUNCTION WRAPPER
@@ -7527,87 +7485,6 @@ function initDirectory() {
         console.log('✅ Directory initialized successfully');
     });
 }
-
-// Wrap filter functions
-function filterDirectory(category) {
-    safeDirectoryOperation(() => displayLimitedDirectory(category));
-}
-
-function filterAllDirectory(category) {
-    safeDirectoryOperation(() => displayAllDirectory(category));
-}
-
-// Display limited directory (6 businesses)
-function displayLimitedDirectory(category) {
-    const directoryContainer = document.getElementById('businessDirectoryLimited');
-    if (!directoryContainer) return;
-    
-    let filteredBusinesses = category === 'all' 
-        ? businessDirectory 
-        : businessDirectory.filter(business => business.category === category);
-    
-    // Only show first 6 businesses
-    const limitedBusinesses = filteredBusinesses.slice(0, 6);
-    
-    // Update active filter button
-    updateFilterButtons(category);
-    
-    let html = '';
-    limitedBusinesses.forEach(business => {
-        html += generateBusinessCard(business);
-    });
-    
-    directoryContainer.innerHTML = html;
-}
-
-// Display all directory for modal with proper filtering
-function displayAllDirectory(category = 'all') {
-    const directoryContainer = document.getElementById('businessDirectoryAll');
-    if (!directoryContainer) return;
-    
-    let filteredBusinesses = category === 'all' 
-        ? businessDirectory 
-        : businessDirectory.filter(business => business.category === category);
-    
-    // Update active filter button in modal - more robust approach
-    updateModalFilterButtons(category);
-    
-    let html = '';
-    filteredBusinesses.forEach(business => {
-        html += generateBusinessCard(business, true);
-    });
-    
-    if (html === '') {
-        html = `
-            <div class="col-span-3 text-center py-12">
-                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-building text-gray-400 text-3xl"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">No Businesses Found</h3>
-                <p class="text-gray-600 mb-4">There are no businesses in this category yet.</p>
-                <button onclick="displayAllDirectory('all')" class="bg-lba-blue text-white px-6 py-2 rounded-lg hover:bg-blue-400 transition">
-                    View All Businesses
-                </button>
-            </div>
-        `;
-    }
-    
-    directoryContainer.innerHTML = html;
-}
-    // Initialize directory
-    if (typeof initDirectory === 'function') {
-        initDirectory();
-    }
-    
-    // Update nomination buttons
-    updateAllNominationButtons();
-    
-    // Update countdown
-    updateCountdown();
-    setInterval(updateCountdown, 60000);
-    
-    console.log('✅ Page initialization complete!');
-});
 
 // Wrap filter functions
 function filterDirectory(category) {
@@ -9873,8 +9750,6 @@ document.addEventListener('DOMContentLoaded', function() {
             performSearch();
         });
     }
-
-     
     
     // Update all nomination buttons on the page
 function updateAllNominationButtons() {
@@ -11818,4 +11693,4 @@ console.log('✅ Voting system frontend fixes applied');
 
 </body>
 
-</html> 
+</html>
