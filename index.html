@@ -3641,7 +3641,7 @@ window.addEventListener('load', function() {
  
     
 <!-- Business Directory Section -->
-<section class="py-16 bg-white px-4">
+<section id="businessDirectory" class="py-16 bg-white px-4">
     <div class="container mx-auto">
         <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4" data-aos="fade-up">Liberia Business Directory</h2>
         <p class="text-xl text-center text-gray-600 mb-8 max-w-3xl mx-auto" data-aos="fade-up">
@@ -7443,6 +7443,48 @@ document.addEventListener('DOMContentLoaded', function() {
     initImageSlider();
     initPartnersSlider();
 
+    // ============================================
+    // ✅ HANDLE URL HASH SCROLLING (For Directory Share Links)
+    // ============================================
+    function handleHashScroll() {
+        // Check if there's a hash in the URL
+        if (window.location.hash) {
+            const hash = window.location.hash;
+            const targetElement = document.querySelector(hash);
+            
+            if (targetElement) {
+                // Small delay to ensure page is fully loaded
+                setTimeout(() => {
+                    // Get the element's position
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - 100; // 100px offset for header
+                
+                    // Smooth scroll to the element
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Optional: Add a highlight effect to the element
+                    targetElement.style.transition = 'background-color 0.5s ease';
+                    targetElement.style.backgroundColor = '#fef3c7'; // Light yellow highlight
+                    setTimeout(() => {
+                        targetElement.style.backgroundColor = '';
+                    }, 1500);
+                    
+                    console.log(`✅ Scrolled to: ${hash}`);
+                }, 500);
+            }
+        }
+    }
+    
+    // Call hash scroll handler
+    handleHashScroll();
+    
+    // Also handle it if the hash changes while on the page (for dynamic navigation)
+    window.addEventListener('hashchange', function() {
+        handleHashScroll();
+    });
 
     // ============================================
 // ✅ SAFE DIRECTORY FUNCTION WRAPPER
@@ -7485,6 +7527,87 @@ function initDirectory() {
         console.log('✅ Directory initialized successfully');
     });
 }
+
+// Wrap filter functions
+function filterDirectory(category) {
+    safeDirectoryOperation(() => displayLimitedDirectory(category));
+}
+
+function filterAllDirectory(category) {
+    safeDirectoryOperation(() => displayAllDirectory(category));
+}
+
+// Display limited directory (6 businesses)
+function displayLimitedDirectory(category) {
+    const directoryContainer = document.getElementById('businessDirectoryLimited');
+    if (!directoryContainer) return;
+    
+    let filteredBusinesses = category === 'all' 
+        ? businessDirectory 
+        : businessDirectory.filter(business => business.category === category);
+    
+    // Only show first 6 businesses
+    const limitedBusinesses = filteredBusinesses.slice(0, 6);
+    
+    // Update active filter button
+    updateFilterButtons(category);
+    
+    let html = '';
+    limitedBusinesses.forEach(business => {
+        html += generateBusinessCard(business);
+    });
+    
+    directoryContainer.innerHTML = html;
+}
+
+// Display all directory for modal with proper filtering
+function displayAllDirectory(category = 'all') {
+    const directoryContainer = document.getElementById('businessDirectoryAll');
+    if (!directoryContainer) return;
+    
+    let filteredBusinesses = category === 'all' 
+        ? businessDirectory 
+        : businessDirectory.filter(business => business.category === category);
+    
+    // Update active filter button in modal - more robust approach
+    updateModalFilterButtons(category);
+    
+    let html = '';
+    filteredBusinesses.forEach(business => {
+        html += generateBusinessCard(business, true);
+    });
+    
+    if (html === '') {
+        html = `
+            <div class="col-span-3 text-center py-12">
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-building text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No Businesses Found</h3>
+                <p class="text-gray-600 mb-4">There are no businesses in this category yet.</p>
+                <button onclick="displayAllDirectory('all')" class="bg-lba-blue text-white px-6 py-2 rounded-lg hover:bg-blue-400 transition">
+                    View All Businesses
+                </button>
+            </div>
+        `;
+    }
+    
+    directoryContainer.innerHTML = html;
+}
+    // Initialize directory
+    if (typeof initDirectory === 'function') {
+        initDirectory();
+    }
+    
+    // Update nomination buttons
+    updateAllNominationButtons();
+    
+    // Update countdown
+    updateCountdown();
+    setInterval(updateCountdown, 60000);
+    
+    console.log('✅ Page initialization complete!');
+});
 
 // Wrap filter functions
 function filterDirectory(category) {
@@ -9750,6 +9873,8 @@ document.addEventListener('DOMContentLoaded', function() {
             performSearch();
         });
     }
+
+     
     
     // Update all nomination buttons on the page
 function updateAllNominationButtons() {
@@ -10275,7 +10400,6 @@ function shareDirectoryByEmail() {
 function copyDirectoryLink() {
     const url = window.location.href.split('#')[0] + '#businessDirectory';
     navigator.clipboard.writeText(url).then(() => {
-        // Show success notification
         const notification = document.createElement('div');
         notification.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
         notification.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Directory link copied to clipboard!';
@@ -10287,6 +10411,37 @@ function copyDirectoryLink() {
     }).catch(() => {
         alert('Press Ctrl+C to copy the link: ' + window.location.href.split('#')[0] + '#businessDirectory');
     });
+}
+
+function shareDirectoryOnWhatsApp() {
+    const text = encodeURIComponent('🇱🇷 Check out the Liberia Business Directory! Find outstanding Liberian businesses across all industries.\n\n');
+    const url = encodeURIComponent(window.location.href.split('#')[0] + '#businessDirectory');
+    window.open(`https://wa.me/?text=${text}${url}`, '_blank', 'width=600,height=400');
+}
+
+function shareDirectoryOnFacebook() {
+    const url = encodeURIComponent(window.location.href.split('#')[0] + '#businessDirectory');
+    const title = encodeURIComponent('Liberia Business Directory - Find Outstanding Liberian Businesses');
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${title}`, '_blank', 'width=600,height=400');
+}
+
+function shareDirectoryOnTwitter() {
+    const text = encodeURIComponent('🇱🇷 Discover outstanding Liberian businesses across all industries! Check out the Liberia Business Directory 🇱🇷 #LiberiaBusinessAwards #SupportLocal');
+    const url = encodeURIComponent(window.location.href.split('#')[0] + '#businessDirectory');
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=600,height=400');
+}
+
+function shareDirectoryOnLinkedIn() {
+    const url = encodeURIComponent(window.location.href.split('#')[0] + '#businessDirectory');
+    const title = encodeURIComponent('Liberia Business Directory');
+    const summary = encodeURIComponent('Discover outstanding Liberian businesses across various industries. Supporting local entrepreneurship and national growth.');
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&title=${title}&summary=${summary}`, '_blank', 'width=600,height=400');
+}
+
+function shareDirectoryByEmail() {
+    const subject = encodeURIComponent('Liberia Business Directory - Outstanding Liberian Businesses');
+    const body = encodeURIComponent(`Hello,\n\nI wanted to share the Liberia Business Directory with you. Discover outstanding Liberian businesses across various industries.\n\nView the directory here:\n${window.location.href.split('#')[0]}#businessDirectory\n\nSupporting local entrepreneurship and national growth!\n\n- Liberia Business Awards`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
 // Test functions for console (referenced in debug logs)
