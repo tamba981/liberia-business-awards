@@ -1252,177 +1252,80 @@ window.addEventListener('load', function() {
     </div>
 
    <!-- Navigation -->
-<!-- Navigation - COMPLETELY FIXED FOR MOBILE -->
-<nav class="bg-white shadow-md sticky top-0 z-50" id="navbar" aria-label="Main navigation">
-    <div class="w-full px-3 sm:px-4 py-2">
-        <!-- Top Row: Logo + Mobile Menu Button -->
-        <div class="flex items-center justify-between">
-            <!-- Logo -->
-            <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded shrink-0">
-                <img src="images/logo.png" alt="Liberia Business Awards Logo" class="h-12 sm:h-14 md:h-16 object-contain" width="100" height="100" fetchpriority="high" loading="eager">
+<nav class="bg-white shadow-md sticky top-0 z-50 py-2" id="navbar" aria-label="Main navigation">
+    <div class="container mx-auto px-4 py-2 flex flex-wrap items-center justify-between">
+        <!-- Logo Section -->
+        <div class="flex items-center">
+            <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
+                <img src="images/logo.png" alt="Liberia Business Awards Logo - Home" class="h-16 md:h-20 lg:h-24 xl:h-28 mr-3 object-contain" width="140" height="140" fetchpriority="high" loading="eager">
             </a>
+        </div>
+        
+        <!-- Desktop Menu - Centered -->
+        <div class="hidden lg:flex space-x-5 xl:space-x-7 items-center">
+            <a href="#about" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">About</a>
+            <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Team Message</a>
+            <a href="#team" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Team</a>
+            <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Categories</a>
+            <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Featured</a>
+            <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Blog</a>
+            <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Partnership</a>
+            <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Contact</a>
+            <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Dashboard</a>
+        </div>
+        
+        <!-- Right Side Buttons - Properly spaced and ordered -->
+        <div class="flex items-center gap-2 lg:gap-3">
+            <!-- Become a Member Button (Green) -->
+            <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full font-semibold text-sm hover:shadow-lg transition transform hover:scale-105 whitespace-nowrap">
+                <i class="fas fa-user-plus mr-1"></i> Become a Member
+            </a>
+            
+            <!-- Nominate Now Button (Red) -->
+            <button onclick="checkNominationStatus()" id="navNominateBtn" class="bg-lba-red text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-red-600 transition whitespace-nowrap">
+                <span id="nominateBtnText">Nominate Now</span>
+            </button>
+            
+            <!-- Partner Button (Blue) -->
+            <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-blue-400 transition whitespace-nowrap">
+                Partner
+            </button>
             
             <!-- Mobile Menu Button -->
             <button id="mobileMenuBtn" class="block lg:hidden p-2 text-gray-600 hover:text-lba-red focus:outline-none">
                 <i class="fas fa-bars text-2xl"></i>
             </button>
-            
-            <!-- Desktop Navigation Links (Hidden on mobile) -->
-            <div class="hidden lg:flex space-x-6 xl:space-x-8 items-center">
-                <a href="#about" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">About</a>
-                <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">Team Message</a>
-                <a href="#team" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">Team</a>
-                <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">Categories</a>
-                <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">Featured</a>
-                <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">Blog</a>
-                <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">Partnership</a>
-                <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">Contact</a>
-                <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium text-sm whitespace-nowrap">Dashboard</a>
-            </div>
-            
-            <!-- Desktop Action Buttons (Hidden on mobile) -->
-            <div class="hidden lg:flex items-center gap-2">
-                <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full font-semibold text-sm hover:shadow-lg transition whitespace-nowrap">
-                    <i class="fas fa-user-plus mr-1"></i> Become a Member
-                </a>
-                <button onclick="checkNominationStatus()" class="bg-lba-red text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-red-600 transition whitespace-nowrap">
-                    Nominate Now
-                </button>
-                <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-blue-400 transition whitespace-nowrap">
-                    Partner
-                </button>
-            </div>
-        </div>
-        
-        <!-- Mobile Action Buttons Row - WITHIN DESIGN, NO OVERFLOW -->
-        <div class="flex lg:hidden flex-wrap justify-center gap-2 mt-3">
-            <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-full font-semibold text-xs sm:text-sm whitespace-nowrap">
-                <i class="fas fa-user-plus mr-1"></i> Member
-            </a>
-            <button onclick="checkNominationStatus()" class="bg-lba-red text-white px-3 py-2 rounded-full font-semibold text-xs sm:text-sm whitespace-nowrap">
-                Nominate
-            </button>
-            <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-3 py-2 rounded-full font-semibold text-xs sm:text-sm whitespace-nowrap">
-                Partner
-            </button>
-            <button onclick="openModal('liveSessionModal')" class="bg-lba-blue text-white px-3 py-2 rounded-full font-semibold text-xs sm:text-sm whitespace-nowrap">
-                Live
-            </button>
-            <button onclick="openModal('registerModal')" class="bg-lba-blue text-white px-3 py-2 rounded-full font-semibold text-xs sm:text-sm whitespace-nowrap">
-                Register
-            </button>
         </div>
     </div>
     
-    <!-- Mobile Menu Dropdown -->
-    <div id="mobileMenu" class="hidden lg:hidden bg-white border-t border-gray-200 max-h-[70vh] overflow-y-auto">
-        <div class="flex flex-col p-4 space-y-2">
-            <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">About</a>
-            <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">Team Message</a>
-            <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">Team</a>
-            <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">Categories</a>
-            <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">Featured</a>
-            <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">Blog</a>
-            <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">Partnership</a>
-            <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">Contact</a>
-            <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 rounded hover:bg-gray-50">Dashboard</a>
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden lg:hidden bg-white px-4 py-4 shadow-lg border-t border-gray-200">
+        <div class="flex flex-col space-y-3">
+            <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">About</a>
+            <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team Message</a>
+            <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team</a>
+            <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Categories</a>
+            <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Featured</a>
+            <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Blog</a>
+            <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Partnership</a>
+            <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Contact</a>
+            <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Dashboard</a>
+            
+            <!-- Mobile Action Buttons -->
+            <div class="pt-4 flex flex-col gap-3">
+                <a href="directory.html" onclick="closeMobileMenu()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-full font-bold text-center">
+                    <i class="fas fa-user-plus mr-2"></i> Become a Member
+                </a>
+                <button onclick="checkNominationStatus(); closeMobileMenu();" class="bg-lba-red text-white px-4 py-3 rounded-full font-bold text-center" id="mobileNominateBtn">
+                    Nominate Now
+                </button>
+                <button onclick="openModal('partnerModal'); closeMobileMenu();" class="bg-lba-blue text-white px-4 py-3 rounded-full font-bold text-center">
+                    Partner
+                </button>
+            </div>
         </div>
     </div>
 </nav>
-
-<!-- Hero Section - FIXED FOR MOBILE -->
-<section class="hero-bg pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 text-white">
-    <div class="container mx-auto text-center">
-        <div data-aos="fade-up" data-aos-duration="1000">
-            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
-                <span>Liberia Business Awards 3.0</span>
-            </h1>
-            <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-10 max-w-3xl mx-auto px-2">Recognizing Excellence Across All Economic Sectors</p>
-            <p class="text-base sm:text-lg mb-8 sm:mb-12 max-w-2xl mx-auto px-2">
-                Join Liberia's most comprehensive business recognition platform, celebrating achievement from Agriculture to Sports across our nation.
-            </p>
-            
-            <!-- Hero Buttons - WRAPPED FOR MOBILE, NO OVERFLOW -->
-            <div class="flex flex-wrap justify-center gap-3 sm:gap-4 px-2">
-                <button onclick="openModal('registerModal')" class="bg-lba-blue text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base md:text-lg hover:bg-blue-400 transition shadow-lg">
-                    Register
-                </button>
-                <button onclick="openModal('liveSessionModal')" class="bg-lba-blue text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base md:text-lg hover:bg-blue-400 transition shadow-lg">
-                    Live Session
-                </button>
-                <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base md:text-lg hover:shadow-xl transition shadow-lg">
-                    <i class="fas fa-crown mr-1 sm:mr-2"></i> Become a Member
-                </a>
-                <button onclick="checkNominationStatus()" class="bg-lba-red text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base md:text-lg hover:bg-red-600 transition shadow-lg">
-                    Nominate Now
-                </button>
-                <button onclick="openModal('partnerModal')" class="bg-white text-lba-blue px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base md:text-lg hover:bg-gray-100 transition shadow-lg">
-                    Partner
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
-
-<style>
-    /* Ensure no overflow on mobile */
-    @media (max-width: 640px) {
-        .container {
-            overflow-x: hidden;
-        }
-        .hero-bg .flex-wrap {
-            max-width: 100%;
-        }
-        .hero-bg button, 
-        .hero-bg a {
-            flex: 0 0 auto;
-        }
-    }
-    
-    /* Prevent any horizontal scroll */
-    body {
-        overflow-x: hidden;
-        width: 100%;
-    }
-    
-    /* Make buttons more compact on very small screens */
-    @media (max-width: 480px) {
-        .hero-bg button, 
-        .hero-bg a {
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-            font-size: 0.75rem;
-        }
-    }
-</style>
-
-<script>
-    // Mobile menu toggle function
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    
-    if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            mobileMenu.classList.toggle('hidden');
-        });
-    }
-    
-    function closeMobileMenu() {
-        if (mobileMenu) {
-            mobileMenu.classList.add('hidden');
-        }
-    }
-    
-    // Close mobile menu when clicking outside
-    document.addEventListener('click', function(event) {
-        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-            if (!mobileMenu.contains(event.target) && !mobileMenuBtn?.contains(event.target)) {
-                mobileMenu.classList.add('hidden');
-            }
-        }
-    });
-</script>
     
     <!-- Hero Section -->
 <section class="hero-bg pt-32 pb-20 px-4 text-white">
