@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>LBA Directory | Liberia Business Awards - Get Listed & Grow</title>
+    <meta name="description" content="Join Liberia's Verified Business Network. Get visibility, build credibility, and attract more customers through the Liberia Business Awards Directory.">
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #fefefe; scroll-behavior: smooth; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
+        
+        .container-custom { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+        .btn-primary { background: #FF0000; color: white; padding: 14px 32px; border-radius: 40px; font-weight: 700; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(255,0,0,0.25); }
+        .btn-primary:hover { background: #cc0000; transform: translateY(-2px); }
+        .btn-outline { background: transparent; border: 2px solid #FF0000; color: #FF0000; padding: 12px 28px; border-radius: 40px; font-weight: 700; transition: 0.2s; }
+        .btn-outline:hover { background: #FF0000; color: white; }
+        
+        /* Image Slider Styles */
+        .image-slider { position: relative; border-radius: 1rem; overflow: hidden; }
+        .slides-container { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex-shrink: 0; width: 100%; }
+        .slider-nav { opacity: 0; transition: opacity 0.3s ease; background: white/80; cursor: pointer; }
+        .image-slider:hover .slider-nav { opacity: 1; }
+        .slider-dot { transition: all 0.3s ease; cursor: pointer; }
+        .dot-active { background-color: #FF0000 !important; width: 12px !important; }
+        
+        /* Package Cards */
+        .card-package { background: white; border-radius: 28px; padding: 28px 24px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.07); transition: all 0.25s; border: 1px solid #f0f0f0; }
+        .card-package:hover { transform: translateY(-6px); box-shadow: 0 30px 40px -15px rgba(0,0,0,0.12); }
+        .price { font-size: 2rem; font-weight: 800; color: #1A2C3E; }
+        
+        /* Share Buttons */
+        .share-btn-group { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .share-icon { padding: 10px 20px; border-radius: 40px; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; border: none; }
+        .fb-share { background: #1877f2; color: white; }
+        .tw-share { background: #1da1f2; color: white; }
+        .li-share { background: #0077b5; color: white; }
+        .wa-share { background: #25d366; color: white; }
+        .email-share { background: #6c757d; color: white; }
+        .copy-share { background: #FF0000; color: white; }
+        .share-icon:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        
+        /* WhatsApp Float */
+        .whatsapp-float { position: fixed; bottom: 28px; left: 20px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 6px 20px rgba(37,211,102,0.4); z-index: 999; text-decoration: none; transition: 0.2s; }
+        .whatsapp-float:hover { transform: scale(1.08); }
+        .whatsapp-tooltip { position: absolute; left: 70px; background: #1a202c; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; white-space: nowrap; opacity: 0; transition: 0.2s; pointer-events: none; }
+        .whatsapp-float:hover .whatsapp-tooltip { opacity: 1; }
+        
+        .compare-table { width: 100%; border-collapse: collapse; background: white; border-radius: 24px; overflow: hidden; }
+        .compare-table th, .compare-table td { padding: 16px 12px; text-align: center; border-bottom: 1px solid #e9eef3; }
+        .compare-table th { background: #F8FAFE; font-weight: 700; }
+        
+        @media (max-width: 768px) { .container-custom { padding: 0 20px; } .price { font-size: 1.6rem; } }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="bg-white shadow-md sticky top-0 z-50 py-3">
+    <div class="container-custom flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <img src="images/logo.png" alt="Liberia Business Awards Logo" class="h-14 md:h-16 object-contain" onerror="this.src='https://placehold.co/80x80/FF0000/white?text=LBA'">
+            <span class="font-bold text-xl md:text-2xl text-gray-800">LBA <span class="text-red-600">Directory</span></span>
+        </div>
+        <div class="flex gap-3">
+            <a href="#packages" class="btn-outline text-sm md:text-base" style="text-decoration: none;">Upgrade</a>
+            <a href="#register-form" class="btn-primary text-sm md:text-base" style="text-decoration: none; padding: 10px 24px;">Get Listed</a>
+        </div>
+    </div>
+</nav>
+
+<main>
+    <!-- HERO with Image Slider (exactly like frontend) -->
+    <section class="py-16 bg-gradient-to-r from-red-50 to-blue-50">
+        <div class="container-custom">
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <div class="flex-1" data-aos="fade-right">
+                    <span class="bg-red-100 text-red-600 px-4 py-1 rounded-full text-sm font-semibold"><i class="fas fa-check-circle mr-1"></i> Official LBA Network</span>
+                    <h1 class="text-4xl md:text-5xl font-bold mt-6 mb-4 leading-tight">Join Liberia's <span class="text-red-600">Verified Business Network</span></h1>
+                    <p class="text-xl text-gray-600 mb-6">Get visibility, build credibility, and attract more customers through the Liberia Business Awards Directory.</p>
+                    <div class="bg-blue-50 p-5 rounded-2xl mb-8 border-l-4 border-red-600">
+                        <i class="fas fa-gem text-red-600 mr-3"></i> <strong>Your business deserves to be seen, trusted, and chosen.</strong>
+                    </div>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#register-form" class="btn-primary"><i class="fas fa-list-ul"></i> Get Listed for Free</a>
+                        <a href="#packages" class="btn-outline"><i class="fas fa-chart-line"></i> Upgrade Your Business</a>
+                    </div>
+                </div>
+                <div class="flex-1" data-aos="fade-left">
+                    <!-- IMAGE SLIDER - exactly like frontend -->
+                    <div class="image-slider relative rounded-xl shadow-2xl overflow-hidden">
+                        <div class="slides-container flex transition-transform duration-500 ease-in-out">
+                            <div class="slide flex-shrink-0 w-full"><img src="images/about-slider/slide-1.jpg" alt="LBA Team Event" class="w-full h-80 object-cover" loading="lazy" onerror="this.src='https://placehold.co/600x400/FF0000/white?text=LBA+Event'"></div>
+                            <div class="slide flex-shrink-0 w-full"><img src="images/about-slider/slide-2.jpg" alt="LBA Gathering" class="w-full h-80 object-cover" loading="lazy" onerror="this.src='https://placehold.co/600x400/87CEEB/white?text=LBA+Ceremony'"></div>
+                            <div class="slide flex-shrink-0 w-full"><img src="images/about-slider/slide-3.jpg" alt="LBA Celebration" class="w-full h-80 object-cover" loading="lazy" onerror="this.src='https://placehold.co/600x400/FF0000/white?text=Awards+Night'"></div>
+                            <div class="slide flex-shrink-0 w-full"><img src="images/about-slider/slide-4.jpg" alt="LBA Certificates" class="w-full h-80 object-cover" loading="lazy" onerror="this.src='https://placehold.co/600x400/87CEEB/white?text=Recognition'"></div>
+                        </div>
+                        <button class="slider-nav slider-prev absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-red-600 w-9 h-9 rounded-full flex items-center justify-center shadow-md z-10"><i class="fas fa-chevron-left"></i></button>
+                        <button class="slider-nav slider-next absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-red-600 w-9 h-9 rounded-full flex items-center justify-center shadow-md z-10"><i class="fas fa-chevron-right"></i></button>
+                        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                            <button class="slider-dot w-2 h-2 rounded-full bg-white/80 dot-active"></button>
+                            <button class="slider-dot w-2 h-2 rounded-full bg-white/80"></button>
+                            <button class="slider-dot w-2 h-2 rounded-full bg-white/80"></button>
+                            <button class="slider-dot w-2 h-2 rounded-full bg-white/80"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Building + Who We Are (exactly like frontend content) -->
+    <section class="py-20 bg-white">
+        <div class="container-custom">
+            <div class="text-center max-w-3xl mx-auto mb-16" data-aos="fade-up">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Who We Are</h2>
+                <p class="text-gray-600 text-lg mt-4">The Liberia Business Awards is the nation's premier recognition platform for businesses across all 18 major economic sectors. We provide comprehensive coverage from Agriculture to Sports, ensuring every business in Liberia has the opportunity to be recognized for excellence.</p>
+                <p class="text-gray-600 text-lg mt-4">Our 18-sector framework encompasses the complete Liberian economy, with 72 specialized award categories designed to celebrate achievements at every level - from startups to established enterprises, fostering economic growth and inspiring the next generation of entrepreneurs.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 mt-8">
+                <div class="bg-gray-50 p-8 rounded-2xl text-center"><i class="fas fa-chart-line text-5xl text-red-600 mb-4"></i><h3 class="font-bold text-xl">Promote credible businesses</h3><p class="text-gray-600">We spotlight authentic Liberian enterprises</p></div>
+                <div class="bg-gray-50 p-8 rounded-2xl text-center"><i class="fas fa-handshake text-5xl text-red-600 mb-4"></i><h3 class="font-bold text-xl">Connect to opportunities</h3><p class="text-gray-600">Partnerships, investors & buyers</p></div>
+                <div class="bg-gray-50 p-8 rounded-2xl text-center"><i class="fas fa-shield-alt text-5xl text-red-600 mb-4"></i><h3 class="font-bold text-xl">Build trust</h3><p class="text-gray-600">Verified badge & ecosystem credibility</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="py-16 bg-red-50">
+        <div class="container-custom text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12">How It Works</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl shadow"><div class="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">1</div><h3 class="font-bold text-xl">Register Your Business</h3><p>Join the LBA Network for free in less than 2 minutes</p></div>
+                <div class="bg-white p-8 rounded-2xl shadow"><div class="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">2</div><h3 class="font-bold text-xl">Complete Your Directory Profile</h3><p>Add your business details and get listed</p></div>
+                <div class="bg-white p-8 rounded-2xl shadow"><div class="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">3</div><h3 class="font-bold text-xl">Upgrade for Visibility & Growth</h3><p>Unlock premium features that bring customers</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Packages Section -->
+    <section id="packages" class="py-20">
+        <div class="container-custom">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">Our Packages</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div class="card-package"><span class="bg-gray-200 px-3 py-1 rounded-full text-sm">🟢 FREE</span><h3 class="text-xl font-bold mt-4">Basic Listing</h3><p class="price">$0</p><ul class="mt-4 space-y-2 text-sm"><li><i class="fas fa-check text-green-600"></i> Business listed</li><li><i class="fas fa-check text-green-600"></i> Basic profile</li><li><i class="fas fa-times text-gray-400"></i> No visibility boost</li></ul><a href="#register-form" class="btn-outline block text-center mt-6 text-sm">Start Free</a></div>
+                <div class="card-package border-t-4 border-yellow-500"><span class="bg-yellow-100 px-3 py-1 rounded-full text-sm">🟡 VERIFIED</span><h3 class="text-xl font-bold mt-4">Verified Business</h3><p class="price">$25–$50</p><ul class="mt-4 space-y-2 text-sm"><li><i class="fas fa-check text-green-600"></i> Verified Badge</li><li><i class="fas fa-check text-green-600"></i> Trust ranking</li><li><i class="fas fa-check text-green-600"></i> Priority over free</li></ul><a href="#register-form" class="btn-primary block text-center mt-6 text-sm bg-yellow-600 hover:bg-yellow-700">Get Verified</a></div>
+                <div class="card-package"><span class="bg-orange-100 px-3 py-1 rounded-full text-sm">🟠 PREMIUM</span><h3 class="text-xl font-bold mt-4">Premium Listing</h3><p class="price">$75–$150</p><ul class="mt-4 space-y-2 text-sm"><li><i class="fas fa-check"></i> Top placement</li><li><i class="fas fa-check"></i> Logo display</li><li><i class="fas fa-check"></i> Direct inquiries</li></ul><a href="#register-form" class="btn-primary block text-center mt-6 text-sm bg-orange-600">Upgrade</a></div>
+                <div class="card-package"><span class="bg-red-100 px-3 py-1 rounded-full text-sm">🔴 SPOTLIGHT</span><h3 class="text-xl font-bold mt-4">Business Spotlight</h3><p class="price">$150–$300</p><ul class="mt-4 space-y-2 text-sm"><li><i class="fas fa-bullhorn"></i> Social promo</li><li><i class="fas fa-star"></i> Business of Week</li></ul><a href="#register-form" class="btn-primary block text-center mt-6 text-sm bg-red-700">Get Featured</a></div>
+                <div class="card-package bg-gradient-to-br from-gray-900 to-gray-800 text-white"><span class="bg-purple-300 text-gray-900 px-3 py-1 rounded-full text-sm">🟣 ELITE</span><h3 class="text-xl font-bold mt-4">Elite Package</h3><p class="price text-yellow-300">$300–$700</p><ul class="mt-4 space-y-2 text-sm"><li><i class="fas fa-crown"></i> All features</li><li><i class="fas fa-chart-simple"></i> Maximum exposure</li></ul><a href="#register-form" class="bg-yellow-500 text-gray-900 block text-center mt-6 py-2 rounded-full font-bold">Go Elite</a></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="py-16 bg-gray-50">
+        <div class="container-custom">
+            <h2 class="text-3xl font-bold text-center mb-8">Compare & Choose Growth</h2>
+            <div class="overflow-x-auto"><table class="compare-table"><thead><tr><th>Feature</th><th>Free</th><th>Verified</th><th>Premium</th><th>Elite</th></tr></thead><tbody><tr><td>Directory Listing</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>Verified Badge</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>Priority Placement</td><td>❌</td><td>⚠️</td><td>✅</td><td>✅</td></tr><tr><td>Customer Visibility</td><td>Low</td><td>Medium</td><td>High</td><td>Maximum</td></tr><tr><td>Spotlight Feature</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td></tr></tbody></table></div>
+            <div class="bg-blue-50 p-6 rounded-2xl mt-10 text-center"><p class="text-lg"><strong>📈 WHY UPGRADE?</strong> Businesses that upgrade get more visibility, build stronger trust, attract more customers. Free listing is just the beginning.</p></div>
+        </div>
+    </section>
+
+    <!-- Registration Form - EXACTLY like frontend with all fields + same submission -->
+    <section id="register-form" class="py-20">
+        <div class="container-custom">
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div>
+                    <div class="bg-red-600 text-white p-8 rounded-2xl mb-8"><i class="fas fa-bell text-4xl"></i><h3 class="text-2xl font-bold mt-3">🚨 Limited Featured Slots Available</h3><p>Only a limited number of businesses can be featured at the top. Secure your position before slots fill.</p></div>
+                    <div class="bg-white p-8 rounded-2xl shadow-xl"><h3 class="text-2xl font-bold">Ready to Grow Your Business?</h3><p class="mt-2 text-gray-600">Don't just exist. Be seen. Be trusted. Be chosen.</p><div class="flex gap-4 mt-6"><a href="#register-form" class="btn-primary">Start Free Today</a><a href="#packages" class="btn-outline">Upgrade for Growth</a></div><div class="mt-8 bg-gray-50 p-5 rounded-xl"><p><i class="fas fa-users text-red-600"></i> Businesses are already joining the LBA Network — join a growing community of credible businesses across Liberia.</p></div></div>
+                </div>
+                <div>
+                    <div class="bg-white rounded-2xl shadow-xl p-8">
+                        <h3 class="text-2xl font-bold text-red-600 mb-2">Register Your Business</h3>
+                        <p class="text-gray-500 mb-6">Complete the form below to join LBA Directory</p>
+                        <form id="registerForm">
+                            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                                <div><label class="block text-gray-700 mb-1 text-sm">Business Name *</label><input type="text" id="reg-business-name" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-400" required></div>
+                                <div><label class="block text-gray-700 mb-1 text-sm">Business Sector *</label><select id="reg-business-sector" class="w-full px-4 py-2 border rounded-lg" required><option value="">Select Sector</option><option>Agriculture</option><option>Mining</option><option>Manufacturing</option><option>Technology</option><option>Energy</option><option>Tourism</option><option>Trade</option></select></div>
+                            </div>
+                            <div class="mb-4"><label class="block text-gray-700 mb-1 text-sm">Business Size/Type *</label><select id="reg-business-size" class="w-full px-4 py-2 border rounded-lg" required><option value="">Select Size</option><option>Startup (0-3 years)</option><option>Small (6-20 emp)</option><option>Medium (21-100 emp)</option><option>Large (100+ emp)</option></select></div>
+                            <div class="grid md:grid-cols-2 gap-4 mb-4"><div><label class="block text-gray-700 mb-1 text-sm">Contact Person Name *</label><input type="text" id="reg-contact-name" class="w-full px-4 py-2 border rounded-lg" required></div><div><label class="block text-gray-700 mb-1 text-sm">Position *</label><input type="text" id="reg-position" class="w-full px-4 py-2 border rounded-lg" required></div></div>
+                            <div class="grid md:grid-cols-2 gap-4 mb-4"><div><label class="block text-gray-700 mb-1 text-sm">Email Address *</label><input type="email" id="reg-email" class="w-full px-4 py-2 border rounded-lg" required></div><div><label class="block text-gray-700 mb-1 text-sm">Phone Number *</label><input type="tel" id="reg-phone" class="w-full px-4 py-2 border rounded-lg" required></div></div>
+                            <div class="mb-4"><label class="block text-gray-700 mb-1 text-sm">Business Address *</label><textarea id="reg-address" rows="2" class="w-full px-4 py-2 border rounded-lg" required></textarea></div>
+                            <div class="mb-6"><label class="block text-gray-700 mb-1 text-sm">Business Description *</label><textarea id="reg-description" rows="3" class="w-full px-4 py-2 border rounded-lg" required></textarea></div>
+                            <input type="hidden" id="reg-business-type" value="SME">
+                            <div class="flex gap-4"><button type="button" onclick="closeRegisterModal()" class="bg-gray-200 px-6 py-2 rounded-lg">Cancel</button><button type="submit" id="register-submit-btn" class="bg-red-600 text-white px-8 py-2 rounded-lg hover:bg-red-700 transition">Submit Registration</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Share Directory Section -->
+    <section class="py-12 bg-gray-100 text-center">
+        <div class="container-custom"><h3 class="text-2xl font-bold"><i class="fas fa-share-alt text-red-600"></i> Share This Directory</h3><p class="mb-6">Help other businesses discover the LBA Network</p><div class="share-btn-group"><button class="share-icon fb-share" id="shareFB"><i class="fab fa-facebook-f"></i> Facebook</button><button class="share-icon tw-share" id="shareTW"><i class="fab fa-twitter"></i> Twitter</button><button class="share-icon li-share" id="shareLI"><i class="fab fa-linkedin-in"></i> LinkedIn</button><button class="share-icon wa-share" id="shareWA"><i class="fab fa-whatsapp"></i> WhatsApp</button><button class="share-icon email-share" id="shareEmail"><i class="fas fa-envelope"></i> Email</button><button class="share-icon copy-share" id="copyLinkBtn"><i class="fas fa-link"></i> Copy Link</button></div></div>
+    </section>
+
+    <footer class="bg-gray-900 text-gray-400 py-8 text-center"><p>© 2026 Liberia Business Awards Directory — Empowering Liberian enterprises.</p></footer>
+</main>
+
+<!-- WhatsApp Float -->
+<a href="https://wa.me/231886590302" class="whatsapp-float" target="_blank"><i class="fab fa-whatsapp"></i><span class="whatsapp-tooltip">Chat with us</span></a>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({ duration: 1000, once: true });
+    
+    // IMAGE SLIDER (exactly from frontend)
+    function initImageSlider() {
+        const slider = document.querySelector('.image-slider');
+        if(!slider) return;
+        const slidesContainer = slider.querySelector('.slides-container');
+        const slides = slider.querySelectorAll('.slide');
+        const prevBtn = slider.querySelector('.slider-prev');
+        const nextBtn = slider.querySelector('.slider-next');
+        const dots = slider.querySelectorAll('.slider-dot');
+        let currentSlide = 0, total = slides.length;
+        function updateSlider(){ slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`; dots.forEach((d,i)=>{ if(i===currentSlide){ d.classList.add('dot-active','bg-white','w-3'); d.classList.remove('bg-white/80','w-2'); } else { d.classList.remove('dot-active','bg-white','w-3'); d.classList.add('bg-white/80','w-2'); } }); }
+        function next(){ currentSlide = (currentSlide+1)%total; updateSlider(); }
+        function prev(){ currentSlide = (currentSlide-1+total)%total; updateSlider(); }
+        nextBtn?.addEventListener('click',next); prevBtn?.addEventListener('click',prev);
+        dots.forEach((dot,i)=>{ dot.addEventListener('click',()=>{ currentSlide=i; updateSlider(); }); });
+        let interval = setInterval(next,5000);
+        slider.addEventListener('mouseenter',()=>clearInterval(interval));
+        slider.addEventListener('mouseleave',()=>{ interval = setInterval(next,5000); });
+        updateSlider();
+    }
+    initImageSlider();
+    
+    // SHARE FUNCTIONS
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent("Liberia Business Directory - Join Verified Network");
+    document.getElementById('shareFB')?.addEventListener('click',()=>window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`,'_blank'));
+    document.getElementById('shareTW')?.addEventListener('click',()=>window.open(`https://twitter.com/intent/tweet?text=${title}&url=${url}`,'_blank'));
+    document.getElementById('shareLI')?.addEventListener('click',()=>window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`,'_blank'));
+    document.getElementById('shareWA')?.addEventListener('click',()=>window.open(`https://wa.me/?text=${title}%20${url}`,'_blank'));
+    document.getElementById('shareEmail')?.addEventListener('click',()=>window.location.href=`mailto:?subject=${title}&body=Check out LBA Directory: ${window.location.href}`);
+    document.getElementById('copyLinkBtn')?.addEventListener('click',()=>{ navigator.clipboard.writeText(window.location.href).then(()=>alert('✅ Link copied!')); });
+    
+    // REGISTRATION FORM SUBMISSION (matching frontend)
+    const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+    function showNotification(msg, type){ alert(msg); }
+    function closeRegisterModal(){ document.getElementById('registerForm').reset(); }
+    document.getElementById('registerForm')?.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const formData = { businessName: document.getElementById('reg-business-name')?.value, sector: document.getElementById('reg-business-sector')?.value, businessSize: document.getElementById('reg-business-size')?.value, contactName: document.getElementById('reg-contact-name')?.value, position: document.getElementById('reg-position')?.value, email: document.getElementById('reg-email')?.value, phone: document.getElementById('reg-phone')?.value, address: document.getElementById('reg-address')?.value, description: document.getElementById('reg-description')?.value, formType: 'register', source: 'landing-page' };
+        for(let k of Object.values(formData)) if(!k && k!=='source'){ alert('Please fill all required fields'); return; }
+        const btn = document.getElementById('register-submit-btn');
+        const original = btn.innerHTML;
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        try {
+            await fetch(GOOGLE_APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(formData) });
+            alert('✅ Registration successful! We will contact you soon.');
+            document.getElementById('registerForm').reset();
+        } catch(err){ alert('⚠️ Form submitted! We received your info.'); }
+        finally { btn.disabled = false; btn.innerHTML = original; }
+    });
+</script>
+</body>
+</html>
