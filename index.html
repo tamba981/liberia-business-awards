@@ -1285,15 +1285,15 @@ window.addEventListener('load', function() {
         <!-- Mobile Dropdown Menu (Appears right after logo row on mobile) -->
         <div id="mobileMenu" class="hidden lg:hidden bg-white border-t border-gray-100 mt-2">
             <div class="flex flex-col space-y-2 py-4">
-                <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">About</a>
-                <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Team Message</a>
-                <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Team</a>
-                <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Categories</a>
-                <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Featured</a>
-                <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Blog</a>
-                <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Partnership</a>
-                <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Contact</a>
-                <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Dashboard</a>
+                <a href="#about" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">About</a>
+                <a href="#Team Message" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Team Message</a>
+                <a href="#team" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Team</a>
+                <a href="#categories" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Categories</a>
+                <a href="#featured" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Featured</a>
+                <a href="#blog" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Blog</a>
+                <a href="#partnership" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Partnership</a>
+                <a href="#contact" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Contact</a>
+                <a href="dashboard/login.html" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Dashboard</a>
             </div>
         </div>
         
@@ -1340,54 +1340,93 @@ window.addEventListener('load', function() {
 </style>
 
 <script>
-    // Mobile menu toggle function
-    document.addEventListener('DOMContentLoaded', function() {
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
+    (function() {
+        // Wait for DOM to be fully loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMobileMenu);
+        } else {
+            initMobileMenu();
+        }
         
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', function(e) {
+        function initMobileMenu() {
+            console.log('Initializing mobile menu...');
+            
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            if (!mobileMenuBtn) {
+                console.error('Mobile menu button not found!');
+                return;
+            }
+            
+            if (!mobileMenu) {
+                console.error('Mobile menu element not found!');
+                return;
+            }
+            
+            console.log('Mobile menu elements found:', { mobileMenuBtn, mobileMenu });
+            
+            // Remove any existing event listeners by cloning and replacing
+            const newBtn = mobileMenuBtn.cloneNode(true);
+            mobileMenuBtn.parentNode.replaceChild(newBtn, mobileMenuBtn);
+            
+            const finalMenuBtn = document.getElementById('mobileMenuBtn');
+            const finalMenu = document.getElementById('mobileMenu');
+            
+            finalMenuBtn.addEventListener('click', function(e) {
+                e.preventDefault();
                 e.stopPropagation();
-                mobileMenu.classList.toggle('hidden');
-                // Change icon when menu is open
-                const icon = this.querySelector('i');
-                if (icon) {
-                    if (mobileMenu.classList.contains('hidden')) {
-                        icon.classList.remove('fa-times');
-                        icon.classList.add('fa-bars');
-                    } else {
+                
+                console.log('Menu button clicked');
+                
+                if (finalMenu.classList.contains('hidden')) {
+                    finalMenu.classList.remove('hidden');
+                    const icon = this.querySelector('i');
+                    if (icon) {
                         icon.classList.remove('fa-bars');
                         icon.classList.add('fa-times');
                     }
+                    console.log('Menu opened');
+                } else {
+                    finalMenu.classList.add('hidden');
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                    console.log('Menu closed');
                 }
             });
         }
-    });
+    })();
     
-    function closeMobileMenu() {
+    // Global closeMobileMenu function
+    window.closeMobileMenu = function() {
+        console.log('Closing mobile menu');
         const mobileMenu = document.getElementById('mobileMenu');
         const menuBtn = document.getElementById('mobileMenuBtn');
+        
         if (mobileMenu) {
             mobileMenu.classList.add('hidden');
-            // Reset icon back to bars
-            if (menuBtn) {
-                const icon = menuBtn.querySelector('i');
-                if (icon) {
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-bars');
-                }
+        }
+        
+        if (menuBtn) {
+            const icon = menuBtn.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
             }
         }
-    }
+    };
     
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(event) {
         const mobileMenu = document.getElementById('mobileMenu');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         
-        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-            if (!mobileMenu.contains(event.target) && !mobileMenuBtn?.contains(event.target)) {
-                closeMobileMenu();
+        if (mobileMenu && mobileMenuBtn && !mobileMenu.classList.contains('hidden')) {
+            if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                window.closeMobileMenu();
             }
         }
     });
@@ -1395,9 +1434,22 @@ window.addEventListener('load', function() {
     // Close menu on window resize (when switching to desktop)
     window.addEventListener('resize', function() {
         if (window.innerWidth >= 1024) {
-            closeMobileMenu();
+            window.closeMobileMenu();
         }
     });
+    
+    // Make sure checkNominationStatus and openModal functions exist (if not, create placeholders)
+    if (typeof checkNominationStatus === 'undefined') {
+        window.checkNominationStatus = function() {
+            alert('Nomination functionality will be available soon!');
+        };
+    }
+    
+    if (typeof openModal === 'undefined') {
+        window.openModal = function(modalId) {
+            alert('Modal ' + modalId + ' will be available soon!');
+        };
+    }
 </script>
     
     <!-- Hero Section -->
