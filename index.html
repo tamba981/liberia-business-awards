@@ -11907,398 +11907,452 @@ console.log('✅ Voting system frontend fixes applied');
 </script>
 
  <!-- ============================================ -->
-<!-- PROFESSIONAL POP-UP AD SYSTEM (Image & Video Support) -->
+<!-- NON-INTRUSIVE CORNER POP-UP AD SYSTEM -->
+<!-- Image & Video Support - Doesn't block user interaction -->
 <!-- ============================================ -->
 <style>
-    /* Popup Overlay */
-    .ad-popup-overlay {
+    /* Corner Pop-up Container */
+    .corner-ad-container {
         position: fixed;
-        top: 0;
-        left: 0;
+        bottom: 20px;
+        right: 20px;
+        z-index: 10000;
+        max-width: 360px;
+        width: calc(100% - 40px);
+        animation: slideInRight 0.4s ease-out;
+    }
+    
+    .corner-ad-container.left {
+        right: auto;
+        left: 20px;
+        animation: slideInLeft 0.4s ease-out;
+    }
+    
+    .corner-ad-container.top-right {
+        bottom: auto;
+        top: 20px;
+        right: 20px;
+        animation: slideInDown 0.4s ease-out;
+    }
+    
+    .corner-ad-container.top-left {
+        bottom: auto;
+        top: 20px;
+        left: 20px;
+        animation: slideInDown 0.4s ease-out;
+    }
+    
+    @keyframes slideInRight {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideInLeft {
+        from { transform: translateX(-400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideInDown {
+        from { transform: translateY(-100px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    /* Ad Card */
+    .corner-ad-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 0, 0, 0.2);
+        cursor: pointer;
+    }
+    
+    .corner-ad-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+    }
+    
+    /* Ad Header */
+    .corner-ad-header {
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        padding: 8px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .corner-ad-header span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .corner-ad-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s;
+    }
+    
+    .corner-ad-close:hover {
+        background: rgba(255, 255, 255, 0.4);
+        transform: scale(1.1);
+    }
+    
+    /* Ad Body */
+    .corner-ad-body {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    /* Ad Media */
+    .corner-ad-media {
+        flex-shrink: 0;
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #f0f0f0;
+    }
+    
+    .corner-ad-media img,
+    .corner-ad-media video {
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.85);
-        backdrop-filter: blur(5px);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.4s ease;
+        object-fit: cover;
     }
     
-    .ad-popup-overlay.active {
-        opacity: 1;
-        visibility: visible;
+    /* Ad Info */
+    .corner-ad-info {
+        flex: 1;
     }
     
-    /* Popup Container */
-    .ad-popup-container {
-        position: relative;
-        max-width: 90vw;
-        max-height: 90vh;
-        transform: scale(0.7);
-        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    .corner-ad-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 5px;
     }
     
-    .ad-popup-overlay.active .ad-popup-container {
-        transform: scale(1);
+    .corner-ad-description {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 10px;
+        line-height: 1.4;
     }
     
-    /* Popup Content */
-    .ad-popup-content {
-        background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        position: relative;
-        animation: popupGlow 2s ease-in-out infinite;
-    }
-    
-    @keyframes popupGlow {
-        0%, 100% { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        50% { box-shadow: 0 25px 60px -12px rgba(255, 0, 0, 0.4); }
-    }
-    
-    /* Close Button */
-    .ad-popup-close {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        width: 40px;
-        height: 40px;
-        background: rgba(0, 0, 0, 0.7);
-        border: none;
-        border-radius: 50%;
-        color: white;
-        font-size: 20px;
-        cursor: pointer;
-        z-index: 10;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .ad-popup-close:hover {
+    .corner-ad-btn {
+        display: inline-block;
         background: #FF0000;
-        transform: rotate(90deg);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
     }
     
-    /* Image Ad */
-    .ad-popup-image {
+    .corner-ad-btn:hover {
+        background: #cc0000;
+        transform: scale(1.02);
+    }
+    
+    /* Large Image Ad (Full width) */
+    .corner-ad-card.image-full .corner-ad-body {
+        flex-direction: column;
+        padding: 0;
+    }
+    
+    .corner-ad-card.image-full .corner-ad-media {
         width: 100%;
         height: auto;
-        display: block;
-        cursor: pointer;
+        border-radius: 0;
+    }
+    
+    .corner-ad-card.image-full .corner-ad-media img {
+        width: 100%;
+        height: auto;
+    }
+    
+    .corner-ad-card.image-full .corner-ad-info {
+        padding: 12px;
     }
     
     /* Video Ad */
-    .ad-popup-video {
+    .corner-ad-card.video .corner-ad-media {
         width: 100%;
-        max-width: 800px;
-        background: #000;
+        height: auto;
+        border-radius: 0;
     }
     
-    .ad-popup-video video {
+    .corner-ad-card.video .corner-ad-body {
+        flex-direction: column;
+        padding: 0;
+    }
+    
+    .corner-ad-card.video video {
         width: 100%;
-        display: block;
-    }
-    
-    /* HTML/Custom Content Ad */
-    .ad-popup-custom {
-        padding: 40px;
-        text-align: center;
-        max-width: 500px;
-    }
-    
-    .ad-popup-custom h3 {
-        font-size: 28px;
-        font-weight: 800;
-        margin-bottom: 15px;
-        color: #FF0000;
-    }
-    
-    .ad-popup-custom p {
-        font-size: 16px;
-        color: #666;
-        margin-bottom: 25px;
-    }
-    
-    .ad-popup-btn {
-        display: inline-block;
-        background: linear-gradient(135deg, #FF0000, #87CEEB);
-        color: white;
-        padding: 14px 35px;
-        border-radius: 50px;
-        text-decoration: none;
-        font-weight: 700;
-        transition: all 0.3s;
-    }
-    
-    .ad-popup-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
-    }
-    
-    /* Countdown Timer */
-    .ad-popup-timer {
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
-        padding: 8px 15px;
-        border-radius: 30px;
-        font-size: 14px;
-        font-weight: 600;
-        z-index: 10;
+        height: auto;
     }
     
     /* Progress Bar */
-    .ad-popup-progress {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 4px;
+    .corner-ad-progress {
+        height: 3px;
         background: #FF0000;
         width: 0%;
         transition: width 0.1s linear;
     }
     
     /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .ad-popup-custom {
-            padding: 25px;
-            max-width: 350px;
+    @media (max-width: 480px) {
+        .corner-ad-container {
+            max-width: 320px;
+            bottom: 15px;
+            right: 15px;
         }
-        .ad-popup-custom h3 {
-            font-size: 22px;
+        .corner-ad-title {
+            font-size: 13px;
         }
-        .ad-popup-close {
-            top: 10px;
-            right: 10px;
-            width: 32px;
-            height: 32px;
-            font-size: 16px;
+        .corner-ad-description {
+            font-size: 11px;
+        }
+        .corner-ad-media {
+            width: 65px;
+            height: 65px;
         }
     }
 </style>
 
 <script>
 // ============================================
-// PROFESSIONAL POP-UP AD SYSTEM
-// Supports: Images, Videos, Custom HTML
+// NON-INTRUSIVE CORNER POP-UP AD SYSTEM
+// Users can interact with website while ads are visible
 // ============================================
 
-const PopupAdManager = {
-    // Ad Queue - Add your ads here
+const CornerAdManager = {
+    // Ad Queue
     adQueue: [
         {
             id: 1,
-            type: "image", // "image", "video", "custom"
-            title: "Become a Member Today!",
+            type: "compact", // "compact", "image-full", "video"
+            title: "✨ Become a Member!",
             description: "Get listed in Liberia's Premier Business Directory",
-            mediaUrl: "images/LBA-cover.png", // Image path or video URL
-            ctaText: "Join Now →",
+            mediaUrl: "images/LBA-cover.png",
+            ctaText: "Join Now",
             ctaLink: "/lba-directory.html",
-            duration: 8000, // 8 seconds before auto-close
-            delay: 3000, // Show after 3 seconds
-            frequency: "once_per_session" // "once_per_session", "once_per_day", "always"
+            duration: 10000, // 10 seconds visible
+            delay: 3000,
+            position: "bottom-right", // "bottom-right", "bottom-left", "top-right", "top-left"
+            frequency: "once_per_session"
         },
         {
             id: 2,
-            type: "image",
-            title: "Nominations Now Open!",
+            type: "compact",
+            title: "🏆 Nominations Open!",
             description: "Nominate Your Business for LBA 3.0",
             mediaUrl: "images/logo.png",
-            ctaText: "Nominate Now →",
+            ctaText: "Nominate",
             ctaLink: "/#nominateModal",
-            duration: 8000,
+            duration: 10000,
             delay: 5000,
+            position: "bottom-right",
             frequency: "once_per_session"
         },
         {
             id: 3,
-            type: "custom",
-            title: "🚀 Limited Time Offer",
-            description: "Premium Directory Packages Starting at $25/month",
-            ctaText: "Upgrade Now",
+            type: "compact",
+            title: "🚀 Premium Packages",
+            description: "Starting at $25/month - Get Verified Today!",
+            mediaUrl: "",
+            ctaText: "Upgrade",
             ctaLink: "/lba-directory.html",
             duration: 10000,
             delay: 7000,
+            position: "bottom-right",
             frequency: "once_per_session"
         },
         {
             id: 4,
-            type: "video",
-            title: "Watch Our Latest Event",
-            description: "Liberia Business Awards 2025 Highlights",
-            mediaUrl: "https://www.youtube.com/embed/bIsGGJ1Zm44",
-            ctaText: "Watch Full Video",
-            ctaLink: "https://www.youtube.com/@LiberiaBusinessAwards",
-            duration: 15000,
+            type: "image-full",
+            title: "📢 Advertise With Us",
+            description: "Reach 50,000+ Monthly Visitors",
+            mediaUrl: "images/LBA-cover.png",
+            ctaText: "View Packages",
+            ctaLink: "/advertise.html",
+            duration: 12000,
             delay: 10000,
-            frequency: "once_per_session",
-            isYouTube: true
+            position: "bottom-right",
+            frequency: "once_per_session"
         },
         {
             id: 5,
-            type: "image",
-            title: "Partner With LBA",
-            description: "Sponsor the Biggest Business Event in Liberia",
-            mediaUrl: "images/LBA-cover.png",
-            ctaText: "Become a Partner",
+            type: "compact",
+            title: "🤝 Partner With LBA",
+            description: "Sponsor the Biggest Business Event",
+            mediaUrl: "",
+            ctaText: "Learn More",
             ctaLink: "/#partnership",
-            duration: 8000,
-            delay: 12000,
+            duration: 10000,
+            delay: 13000,
+            position: "bottom-right",
             frequency: "once_per_session"
         },
         {
             id: 6,
-            type: "custom",
-            title: "📢 Advertise With Us",
-            description: "Reach 50,000+ Monthly Visitors",
-            ctaText: "View Packages",
-            ctaLink: "/advertise.html",
-            duration: 8000,
-            delay: 15000,
-            frequency: "once_per_session"
+            type: "video",
+            title: "Watch Our Event Highlights",
+            description: "Liberia Business Awards 2025",
+            mediaUrl: "https://www.youtube.com/embed/bIsGGJ1Zm44",
+            ctaText: "Watch Now",
+            ctaLink: "https://www.youtube.com/@LiberiaBusinessAwards",
+            duration: 15000,
+            delay: 16000,
+            position: "bottom-right",
+            frequency: "once_per_session",
+            isYouTube: true
         }
     ],
     
-    // Track shown ads
-    shownAds: [],
-    currentAdIndex: 0,
-    isShowing: false,
-    countdownInterval: null,
+    currentAd: null,
+    currentTimeout: null,
+    progressInterval: null,
+    isVisible: false,
+    adContainer: null,
     
-    // Check if ad should be shown based on frequency
+    // Check if ad should be shown
     shouldShowAd: function(ad) {
-        const storageKey = `popup_ad_${ad.id}_shown`;
-        const lastShown = localStorage.getItem(storageKey);
-        const now = Date.now();
+        const storageKey = `corner_ad_${ad.id}_shown`;
+        const sessionKey = `corner_ad_${ad.id}_session`;
         
         switch(ad.frequency) {
             case "once_per_session":
-                return !sessionStorage.getItem(storageKey);
+                return !sessionStorage.getItem(sessionKey);
             case "once_per_day":
+                const lastShown = localStorage.getItem(storageKey);
                 if (!lastShown) return true;
-                const lastShownDate = new Date(parseInt(lastShown));
+                const lastDate = new Date(parseInt(lastShown));
                 const today = new Date();
-                return lastShownDate.toDateString() !== today.toDateString();
-            case "always":
-                return true;
+                return lastDate.toDateString() !== today.toDateString();
             default:
-                return !sessionStorage.getItem(storageKey);
+                return true;
         }
     },
     
     // Mark ad as shown
     markAdAsShown: function(ad) {
-        const storageKey = `popup_ad_${ad.id}_shown`;
-        sessionStorage.setItem(storageKey, 'true');
+        const storageKey = `corner_ad_${ad.id}_shown`;
+        const sessionKey = `corner_ad_${ad.id}_session`;
+        sessionStorage.setItem(sessionKey, 'true');
         localStorage.setItem(storageKey, Date.now().toString());
-        this.shownAds.push(ad.id);
     },
     
-    // Create popup HTML
-    createPopupHTML: function(ad) {
-        let contentHtml = '';
+    // Create ad HTML
+    createAdHTML: function(ad) {
+        let mediaHtml = '';
+        let bodyClass = '';
         
         switch(ad.type) {
-            case "image":
-                contentHtml = `
-                    <img src="${ad.mediaUrl}" alt="${ad.title}" class="ad-popup-image" style="max-width: 600px; width: 100%; cursor: pointer;" onclick="window.location.href='${ad.ctaLink}'">
-                    <div class="ad-popup-timer" id="popupTimer">Closing in 8s</div>
-                    <div class="ad-popup-progress" id="popupProgress"></div>
-                `;
-                break;
-                
-            case "video":
-                if (ad.isYouTube) {
-                    contentHtml = `
-                        <div class="ad-popup-video">
-                            <iframe src="${ad.mediaUrl}?autoplay=1&mute=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 400px; max-width: 800px;"></iframe>
+            case "compact":
+                bodyClass = 'compact';
+                if (ad.mediaUrl) {
+                    mediaHtml = `
+                        <div class="corner-ad-media">
+                            <img src="${ad.mediaUrl}" alt="${ad.title}" loading="lazy">
                         </div>
-                        <div class="ad-popup-timer" id="popupTimer">Closing in 15s</div>
-                        <div class="ad-popup-progress" id="popupProgress"></div>
-                    `;
-                } else {
-                    contentHtml = `
-                        <div class="ad-popup-video">
-                            <video autoplay muted loop playsinline>
-                                <source src="${ad.mediaUrl}" type="video/mp4">
-                            </video>
-                        </div>
-                        <div class="ad-popup-timer" id="popupTimer">Closing in ${Math.floor(ad.duration/1000)}s</div>
-                        <div class="ad-popup-progress" id="popupProgress"></div>
                     `;
                 }
                 break;
                 
-            case "custom":
-                contentHtml = `
-                    <div class="ad-popup-custom">
-                        <div style="font-size: 50px; margin-bottom: 15px;">🎉</div>
-                        <h3>${ad.title}</h3>
-                        <p>${ad.description}</p>
-                        <a href="${ad.ctaLink}" class="ad-popup-btn">${ad.ctaText}</a>
-                        <div class="ad-popup-timer" id="popupTimer">Closing in ${Math.floor(ad.duration/1000)}s</div>
-                        <div class="ad-popup-progress" id="popupProgress"></div>
+            case "image-full":
+                bodyClass = 'image-full';
+                mediaHtml = `
+                    <div class="corner-ad-media">
+                        <img src="${ad.mediaUrl}" alt="${ad.title}" style="width:100%; height:auto;" loading="lazy">
                     </div>
                 `;
+                break;
+                
+            case "video":
+                bodyClass = 'video';
+                if (ad.isYouTube) {
+                    mediaHtml = `
+                        <div class="corner-ad-media">
+                            <iframe src="${ad.mediaUrl}?autoplay=1&mute=1&playsinline=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%; height:180px;"></iframe>
+                        </div>
+                    `;
+                } else {
+                    mediaHtml = `
+                        <div class="corner-ad-media">
+                            <video autoplay muted loop playsinline>
+                                <source src="${ad.mediaUrl}" type="video/mp4">
+                            </video>
+                        </div>
+                    `;
+                }
                 break;
         }
         
         return `
-            <div class="ad-popup-overlay" id="popupOverlay">
-                <div class="ad-popup-container">
-                    <div class="ad-popup-content">
-                        <button class="ad-popup-close" onclick="PopupAdManager.closePopup()">✕</button>
-                        ${contentHtml}
+            <div class="corner-ad-card ${bodyClass}" onclick="event.stopPropagation(); window.location.href='${ad.ctaLink}'">
+                <div class="corner-ad-header">
+                    <span><i class="fas fa-ad"></i> Advertisement</span>
+                    <button class="corner-ad-close" onclick="event.stopPropagation(); CornerAdManager.closeAd()">✕</button>
+                </div>
+                ${mediaHtml}
+                <div class="corner-ad-body">
+                    <div class="corner-ad-info">
+                        <div class="corner-ad-title">${ad.title}</div>
+                        <div class="corner-ad-description">${ad.description}</div>
+                        <a href="${ad.ctaLink}" class="corner-ad-btn" onclick="event.stopPropagation()">${ad.ctaText} →</a>
                     </div>
                 </div>
+                <div class="corner-ad-progress" id="cornerAdProgress"></div>
             </div>
         `;
     },
     
-    // Show popup
-    showPopup: function(ad) {
-        if (this.isShowing) return;
+    // Show ad
+    showAd: function(ad) {
+        if (this.isVisible) return;
         if (!this.shouldShowAd(ad)) return;
         
-        this.isShowing = true;
+        // Remove existing ad container
+        if (this.adContainer) {
+            this.adContainer.remove();
+        }
         
-        // Remove existing popup
-        const existingPopup = document.getElementById('popupAdContainer');
-        if (existingPopup) existingPopup.remove();
+        // Create container
+        this.adContainer = document.createElement('div');
+        this.adContainer.className = `corner-ad-container ${ad.position || 'bottom-right'}`;
+        this.adContainer.innerHTML = this.createAdHTML(ad);
+        document.body.appendChild(this.adContainer);
         
-        // Create popup container
-        const popupDiv = document.createElement('div');
-        popupDiv.id = 'popupAdContainer';
-        popupDiv.innerHTML = this.createPopupHTML(ad);
-        document.body.appendChild(popupDiv);
-        
-        // Mark as shown
+        this.currentAd = ad;
+        this.isVisible = true;
         this.markAdAsShown(ad);
         
-        // Show with animation
-        setTimeout(() => {
-            const overlay = document.getElementById('popupOverlay');
-            if (overlay) overlay.classList.add('active');
-            this.startCountdown(ad.duration);
-        }, 100);
+        // Start progress bar animation
+        this.startProgressBar(ad.duration);
         
         // Auto close after duration
-        this.autoCloseTimeout = setTimeout(() => {
-            this.closePopup();
+        this.currentTimeout = setTimeout(() => {
+            this.closeAd();
         }, ad.duration);
         
-        // Track in analytics if available
+        // Track analytics
         if (typeof gtag !== 'undefined') {
-            gtag('event', 'popup_ad_view', {
+            gtag('event', 'corner_ad_view', {
                 'ad_id': ad.id,
                 'ad_title': ad.title,
                 'ad_type': ad.type
@@ -12306,59 +12360,52 @@ const PopupAdManager = {
         }
     },
     
-    // Start countdown timer
-    startCountdown: function(duration) {
-        let remaining = duration / 1000;
-        const timerElement = document.getElementById('popupTimer');
-        const progressElement = document.getElementById('popupProgress');
+    // Start progress bar
+    startProgressBar: function(duration) {
+        const progressBar = document.getElementById('cornerAdProgress');
+        if (!progressBar) return;
+        
         const startTime = Date.now();
         
-        if (this.countdownInterval) clearInterval(this.countdownInterval);
+        if (this.progressInterval) clearInterval(this.progressInterval);
         
-        this.countdownInterval = setInterval(() => {
+        this.progressInterval = setInterval(() => {
             const elapsed = Date.now() - startTime;
-            const remainingSec = Math.max(0, Math.ceil((duration - elapsed) / 1000));
-            const progress = ((elapsed / duration) * 100);
-            
-            if (timerElement) {
-                timerElement.textContent = `Closing in ${remainingSec}s`;
+            const progress = (elapsed / duration) * 100;
+            if (progressBar) {
+                progressBar.style.width = `${Math.min(progress, 100)}%`;
             }
-            if (progressElement) {
-                progressElement.style.width = `${progress}%`;
-            }
-            
             if (elapsed >= duration) {
-                clearInterval(this.countdownInterval);
+                clearInterval(this.progressInterval);
             }
-        }, 100);
+        }, 50);
     },
     
-    // Close popup
-    closePopup: function() {
-        const overlay = document.getElementById('popupOverlay');
-        if (overlay) {
-            overlay.classList.remove('active');
+    // Close current ad
+    closeAd: function() {
+        if (this.adContainer) {
+            this.adContainer.style.opacity = '0';
+            this.adContainer.style.transform = 'translateX(100%)';
             setTimeout(() => {
-                const container = document.getElementById('popupAdContainer');
-                if (container) container.remove();
-                this.isShowing = false;
-            }, 400);
+                if (this.adContainer) this.adContainer.remove();
+                this.isVisible = false;
+                this.currentAd = null;
+            }, 300);
         }
         
-        if (this.autoCloseTimeout) clearTimeout(this.autoCloseTimeout);
-        if (this.countdownInterval) clearInterval(this.countdownInterval);
+        if (this.currentTimeout) clearTimeout(this.currentTimeout);
+        if (this.progressInterval) clearInterval(this.progressInterval);
         
-        // Track close event
+        // Track close
         if (typeof gtag !== 'undefined') {
-            gtag('event', 'popup_ad_close', {
+            gtag('event', 'corner_ad_close', {
                 'event_category': 'ad_interaction'
             });
         }
     },
     
-    // Start the ad rotation
+    // Start ad rotation
     startAdRotation: function() {
-        // Filter ads that haven't been shown in this session
         const availableAds = this.adQueue.filter(ad => this.shouldShowAd(ad));
         
         if (availableAds.length === 0) {
@@ -12366,81 +12413,52 @@ const PopupAdManager = {
             return;
         }
         
-        // Show first ad
-        this.currentAdIndex = 0;
-        const firstAd = availableAds[0];
+        let cumulativeDelay = 0;
         
-        setTimeout(() => {
-            this.showPopup(firstAd);
-        }, firstAd.delay || 3000);
-        
-        // Schedule remaining ads
-        let cumulativeDelay = (firstAd.delay || 3000) + (firstAd.duration || 8000) + 5000; // +5 seconds between ads
-        
-        for (let i = 1; i < availableAds.length; i++) {
-            const ad = availableAds[i];
+        availableAds.forEach((ad, index) => {
+            const delay = ad.delay + cumulativeDelay;
             setTimeout(() => {
-                if (!this.isShowing) {
-                    this.showPopup(ad);
+                if (!this.isVisible) {
+                    this.showAd(ad);
                 }
-            }, cumulativeDelay);
-            cumulativeDelay += (ad.delay || 3000) + (ad.duration || 8000) + 5000;
-        }
+            }, delay);
+            cumulativeDelay += ad.duration + 5000; // +5 seconds gap between ads
+        });
     },
     
-    // Manually add a new ad
+    // Add new ad
     addAd: function(adData) {
         this.adQueue.push(adData);
-        console.log(`✅ New popup ad added: ${adData.title}`);
+        console.log(`✅ New corner ad added: ${adData.title}`);
     }
 };
 
-// Initialize popup ads when page loads
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Start showing popup ads after page load
     setTimeout(() => {
-        PopupAdManager.startAdRotation();
+        CornerAdManager.startAdRotation();
     }, 2000);
 });
 
-// Example: How to add a video ad for a paying customer
-function addCustomerVideoAd(businessName, videoUrl, ctaLink, ctaText) {
-    PopupAdManager.addAd({
-        id: PopupAdManager.adQueue.length + 1,
-        type: "video",
-        title: businessName,
-        description: "Watch our video to learn more",
-        mediaUrl: videoUrl,
-        ctaText: ctaText,
-        ctaLink: ctaLink,
-        duration: 10000,
-        delay: 5000,
-        frequency: "once_per_session",
-        isYouTube: videoUrl.includes('youtube') || videoUrl.includes('youtu.be')
-    });
-}
-
-// Example: How to add an image ad for a paying customer
-function addCustomerImageAd(businessName, imageUrl, ctaLink, ctaText, description = "") {
-    PopupAdManager.addAd({
-        id: PopupAdManager.adQueue.length + 1,
-        type: "image",
+// Helper functions for customers
+function addCustomerCornerAd(businessName, description, imageUrl, ctaLink, ctaText, type = "compact") {
+    CornerAdManager.addAd({
+        id: CornerAdManager.adQueue.length + 1,
+        type: type,
         title: businessName,
         description: description,
         mediaUrl: imageUrl,
         ctaText: ctaText,
         ctaLink: ctaLink,
-        duration: 8000,
+        duration: 10000,
         delay: 5000,
+        position: "bottom-right",
         frequency: "once_per_session"
     });
 }
 
-// Example usage for paying customers:
-// addCustomerImageAd("ABC Store", "images/abc-ad.jpg", "https://abcstore.com", "Shop Now", "Get 20% off your first order");
-// addCustomerVideoAd("XYZ Company", "https://www.youtube.com/embed/VIDEO_ID", "https://xyz.com", "Watch Now");
-</script> 
-    
+// Example: addCustomerCornerAd("ABC Store", "Get 20% off your first order", "images/abc-ad.jpg", "https://abcstore.com", "Shop Now", "compact");
+</script>
 
 </body>
 
