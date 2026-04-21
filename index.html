@@ -11480,6 +11480,179 @@ console.log('✅ Voting system frontend fixes applied');
         .lba-chat-container { width: min(320px, 92vw); height: min(500px, 60vh); right: -10px; }
         .lba-chat-messages { padding: 15px; }
     }
+
+/* ============================================ */
+/* AD DISPLAY SYSTEM - POPUP ADS */
+/* ============================================ */
+
+/* Floating Ad Container */
+.floating-ad {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    z-index: 9998;
+    overflow: hidden;
+    animation: slideInRight 0.5s ease;
+    border: 1px solid #e5e7eb;
+}
+
+.floating-ad.minimized {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.floating-ad.minimized .ad-content,
+.floating-ad.minimized .ad-header span {
+    display: none;
+}
+
+.floating-ad.minimized .ad-header {
+    justify-content: center;
+    padding: 12px;
+}
+
+.floating-ad.minimized .ad-close {
+    display: none;
+}
+
+.ad-header {
+    background: linear-gradient(135deg, #FF0000, #87CEEB);
+    color: white;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.ad-header span {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.ad-close {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.ad-close:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.ad-content {
+    padding: 20px;
+    text-align: center;
+}
+
+.ad-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.ad-content h4 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #1a202c;
+}
+
+.ad-content p {
+    font-size: 13px;
+    color: #6c757d;
+    margin-bottom: 12px;
+}
+
+.ad-btn {
+    background: #FF0000;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    transition: all 0.3s;
+}
+
+.ad-btn:hover {
+    background: #cc0000;
+    transform: scale(1.05);
+}
+
+/* Sidebar Ad */
+.sidebar-ad-container {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+.sidebar-ad-container img {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.sidebar-ad-label {
+    font-size: 10px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+/* In-content Ad */
+.in-content-ad-container {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 30px 0;
+    text-align: center;
+    border: 1px dashed #FF0000;
+}
+
+/* Top Banner Ad */
+.top-banner-ad {
+    background: #f8f9fa;
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .floating-ad {
+        width: 260px;
+        bottom: 80px;
+        right: 10px;
+    }
+}
 </style>
 
 <script>
@@ -11733,6 +11906,289 @@ console.log('✅ Voting system frontend fixes applied');
     });
 </script>
 
+ <!-- ============================================ -->
+<!-- AD MANAGEMENT SYSTEM - LBA SELF PROMOTION -->
+<!-- ============================================ -->
+<script>
+// Ad Management System - Promote LBA Services
+const AdManager = {
+    // Current ads - Promoting LBA's own services
+    activeAds: [
+        {
+            id: 1,
+            businessName: "Liberia Business Awards",
+            package: "Premium",
+            imageUrl: "images/LBA-cover.png",
+            linkUrl: "/lba-directory.html",
+            description: "✨ Become a Member Today! Get Listed in Liberia's Premier Business Directory",
+            ctaText: "Join Now →",
+            startDate: "2026-01-01",
+            endDate: "2026-12-31",
+            placement: "floating"
+        },
+        {
+            id: 2,
+            businessName: "Liberia Business Awards",
+            package: "Premium",
+            imageUrl: "images/logo.png",
+            linkUrl: "/#nominateModal",
+            description: "🏆 Nominations Now Open! Nominate Your Business for LBA 3.0",
+            ctaText: "Nominate Now →",
+            startDate: "2026-03-01",
+            endDate: "2026-05-30",
+            placement: "floating"
+        },
+        {
+            id: 3,
+            businessName: "LBA Directory",
+            package: "Standard",
+            imageUrl: "",
+            linkUrl: "/lba-directory.html",
+            description: "💼 List Your Business for FREE - Join 500+ Liberian Businesses",
+            ctaText: "Get Listed",
+            startDate: "2026-01-01",
+            endDate: "2026-12-31",
+            placement: "sidebar"
+        },
+        {
+            id: 4,
+            businessName: "LBA Advertising",
+            package: "Standard",
+            imageUrl: "",
+            linkUrl: "/advertise.html",
+            description: "📢 Advertise With Us - Reach 50K+ Monthly Visitors",
+            ctaText: "View Packages",
+            startDate: "2026-01-01",
+            endDate: "2026-12-31",
+            placement: "sidebar"
+        },
+        {
+            id: 5,
+            businessName: "Liberia Business Awards",
+            package: "Premium",
+            imageUrl: "images/LBA-cover.png",
+            linkUrl: "/#partnership",
+            description: "🤝 Partner With LBA - Sponsor the Biggest Business Event in Liberia",
+            ctaText: "Become a Partner",
+            startDate: "2026-01-01",
+            endDate: "2026-12-31",
+            placement: "banner"
+        },
+        {
+            id: 6,
+            businessName: "LBA 3.0",
+            package: "Elite",
+            imageUrl: "",
+            linkUrl: "/#timeline",
+            description: "📅 Awards Ceremony December 19 - Save the Date! Get Your Tickets Now",
+            ctaText: "Learn More",
+            startDate: "2026-11-01",
+            endDate: "2026-12-19",
+            placement: "incontent"
+        },
+        {
+            id: 7,
+            businessName: "Liberia Business Awards",
+            package: "Premium",
+            imageUrl: "images/logo.png",
+            linkUrl: "/lba-directory.html",
+            description: "🚀 Premium Directory Packages Starting at $25/month - Get Verified Today!",
+            ctaText: "Upgrade Now",
+            startDate: "2026-01-01",
+            endDate: "2026-12-31",
+            placement: "floating"
+        }
+    ],
+    
+    // Track which ads have been shown
+    adIndex: 0,
+    
+    // Display floating ad
+    showFloatingAd: function(ad) {
+        // Remove existing floating ad
+        const existingAd = document.querySelector('.floating-ad');
+        if (existingAd) existingAd.remove();
+        
+        const adDiv = document.createElement('div');
+        adDiv.className = 'floating-ad';
+        adDiv.innerHTML = `
+            <div class="ad-header">
+                <span><i class="fas fa-ad"></i> Special Offer</span>
+                <button class="ad-close" onclick="this.closest('.floating-ad').remove()">✕</button>
+            </div>
+            <div class="ad-content">
+                ${ad.imageUrl ? `<img src="${ad.imageUrl}" alt="${ad.businessName}" onerror="this.style.display='none'" style="max-width:100%; border-radius:8px;">` : ''}
+                <h4>${ad.businessName}</h4>
+                <p>${ad.description}</p>
+                <a href="${ad.linkUrl}" target="_blank" class="ad-btn" onclick="if(this.href.includes('#') && !this.href.includes('http')) { event.preventDefault(); window.location.href=this.href; }">${ad.ctaText}</a>
+            </div>
+        `;
+        document.body.appendChild(adDiv);
+        
+        // Auto-hide after 12 seconds
+        setTimeout(() => {
+            if (adDiv && adDiv.parentNode) {
+                adDiv.style.opacity = '0';
+                setTimeout(() => {
+                    if (adDiv.parentNode) adDiv.remove();
+                }, 300);
+            }
+        }, 12000);
+    },
+    
+    // Rotate through different floating ads
+    showRotatingFloatingAd: function() {
+        const floatingAds = this.activeAds.filter(ad => ad.placement === 'floating');
+        if (floatingAds.length === 0) return;
+        
+        // Show current ad
+        const ad = floatingAds[this.adIndex % floatingAds.length];
+        this.showFloatingAd(ad);
+        
+        // Move to next ad for next time
+        this.adIndex++;
+        
+        // Save which ad to show next
+        localStorage.setItem('nextFloatingAdIndex', this.adIndex);
+    },
+    
+    // Load all active ads
+    loadAds: function() {
+        // Restore ad index from localStorage
+        const savedIndex = localStorage.getItem('nextFloatingAdIndex');
+        if (savedIndex) this.adIndex = parseInt(savedIndex);
+        
+        // Show rotating floating ad (only if not closed recently)
+        const floatingAdShown = localStorage.getItem('floatingAdShown');
+        if (!floatingAdShown || Date.now() - parseInt(floatingAdShown) > 3600000) {
+            setTimeout(() => this.showRotatingFloatingAd(), 3000);
+            localStorage.setItem('floatingAdShown', Date.now().toString());
+        }
+        
+        // Add sidebar ads (show 2 different ones)
+        const sidebarAds = this.activeAds.filter(ad => ad.placement === 'sidebar');
+        if (sidebarAds.length > 0 && document.getElementById('sidebarAds')) {
+            let sidebarHtml = '<div class="space-y-4">';
+            // Show up to 2 sidebar ads
+            const adsToShow = sidebarAds.slice(0, 2);
+            adsToShow.forEach(ad => {
+                sidebarHtml += `
+                    <div class="sidebar-ad-container">
+                        <div class="sidebar-ad-label">✨ Promotion</div>
+                        ${ad.imageUrl ? `<img src="${ad.imageUrl}" alt="${ad.businessName}" onerror="this.style.display='none'" style="max-width:100%; border-radius:8px;">` : ''}
+                        <div style="padding: 10px;">
+                            <h4 style="font-size:15px; font-weight:bold; margin:5px 0; color:#1a202c;">${ad.businessName}</h4>
+                            <p style="font-size:12px; color:#666; margin-bottom:10px;">${ad.description}</p>
+                            <a href="${ad.linkUrl}" onclick="if(this.href.includes('#') && !this.href.includes('http')) { event.preventDefault(); window.location.href=this.href; }" style="display:inline-block; background:#FF0000; color:white; padding:8px 20px; border-radius:30px; font-size:12px; text-decoration:none; font-weight:600;">${ad.ctaText}</a>
+                        </div>
+                    </div>
+                `;
+            });
+            sidebarHtml += '</div>';
+            const sidebarContainer = document.getElementById('sidebarAds');
+            if (sidebarContainer) sidebarContainer.innerHTML = sidebarHtml;
+        }
+        
+        // Add top banner ad
+        const bannerAd = this.activeAds.find(ad => ad.placement === 'banner');
+        if (bannerAd && document.getElementById('topBannerAd')) {
+            document.getElementById('topBannerAd').innerHTML = `
+                <div class="top-banner-ad" style="background: linear-gradient(135deg, #1a202c, #2d3748); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                    <div style="font-size:11px; color:#9ca3af; margin-bottom:5px;">⭐ Featured Opportunity</div>
+                    <a href="${bannerAd.linkUrl}" onclick="if(this.href.includes('#') && !this.href.includes('http')) { event.preventDefault(); window.location.href=this.href; }" style="color: white; text-decoration: none; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="flex:1;">
+                            <strong style="font-size:16px;">${bannerAd.businessName}</strong>
+                            <p style="font-size:13px; margin-top:5px;">${bannerAd.description}</p>
+                        </div>
+                        <span style="background: #FF0000; padding: 8px 20px; border-radius: 30px; font-size:13px; font-weight:600;">${bannerAd.ctaText}</span>
+                    </a>
+                </div>
+            `;
+        }
+        
+        // Add in-content ad (between sections)
+        const inContentAd = this.activeAds.find(ad => ad.placement === 'incontent');
+        if (inContentAd && document.getElementById('inContentAd')) {
+            document.getElementById('inContentAd').innerHTML = `
+                <div class="in-content-ad-container" style="background: linear-gradient(135deg, #fff5f5, #fff0f0); border: 2px solid #FF0000;">
+                    <div style="font-size:11px; color:#FF0000; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">🚀 Limited Time Offer</div>
+                    <h4 style="font-size:18px; font-weight:bold; margin-bottom:8px;">${inContentAd.businessName}</h4>
+                    <p style="font-size:14px; margin-bottom:12px;">${inContentAd.description}</p>
+                    <a href="${inContentAd.linkUrl}" onclick="if(this.href.includes('#') && !this.href.includes('http')) { event.preventDefault(); window.location.href=this.href; }" style="display:inline-block; background:#FF0000; color:white; padding:10px 30px; border-radius:40px; text-decoration:none; font-weight:600;">${inContentAd.ctaText}</a>
+                </div>
+            `;
+        }
+    },
+    
+    // Manually add a new ad (for when you sell to a customer)
+    addAd: function(adData) {
+        this.activeAds.push(adData);
+        console.log('✅ New ad added:', adData.businessName);
+        // Reload ads to show the new one
+        this.loadAds();
+    }
+};
+
+// Initialize ads when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add sidebar ad container if it doesn't exist
+    if (!document.getElementById('sidebarAds')) {
+        const sidebar = document.querySelector('.w-full.md\\:w-1\\/2:last-child');
+        if (sidebar) {
+            const adContainer = document.createElement('div');
+            adContainer.id = 'sidebarAds';
+            adContainer.className = 'mt-8';
+            sidebar.appendChild(adContainer);
+        }
+    }
+    
+    // Add top banner ad container
+    if (!document.getElementById('topBannerAd')) {
+        const heroSection = document.querySelector('.hero-bg');
+        if (heroSection) {
+            const bannerContainer = document.createElement('div');
+            bannerContainer.id = 'topBannerAd';
+            bannerContainer.className = 'container mx-auto px-4 mt-4';
+            heroSection.parentNode.insertBefore(bannerContainer, heroSection);
+        }
+    }
+    
+    // Add in-content ad container (between sections)
+    if (!document.getElementById('inContentAd')) {
+        const categoriesSection = document.getElementById('categories');
+        if (categoriesSection) {
+            const inContentContainer = document.createElement('div');
+            inContentContainer.id = 'inContentAd';
+            inContentContainer.className = 'container mx-auto px-4 my-8';
+            categoriesSection.insertAdjacentElement('afterend', inContentContainer);
+        }
+    }
+    
+    // Load ads
+    AdManager.loadAds();
+});
+
+// Helper function to add new customer ads (use this when you sell ad space)
+function addCustomerAd(businessName, description, linkUrl, ctaText, placement = 'sidebar') {
+    AdManager.addAd({
+        id: AdManager.activeAds.length + 1,
+        businessName: businessName,
+        package: "Customer",
+        imageUrl: "",
+        linkUrl: linkUrl,
+        description: description,
+        ctaText: ctaText,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+        placement: placement
+    });
+    console.log(`✅ Customer ad for ${businessName} added!`);
+}
+
+// Example: How to add a paying customer's ad
+// addCustomerAd("ABC Store", "Get 20% off your first purchase", "https://abcstore.com", "Shop Now", "sidebar");
+</script>   
+    
 
 </body>
 
