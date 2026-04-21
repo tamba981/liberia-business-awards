@@ -1472,6 +1472,178 @@ app.delete('/api/business/nominations/:id', authenticate, authorize('business'),
     }
 });
 
+// ============ VIEW DOCUMENT (INLINE) ============
+app.get('/api/business/documents/:id/view', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const document = await BusinessDocument.findOne({
+            _id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        // Construct full file path
+        const filePath = path.join(__dirname, document.file_url);
+        
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: 'File not found on server' });
+        }
+        
+        // Get file extension and set appropriate content type
+        const ext = path.extname(document.file_name || document.file_url).toLowerCase();
+        let contentType = 'application/octet-stream';
+        
+        switch(ext) {
+            case '.pdf':
+                contentType = 'application/pdf';
+                break;
+            case '.jpg':
+            case '.jpeg':
+                contentType = 'image/jpeg';
+                break;
+            case '.png':
+                contentType = 'image/png';
+                break;
+            case '.gif':
+                contentType = 'image/gif';
+                break;
+            case '.doc':
+                contentType = 'application/msword';
+                break;
+            case '.docx':
+                contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                break;
+        }
+        
+        // Set headers for inline viewing
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `inline; filename="${document.name || 'document'}${ext}"`);
+        
+        // Stream the file
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        
+    } catch (error) {
+        console.error('View document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ DOWNLOAD DOCUMENT ============
+app.get('/api/business/documents/:id/download', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const document = await BusinessDocument.findOne({
+            _id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        // Construct full file path
+        const filePath = path.join(__dirname, document.file_url);
+        
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: 'File not found on server' });
+        }
+        
+        // Get file extension
+        const ext = path.extname(document.file_name || document.file_url);
+        
+        // Set headers for download (force download)
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${document.name || 'document'}${ext}"`);
+        
+        // Stream the file
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        
+    } catch (error) {
+        console.error('Download document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN VIEW DOCUMENT (for admin dashboard) ============
+app.get('/api/admin/documents/:id/view', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const document = await BusinessDocument.findById(req.params.id);
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        // Construct full file path
+        const filePath = path.join(__dirname, document.file_url);
+        
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: 'File not found on server' });
+        }
+        
+        // Get file extension
+        const ext = path.extname(document.file_name || document.file_url).toLowerCase();
+        let contentType = 'application/octet-stream';
+        
+        switch(ext) {
+            case '.pdf':
+                contentType = 'application/pdf';
+                break;
+            case '.jpg':
+            case '.jpeg':
+                contentType = 'image/jpeg';
+                break;
+            case '.png':
+                contentType = 'image/png';
+                break;
+        }
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `inline; filename="${document.name}${ext}"`);
+        
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        
+    } catch (error) {
+        console.error('Admin view document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN DOWNLOAD DOCUMENT ============
+app.get('/api/admin/documents/:id/download', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const document = await BusinessDocument.findById(req.params.id);
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        const filePath = path.join(__dirname, document.file_url);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: 'File not found on server' });
+        }
+        
+        const ext = path.extname(document.file_name || document.file_url);
+        
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${document.name}${ext}"`);
+        
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        
+    } catch (error) {
+        console.error('Admin download document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============ BUSINESS DOCUMENT ROUTES ============
 
 // Get business documents
@@ -1518,11 +1690,14 @@ app.post('/api/business/documents', authenticate, authorize('business'), upload.
             return res.status(400).json({ success: false, message: 'Document name is required' });
         }
         
+        // IMPORTANT: Store the correct file path for retrieval
+        const fileUrl = `/uploads/${req.file.filename}`;
+        
         const document = new BusinessDocument({
             business_id: req.user._id,
             name,
             type: type || 'other',
-            file_url: `/uploads/${req.file.filename}`,
+            file_url: fileUrl,  // Store relative path
             file_name: req.file.originalname,
             file_size: req.file.size,
             mime_type: req.file.mimetype
@@ -1544,7 +1719,6 @@ app.post('/api/business/documents', authenticate, authorize('business'), upload.
         res.status(500).json({ success: false, message: error.message });
     }
 });
-
 // Delete document
 app.delete('/api/business/documents/:id', authenticate, authorize('business'), async (req, res) => {
     try {
