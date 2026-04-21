@@ -1333,21 +1333,70 @@
         }
 
         async function apiRequest(endpoint, options = {}) {
-            const token = localStorage.getItem('lba_auth_token');
-            const defaultOptions = { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' } };
-            if (options.body instanceof FormData) delete defaultOptions.headers['Content-Type'];
-            const fetchOptions = { ...defaultOptions, ...options, headers: { ...defaultOptions.headers, ...options.headers } };
-            try {
-                let cleanEndpoint = endpoint;
-                if (cleanEndpoint.startsWith('/api/')) cleanEndpoint = cleanEndpoint.substring(4);
-                const url = `${BACKEND_URL}${cleanEndpoint}`;
-                const response = await fetch(url, fetchOptions);
-                if (response.status === 401) { showToast('Session expired. Please login again.', 'error'); setTimeout(logout, 2000); throw new Error('Unauthorized'); }
-                if (response.status === 403) { showToast('Access denied', 'error'); throw new Error('Forbidden'); }
-                if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.message || `HTTP ${response.status}`); }
-                return await response.json();
-            } catch (error) { console.error('API Error:', error); throw error; }
+    const token = localStorage.getItem('lba_auth_token');
+    
+    // Build the URL correctly
+    let url;
+    if (endpoint.startsWith('/api/')) {
+        url = `${BACKEND_URL}${endpoint}`;
+    } else if (endpoint.startsWith('http')) {
+        url = endpoint;
+    } else {
+        url = `${BACKEND_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    }
+    
+    console.log('🌐 API Request:', url);
+    
+    const defaultOptions = { 
+        headers: { 
+            'Authorization': `Bearer ${token}`, 
+            'Accept': 'application/json'
+        } 
+    };
+    
+    // Don't set Content-Type for FormData (browser will set it with boundary)
+    if (!(options.body instanceof FormData)) {
+        defaultOptions.headers['Content-Type'] = 'application/json';
+    }
+    
+    const fetchOptions = { 
+        ...defaultOptions, 
+        ...options, 
+        headers: { ...defaultOptions.headers, ...options.headers } 
+    };
+    
+    try {
+        const response = await fetch(url, fetchOptions);
+        
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            setTimeout(logout, 2000);
+            throw new Error('Unauthorized');
         }
+        
+        if (response.status === 403) {
+            showToast('Access denied', 'error');
+            throw new Error('Forbidden');
+        }
+        
+        // For responses that might not be JSON (like file uploads)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+        }
+        
+        // For non-JSON responses, just return success
+        if (response.ok) {
+            return { success: true };
+        }
+        
+        throw new Error(`HTTP ${response.status}`);
+        
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
 
         async function loadAllData() {
             showLoading();
