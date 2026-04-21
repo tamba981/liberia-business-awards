@@ -648,6 +648,23 @@ iframe {
     animation: pulseOpen 2s infinite;
 }
 
+/* ===== ADD THIS NEW CSS HERE ===== */
+@keyframes scrollText {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.scrolling-content:hover {
+    animation-play-state: paused !important;
+}
+
+.scrolling-item a:hover {
+    color: #FF0000 !important;
+    background: rgba(255,255,255,0.1);
+    border-radius: 30px;
+    padding: 5px 10px;
+}
+
 </style>
     
    <!-- Dynamic Structured Data for SEO - AUTO-UPDATING CEREMONY STRUCTURED DATA -->
@@ -1251,21 +1268,16 @@ window.addEventListener('load', function() {
         </div>
     </div>
 
-    <!-- Navigation -->
-<nav class="bg-white shadow-md sticky top-0 z-50 py-2" id="navbar" aria-label="Main navigation">
+   <!-- Navigation WITH SCROLLING ANNOUNCEMENT BAR INSIDE -->
+<nav class="bg-white shadow-md sticky top-0 z-50" id="navbar" aria-label="Main navigation">
+    <!-- Main Navbar Content -->
     <div class="container mx-auto px-4 py-2 flex justify-between items-center">
-        <!-- Logo Section - IMPROVED SIZE -->
+        <!-- Logo Section -->
         <div class="flex items-center">
-    <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
-        <img src="images/logo.png" 
-     alt="Liberia Business Awards Logo - Home" 
-     class="h-20 md:h-28 lg:h-32 xl:h-36 mr-3 object-contain"
-     width="160"
-     height="160"
-     fetchpriority="high"
-     loading="eager">
-    </a>
-</div>
+            <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
+                <img src="images/logo.png" alt="Liberia Business Awards Logo - Home" class="h-20 md:h-28 lg:h-32 xl:h-36 mr-3 object-contain" width="160" height="160" fetchpriority="high" loading="eager">
+            </a>
+        </div>
         
         <!-- Desktop Menu -->
         <div class="hidden md:flex space-x-6 lg:space-x-8 items-center">
@@ -1297,211 +1309,54 @@ window.addEventListener('load', function() {
         </div>
     </div>
     
-<!-- Mobile Menu -->
-<div id="mobileMenu" class="hidden md:hidden bg-white px-4 py-4 shadow-lg border-t border-gray-200">
-    <div class="flex flex-col space-y-3">
-        <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">About</a>
-        <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team Message</a>
-        <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team</a>
-        <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Categories</a>
-        <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Featured</a>
-        <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Blog</a>
-        <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Partnership</a>
-        <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Contact</a>
-        <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Dashboard</a>
-        <div class="pt-4 flex space-x-4">
-            <button onclick="openModal('registerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Register</button>
-            <button onclick="checkNominationStatus(); closeMobileMenu();" class="flex-1 bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm" id="mobileNominateBtn">Nominate</button>
-            <button onclick="openModal('partnerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Partner</button>
-            <a href="/lba-directory.html" onclick="closeMobileMenu()" class="w-full bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-3 rounded-full font-medium hover:from-green-700 hover:to-green-600 transition text-sm text-center flex items-center justify-center">
-                <i class="fas fa-user-plus mr-2"></i> Become a Member</a> 
+    <!-- ============================================ -->
+    <!-- SCROLLING ANNOUNCEMENT BAR - INSIDE NAV (ALWAYS VISIBLE) -->
+    <!-- ============================================ -->
+    <div class="announcement-bar" style="background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%); color: white; overflow: hidden; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid #FF0000;">
+        <div class="scrolling-wrapper" style="overflow: hidden; white-space: nowrap; position: relative; width: 100%; padding: 8px 0;">
+            <div class="scrolling-content" style="display: inline-block; animation: scrollText 30s linear infinite; white-space: nowrap;">
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-star" style="color: #FF0000; margin-right: 8px;"></i><a href="lba-directory.html" style="color: white; text-decoration: none;">✨ Become a Member Today!</a><span style="background: #FF0000; color: white; font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px;">NEW</span></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-chart-line" style="color: #FF0000; margin-right: 8px;"></i><a href="advertise.html" style="color: white; text-decoration: none;">📢 Advertise With Us</a><span style="background: #3B82F6; color: white; font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px;">Limited Slots</span></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-trophy" style="color: #FF0000; margin-right: 8px;"></i><a href="javascript:void(0)" onclick="checkNominationStatus()" style="color: white; text-decoration: none;">🏆 Nominations Now Open</a><span style="background: #10B981; color: white; font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px;">March 1 - May 30</span></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-handshake" style="color: #FF0000; margin-right: 8px;"></i><a href="#partnership" style="color: white; text-decoration: none;">🤝 Partner With LBA</a></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-building" style="color: #FF0000; margin-right: 8px;"></i><a href="lba-directory.html" style="color: white; text-decoration: none;">💼 List Your Business for FREE</a></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-calendar-alt" style="color: #FF0000; margin-right: 8px;"></i><a href="#timeline" style="color: white; text-decoration: none;">📅 Awards Ceremony Dec 19</a></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-chart-simple" style="color: #FF0000; margin-right: 8px;"></i><a href="advertise.html" style="color: white; text-decoration: none;">🚀 Premium Ads $150/month</a></span>
+                <!-- Duplicate for seamless loop -->
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-star" style="color: #FF0000; margin-right: 8px;"></i><a href="lba-directory.html" style="color: white; text-decoration: none;">✨ Become a Member Today!</a><span style="background: #FF0000; color: white; font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px;">NEW</span></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-chart-line" style="color: #FF0000; margin-right: 8px;"></i><a href="advertise.html" style="color: white; text-decoration: none;">📢 Advertise With Us</a><span style="background: #3B82F6; color: white; font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px;">Limited Slots</span></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-trophy" style="color: #FF0000; margin-right: 8px;"></i><a href="javascript:void(0)" onclick="checkNominationStatus()" style="color: white; text-decoration: none;">🏆 Nominations Now Open</a><span style="background: #10B981; color: white; font-size: 0.6rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px;">March 1 - May 30</span></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-handshake" style="color: #FF0000; margin-right: 8px;"></i><a href="#partnership" style="color: white; text-decoration: none;">🤝 Partner With LBA</a></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-building" style="color: #FF0000; margin-right: 8px;"></i><a href="lba-directory.html" style="color: white; text-decoration: none;">💼 List Your Business for FREE</a></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-calendar-alt" style="color: #FF0000; margin-right: 8px;"></i><a href="#timeline" style="color: white; text-decoration: none;">📅 Awards Ceremony Dec 19</a></span>
+                <span class="scrolling-item" style="display: inline-block; margin: 0 25px; font-size: 0.85rem;"><i class="fas fa-chart-simple" style="color: #FF0000; margin-right: 8px;"></i><a href="advertise.html" style="color: white; text-decoration: none;">🚀 Premium Ads $150/month</a></span>
+            </div>
         </div>
     </div>
-</div>
+    
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden md:hidden bg-white px-4 py-4 shadow-lg border-t border-gray-200">
+        <div class="flex flex-col space-y-3">
+            <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">About</a>
+            <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team Message</a>
+            <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team</a>
+            <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Categories</a>
+            <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Featured</a>
+            <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Blog</a>
+            <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Partnership</a>
+            <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Contact</a>
+            <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Dashboard</a>
+            <div class="pt-4 flex space-x-4">
+                <button onclick="openModal('registerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Register</button>
+                <button onclick="checkNominationStatus(); closeMobileMenu();" class="flex-1 bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm" id="mobileNominateBtn">Nominate</button>
+                <button onclick="openModal('partnerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Partner</button>
+                <a href="/lba-directory.html" onclick="closeMobileMenu()" class="w-full bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-3 rounded-full font-medium hover:from-green-700 hover:to-green-600 transition text-sm text-center flex items-center justify-center">
+                    <i class="fas fa-user-plus mr-2"></i> Become a Member
+                </a> 
+            </div>
+        </div>
+    </div>
 </nav>
-
-<!-- ============================================ -->
-<!-- SCROLLING ANNOUNCEMENT TICKER - STICKY/FIXED -->
-<!-- ============================================ -->
-<style>
-    .announcement-bar {
-        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-        color: white;
-        padding: 10px 0;
-        overflow: hidden;
-        position: sticky;
-        top: 0;
-        z-index: 48;
-        border-bottom: 2px solid #FF0000;
-        border-top: 1px solid rgba(255,255,255,0.1);
-        width: 100%;
-    }
-    
-    /* Adjust position when navbar is also sticky */
-    .announcement-bar.sticky-adjusted {
-        top: 70px; /* Adjust based on your navbar height on desktop */
-    }
-    
-    .scrolling-wrapper {
-        overflow: hidden;
-        white-space: nowrap;
-        position: relative;
-        width: 100%;
-    }
-    
-    .scrolling-content {
-        display: inline-block;
-        animation: scrollText 30s linear infinite;
-        white-space: nowrap;
-    }
-    
-    .scrolling-content:hover {
-        animation-play-state: paused;
-    }
-    
-    .scrolling-item {
-        display: inline-block;
-        margin: 0 30px;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-    
-    .scrolling-item i {
-        margin-right: 8px;
-        color: #FF0000;
-    }
-    
-    .scrolling-item a {
-        color: white;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        padding: 5px 10px;
-        border-radius: 30px;
-    }
-    
-    .scrolling-item a:hover {
-        color: #FF0000;
-        background: rgba(255,255,255,0.1);
-    }
-    
-    .scrolling-badge {
-        background: #FF0000;
-        color: white;
-        font-size: 0.65rem;
-        padding: 2px 8px;
-        border-radius: 20px;
-        margin-left: 10px;
-        vertical-align: middle;
-    }
-    
-    .scrolling-badge-green {
-        background: #10B981;
-    }
-    
-    .scrolling-badge-blue {
-        background: #3B82F6;
-    }
-    
-    @keyframes scrollText {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-    }
-    
-    @media (max-width: 768px) {
-        .scrolling-item {
-            margin: 0 15px;
-            font-size: 0.75rem;
-        }
-        .scrolling-badge {
-            font-size: 0.55rem;
-            padding: 2px 6px;
-        }
-        .announcement-bar {
-            padding: 8px 0;
-        }
-        .announcement-bar.sticky-adjusted {
-            top: 60px; /* Adjust for mobile navbar height */
-        }
-    }
-</style>
-
-<div class="announcement-bar" id="announcementBar">
-    <div class="scrolling-wrapper">
-        <div class="scrolling-content">
-            <span class="scrolling-item"><i class="fas fa-star"></i><a href="lba-directory.html">✨ Become a Member Today! Get Listed in Liberia's Premier Business Directory</a><span class="scrolling-badge">NEW</span></span>
-            <span class="scrolling-item"><i class="fas fa-chart-line"></i><a href="advertise.html">📢 Advertise With Us - Reach 50K+ Monthly Visitors</a><span class="scrolling-badge scrolling-badge-blue">Limited Slots</span></span>
-            <span class="scrolling-item"><i class="fas fa-trophy"></i><a href="javascript:void(0)" onclick="checkNominationStatus()">🏆 Nominations Now Open - Nominate Your Business for LBA 3.0</a><span class="scrolling-badge scrolling-badge-green">March 1 - May 30</span></span>
-            <span class="scrolling-item"><i class="fas fa-handshake"></i><a href="#partnership">🤝 Partner With LBA - Sponsor the Biggest Business Event in Liberia</a></span>
-            <span class="scrolling-item"><i class="fas fa-building"></i><a href="lba-directory.html">💼 List Your Business for FREE - Join 500+ Liberian Businesses</a></span>
-            <span class="scrolling-item"><i class="fas fa-calendar-alt"></i><a href="#timeline">📅 Awards Ceremony December 19 - Save the Date!</a></span>
-            <span class="scrolling-item"><i class="fas fa-chart-simple"></i><a href="advertise.html">🚀 Premium Ad Packages Starting at $150/month - Book Your Spot</a></span>
-            <!-- Duplicate for seamless loop -->
-            <span class="scrolling-item"><i class="fas fa-star"></i><a href="lba-directory.html">✨ Become a Member Today! Get Listed in Liberia's Premier Business Directory</a><span class="scrolling-badge">NEW</span></span>
-            <span class="scrolling-item"><i class="fas fa-chart-line"></i><a href="advertise.html">📢 Advertise With Us - Reach 50K+ Monthly Visitors</a><span class="scrolling-badge scrolling-badge-blue">Limited Slots</span></span>
-            <span class="scrolling-item"><i class="fas fa-trophy"></i><a href="javascript:void(0)" onclick="checkNominationStatus()">🏆 Nominations Now Open - Nominate Your Business for LBA 3.0</a><span class="scrolling-badge scrolling-badge-green">March 1 - May 30</span></span>
-            <span class="scrolling-item"><i class="fas fa-handshake"></i><a href="#partnership">🤝 Partner With LBA - Sponsor the Biggest Business Event in Liberia</a></span>
-            <span class="scrolling-item"><i class="fas fa-building"></i><a href="lba-directory.html">💼 List Your Business for FREE - Join 500+ Liberian Businesses</a></span>
-            <span class="scrolling-item"><i class="fas fa-calendar-alt"></i><a href="#timeline">📅 Awards Ceremony December 19 - Save the Date!</a></span>
-            <span class="scrolling-item"><i class="fas fa-chart-simple"></i><a href="advertise.html">🚀 Premium Ad Packages Starting at $150/month - Book Your Spot</a></span>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Dynamic Announcement Manager
-    const AnnouncementManager = {
-        announcements: [
-            { icon: "fa-star", text: "Become a Member Today! Get Listed in Liberia's Premier Business Directory", link: "lba-directory.html", badge: "NEW", badgeColor: "red" },
-            { icon: "fa-chart-line", text: "Advertise With Us - Reach 50K+ Monthly Visitors", link: "advertise.html", badge: "Limited Slots", badgeColor: "blue" },
-            { icon: "fa-trophy", text: "Nominations Now Open - Nominate Your Business for LBA 3.0", link: "#", onclick: "checkNominationStatus()", badge: "March 1 - May 30", badgeColor: "green" },
-            { icon: "fa-handshake", text: "Partner With LBA - Sponsor the Biggest Business Event in Liberia", link: "#partnership", badge: "", badgeColor: "" },
-            { icon: "fa-building", text: "List Your Business for FREE - Join 500+ Liberian Businesses", link: "lba-directory.html", badge: "", badgeColor: "" },
-            { icon: "fa-calendar-alt", text: "Awards Ceremony December 19 - Save the Date!", link: "#timeline", badge: "", badgeColor: "" },
-            { icon: "fa-chart-simple", text: "Premium Ad Packages Starting at $150/month - Book Your Spot", link: "advertise.html", badge: "", badgeColor: "" }
-        ],
-        refreshDisplay: function() {
-            const container = document.querySelector('.scrolling-content');
-            if (!container) return;
-            let html = '';
-            for (let i = 0; i < 2; i++) {
-                this.announcements.forEach(a => {
-                    let badgeHtml = a.badge ? `<span class="scrolling-badge${a.badgeColor === 'green' ? ' scrolling-badge-green' : a.badgeColor === 'blue' ? ' scrolling-badge-blue' : ''}">${a.badge}</span>` : '';
-                    let linkHtml = a.onclick ? `<a href="javascript:void(0)" onclick="${a.onclick}">${a.text}</a>` : `<a href="${a.link}">${a.text}</a>`;
-                    html += `<span class="scrolling-item"><i class="fas ${a.icon}"></i>${linkHtml}${badgeHtml}</span>`;
-                });
-            }
-            container.innerHTML = html;
-        }
-    };
-    
-    // Handle scroll to keep announcement bar visible below navbar
-    document.addEventListener('DOMContentLoaded', function() {
-        const announcementBar = document.getElementById('announcementBar');
-        const navbar = document.getElementById('navbar');
-        
-        if (announcementBar && navbar) {
-            // Set initial top position based on navbar height
-            const navbarHeight = navbar.offsetHeight;
-            announcementBar.style.top = navbarHeight + 'px';
-            
-            // Update on scroll
-            window.addEventListener('scroll', function() {
-                if (window.scrollY > 10) {
-                    announcementBar.style.top = navbarHeight + 'px';
-                    announcementBar.style.position = 'sticky';
-                } else {
-                    announcementBar.style.top = navbarHeight + 'px';
-                }
-            });
-            
-            // Update on resize
-            window.addEventListener('resize', function() {
-                const newNavbarHeight = navbar.offsetHeight;
-                announcementBar.style.top = newNavbarHeight + 'px';
-            });
-        }
-    });
-</script>
     
     <!-- Hero Section -->
     <section class="hero-bg pt-32 pb-20 px-4 text-white">
