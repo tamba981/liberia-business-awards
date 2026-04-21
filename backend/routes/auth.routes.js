@@ -11,6 +11,71 @@ router.get('/auth/test', (req, res) => {
     res.json({ message: 'Auth routes working!' });
 });
 
+// ============================================
+// VERIFY ENDPOINT - ADD THIS (FIXES INFINITE LOOP)
+// ============================================
+router.post('/auth/verify', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        
+        if (!token) {
+            return res.status(401).json({ success: false, message: 'No token provided' });
+        }
+        
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        if (decoded.role === 'admin') {
+            const admin = await Admin.findById(decoded.userId).select('-password');
+            if (!admin) {
+                return res.status(401).json({ success: false, message: 'Admin not found' });
+            }
+            return res.json({
+                success: true,
+                user: {
+                    id: admin._id,
+                    email: admin.email,
+                    name: admin.name,
+                    role: 'admin'
+                }
+            });
+        } 
+        else if (decoded.role === 'business') {
+            const business = await BusinessUser.findById(decoded.userId).select('-password');
+            if (!business) {
+                return res.status(401).json({ success: false, message: 'Business not found' });
+            }
+            
+            if (business.status !== 'active') {
+                return res.status(403).json({ success: false, message: 'Account pending approval' });
+            }
+            
+            return res.json({
+                success: true,
+                user: {
+                    id: business._id,
+                    email: business.email,
+                    name: business.business_name,
+                    role: 'business',
+                    phone: business.phone,
+                    status: business.status
+                }
+            });
+        }
+        
+        return res.status(401).json({ success: false, message: 'Invalid user role' });
+        
+    } catch (error) {
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ success: false, message: 'Invalid token' });
+        }
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ success: false, message: 'Token expired' });
+        }
+        console.error('Verify error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 // Admin Login
 router.post('/auth/admin/login', async (req, res) => {
     try {
@@ -74,7 +139,9 @@ router.post('/auth/business/login', async (req, res) => {
                 id: business._id,
                 email: business.email,
                 name: business.business_name,
-                role: 'business'
+                role: 'business',
+                phone: business.phone,
+                status: business.status
             }
         });
     } catch (error) {
@@ -100,8 +167,5 @@ const createDefaultAdmin = async () => {
         console.error('Error creating default admin:', error);
     }
 };
-
-// Don't call this here - let server.js handle it
-// createDefaultAdmin();
 
 module.exports = router;
