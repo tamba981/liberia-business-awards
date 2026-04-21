@@ -1657,44 +1657,67 @@
         // DOCUMENTS FUNCTIONS - FIXED VIEW/DOWNLOAD
         // ============================================
         async function loadDocuments() {
-            try {
-                const page = appState.documents.currentPage;
-                const data = await apiRequest(`/api/business/documents?page=${page}&limit=12`);
-                if (data.success) {
-                    appState.documents.data = data.documents || data.data || [];
-                    appState.documents.total = data.total || data.pagination?.total || 0;
-                    appState.documents.totalPages = data.pages || data.pagination?.pages || 1;
-                    displayDocuments();
-                    updateDocumentsPagination();
-                    document.getElementById('documentsCount').textContent = appState.documents.total;
-                    document.getElementById('documentsUploaded').textContent = appState.documents.total;
-                    document.getElementById('totalDocuments').textContent = appState.documents.total;
-                }
-            } catch (error) { console.error('Documents load error:', error); }
+    try {
+        const page = appState.documents.currentPage;
+        const data = await apiRequest(`/api/business/documents?page=${page}&limit=12`);
+        if (data.success) {
+            appState.documents.data = data.documents || data.data || [];
+            appState.documents.total = data.total || data.pagination?.total || 0;
+            appState.documents.totalPages = data.pages || data.pagination?.pages || 1;
+            displayDocuments();
+            updateDocumentsPagination();
+            document.getElementById('documentsCount').textContent = appState.documents.total;
+            document.getElementById('documentsUploaded').textContent = appState.documents.total;
+            document.getElementById('totalDocuments').textContent = appState.documents.total;
         }
+    } catch (error) { 
+        console.error('Documents load error:', error);
+        showNotification('Could not load documents', 'warning');
+    }
+}
 
-        function displayDocuments() {
-            const grid = document.getElementById('documentsGrid');
-            const documents = appState.documents.data;
-            if (documents.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><i class="fas fa-file-upload" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i><p>No documents uploaded yet</p><button class="btn btn-primary btn-sm" onclick="showUploadModal()" style="margin-top: 10px;"><i class="fas fa-upload"></i> Upload Your First Document</button></div>`;
-                return;
-            }
-            grid.innerHTML = documents.map(doc => {
-                const icon = doc.type?.includes('pdf') ? 'fa-file-pdf' : doc.type?.includes('image') ? 'fa-file-image' : 'fa-file';
-                return `
-                    <div class="document-card">
-                        <div class="document-icon"><i class="fas ${icon}"></i></div>
-                        <div class="document-info"><div class="document-name">${doc.name || 'Document'}</div><div class="document-date">Uploaded: ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'Recent'}</div></div>
-                        <div class="document-actions">
-                            <button onclick="viewDocument('${doc._id}')"><i class="fas fa-eye"></i></button>
-                            <button onclick="downloadDocument('${doc._id}')"><i class="fas fa-download"></i></button>
-                            <button onclick="deleteDocument('${doc._id}')"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+function displayDocuments() {
+    const grid = document.getElementById('documentsGrid');
+    const documents = appState.documents.data;
+    if (documents.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+            <i class="fas fa-file-upload" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
+            <p>No documents uploaded yet</p>
+            <button class="btn btn-primary btn-sm" onclick="showUploadModal()" style="margin-top: 10px;">
+                <i class="fas fa-upload"></i> Upload Your First Document
+            </button>
+        </div>`;
+        return;
+    }
+    
+    grid.innerHTML = documents.map(doc => {
+        const icon = doc.fileType?.includes('pdf') ? 'fa-file-pdf' : 
+                     doc.fileType?.includes('image') ? 'fa-file-image' : 
+                     doc.fileType?.includes('word') ? 'fa-file-word' : 'fa-file';
+        
+        // FIXED: Use correct function calls
+        return `
+            <div class="document-card">
+                <div class="document-icon"><i class="fas ${icon}"></i></div>
+                <div class="document-info">
+                    <div class="document-name">${escapeHtml(doc.name || 'Document')}</div>
+                    <div class="document-date">Uploaded: ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'Recent'}</div>
+                </div>
+                <div class="document-actions">
+                    <button onclick="viewDocument('${doc._id}')" title="View Document">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="downloadDocument('${doc._id}')" title="Download Document">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button onclick="deleteDocument('${doc._id}')" title="Delete Document">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
 
         function updateDocumentsPagination() {
             const pagination = document.getElementById('documentsPagination');
@@ -1717,20 +1740,47 @@
             loadDocuments();
         }
 
-        // FIXED: View Document with correct URL (no double /api)
-        function viewDocument(id) {
-            const token = localStorage.getItem('lba_auth_token');
-            const url = `${BACKEND_URL.replace('/api', '')}/api/business/documents/${id}/view`;
-            window.open(url, '_blank');
-        }
+        // ============================================
+// FIXED: DOCUMENT VIEW AND DOWNLOAD FUNCTIONS
+// ============================================
 
-        // FIXED: Download Document with correct URL (no double /api)
-        function downloadDocument(id) {
-            const token = localStorage.getItem('lba_auth_token');
-            const url = `${BACKEND_URL.replace('/api', '')}/api/business/documents/${id}/download`;
-            window.open(url, '_blank');
-        }
+function viewDocument(id) {
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        showNotification('Please login again', 'error');
+        return;
+    }
+    
+    // FIXED: Use correct URL format
+    const url = `${BACKEND_URL}/business/documents/${id}/view`;
+    
+    console.log('📄 Viewing document:', url);
+    
+    // Open in new tab
+    window.open(url, '_blank');
+}
 
+function downloadDocument(id) {
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        showNotification('Please login again', 'error');
+        return;
+    }
+    
+    // FIXED: Use correct URL format
+    const url = `${BACKEND_URL}/business/documents/${id}/download`;
+    
+    console.log('📥 Downloading document:', url);
+    
+    // Create hidden link for download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '';  // Let server set filename
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
         async function deleteDocument(id) {
             if (!confirm('Delete this document? This action cannot be undone.')) return;
             try {
