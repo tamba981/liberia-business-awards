@@ -1254,77 +1254,88 @@ window.addEventListener('load', function() {
 
     <!-- Navigation -->
 <nav class="bg-white shadow-md sticky top-0 z-50 py-2" id="navbar" aria-label="Main navigation">
-    <div class="container mx-auto px-4 py-2 flex justify-between items-center">
-        <!-- Logo Section - IMPROVED SIZE -->
-        <div class="flex items-center">
-            <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
-                <img src="images/logo.png" 
-                     alt="Liberia Business Awards Logo - Home" 
-                     class="h-20 md:h-28 lg:h-32 xl:h-36 mr-3 object-contain"
-                     width="160"
-                     height="160"
-                     fetchpriority="high"
-                     loading="eager">
-            </a>
-        </div>
-        
-        <!-- Desktop Menu -->
-        <div class="hidden md:flex space-x-6 lg:space-x-8 items-center">
-            <a href="#about" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">About</a>
-            <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Team Message</a>
-            <a href="#team" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Team</a>
-            <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Categories</a>
-            <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Featured</a>
-            <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Blog</a>
-            <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Partnership</a>
-            <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Contact</a>
-            <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-lba-red focus:ring-offset-2 px-2 py-1 rounded">Dashboard</a>
-            
-            <!-- NEW: Become a Member Button in Desktop Menu -->
-            <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-full font-bold text-sm lg:text-base hover:shadow-lg transition transform hover:scale-105 whitespace-nowrap">
-                <i class="fas fa-user-plus mr-1"></i> Become a Member
-            </a>
-        </div>
-        
-        <div class="flex items-center space-x-4">
-            <!-- Desktop Buttons -->
-            <button onclick="checkNominationStatus()" id="navNominateBtn" class="hidden md:block bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm lg:text-base">
-                <span id="nominateBtnText">Nominate</span>
-                <i class="fas fa-caret-down ml-1" id="nominateBtnIcon"></i>
-            </button>
-            <button onclick="openModal('partnerModal')" class="hidden md:block bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm lg:text-base">
-                Partner
-            </button>
+    <div class="container mx-auto px-4 py-2">
+        <!-- Logo Section -->
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
+                    <img src="images/logo.png" 
+                         alt="Liberia Business Awards Logo - Home" 
+                         class="h-20 md:h-28 lg:h-32 xl:h-36 mr-3 object-contain"
+                         width="160"
+                         height="160"
+                         fetchpriority="high"
+                         loading="eager">
+                </a>
+            </div>
             
             <!-- Mobile Menu Button -->
             <button id="mobileMenuBtn" class="block md:hidden p-2 text-gray-600 hover:text-lba-red focus:outline-none">
                 <i class="fas fa-bars text-2xl"></i>
             </button>
         </div>
-    </div>
-    
-    <!-- Mobile Menu -->
-    <div id="mobileMenu" class="hidden md:hidden bg-white px-4 py-4 shadow-lg border-t border-gray-200">
-        <div class="flex flex-col space-y-3">
-            <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">About</a>
-            <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team Message</a>
-            <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Team</a>
-            <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Categories</a>
-            <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Featured</a>
-            <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Blog</a>
-            <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Partnership</a>
-            <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Contact</a>
-            <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Dashboard</a>
+        
+        <!-- Desktop Menu - Visible on desktop only -->
+        <div class="hidden md:flex md:flex-wrap md:items-center md:justify-between mt-4">
+            <!-- Desktop Navigation Links -->
+            <div class="flex flex-wrap items-center gap-4 lg:gap-6">
+                <a href="#about" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">About</a>
+                <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">Team Message</a>
+                <a href="#team" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">Team</a>
+                <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">Categories</a>
+                <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">Featured</a>
+                <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">Blog</a>
+                <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">Partnership</a>
+                <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">Contact</a>
+                <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base">Dashboard</a>
+            </div>
             
-            <!-- NEW: Become a Member in Mobile Menu -->
-            <a href="directory.html" onclick="closeMobileMenu()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-full font-bold text-center hover:shadow-lg transition">
-                <i class="fas fa-user-plus mr-2"></i> Become a Member
-            </a>
-            
-            <div class="pt-4 flex space-x-4">
-                <button onclick="openModal('registerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Register</button>
-                <button onclick="checkNominationStatus(); closeMobileMenu();" class="flex-1 bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm" id="mobileNominateBtn">Nominate</button>
-                <button onclick="openModal('partnerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Partner</button>
+            <!-- Desktop Action Buttons -->
+            <div class="flex items-center gap-3 mt-3 md:mt-0">
+                <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-full font-bold text-sm hover:shadow-lg transition">
+                    <i class="fas fa-user-plus mr-1"></i> Become a Member
+                </a>
+                <button onclick="checkNominationStatus()" id="navNominateBtn" class="bg-lba-red text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-red-600 transition">
+                    Nominate Now
+                </button>
+                <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-blue-400 transition">
+                    Partner
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobileMenu" class="hidden md:hidden mt-4 bg-white border-t border-gray-100">
+            <div class="flex flex-col space-y-3 pt-4">
+                <!-- Mobile Navigation Links -->
+                <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">About</a>
+                <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">Team Message</a>
+                <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">Team</a>
+                <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">Categories</a>
+                <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">Featured</a>
+                <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">Blog</a>
+                <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">Partnership</a>
+                <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">Contact</a>
+                <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2 px-2 hover:bg-gray-50 rounded-lg">Dashboard</a>
+                
+                <!-- Divider -->
+                <div class="border-t border-gray-200 my-2"></div>
+                
+                <!-- Mobile Action Buttons -->
+                <a href="directory.html" onclick="closeMobileMenu()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-full font-bold text-center">
+                    <i class="fas fa-user-plus mr-2"></i> Become a Member
+                </a>
+                <button onclick="checkNominationStatus(); closeMobileMenu();" class="bg-lba-red text-white px-4 py-3 rounded-full font-bold text-center">
+                    Nominate Now
+                </button>
+                <button onclick="openModal('partnerModal'); closeMobileMenu();" class="bg-lba-blue text-white px-4 py-3 rounded-full font-bold text-center">
+                    Partner
+                </button>
+                
+                <!-- Register Button (additional) -->
+                <button onclick="openModal('registerModal'); closeMobileMenu();" class="border border-lba-blue text-lba-blue px-4 py-3 rounded-full font-medium text-center mt-2">
+                    Register
+                </button>
             </div>
         </div>
     </div>
@@ -1339,21 +1350,24 @@ window.addEventListener('load', function() {
     }
     
     // Toggle mobile menu
-    document.getElementById('mobileMenuBtn')?.addEventListener('click', function() {
-        const mobileMenu = document.getElementById('mobileMenu');
-        if (mobileMenu) {
-            mobileMenu.classList.toggle('hidden');
-        }
-    });
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
     
-    // Close menu when clicking outside (optional but good UX)
+    if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+    
+    // Close menu when clicking outside
     document.addEventListener('click', function(event) {
-        const mobileMenu = document.getElementById('mobileMenu');
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const menu = document.getElementById('mobileMenu');
+        const btn = document.getElementById('mobileMenuBtn');
         
-        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-            if (!mobileMenu.contains(event.target) && !mobileMenuBtn?.contains(event.target)) {
-                mobileMenu.classList.add('hidden');
+        if (menu && btn && !menu.classList.contains('hidden')) {
+            if (!menu.contains(event.target) && !btn.contains(event.target)) {
+                menu.classList.add('hidden');
             }
         }
     });
