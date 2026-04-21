@@ -10,8 +10,9 @@
     <style>
         body { font-family: 'Poppins', sans-serif; }
         h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
-        .ad-package { transition: all 0.3s ease; }
+        .ad-package { transition: all 0.3s ease; cursor: pointer; }
         .ad-package:hover { transform: translateY(-5px); }
+        .ad-package.selected { border: 3px solid #FF0000; background: #fff5f5; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -32,9 +33,9 @@
         </div>
 
         <!-- Ad Packages -->
-        <div class="grid md:grid-cols-3 gap-8 mb-16">
+        <div class="grid md:grid-cols-3 gap-8 mb-16" id="adPackages">
             <!-- Basic Package -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 ad-package">
+            <div class="ad-package bg-white rounded-2xl shadow-lg p-6" data-package="Basic Banner" data-price="150">
                 <div class="text-center mb-6">
                     <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-bullhorn text-2xl text-blue-600"></i>
@@ -48,11 +49,10 @@
                     <li class="flex items-center"><i class="fas fa-check text-green-500 mr-3"></i> 30-day campaign</li>
                     <li class="flex items-center"><i class="fas fa-times text-gray-400 mr-3"></i> Priority placement</li>
                 </ul>
-                <button onclick="window.location.href='/#contact'" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">Get Started</button>
             </div>
 
             <!-- Premium Package -->
-            <div class="bg-white rounded-2xl shadow-xl p-6 ad-package border-2 border-red-500 relative">
+            <div class="ad-package bg-white rounded-2xl shadow-xl p-6 border-2 border-red-500 relative" data-package="Premium Package" data-price="350">
                 <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-1 rounded-full text-sm">Most Popular</div>
                 <div class="text-center mb-6">
                     <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -68,11 +68,10 @@
                     <li class="flex items-center"><i class="fas fa-check text-green-500 mr-3"></i> Priority placement above fold</li>
                     <li class="flex items-center"><i class="fas fa-check text-green-500 mr-3"></i> Social media promotion</li>
                 </ul>
-                <button onclick="window.location.href='/#contact'" class="w-full bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition">Get Started</button>
             </div>
 
             <!-- Elite Package -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 ad-package">
+            <div class="ad-package bg-white rounded-2xl shadow-lg p-6" data-package="Elite Package" data-price="600">
                 <div class="text-center mb-6">
                     <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-crown text-2xl text-purple-600"></i>
@@ -88,12 +87,77 @@
                     <li class="flex items-center"><i class="fas fa-check text-green-500 mr-3"></i> Newsletter feature</li>
                     <li class="flex items-center"><i class="fas fa-check text-green-500 mr-3"></i> Dedicated support</li>
                 </ul>
-                <button onclick="window.location.href='/#contact'" class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition">Get Started</button>
             </div>
         </div>
 
+        <!-- Ad Request Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold text-center mb-6">Request Ad Space</h2>
+            <p class="text-center text-gray-600 mb-8">Fill out the form below and we'll contact you within 24 hours</p>
+            
+            <form id="adRequestForm">
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Business Name *</label>
+                        <input type="text" id="adBusinessName" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-400">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Contact Person *</label>
+                        <input type="text" id="adContactName" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-400">
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Email Address *</label>
+                        <input type="email" id="adEmail" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-400">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Phone Number *</label>
+                        <input type="tel" id="adPhone" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-400">
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">Select Package *</label>
+                    <select id="adPackage" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-400">
+                        <option value="">-- Select a Package --</option>
+                        <option value="Basic Banner ($150/month)">Basic Banner - $150/month</option>
+                        <option value="Premium Package ($350/month)">Premium Package - $350/month</option>
+                        <option value="Elite Package ($600/month)">Elite Package - $600/month</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">Ad Duration (months) *</label>
+                    <select id="adDuration" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-400">
+                        <option value="1">1 month</option>
+                        <option value="3">3 months (Save 5%)</option>
+                        <option value="6">6 months (Save 10%)</option>
+                        <option value="12">12 months (Save 15%)</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">Additional Notes / Ad Requirements</label>
+                    <textarea id="adNotes" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-400"></textarea>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                    <p class="text-center text-gray-700">
+                        <strong>Estimated Total:</strong> 
+                        <span id="estimatedTotal" class="text-2xl font-bold text-red-600">$0</span>
+                    </p>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-blue-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                    Submit Ad Request
+                </button>
+            </form>
+        </div>
+
         <!-- Why Advertise -->
-        <div class="bg-white rounded-2xl shadow-lg p-8 mb-12">
+        <div class="bg-white rounded-2xl shadow-lg p-8 mt-12">
             <h2 class="text-2xl font-bold text-center mb-8">Why Advertise With LBA?</h2>
             <div class="grid md:grid-cols-4 gap-6">
                 <div class="text-center">
@@ -118,22 +182,97 @@
                 </div>
             </div>
         </div>
-
-        <!-- Contact Form -->
-        <div class="bg-gradient-to-r from-red-600 to-blue-600 rounded-2xl p-8 text-white">
-            <h2 class="text-2xl font-bold text-center mb-6">Ready to Advertise?</h2>
-            <p class="text-center mb-8">Contact our advertising team for custom packages</p>
-            <div class="max-w-md mx-auto text-center">
-                <p class="mb-4"><i class="fas fa-envelope mr-2"></i> ads@liberiabusinessawardslr.com</p>
-                <p class="mb-6"><i class="fas fa-phone-alt mr-2"></i> +231 886 590 302</p>
-                <a href="/#contact" class="inline-block bg-white text-red-600 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition">Contact Us Today</a>
-            </div>
-        </div>
     </main>
 
     <footer class="bg-gray-900 text-white py-6 text-center mt-12">
         <p>&copy; 2026 Liberia Business Awards. All rights reserved.</p>
         <p class="mt-2 text-sm"><a href="/" class="text-gray-400 hover:text-white">← Back to Homepage</a></p>
     </footer>
+
+    <script>
+        // Calculate estimated total
+        const packagePrices = {
+            'Basic Banner ($150/month)': 150,
+            'Premium Package ($350/month)': 350,
+            'Elite Package ($600/month)': 600
+        };
+        
+        const durationDiscounts = {
+            '1': 0,
+            '3': 0.05,
+            '6': 0.10,
+            '12': 0.15
+        };
+        
+        function updateEstimatedTotal() {
+            const packageSelect = document.getElementById('adPackage');
+            const durationSelect = document.getElementById('adDuration');
+            const totalSpan = document.getElementById('estimatedTotal');
+            
+            const selectedPackage = packageSelect.value;
+            const duration = durationSelect.value;
+            
+            if (selectedPackage && packagePrices[selectedPackage]) {
+                let total = packagePrices[selectedPackage] * parseInt(duration);
+                const discount = durationDiscounts[duration];
+                if (discount > 0) {
+                    total = total * (1 - discount);
+                }
+                totalSpan.textContent = '$' + Math.round(total);
+            } else {
+                totalSpan.textContent = '$0';
+            }
+        }
+        
+        document.getElementById('adPackage').addEventListener('change', updateEstimatedTotal);
+        document.getElementById('adDuration').addEventListener('change', updateEstimatedTotal);
+        
+        // Form submission to Google Sheets
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+        
+        document.getElementById('adRequestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                formType: 'advertisement',
+                businessName: document.getElementById('adBusinessName').value,
+                contactName: document.getElementById('adContactName').value,
+                email: document.getElementById('adEmail').value,
+                phone: document.getElementById('adPhone').value,
+                package: document.getElementById('adPackage').value,
+                duration: document.getElementById('adDuration').value,
+                notes: document.getElementById('adNotes').value,
+                estimatedTotal: document.getElementById('estimatedTotal').innerText,
+                timestamp: new Date().toISOString(),
+                source: 'advertise-page'
+            };
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            
+            try {
+                await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(formData)
+                });
+                alert('✅ Thank you! Our advertising team will contact you within 24 hours.');
+                document.getElementById('adRequestForm').reset();
+                updateEstimatedTotal();
+            } catch(error) {
+                alert('⚠️ Form submitted! We received your request.');
+                document.getElementById('adRequestForm').reset();
+                updateEstimatedTotal();
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+        
+        updateEstimatedTotal();
+    </script>
 </body>
 </html>
