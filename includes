@@ -1,0 +1,146 @@
+<!-- ============================================ -->
+<!-- SCROLLING ANNOUNCEMENT TICKER - ALWAYS VISIBLE -->
+<!-- ============================================ -->
+<style>
+    .announcement-bar {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        color: white;
+        padding: 10px 0;
+        overflow: hidden;
+        position: sticky;
+        top: 0;
+        z-index: 47;
+        border-bottom: 2px solid #FF0000;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        width: 100%;
+    }
+    
+    .scrolling-wrapper {
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+        width: 100%;
+    }
+    
+    .scrolling-content {
+        display: inline-block;
+        animation: scrollText 30s linear infinite;
+        white-space: nowrap;
+    }
+    
+    .scrolling-content:hover {
+        animation-play-state: paused;
+    }
+    
+    .scrolling-item {
+        display: inline-block;
+        margin: 0 30px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .scrolling-item i {
+        margin-right: 8px;
+        color: #FF0000;
+    }
+    
+    .scrolling-item a {
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        padding: 5px 10px;
+        border-radius: 30px;
+    }
+    
+    .scrolling-item a:hover {
+        color: #FF0000;
+        background: rgba(255,255,255,0.1);
+    }
+    
+    .scrolling-badge {
+        background: #FF0000;
+        color: white;
+        font-size: 0.65rem;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+    
+    .scrolling-badge-green {
+        background: #10B981;
+    }
+    
+    .scrolling-badge-blue {
+        background: #3B82F6;
+    }
+    
+    @keyframes scrollText {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+    
+    @media (max-width: 768px) {
+        .scrolling-item {
+            margin: 0 15px;
+            font-size: 0.75rem;
+        }
+        .scrolling-badge {
+            font-size: 0.55rem;
+            padding: 2px 6px;
+        }
+        .announcement-bar {
+            padding: 8px 0;
+        }
+    }
+</style>
+
+<div class="announcement-bar">
+    <div class="scrolling-wrapper">
+        <div class="scrolling-content">
+            <span class="scrolling-item"><i class="fas fa-star"></i><a href="/lba-directory.html">✨ Become a Member Today! Get Listed in Liberia's Premier Business Directory</a><span class="scrolling-badge">NEW</span></span>
+            <span class="scrolling-item"><i class="fas fa-chart-line"></i><a href="/advertise.html">📢 Advertise With Us - Reach 50K+ Monthly Visitors</a><span class="scrolling-badge scrolling-badge-blue">Limited Slots</span></span>
+            <span class="scrolling-item"><i class="fas fa-trophy"></i><a href="javascript:void(0)" onclick="checkNominationStatus()">🏆 Nominations Now Open - Nominate Your Business for LBA 3.0</a><span class="scrolling-badge scrolling-badge-green">March 1 - May 30</span></span>
+            <span class="scrolling-item"><i class="fas fa-handshake"></i><a href="/#partnership">🤝 Partner With LBA - Sponsor the Biggest Business Event in Liberia</a></span>
+            <span class="scrolling-item"><i class="fas fa-building"></i><a href="/lba-directory.html">💼 List Your Business for FREE - Join 500+ Liberian Businesses</a></span>
+            <span class="scrolling-item"><i class="fas fa-calendar-alt"></i><a href="/#timeline">📅 Awards Ceremony December 19 - Save the Date!</a></span>
+            <span class="scrolling-item"><i class="fas fa-chart-simple"></i><a href="/advertise.html">🚀 Premium Ad Packages Starting at $150/month - Book Your Spot</a></span>
+            <!-- Duplicate for seamless loop -->
+            <span class="scrolling-item"><i class="fas fa-star"></i><a href="/lba-directory.html">✨ Become a Member Today! Get Listed in Liberia's Premier Business Directory</a><span class="scrolling-badge">NEW</span></span>
+            <span class="scrolling-item"><i class="fas fa-chart-line"></i><a href="/advertise.html">📢 Advertise With Us - Reach 50K+ Monthly Visitors</a><span class="scrolling-badge scrolling-badge-blue">Limited Slots</span></span>
+            <span class="scrolling-item"><i class="fas fa-trophy"></i><a href="javascript:void(0)" onclick="checkNominationStatus()">🏆 Nominations Now Open - Nominate Your Business for LBA 3.0</a><span class="scrolling-badge scrolling-badge-green">March 1 - May 30</span></span>
+            <span class="scrolling-item"><i class="fas fa-handshake"></i><a href="/#partnership">🤝 Partner With LBA - Sponsor the Biggest Business Event in Liberia</a></span>
+            <span class="scrolling-item"><i class="fas fa-building"></i><a href="/lba-directory.html">💼 List Your Business for FREE - Join 500+ Liberian Businesses</a></span>
+            <span class="scrolling-item"><i class="fas fa-calendar-alt"></i><a href="/#timeline">📅 Awards Ceremony December 19 - Save the Date!</a></span>
+            <span class="scrolling-item"><i class="fas fa-chart-simple"></i><a href="/advertise.html">🚀 Premium Ad Packages Starting at $150/month - Book Your Spot</a></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Dynamic Announcement Manager
+    const AnnouncementManager = {
+        announcements: [
+            { icon: "fa-star", text: "Become a Member Today! Get Listed in Liberia's Premier Business Directory", link: "/lba-directory.html", badge: "NEW", badgeColor: "red" },
+            { icon: "fa-chart-line", text: "Advertise With Us - Reach 50K+ Monthly Visitors", link: "/advertise.html", badge: "Limited Slots", badgeColor: "blue" },
+            { icon: "fa-trophy", text: "Nominations Now Open - Nominate Your Business for LBA 3.0", link: "#", onclick: "checkNominationStatus()", badge: "March 1 - May 30", badgeColor: "green" },
+            { icon: "fa-handshake", text: "Partner With LBA - Sponsor the Biggest Business Event in Liberia", link: "/#partnership", badge: "", badgeColor: "" },
+            { icon: "fa-building", text: "List Your Business for FREE - Join 500+ Liberian Businesses", link: "/lba-directory.html", badge: "", badgeColor: "" },
+            { icon: "fa-calendar-alt", text: "Awards Ceremony December 19 - Save the Date!", link: "/#timeline", badge: "", badgeColor: "" },
+            { icon: "fa-chart-simple", text: "Premium Ad Packages Starting at $150/month - Book Your Spot", link: "/advertise.html", badge: "", badgeColor: "" }
+        ],
+        refreshDisplay: function() {
+            const container = document.querySelector('.scrolling-content');
+            if (!container) return;
+            let html = '';
+            for (let i = 0; i < 2; i++) {
+                this.announcements.forEach(a => {
+                    let badgeHtml = a.badge ? `<span class="scrolling-badge${a.badgeColor === 'green' ? ' scrolling-badge-green' : a.badgeColor === 'blue' ? ' scrolling-badge-blue' : ''}">${a.badge}</span>` : '';
+                    let linkHtml = a.onclick ? `<a href="javascript:void(0)" onclick="${a.onclick}">${a.text}</a>` : `<a href="${a.link}">${a.text}</a>`;
+                    html += `<span class="scrolling-item"><i class="fas ${a.icon}"></i>${linkHtml}${badgeHtml}</span>`;
+                });
+            }
+            container.innerHTML = html;
+        }
+    };
+</script>
