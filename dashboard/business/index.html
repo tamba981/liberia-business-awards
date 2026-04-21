@@ -1738,15 +1738,15 @@ function viewDocument(id) {
         return;
     }
     
-    // Use the correct backend URL structure
+    // Use the correct backend URL structure - NO extra /api
     const baseUrl = BACKEND_URL.replace(/\/api$/, '');
     const url = `${baseUrl}/api/business/documents/${id}/view`;
     
-    // Open in new tab
+    console.log('Opening view URL:', url);
     window.open(url, '_blank');
 }
 
-// FIXED: Download Document - Downloads file properly
+// FIXED: Download Document
 async function downloadDocument(id) {
     if (!id) {
         showToast('Invalid document ID', 'error');
@@ -1760,11 +1760,11 @@ async function downloadDocument(id) {
         return;
     }
     
-    showLoading();
-    
     try {
         const baseUrl = BACKEND_URL.replace(/\/api$/, '');
         const url = `${baseUrl}/api/business/documents/${id}/download`;
+        
+        console.log('Download URL:', url);
         
         const response = await fetch(url, {
             method: 'GET',
@@ -1774,19 +1774,12 @@ async function downloadDocument(id) {
         });
         
         if (!response.ok) {
-            if (response.status === 401) {
-                showToast('Session expired. Please login again.', 'error');
-                logout();
-                return;
-            }
-            if (response.status === 404) {
-                showToast('Document not found', 'error');
-                return;
-            }
-            throw new Error(`HTTP ${response.status}`);
+            const errorText = await response.text();
+            console.error('Download error response:', errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
-        // Get filename from Content-Disposition or use document name
+        // Get filename from Content-Disposition
         let filename = 'document';
         const contentDisposition = response.headers.get('Content-Disposition');
         if (contentDisposition) {
@@ -1796,7 +1789,6 @@ async function downloadDocument(id) {
             }
         }
         
-        // Get blob and trigger download
         const blob = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1811,8 +1803,6 @@ async function downloadDocument(id) {
     } catch (error) {
         console.error('Download error:', error);
         showToast(error.message || 'Failed to download document', 'error');
-    } finally {
-        hideLoading();
     }
 }
 
