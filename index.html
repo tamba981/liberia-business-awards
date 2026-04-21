@@ -11907,32 +11907,186 @@ console.log('✅ Voting system frontend fixes applied');
 </script>
 
 <!-- ============================================ -->
-<!-- NON-INTRUSIVE POP-UP ADS (Bottom-Left Position) -->
-<!-- Supports: Images, Videos, Custom HTML -->
+<!-- BOTTOM-LEFT POPUP AD SYSTEM (Non-Intrusive) -->
 <!-- ============================================ -->
 <style>
-    /* Non-Intrusive Popup Container - Bottom Left */
-    .ad-popup-container {
+    /* Non-Intrusive Popup Ad Container */
+    .bottom-popup-ad {
         position: fixed;
-        bottom: 100px;
+        bottom: 140px; /* Above WhatsApp button (which is at bottom: 28px) */
         left: 20px;
         z-index: 9998;
-        max-width: 320px;
-        width: calc(100% - 40px);
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-        overflow: hidden;
         transform: translateX(-120%);
         transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        border: 1px solid rgba(255, 0, 0, 0.2);
+        cursor: pointer;
     }
     
-    .ad-popup-container.active {
+    .bottom-popup-ad.active {
         transform: translateX(0);
     }
     
-    /* Slide in from left animation */
+    /* Ad Card */
+    .ad-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        width: 320px;
+        max-width: calc(100vw - 40px);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 0, 0, 0.2);
+    }
+    
+    .ad-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 50px rgba(255, 0, 0, 0.25);
+    }
+    
+    /* Ad Header */
+    .ad-card-header {
+        background: linear-gradient(135deg, #FF0000, #87CEEB);
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .ad-close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s;
+    }
+    
+    .ad-close-btn:hover {
+        background: rgba(255, 255, 255, 0.4);
+        transform: scale(1.1);
+    }
+    
+    /* Ad Body */
+    .ad-card-body {
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .ad-card-body img {
+        max-width: 100%;
+        border-radius: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .ad-card-body h4 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: #1a202c;
+    }
+    
+    .ad-card-body p {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 12px;
+    }
+    
+    .ad-cta-btn {
+        display: inline-block;
+        background: #FF0000;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .ad-cta-btn:hover {
+        background: #cc0000;
+        transform: scale(1.05);
+    }
+    
+    /* Video Container */
+    .ad-video-container {
+        position: relative;
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    
+    .ad-video-container video,
+    .ad-video-container iframe {
+        width: 100%;
+        height: auto;
+        min-height: 180px;
+        display: block;
+    }
+    
+    /* Progress Bar */
+    .ad-progress-bar {
+        height: 3px;
+        background: #FF0000;
+        width: 0%;
+        transition: width 0.1s linear;
+    }
+    
+    /* Timer Badge */
+    .ad-timer-badge {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 600;
+        z-index: 5;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .bottom-popup-ad {
+            bottom: 120px;
+            left: 15px;
+        }
+        .ad-card {
+            width: 280px;
+        }
+        .ad-card-body {
+            padding: 12px;
+        }
+        .ad-card-body h4 {
+            font-size: 14px;
+        }
+        .ad-card-body p {
+            font-size: 11px;
+        }
+        .ad-cta-btn {
+            padding: 6px 16px;
+            font-size: 12px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .bottom-popup-ad {
+            bottom: 100px;
+            left: 10px;
+        }
+        .ad-card {
+            width: 260px;
+        }
+    }
+    
+    /* Slide-in Animation */
     @keyframes slideInLeft {
         from {
             transform: translateX(-120%);
@@ -11944,183 +12098,39 @@ console.log('✅ Voting system frontend fixes applied');
         }
     }
     
-    /* Popup Header */
-    .ad-popup-header {
-        background: linear-gradient(135deg, #FF0000, #87CEEB);
-        padding: 10px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: white;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    
-    .ad-popup-header span {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .ad-popup-close {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 14px;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .ad-popup-close:hover {
-        background: rgba(255, 255, 255, 0.4);
-        transform: scale(1.05);
-    }
-    
-    /* Popup Content */
-    .ad-popup-content {
-        padding: 15px;
-        text-align: center;
-    }
-    
-    /* Image Ad */
-    .ad-popup-image {
-        width: 100%;
-        max-height: 200px;
-        object-fit: cover;
-        border-radius: 12px;
-        cursor: pointer;
-        margin-bottom: 12px;
-    }
-    
-    /* Video Ad Container */
-    .ad-popup-video {
-        width: 100%;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 12px;
-    }
-    
-    .ad-popup-video iframe,
-    .ad-popup-video video {
-        width: 100%;
-        height: 180px;
-        border: none;
-    }
-    
-    /* Custom/Text Ad */
-    .ad-popup-custom {
-        text-align: center;
-    }
-    
-    .ad-popup-custom h4 {
-        font-size: 18px;
-        font-weight: 800;
-        color: #FF0000;
-        margin-bottom: 8px;
-    }
-    
-    .ad-popup-custom p {
-        font-size: 13px;
-        color: #666;
-        margin-bottom: 12px;
-    }
-    
-    /* Call to Action Button */
-    .ad-popup-btn {
-        display: inline-block;
-        background: #FF0000;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 30px;
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 600;
-        transition: all 0.3s;
-        margin-top: 8px;
-    }
-    
-    .ad-popup-btn:hover {
-        background: #cc0000;
-        transform: scale(1.03);
-    }
-    
-    /* Countdown Timer */
-    .ad-popup-timer {
-        font-size: 11px;
-        color: #999;
-        text-align: center;
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px solid #eee;
-    }
-    
-    /* Progress Bar */
-    .ad-popup-progress {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 3px;
-        background: #FF0000;
-        width: 0%;
-        transition: width 0.1s linear;
-    }
-    
-    /* Adjust for mobile - ensure it doesn't cover WhatsApp/Back to Top */
-    @media (max-width: 768px) {
-        .ad-popup-container {
-            bottom: 80px;
-            left: 10px;
-            max-width: 280px;
-            width: calc(100% - 20px);
+    @keyframes slideOutLeft {
+        from {
+            transform: translateX(0);
+            opacity: 1;
         }
-        .ad-popup-video iframe,
-        .ad-popup-video video {
-            height: 150px;
+        to {
+            transform: translateX(-120%);
+            opacity: 0;
         }
-        .ad-popup-content {
-            padding: 12px;
-        }
-        .ad-popup-custom h4 {
-            font-size: 16px;
-        }
-    }
-    
-    /* Desktop larger screens */
-    @media (min-width: 1200px) {
-        .ad-popup-container {
-            max-width: 360px;
-            bottom: 110px;
-            left: 25px;
-        }
-        .ad-popup-video iframe,
-        .ad-popup-video video {
-            height: 200px;
-        }
-    }
-    
-    /* Ensure WhatsApp and Back to Top buttons remain above/accessible */
-    .whatsapp-float {
-        z-index: 9999 !important;
-    }
-    #backToTop {
-        z-index: 9999 !important;
     }
 </style>
 
+<div class="bottom-popup-ad" id="bottomPopupAd">
+    <div class="ad-card" id="adCard">
+        <div class="ad-card-header">
+            <span><i class="fas fa-ad"></i> Advertisement</span>
+            <button class="ad-close-btn" id="closeAdBtn" onclick="closeBottomPopupAd()">✕</button>
+        </div>
+        <div class="ad-card-body" id="adBody">
+            <!-- Dynamic content will be loaded here -->
+        </div>
+        <div class="ad-progress-bar" id="adProgressBar"></div>
+    </div>
+</div>
+
 <script>
 // ============================================
-// NON-INTRUSIVE POP-UP AD SYSTEM (Bottom-Left)
-// Supports: Images, Videos, Custom HTML
-// Rotates every 10 seconds
+// BOTTOM-LEFT POPUP AD SYSTEM (Non-Intrusive)
+// Auto-rotates every 10 seconds
+// Supports Images, Videos, Custom HTML
 // ============================================
 
-const PopupAdManager = {
+const BottomPopupAdManager = {
     // Ad Queue - Add your ads here
     adQueue: [
         {
@@ -12131,8 +12141,7 @@ const PopupAdManager = {
             mediaUrl: "images/LBA-cover.png",
             ctaText: "Join Now →",
             ctaLink: "/lba-directory.html",
-            duration: 10000, // 10 seconds display
-            frequency: "once_per_session"
+            duration: 10000 // 10 seconds display time
         },
         {
             id: 2,
@@ -12142,8 +12151,7 @@ const PopupAdManager = {
             mediaUrl: "images/logo.png",
             ctaText: "Nominate Now →",
             ctaLink: "/#nominateModal",
-            duration: 10000,
-            frequency: "once_per_session"
+            duration: 10000
         },
         {
             id: 3,
@@ -12152,8 +12160,7 @@ const PopupAdManager = {
             description: "Premium Directory Packages Starting at $25/month",
             ctaText: "Upgrade Now",
             ctaLink: "/lba-directory.html",
-            duration: 10000,
-            frequency: "once_per_session"
+            duration: 10000
         },
         {
             id: 4,
@@ -12164,19 +12171,17 @@ const PopupAdManager = {
             ctaText: "Watch Full Video",
             ctaLink: "https://www.youtube.com/@LiberiaBusinessAwards",
             duration: 10000,
-            frequency: "once_per_session",
             isYouTube: true
         },
         {
             id: 5,
             type: "image",
             title: "Partner With LBA",
-            description: "Sponsor the Biggest Business Event",
+            description: "Sponsor the Biggest Business Event in Liberia",
             mediaUrl: "images/LBA-cover.png",
             ctaText: "Become a Partner",
             ctaLink: "/#partnership",
-            duration: 10000,
-            frequency: "once_per_session"
+            duration: 10000
         },
         {
             id: 6,
@@ -12185,288 +12190,222 @@ const PopupAdManager = {
             description: "Reach 50,000+ Monthly Visitors",
             ctaText: "View Packages",
             ctaLink: "/advertise.html",
-            duration: 10000,
-            frequency: "once_per_session"
+            duration: 10000
         }
     ],
     
-    currentAdIndex: 0,
-    isShowing: false,
-    countdownInterval: null,
-    rotationInterval: null,
+    currentIndex: 0,
+    isVisible: true,
+    progressInterval: null,
+    autoHideTimer: null,
+    adVisible: false,
     
-    // Check if ad should be shown
-    shouldShowAd: function(ad) {
-        const storageKey = `popup_ad_${ad.id}_shown`;
-        return !sessionStorage.getItem(storageKey);
-    },
-    
-    // Mark ad as shown
-    markAdAsShown: function(ad) {
-        const storageKey = `popup_ad_${ad.id}_shown`;
-        sessionStorage.setItem(storageKey, 'true');
-    },
-    
-    // Create popup HTML
-    createPopupHTML: function(ad) {
+    // Generate ad HTML
+    generateAdHTML: function(ad) {
         let contentHtml = '';
         
         switch(ad.type) {
             case "image":
                 contentHtml = `
-                    <img src="${ad.mediaUrl}" alt="${ad.title}" class="ad-popup-image" onclick="window.location.href='${ad.ctaLink}'" style="cursor: pointer;">
-                    <div class="ad-popup-custom">
-                        <h4>${ad.title}</h4>
-                        <p>${ad.description}</p>
-                        <a href="${ad.ctaLink}" class="ad-popup-btn">${ad.ctaText}</a>
-                    </div>
-                    <div class="ad-popup-timer" id="popupTimer">Next ad in <span id="countdownSeconds">10</span>s</div>
-                    <div class="ad-popup-progress" id="popupProgress"></div>
+                    <img src="${ad.mediaUrl}" alt="${ad.title}" style="cursor: pointer;" onclick="window.location.href='${ad.ctaLink}'">
+                    <h4>${ad.title}</h4>
+                    <p>${ad.description}</p>
+                    <a href="${ad.ctaLink}" class="ad-cta-btn">${ad.ctaText}</a>
                 `;
                 break;
                 
             case "video":
                 if (ad.isYouTube) {
                     contentHtml = `
-                        <div class="ad-popup-video">
-                            <iframe src="${ad.mediaUrl}?autoplay=1&mute=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <div class="ad-video-container">
+                            <iframe src="${ad.mediaUrl}?autoplay=1&mute=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; min-height: 180px;"></iframe>
+                            <div class="ad-timer-badge" id="adTimerBadge">Next ad in 10s</div>
                         </div>
-                        <div class="ad-popup-custom">
-                            <h4>${ad.title}</h4>
-                            <p>${ad.description}</p>
-                            <a href="${ad.ctaLink}" class="ad-popup-btn" target="_blank">${ad.ctaText}</a>
-                        </div>
-                        <div class="ad-popup-timer" id="popupTimer">Next ad in <span id="countdownSeconds">10</span>s</div>
-                        <div class="ad-popup-progress" id="popupProgress"></div>
+                        <h4>${ad.title}</h4>
+                        <p>${ad.description}</p>
+                        <a href="${ad.ctaLink}" class="ad-cta-btn" target="_blank">${ad.ctaText}</a>
                     `;
                 } else {
                     contentHtml = `
-                        <div class="ad-popup-video">
+                        <div class="ad-video-container">
                             <video autoplay muted loop playsinline>
                                 <source src="${ad.mediaUrl}" type="video/mp4">
                             </video>
+                            <div class="ad-timer-badge" id="adTimerBadge">Next ad in 10s</div>
                         </div>
-                        <div class="ad-popup-custom">
-                            <h4>${ad.title}</h4>
-                            <p>${ad.description}</p>
-                            <a href="${ad.ctaLink}" class="ad-popup-btn">${ad.ctaText}</a>
-                        </div>
-                        <div class="ad-popup-timer" id="popupTimer">Next ad in <span id="countdownSeconds">10</span>s</div>
-                        <div class="ad-popup-progress" id="popupProgress"></div>
+                        <h4>${ad.title}</h4>
+                        <p>${ad.description}</p>
+                        <a href="${ad.ctaLink}" class="ad-cta-btn">${ad.ctaText}</a>
                     `;
                 }
                 break;
                 
             case "custom":
                 contentHtml = `
-                    <div class="ad-popup-custom">
-                        <div style="font-size: 40px; margin-bottom: 8px;">🎉</div>
-                        <h4>${ad.title}</h4>
-                        <p>${ad.description}</p>
-                        <a href="${ad.ctaLink}" class="ad-popup-btn">${ad.ctaText}</a>
-                    </div>
-                    <div class="ad-popup-timer" id="popupTimer">Next ad in <span id="countdownSeconds">10</span>s</div>
-                    <div class="ad-popup-progress" id="popupProgress"></div>
+                    <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+                    <h4>${ad.title}</h4>
+                    <p>${ad.description}</p>
+                    <a href="${ad.ctaLink}" class="ad-cta-btn">${ad.ctaText}</a>
+                    <div class="ad-timer-badge" id="adTimerBadge">Next ad in 10s</div>
                 `;
                 break;
         }
         
-        return `
-            <div class="ad-popup-container" id="popupAdContainer">
-                <div class="ad-popup-header">
-                    <span><i class="fas fa-ad"></i> Advertisement</span>
-                    <button class="ad-popup-close" onclick="PopupAdManager.closePopup()">✕</button>
-                </div>
-                <div class="ad-popup-content">
-                    ${contentHtml}
-                </div>
-            </div>
-        `;
+        return contentHtml;
     },
     
-    // Show popup
-    showPopup: function(ad) {
-        if (this.isShowing) return;
-        if (!this.shouldShowAd(ad)) {
-            // Skip to next ad
-            this.showNextAd();
-            return;
+    // Show current ad
+    showCurrentAd: function() {
+        const ad = this.adQueue[this.currentIndex];
+        if (!ad) return;
+        
+        const adBody = document.getElementById('adBody');
+        if (adBody) {
+            adBody.innerHTML = this.generateAdHTML(ad);
         }
         
-        this.isShowing = true;
-        
-        // Remove existing popup
-        const existingPopup = document.getElementById('popupAdContainer');
-        if (existingPopup) {
-            existingPopup.classList.remove('active');
-            setTimeout(() => {
-                if (existingPopup.parentNode) existingPopup.remove();
-                this.createAndShowPopup(ad);
-            }, 300);
-        } else {
-            this.createAndShowPopup(ad);
+        // Reset progress bar
+        const progressBar = document.getElementById('adProgressBar');
+        if (progressBar) {
+            progressBar.style.width = '0%';
         }
-    },
-    
-    createAndShowPopup: function(ad) {
-        // Create popup container
-        const popupDiv = document.createElement('div');
-        popupDiv.innerHTML = this.createPopupHTML(ad);
-        const popupElement = popupDiv.firstElementChild;
-        document.body.appendChild(popupElement);
         
-        // Mark as shown
-        this.markAdAsShown(ad);
+        // Show the popup with animation
+        const popup = document.getElementById('bottomPopupAd');
+        if (popup) {
+            popup.classList.add('active');
+            this.adVisible = true;
+        }
         
-        // Show with animation
-        setTimeout(() => {
-            popupElement.classList.add('active');
-            this.startCountdown(ad.duration);
-        }, 50);
+        // Start progress animation
+        this.startProgressAnimation(ad.duration);
         
-        // Schedule auto close and next ad
-        this.autoCloseTimeout = setTimeout(() => {
-            this.closePopup();
+        // Update timer badge
+        this.updateTimerBadge(ad.duration);
+        
+        // Schedule next ad
+        if (this.autoHideTimer) clearTimeout(this.autoHideTimer);
+        this.autoHideTimer = setTimeout(() => {
+            this.nextAd();
         }, ad.duration);
-        
-        // Track in analytics
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'popup_ad_view', {
-                'ad_id': ad.id,
-                'ad_title': ad.title,
-                'ad_type': ad.type
-            });
-        }
     },
     
-    // Start countdown timer for next ad
-    startCountdown: function(duration) {
-        let remaining = duration / 1000;
-        const secondsElement = document.getElementById('countdownSeconds');
-        const progressElement = document.getElementById('popupProgress');
+    // Start progress bar animation
+    startProgressAnimation: function(duration) {
+        if (this.progressInterval) clearInterval(this.progressInterval);
+        
         const startTime = Date.now();
+        const progressBar = document.getElementById('adProgressBar');
         
-        if (this.countdownInterval) clearInterval(this.countdownInterval);
-        
-        this.countdownInterval = setInterval(() => {
+        this.progressInterval = setInterval(() => {
             const elapsed = Date.now() - startTime;
-            const remainingSec = Math.max(0, Math.ceil((duration - elapsed) / 1000));
-            const progress = ((elapsed / duration) * 100);
+            const progress = (elapsed / duration) * 100;
             
-            if (secondsElement) {
-                secondsElement.textContent = remainingSec;
-            }
-            if (progressElement) {
-                progressElement.style.width = `${progress}%`;
+            if (progressBar && progress <= 100) {
+                progressBar.style.width = `${progress}%`;
             }
             
             if (elapsed >= duration) {
-                clearInterval(this.countdownInterval);
+                clearInterval(this.progressInterval);
             }
-        }, 100);
+        }, 50);
     },
     
-    // Close current popup and show next
-    closePopup: function() {
-        const popup = document.getElementById('popupAdContainer');
-        if (popup) {
-            popup.classList.remove('active');
-            setTimeout(() => {
-                if (popup.parentNode) popup.remove();
-                this.isShowing = false;
-                this.showNextAd();
-            }, 300);
-        }
+    // Update timer badge
+    updateTimerBadge: function(duration) {
+        let remaining = duration / 1000;
+        const timerBadge = document.getElementById('adTimerBadge');
         
-        if (this.autoCloseTimeout) clearTimeout(this.autoCloseTimeout);
-        if (this.countdownInterval) clearInterval(this.countdownInterval);
-    },
-    
-    // Show next ad in rotation
-    showNextAd: function() {
-        // Get available ads (not shown this session)
-        const availableAds = this.adQueue.filter(ad => this.shouldShowAd(ad));
+        if (!timerBadge) return;
         
-        if (availableAds.length === 0) {
-            console.log('📢 All ads shown this session. Resetting for next visit.');
-            return;
-        }
-        
-        // Move to next ad
-        this.currentAdIndex = (this.currentAdIndex + 1) % availableAds.length;
-        const nextAd = availableAds[this.currentAdIndex];
-        
-        // Show next ad after 1 second delay
-        setTimeout(() => {
-            if (!this.isShowing) {
-                this.showPopup(nextAd);
+        const interval = setInterval(() => {
+            if (!this.adVisible) {
+                clearInterval(interval);
+                return;
+            }
+            remaining--;
+            if (remaining > 0) {
+                timerBadge.textContent = `Next ad in ${remaining}s`;
+            } else {
+                clearInterval(interval);
             }
         }, 1000);
     },
     
-    // Start the ad rotation (10 seconds each)
-    startAdRotation: function() {
-        const availableAds = this.adQueue.filter(ad => this.shouldShowAd(ad));
-        
-        if (availableAds.length === 0) {
-            console.log('📢 No ads to show this session');
-            return;
+    // Go to next ad
+    nextAd: function() {
+        // Hide current ad with slide out
+        const popup = document.getElementById('bottomPopupAd');
+        if (popup) {
+            popup.style.animation = 'slideOutLeft 0.3s ease forwards';
         }
         
-        // Show first ad after 3 seconds
         setTimeout(() => {
-            this.showPopup(availableAds[0]);
+            // Move to next ad (loop back to start)
+            this.currentIndex = (this.currentIndex + 1) % this.adQueue.length;
+            
+            // Reset animation
+            if (popup) {
+                popup.style.animation = '';
+            }
+            
+            // Show next ad
+            this.showCurrentAd();
+        }, 300);
+    },
+    
+    // Start the ad rotation
+    startRotation: function() {
+        // Initial delay before showing first ad
+        setTimeout(() => {
+            this.showCurrentAd();
         }, 3000);
     },
     
-    // Manually add a new ad
+    // Add a new ad (for customers)
     addAd: function(adData) {
         this.adQueue.push(adData);
-        console.log(`✅ New popup ad added: ${adData.title}`);
+        console.log(`✅ New bottom popup ad added: ${adData.title}`);
     }
 };
 
-// Initialize popup ads when page loads
+// Close ad manually
+function closeBottomPopupAd() {
+    const popup = document.getElementById('bottomPopupAd');
+    if (popup) {
+        popup.style.animation = 'slideOutLeft 0.3s ease forwards';
+        setTimeout(() => {
+            popup.classList.remove('active');
+            popup.style.animation = '';
+        }, 300);
+    }
+    if (BottomPopupAdManager.autoHideTimer) clearTimeout(BottomPopupAdManager.autoHideTimer);
+    if (BottomPopupAdManager.progressInterval) clearInterval(BottomPopupAdManager.progressInterval);
+    BottomPopupAdManager.adVisible = false;
+}
+
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    // Start showing popup ads after page load
     setTimeout(() => {
-        PopupAdManager.startAdRotation();
+        BottomPopupAdManager.startRotation();
     }, 2000);
 });
 
-// Helper functions for adding customer ads
-function addCustomerImageAd(businessName, imageUrl, ctaLink, ctaText, description = "") {
-    PopupAdManager.addAd({
-        id: PopupAdManager.adQueue.length + 1,
+// Example: Add customer ad
+function addCustomerPopupAd(businessName, imageUrl, ctaLink, ctaText, description = "") {
+    BottomPopupAdManager.addAd({
+        id: BottomPopupAdManager.adQueue.length + 1,
         type: "image",
         title: businessName,
         description: description,
         mediaUrl: imageUrl,
         ctaText: ctaText,
         ctaLink: ctaLink,
-        duration: 10000,
-        frequency: "once_per_session"
+        duration: 10000
     });
 }
 
-function addCustomerVideoAd(businessName, videoUrl, ctaLink, ctaText) {
-    PopupAdManager.addAd({
-        id: PopupAdManager.adQueue.length + 1,
-        type: "video",
-        title: businessName,
-        description: "Watch our video to learn more",
-        mediaUrl: videoUrl,
-        ctaText: ctaText,
-        ctaLink: ctaLink,
-        duration: 10000,
-        frequency: "once_per_session",
-        isYouTube: videoUrl.includes('youtube') || videoUrl.includes('youtu.be')
-    });
-}
-
-// Example usage for paying customers:
-// addCustomerImageAd("ABC Store", "images/abc-ad.jpg", "https://abcstore.com", "Shop Now", "Get 20% off");
-// addCustomerVideoAd("XYZ Company", "https://www.youtube.com/embed/VIDEO_ID", "https://xyz.com", "Watch Now");
+// Example: addCustomerPopupAd("ABC Store", "images/abc-ad.jpg", "https://abcstore.com", "Shop Now", "Get 20% off!");
 </script>
     
 </body>
