@@ -1253,204 +1253,153 @@ window.addEventListener('load', function() {
 
   <!-- Navigation -->
 <nav class="bg-white shadow-md sticky top-0 z-50 py-2" id="navbar" aria-label="Main navigation">
-    <div class="container mx-auto px-4">
-        <!-- Top Row: Logo + Mobile Menu Button + Desktop Buttons -->
-        <div class="flex flex-wrap items-center justify-between py-2">
-            <!-- Logo Section -->
-            <div class="flex items-center">
-                <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
-                    <img src="images/logo.png" alt="Liberia Business Awards Logo - Home" class="h-16 md:h-20 lg:h-24 xl:h-28 object-contain" width="140" height="140" fetchpriority="high" loading="eager">
-                </a>
-            </div>
+    <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+        <!-- Logo Section -->
+        <div class="flex items-center">
+            <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
+                <img src="images/logo.png" alt="Liberia Business Awards Logo - Home" class="h-16 md:h-20 lg:h-24 xl:h-28 object-contain" width="140" height="140" fetchpriority="high" loading="eager">
+            </a>
+        </div>
+        
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex space-x-5 xl:space-x-7 items-center">
+            <a href="#about" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">About</a>
+            <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Team Message</a>
+            <a href="#team" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Team</a>
+            <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Categories</a>
+            <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Featured</a>
+            <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Blog</a>
+            <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Partnership</a>
+            <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Contact</a>
+            <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium text-sm xl:text-base whitespace-nowrap">Dashboard</a>
             
-            <!-- Desktop Right Side Buttons (Hidden on mobile) -->
-            <div class="hidden lg:flex items-center gap-2 lg:gap-3">
-                <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full font-semibold text-sm hover:shadow-lg transition transform hover:scale-105 whitespace-nowrap">
-                    <i class="fas fa-user-plus mr-1"></i> Become a Member
-                </a>
-                <button onclick="checkNominationStatus()" id="navNominateBtn" class="bg-lba-red text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-red-600 transition whitespace-nowrap">
-                    <span id="nominateBtnText">Nominate Now</span>
-                </button>
-                <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-blue-400 transition whitespace-nowrap">
-                    Partner
-                </button>
-            </div>
+            <!-- Become a Member Button in Menu -->
+            <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-full font-bold text-sm lg:text-base hover:shadow-lg transition transform hover:scale-105">
+                <i class="fas fa-user-plus mr-1"></i> Become a Member
+            </a>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <!-- Desktop Buttons -->
+            <button onclick="checkNominationStatus()" id="navNominateBtn" class="hidden md:block bg-lba-red text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-red-600 transition whitespace-nowrap">
+                <span id="nominateBtnText">Nominate Now</span>
+            </button>
+            <button onclick="openModal('partnerModal')" class="hidden md:block bg-lba-blue text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-blue-400 transition whitespace-nowrap">
+                Partner
+            </button>
             
-            <!-- Mobile Menu Button (Visible only on mobile) -->
-            <button id="mobileMenuBtn" class="block lg:hidden p-2 text-gray-600 hover:text-lba-red focus:outline-none">
+            <!-- Mobile Menu Button -->
+            <button id="mobileMenuBtn" class="block md:hidden p-2 text-gray-600 hover:text-lba-red focus:outline-none">
                 <i class="fas fa-bars text-2xl"></i>
             </button>
         </div>
-        
-        <!-- Mobile Dropdown Menu (Appears right after logo row on mobile) -->
-        <div id="mobileMenu" class="hidden lg:hidden bg-white border-t border-gray-100 mt-2">
-            <div class="flex flex-col space-y-2 py-4">
-                <a href="#about" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">About</a>
-                <a href="#Team Message" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Team Message</a>
-                <a href="#team" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Team</a>
-                <a href="#categories" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Categories</a>
-                <a href="#featured" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Featured</a>
-                <a href="#blog" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Blog</a>
-                <a href="#partnership" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Partnership</a>
-                <a href="#contact" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Contact</a>
-                <a href="dashboard/login.html" onclick="closeMobileMenu(); return true;" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition block">Dashboard</a>
+    </div>
+    
+    <!-- Mobile Action Buttons Row (Always visible on mobile - below logo) -->
+    <div class="md:hidden flex flex-wrap items-center justify-center gap-2 py-3 px-4 border-t border-gray-100 mt-1">
+        <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center">
+            <i class="fas fa-user-plus mr-1"></i> Member
+        </a>
+        <button onclick="checkNominationStatus()" class="bg-lba-red text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center">
+            Nominate
+        </button>
+        <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center">
+            Partner
+        </button>
+    </div>
+    
+    <!-- Mobile Menu (Dropdown - Hidden by default) -->
+    <div id="mobileMenu" class="hidden md:hidden bg-white shadow-lg border-t border-gray-200">
+        <div class="px-4 py-4">
+            <div class="flex flex-col space-y-2">
+                <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">About</a>
+                <a href="#Team Message" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Team Message</a>
+                <a href="#team" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Team</a>
+                <a href="#categories" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Categories</a>
+                <a href="#featured" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Featured</a>
+                <a href="#blog" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Blog</a>
+                <a href="#partnership" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Partnership</a>
+                <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Contact</a>
+                <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Dashboard</a>
             </div>
-        </div>
-        
-        <!-- Mobile Action Buttons Row (Below dropdown, always visible on mobile) -->
-        <div class="flex flex-wrap items-center justify-center gap-2 py-3 border-t border-gray-100 mt-1 lg:hidden">
-            <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center min-w-[100px]">
-                <i class="fas fa-user-plus mr-1"></i> Member
-            </a>
-            <button onclick="checkNominationStatus()" class="bg-lba-red text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center min-w-[100px]">
-                Nominate
-            </button>
-            <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center min-w-[100px]">
-                Partner
-            </button>
         </div>
     </div>
 </nav>
 
-<style>
-    /* Ensure container doesn't overflow */
-    .container {
-        overflow-x: visible;
-    }
-    
-    /* Mobile button adjustments */
-    @media (max-width: 640px) {
-        .flex-1 {
-            flex: 1 1 auto;
-        }
-        .min-w-[100px] {
-            min-width: 85px;
-        }
-    }
-    
-    /* Very small screens */
-    @media (max-width: 480px) {
-        .min-w-[100px] {
-            min-width: 70px;
-            font-size: 0.7rem;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-        }
-    }
-</style>
-
 <script>
-    (function() {
-        // Wait for DOM to be fully loaded
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initMobileMenu);
-        } else {
-            initMobileMenu();
-        }
+    // Mobile menu toggle function - FIXED
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
         
-        function initMobileMenu() {
-            console.log('Initializing mobile menu...');
-            
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const mobileMenu = document.getElementById('mobileMenu');
-            
-            if (!mobileMenuBtn) {
-                console.error('Mobile menu button not found!');
-                return;
-            }
-            
-            if (!mobileMenu) {
-                console.error('Mobile menu element not found!');
-                return;
-            }
-            
-            console.log('Mobile menu elements found:', { mobileMenuBtn, mobileMenu });
-            
-            // Remove any existing event listeners by cloning and replacing
-            const newBtn = mobileMenuBtn.cloneNode(true);
-            mobileMenuBtn.parentNode.replaceChild(newBtn, mobileMenuBtn);
-            
-            const finalMenuBtn = document.getElementById('mobileMenuBtn');
-            const finalMenu = document.getElementById('mobileMenu');
-            
-            finalMenuBtn.addEventListener('click', function(e) {
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                console.log('Menu button clicked');
-                
-                if (finalMenu.classList.contains('hidden')) {
-                    finalMenu.classList.remove('hidden');
-                    const icon = this.querySelector('i');
-                    if (icon) {
-                        icon.classList.remove('fa-bars');
-                        icon.classList.add('fa-times');
-                    }
-                    console.log('Menu opened');
+                // Toggle menu visibility
+                if (mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('hidden');
+                    // Change icon to X
+                    this.innerHTML = '<i class="fas fa-times text-2xl"></i>';
                 } else {
-                    finalMenu.classList.add('hidden');
-                    const icon = this.querySelector('i');
-                    if (icon) {
-                        icon.classList.remove('fa-times');
-                        icon.classList.add('fa-bars');
-                    }
-                    console.log('Menu closed');
+                    mobileMenu.classList.add('hidden');
+                    // Change icon back to bars
+                    this.innerHTML = '<i class="fas fa-bars text-2xl"></i>';
                 }
             });
         }
-    })();
+    });
     
-    // Global closeMobileMenu function
-    window.closeMobileMenu = function() {
-        console.log('Closing mobile menu');
+    function closeMobileMenu() {
         const mobileMenu = document.getElementById('mobileMenu');
-        const menuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         
         if (mobileMenu) {
             mobileMenu.classList.add('hidden');
         }
-        
-        if (menuBtn) {
-            const icon = menuBtn.querySelector('i');
-            if (icon) {
-                icon.classList.remove('fa-times');
-                icon.classList.add('fa-bars');
-            }
+        if (mobileMenuBtn) {
+            mobileMenuBtn.innerHTML = '<i class="fas fa-bars text-2xl"></i>';
         }
-    };
+    }
     
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(event) {
         const mobileMenu = document.getElementById('mobileMenu');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         
-        if (mobileMenu && mobileMenuBtn && !mobileMenu.classList.contains('hidden')) {
-            if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
-                window.closeMobileMenu();
+        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+            if (!mobileMenu.contains(event.target) && !mobileMenuBtn?.contains(event.target)) {
+                closeMobileMenu();
             }
         }
     });
     
     // Close menu on window resize (when switching to desktop)
     window.addEventListener('resize', function() {
-        if (window.innerWidth >= 1024) {
-            window.closeMobileMenu();
+        if (window.innerWidth >= 768) { // md breakpoint
+            closeMobileMenu();
         }
     });
-    
-    // Make sure checkNominationStatus and openModal functions exist (if not, create placeholders)
-    if (typeof checkNominationStatus === 'undefined') {
-        window.checkNominationStatus = function() {
-            alert('Nomination functionality will be available soon!');
-        };
-    }
-    
-    if (typeof openModal === 'undefined') {
-        window.openModal = function(modalId) {
-            alert('Modal ' + modalId + ' will be available soon!');
-        };
-    }
 </script>
+
+<style>
+    /* Mobile button adjustments */
+    @media (max-width: 640px) {
+        .flex-1 {
+            flex: 1 1 auto;
+        }
+    }
+    
+    /* Very small screens */
+    @media (max-width: 480px) {
+        .flex-1 {
+            font-size: 0.7rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
+</style>
     
     <!-- Hero Section -->
 <section class="hero-bg pt-32 pb-20 px-4 text-white">
