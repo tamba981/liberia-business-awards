@@ -117,8 +117,23 @@ const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toSt
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('📁 Created uploads directory at:', uploadDir);
+} else {
+    console.log('📁 Uploads directory already exists at:', uploadDir);
 }
-console.log('📁 Uploads directory:', uploadDir);
+
+// Log directory permissions for debugging
+try {
+    fs.access(uploadDir, fs.constants.W_OK, (err) => {
+        if (err) {
+            console.error('❌ Uploads directory is NOT writable:', err);
+        } else {
+            console.log('✅ Uploads directory is writable');
+        }
+    });
+} catch (err) {
+    console.error('Could not check uploads directory permissions:', err);
+}
 
 // ============ RATE LIMITING ============
 const authLimiter = rateLimit({
