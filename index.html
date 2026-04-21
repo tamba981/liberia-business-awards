@@ -1254,8 +1254,8 @@ window.addEventListener('load', function() {
   <!-- Navigation -->
 <nav class="bg-white shadow-md sticky top-0 z-50 py-2" id="navbar" aria-label="Main navigation">
     <div class="container mx-auto px-4">
-        <!-- Top Row: Logo + Mobile Menu Button + Desktop Buttons -->
-        <div class="flex flex-wrap items-center justify-between py-2">
+        <!-- Top Row: Logo + Mobile Menu Button -->
+        <div class="flex items-center justify-between py-2">
             <!-- Logo Section -->
             <div class="flex items-center">
                 <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
@@ -1263,13 +1263,26 @@ window.addEventListener('load', function() {
                 </a>
             </div>
             
-            <!-- Desktop Right Side Buttons (Hidden on mobile) -->
-            <div class="hidden md:flex items-center gap-2 lg:gap-3">
-                <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full font-semibold text-sm hover:shadow-lg transition transform hover:scale-105 whitespace-nowrap">
+            <!-- Desktop Menu - Full links visible on desktop -->
+            <div class="hidden md:flex items-center space-x-4 lg:space-x-6">
+                <a href="#about" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">About</a>
+                <a href="#Team Message" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">Team Message</a>
+                <a href="#team" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">Team</a>
+                <a href="#categories" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">Categories</a>
+                <a href="#featured" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">Featured</a>
+                <a href="#blog" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">Blog</a>
+                <a href="#partnership" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">Partnership</a>
+                <a href="#contact" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">Contact</a>
+                <a href="dashboard/login.html" class="text-gray-700 hover:text-lba-red font-medium text-sm lg:text-base whitespace-nowrap">Dashboard</a>
+            </div>
+            
+            <!-- Desktop Action Buttons -->
+            <div class="hidden md:flex items-center gap-2">
+                <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full font-semibold text-sm hover:shadow-lg transition whitespace-nowrap">
                     <i class="fas fa-user-plus mr-1"></i> Become a Member
                 </a>
                 <button onclick="checkNominationStatus()" id="navNominateBtn" class="bg-lba-red text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-red-600 transition whitespace-nowrap">
-                    <span id="nominateBtnText">Nominate Now</span>
+                    Nominate Now
                 </button>
                 <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-blue-400 transition whitespace-nowrap">
                     Partner
@@ -1282,7 +1295,7 @@ window.addEventListener('load', function() {
             </button>
         </div>
         
-        <!-- Mobile Dropdown Menu (Appears right after logo row on mobile) -->
+        <!-- Mobile Dropdown Menu (Hidden by default, shows when hamburger clicked) -->
         <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100 mt-2">
             <div class="flex flex-col space-y-2 py-4">
                 <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">About</a>
@@ -1295,6 +1308,9 @@ window.addEventListener('load', function() {
                 <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Contact</a>
                 <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Dashboard</a>
                 
+                <!-- Divider -->
+                <div class="border-t border-gray-100 my-2"></div>
+                
                 <!-- Become a Member in Dropdown -->
                 <a href="directory.html" onclick="closeMobileMenu()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-full font-bold text-center hover:shadow-lg transition mt-2">
                     <i class="fas fa-user-plus mr-2"></i> Become a Member
@@ -1302,15 +1318,15 @@ window.addEventListener('load', function() {
             </div>
         </div>
         
-        <!-- Mobile Action Buttons Row (Below dropdown, always visible on mobile) -->
+        <!-- Mobile Action Buttons Row (Always visible on mobile) -->
         <div class="flex flex-wrap items-center justify-center gap-2 py-3 border-t border-gray-100 mt-1 md:hidden">
-            <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center min-w-[100px]">
+            <a href="directory.html" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center">
                 <i class="fas fa-user-plus mr-1"></i> Member
             </a>
-            <button onclick="checkNominationStatus()" class="bg-lba-red text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center min-w-[100px]">
+            <button onclick="checkNominationStatus()" class="bg-lba-red text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center">
                 Nominate
             </button>
-            <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center min-w-[100px]">
+            <button onclick="openModal('partnerModal')" class="bg-lba-blue text-white px-3 py-2 rounded-full font-semibold text-xs flex-1 text-center">
                 Partner
             </button>
         </div>
@@ -1318,68 +1334,61 @@ window.addEventListener('load', function() {
 </nav>
 
 <style>
-    /* Ensure container doesn't overflow */
-    .container {
-        overflow-x: visible;
+    /* Mobile menu animation */
+    #mobileMenu {
+        transition: all 0.3s ease;
     }
     
-    /* Mobile button adjustments */
-    @media (max-width: 640px) {
-        .flex-1 {
-            flex: 1 1 auto;
+    /* Responsive adjustments */
+    @media (max-width: 767px) {
+        .hidden.md\:flex {
+            display: none !important;
         }
-        .min-w-[100px] {
-            min-width: 85px;
+        .block.md\:hidden {
+            display: block !important;
+        }
+        .md\:hidden {
+            display: block !important;
         }
     }
     
-    /* Very small screens */
-    @media (max-width: 480px) {
-        .min-w-[100px] {
-            min-width: 70px;
-            font-size: 0.7rem;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
+    @media (min-width: 768px) {
+        .md\:hidden {
+            display: none !important;
+        }
+        .hidden.md\:flex {
+            display: flex !important;
         }
     }
 </style>
 
 <script>
-    // Mobile menu toggle function - FIXED
+    // Mobile menu toggle function
     document.addEventListener('DOMContentLoaded', function() {
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
         
         if (mobileMenuBtn && mobileMenu) {
-            // Remove any existing listeners to prevent duplicates
-            const newBtn = mobileMenuBtn.cloneNode(true);
-            mobileMenuBtn.parentNode.replaceChild(newBtn, mobileMenuBtn);
-            
-            const finalBtn = document.getElementById('mobileMenuBtn');
-            const finalMenu = document.getElementById('mobileMenu');
-            
-            if (finalBtn && finalMenu) {
-                finalBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    if (finalMenu.classList.contains('hidden')) {
-                        finalMenu.classList.remove('hidden');
-                        // Change icon to X
-                        const icon = this.querySelector('i');
-                        if (icon) {
-                            icon.classList.remove('fa-bars');
-                            icon.classList.add('fa-times');
-                        }
-                    } else {
-                        finalMenu.classList.add('hidden');
-                        // Change icon back to bars
-                        const icon = this.querySelector('i');
-                        if (icon) {
-                            icon.classList.remove('fa-times');
-                            icon.classList.add('fa-bars');
-                        }
+            mobileMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('hidden');
+                    // Change icon to X
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
                     }
-                });
-            }
+                } else {
+                    mobileMenu.classList.add('hidden');
+                    // Change icon back to bars
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            });
         }
     });
     
@@ -1418,7 +1427,6 @@ window.addEventListener('load', function() {
         }
     });
 </script>
-    
     <!-- Hero Section -->
 <section class="hero-bg pt-32 pb-20 px-4 text-white">
     <div class="container mx-auto text-center">
