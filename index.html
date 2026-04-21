@@ -1320,10 +1320,8 @@ window.addEventListener('load', function() {
 </div>
 </nav>
 
-    </nav>
-
-<!-- ============================================ -->
-<!-- SCROLLING ANNOUNCEMENT TICKER - ADD THIS -->
+    <!-- ============================================ -->
+<!-- SCROLLING ANNOUNCEMENT TICKER - STICKY VERSION -->
 <!-- ============================================ -->
 <style>
     .announcement-bar {
@@ -1331,10 +1329,19 @@ window.addEventListener('load', function() {
         color: white;
         padding: 12px 0;
         overflow: hidden;
-        position: relative;
+        position: sticky;
+        top: 0;
+        z-index: 48;
         border-bottom: 2px solid #FF0000;
         border-top: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
+    
+    /* Adjust for when navbar is also sticky */
+    .announcement-bar.sticky-active {
+        top: 70px; /* Adjust based on your navbar height */
+    }
+    
     .scrolling-wrapper { overflow: hidden; white-space: nowrap; position: relative; }
     .scrolling-content { display: inline-block; animation: scrollText 30s linear infinite; white-space: nowrap; }
     .scrolling-content:hover { animation-play-state: paused; }
@@ -1397,7 +1404,27 @@ window.addEventListener('load', function() {
             container.innerHTML = html;
         }
     };
+    
+    // Handle scroll to adjust announcement bar position
+    document.addEventListener('DOMContentLoaded', function() {
+        const announcementBar = document.querySelector('.announcement-bar');
+        const navbar = document.getElementById('navbar');
+        
+        if (announcementBar && navbar) {
+            window.addEventListener('scroll', function() {
+                const navbarHeight = navbar.offsetHeight;
+                if (window.scrollY > 50) {
+                    announcementBar.style.top = navbarHeight + 'px';
+                    announcementBar.classList.add('sticky-active');
+                } else {
+                    announcementBar.style.top = '0';
+                    announcementBar.classList.remove('sticky-active');
+                }
+            });
+        }
+    });
 </script>
+
     
     <!-- Hero Section -->
     <section class="hero-bg pt-32 pb-20 px-4 text-white">
