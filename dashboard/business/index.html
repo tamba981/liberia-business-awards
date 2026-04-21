@@ -1654,9 +1654,10 @@
         function editNomination(id) { if (confirm('Edit this nomination?')) showNominationModal(id); }
 
         // ============================================
-        // DOCUMENTS FUNCTIONS - FIXED VIEW/DOWNLOAD
-        // ============================================
-        async function loadDocuments() {
+// DOCUMENTS FUNCTIONS - FULLY FIXED
+// ============================================
+
+async function loadDocuments() {
     try {
         const page = appState.documents.currentPage;
         const data = await apiRequest(`/api/business/documents?page=${page}&limit=12`);
@@ -1672,7 +1673,7 @@
         }
     } catch (error) { 
         console.error('Documents load error:', error);
-        showNotification('Could not load documents', 'warning');
+        showToast('Could not load documents', 'warning');
     }
 }
 
@@ -1691,11 +1692,13 @@ function displayDocuments() {
     }
     
     grid.innerHTML = documents.map(doc => {
-        const icon = doc.fileType?.includes('pdf') ? 'fa-file-pdf' : 
-                     doc.fileType?.includes('image') ? 'fa-file-image' : 
-                     doc.fileType?.includes('word') ? 'fa-file-word' : 'fa-file';
+        let icon = 'fa-file';
+        if (doc.fileType) {
+            if (doc.fileType.includes('pdf')) icon = 'fa-file-pdf';
+            else if (doc.fileType.includes('image')) icon = 'fa-file-image';
+            else if (doc.fileType.includes('word')) icon = 'fa-file-word';
+        }
         
-        // FIXED: Use correct function calls
         return `
             <div class="document-card">
                 <div class="document-icon"><i class="fas ${icon}"></i></div>
@@ -1719,39 +1722,14 @@ function displayDocuments() {
     }).join('');
 }
 
-        function updateDocumentsPagination() {
-            const pagination = document.getElementById('documentsPagination');
-            const { currentPage, totalPages } = appState.documents;
-            if (totalPages <= 1) { pagination.innerHTML = ''; return; }
-            let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changeDocumentsPage(${i})">${i}</button>`;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    html += `<span class="page-btn" disabled>...</span>`;
-                }
-            }
-            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
-            pagination.innerHTML = html;
-        }
-
-        function changeDocumentsPage(page) {
-            appState.documents.currentPage = page;
-            loadDocuments();
-        }
-
-        // ============================================
-// FIXED: DOCUMENT VIEW AND DOWNLOAD FUNCTIONS
-// ============================================
-
 function viewDocument(id) {
     const token = localStorage.getItem('lba_auth_token');
     if (!token) {
-        showNotification('Please login again', 'error');
+        showToast('Please login again', 'error');
         return;
     }
     
-    // FIXED: Use correct URL format
+    // Use the correct URL format
     const url = `${BACKEND_URL}/business/documents/${id}/view`;
     
     console.log('📄 Viewing document:', url);
@@ -1763,11 +1741,11 @@ function viewDocument(id) {
 function downloadDocument(id) {
     const token = localStorage.getItem('lba_auth_token');
     if (!token) {
-        showNotification('Please login again', 'error');
+        showToast('Please login again', 'error');
         return;
     }
     
-    // FIXED: Use correct URL format
+    // Use the correct URL format
     const url = `${BACKEND_URL}/business/documents/${id}/download`;
     
     console.log('📥 Downloading document:', url);
@@ -1775,19 +1753,25 @@ function downloadDocument(id) {
     // Create hidden link for download
     const link = document.createElement('a');
     link.href = url;
-    link.download = '';  // Let server set filename
+    link.download = '';
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
-        async function deleteDocument(id) {
-            if (!confirm('Delete this document? This action cannot be undone.')) return;
-            try {
-                const response = await apiRequest(`/api/business/documents/${id}`, { method: 'DELETE' });
-                if (response.success) { showToast('Document deleted', 'success'); await loadDocuments(); }
-            } catch (error) { showToast(error.message || 'Failed to delete document', 'error'); }
+
+async function deleteDocument(id) {
+    if (!confirm('Delete this document? This action cannot be undone.')) return;
+    try {
+        const response = await apiRequest(`/api/business/documents/${id}`, { method: 'DELETE' });
+        if (response.success) { 
+            showToast('Document deleted', 'success'); 
+            await loadDocuments(); 
         }
+    } catch (error) { 
+        showToast(error.message || 'Failed to delete document', 'error'); 
+    }
+}
 
         function showUploadModal() {
             document.getElementById('uploadForm').reset();
@@ -1832,11 +1816,11 @@ function downloadDocument(id) {
                 formData.append('name', documentName);
                 formData.append('type', document.getElementById('documentType').value);
                 const response = await apiRequest('/api/business/documents', { method: 'POST', body: formData });
-                if (response.success) {
-                    showToast('Document uploaded successfully', 'success');
-                    hideModal('uploadModal');
-                    await loadDocuments();
-                }
+    if (response.success) {
+    showToast('Document uploaded successfully', 'success');
+    hideModal('uploadModal');
+    await loadDocuments();
+}
             } catch (error) { showToast(error.message || 'Upload failed', 'error'); }
             finally { uploadBtn.innerHTML = originalText; uploadBtn.disabled = false; }
         });
