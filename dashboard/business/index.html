@@ -1216,7 +1216,7 @@
         // ============================================
         // CONFIGURATION
         // ============================================
-        const BACKEND_URL = 'https://liberia-business-awards-production.up.railway.app';
+        const BACKEND_URL = 'https://liberia-business-awards-production.up.railway.app/api';
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
         const SESSION_TIMEOUT = 60 * 60 * 1000;
         const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -1332,88 +1332,23 @@
             else if (page === 'notifications') loadNotifications();
         }
 
-       async function apiRequest(endpoint, options = {}) {
-    const token = localStorage.getItem('lba_auth_token');
-    
-    if (!token) {
-        console.error('❌ No token found');
-        showToast('Please login again', 'error');
-        setTimeout(logout, 2000);
-        throw new Error('No authentication token');
-    }
-    
-    // FIXED: Build the URL correctly
-    let url;
-    if (endpoint.startsWith('http')) {
-        url = endpoint;
-    } else if (endpoint.startsWith('/api/')) {
-        url = `${BACKEND_URL}${endpoint}`;
-    } else if (endpoint.startsWith('/')) {
-        url = `${BACKEND_URL}${endpoint}`;
-    } else {
-        url = `${BACKEND_URL}/${endpoint}`;
-    }
-    
-    console.log('🌐 API Request:', url);
-    console.log('🔑 Token exists:', !!token);
-    
-    const defaultOptions = { 
-        headers: { 
-            'Authorization': `Bearer ${token}`, 
-            'Accept': 'application/json'
-        } 
-    };
-    
-    // Don't set Content-Type for FormData
-    if (!(options.body instanceof FormData)) {
-        defaultOptions.headers['Content-Type'] = 'application/json';
-    }
-    
-    const fetchOptions = { 
-        ...defaultOptions, 
-        ...options, 
-        headers: { ...defaultOptions.headers, ...options.headers } 
-    };
-    
-    try {
-        const response = await fetch(url, fetchOptions);
-        
-        console.log('📡 Response status:', response.status);
-        
-        if (response.status === 401) {
-            console.error('❌ Authentication failed - token invalid or expired');
-            showToast('Session expired. Please login again.', 'error');
-            localStorage.removeItem('lba_auth_token');
-            localStorage.removeItem('lba_user_data');
-            localStorage.removeItem('lba_user_role');
-            setTimeout(() => { window.location.href = '../login.html'; }, 2000);
-            throw new Error('Unauthorized');
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('lba_auth_token');
+            const defaultOptions = { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' } };
+            if (options.body instanceof FormData) delete defaultOptions.headers['Content-Type'];
+            const fetchOptions = { ...defaultOptions, ...options, headers: { ...defaultOptions.headers, ...options.headers } };
+            try {
+                let cleanEndpoint = endpoint;
+                if (cleanEndpoint.startsWith('/api/')) cleanEndpoint = cleanEndpoint.substring(4);
+                const url = `${BACKEND_URL}${cleanEndpoint}`;
+                const response = await fetch(url, fetchOptions);
+                if (response.status === 401) { showToast('Session expired. Please login again.', 'error'); setTimeout(logout, 2000); throw new Error('Unauthorized'); }
+                if (response.status === 403) { showToast('Access denied', 'error'); throw new Error('Forbidden'); }
+                if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.message || `HTTP ${response.status}`); }
+                return await response.json();
+            } catch (error) { console.error('API Error:', error); throw error; }
         }
-        
-        if (response.status === 403) {
-            showToast('Access denied', 'error');
-            throw new Error('Forbidden');
-        }
-        
-        // For responses that might not be JSON
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            return await response.json();
-        }
-        
-        // For non-JSON responses, just return success
-        if (response.ok) {
-            return { success: true };
-        }
-        
-        throw new Error(`HTTP ${response.status}`);
-        
-    } catch (error) {
-        console.error('❌ API Error:', error);
-        throw error;
-    }
-}
-        
+
         async function loadAllData() {
             showLoading();
             try { await Promise.all([loadProfile(), loadNominations(), loadDocuments(), loadNotifications()]); }
@@ -1719,124 +1654,90 @@
         function editNomination(id) { if (confirm('Edit this nomination?')) showNominationModal(id); }
 
         // ============================================
-// DOCUMENTS FUNCTIONS - FULLY FIXED
-// ============================================
-
-async function loadDocuments() {
-    try {
-        const page = appState.documents.currentPage;
-        const data = await apiRequest(`/api/business/documents?page=${page}&limit=12`);
-        if (data.success) {
-            appState.documents.data = data.documents || data.data || [];
-            appState.documents.total = data.total || data.pagination?.total || 0;
-            appState.documents.totalPages = data.pages || data.pagination?.pages || 1;
-            displayDocuments();
-            updateDocumentsPagination();
-            document.getElementById('documentsCount').textContent = appState.documents.total;
-            document.getElementById('documentsUploaded').textContent = appState.documents.total;
-            document.getElementById('totalDocuments').textContent = appState.documents.total;
+        // DOCUMENTS FUNCTIONS - FIXED VIEW/DOWNLOAD
+        // ============================================
+        async function loadDocuments() {
+            try {
+                const page = appState.documents.currentPage;
+                const data = await apiRequest(`/api/business/documents?page=${page}&limit=12`);
+                if (data.success) {
+                    appState.documents.data = data.documents || data.data || [];
+                    appState.documents.total = data.total || data.pagination?.total || 0;
+                    appState.documents.totalPages = data.pages || data.pagination?.pages || 1;
+                    displayDocuments();
+                    updateDocumentsPagination();
+                    document.getElementById('documentsCount').textContent = appState.documents.total;
+                    document.getElementById('documentsUploaded').textContent = appState.documents.total;
+                    document.getElementById('totalDocuments').textContent = appState.documents.total;
+                }
+            } catch (error) { console.error('Documents load error:', error); }
         }
-    } catch (error) { 
-        console.error('Documents load error:', error);
-        showToast('Could not load documents', 'warning');
-    }
-}
 
-function displayDocuments() {
-    const grid = document.getElementById('documentsGrid');
-    const documents = appState.documents.data;
-    if (documents.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px;">
-            <i class="fas fa-file-upload" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
-            <p>No documents uploaded yet</p>
-            <button class="btn btn-primary btn-sm" onclick="showUploadModal()" style="margin-top: 10px;">
-                <i class="fas fa-upload"></i> Upload Your First Document
-            </button>
-        </div>`;
-        return;
-    }
-    
-    grid.innerHTML = documents.map(doc => {
-        let icon = 'fa-file';
-        if (doc.fileType) {
-            if (doc.fileType.includes('pdf')) icon = 'fa-file-pdf';
-            else if (doc.fileType.includes('image')) icon = 'fa-file-image';
-            else if (doc.fileType.includes('word')) icon = 'fa-file-word';
+        function displayDocuments() {
+            const grid = document.getElementById('documentsGrid');
+            const documents = appState.documents.data;
+            if (documents.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><i class="fas fa-file-upload" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i><p>No documents uploaded yet</p><button class="btn btn-primary btn-sm" onclick="showUploadModal()" style="margin-top: 10px;"><i class="fas fa-upload"></i> Upload Your First Document</button></div>`;
+                return;
+            }
+            grid.innerHTML = documents.map(doc => {
+                const icon = doc.type?.includes('pdf') ? 'fa-file-pdf' : doc.type?.includes('image') ? 'fa-file-image' : 'fa-file';
+                return `
+                    <div class="document-card">
+                        <div class="document-icon"><i class="fas ${icon}"></i></div>
+                        <div class="document-info"><div class="document-name">${doc.name || 'Document'}</div><div class="document-date">Uploaded: ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'Recent'}</div></div>
+                        <div class="document-actions">
+                            <button onclick="viewDocument('${doc._id}')"><i class="fas fa-eye"></i></button>
+                            <button onclick="downloadDocument('${doc._id}')"><i class="fas fa-download"></i></button>
+                            <button onclick="deleteDocument('${doc._id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
-        
-        return `
-            <div class="document-card">
-                <div class="document-icon"><i class="fas ${icon}"></i></div>
-                <div class="document-info">
-                    <div class="document-name">${escapeHtml(doc.name || 'Document')}</div>
-                    <div class="document-date">Uploaded: ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'Recent'}</div>
-                </div>
-                <div class="document-actions">
-                    <button onclick="viewDocument('${doc._id}')" title="View Document">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button onclick="downloadDocument('${doc._id}')" title="Download Document">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button onclick="deleteDocument('${doc._id}')" title="Delete Document">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
 
-function viewDocument(id) {
-    const token = localStorage.getItem('lba_auth_token');
-    if (!token) {
-        showToast('Please login again', 'error');
-        return;
-    }
-    
-    // Use the correct URL format
-    const url = `${BACKEND_URL}/business/documents/${id}/view`;
-    
-    console.log('📄 Viewing document:', url);
-    
-    // Open in new tab
-    window.open(url, '_blank');
-}
-
-function downloadDocument(id) {
-    const token = localStorage.getItem('lba_auth_token');
-    if (!token) {
-        showToast('Please login again', 'error');
-        return;
-    }
-    
-    // Use the correct URL format
-    const url = `${BACKEND_URL}/business/documents/${id}/download`;
-    
-    console.log('📥 Downloading document:', url);
-    
-    // Create hidden link for download
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = '';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-async function deleteDocument(id) {
-    if (!confirm('Delete this document? This action cannot be undone.')) return;
-    try {
-        const response = await apiRequest(`/api/business/documents/${id}`, { method: 'DELETE' });
-        if (response.success) { 
-            showToast('Document deleted', 'success'); 
-            await loadDocuments(); 
+        function updateDocumentsPagination() {
+            const pagination = document.getElementById('documentsPagination');
+            const { currentPage, totalPages } = appState.documents;
+            if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+            let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changeDocumentsPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span class="page-btn" disabled>...</span>`;
+                }
+            }
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+            pagination.innerHTML = html;
         }
-    } catch (error) { 
-        showToast(error.message || 'Failed to delete document', 'error'); 
-    }
-}
+
+        function changeDocumentsPage(page) {
+            appState.documents.currentPage = page;
+            loadDocuments();
+        }
+
+        // FIXED: View Document with correct URL (no double /api)
+        function viewDocument(id) {
+            const token = localStorage.getItem('lba_auth_token');
+            const url = `${BACKEND_URL.replace('/api', '')}/api/business/documents/${id}/view`;
+            window.open(url, '_blank');
+        }
+
+        // FIXED: Download Document with correct URL (no double /api)
+        function downloadDocument(id) {
+            const token = localStorage.getItem('lba_auth_token');
+            const url = `${BACKEND_URL.replace('/api', '')}/api/business/documents/${id}/download`;
+            window.open(url, '_blank');
+        }
+
+        async function deleteDocument(id) {
+            if (!confirm('Delete this document? This action cannot be undone.')) return;
+            try {
+                const response = await apiRequest(`/api/business/documents/${id}`, { method: 'DELETE' });
+                if (response.success) { showToast('Document deleted', 'success'); await loadDocuments(); }
+            } catch (error) { showToast(error.message || 'Failed to delete document', 'error'); }
+        }
 
         function showUploadModal() {
             document.getElementById('uploadForm').reset();
@@ -1881,11 +1782,11 @@ async function deleteDocument(id) {
                 formData.append('name', documentName);
                 formData.append('type', document.getElementById('documentType').value);
                 const response = await apiRequest('/api/business/documents', { method: 'POST', body: formData });
-    if (response.success) {
-    showToast('Document uploaded successfully', 'success');
-    hideModal('uploadModal');
-    await loadDocuments();
-}
+                if (response.success) {
+                    showToast('Document uploaded successfully', 'success');
+                    hideModal('uploadModal');
+                    await loadDocuments();
+                }
             } catch (error) { showToast(error.message || 'Upload failed', 'error'); }
             finally { uploadBtn.innerHTML = originalText; uploadBtn.disabled = false; }
         });
@@ -2053,17 +1954,6 @@ async function deleteDocument(id) {
         }
 
         // ============================================
-        // MISSING FUNCTION - ADD THIS
-        // ============================================
-        function showNominationModal(id) {
-            if (id) {
-                showToast(`Editing nomination ${id}`, 'info');
-            } else {
-                openNominationFromFrontend();
-            }
-        }
-
-        // ============================================
         // UTILITY FUNCTIONS
         // ============================================
         function hideModal(modalId) {
@@ -2094,7 +1984,6 @@ async function deleteDocument(id) {
             window.location.href = '../login.html';
         }
 
-        
         window.switchPage = switchPage;
         window.showProfileModal = showProfileModal;
         window.showNominationModal = showNominationModal;
