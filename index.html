@@ -1251,15 +1251,16 @@ window.addEventListener('load', function() {
         </div>
     </div>
 
-  <!-- Navigation -->
+
+     <!-- Navigation -->
 <nav class="bg-white shadow-md sticky top-0 z-50 py-2" id="navbar" aria-label="Main navigation">
     <div class="container mx-auto px-4">
         <!-- Top Row: Logo + Mobile Menu Button -->
         <div class="flex items-center justify-between py-2">
-            <!-- Logo Section -->
+            <!-- Logo Section - FIXED PATH -->
             <div class="flex items-center">
                 <a href="#hero" class="flex items-center focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
-                    <img src="images/logo.png" alt="Liberia Business Awards Logo - Home" class="h-16 md:h-20 lg:h-24 xl:h-28 object-contain" width="140" height="140" fetchpriority="high" loading="eager">
+                    <img src="/images/logo.png" alt="Liberia Business Awards Logo" class="h-16 md:h-20 lg:h-24 xl:h-28 object-contain" width="140" height="140" fetchpriority="high" loading="eager" onerror="this.src='https://placehold.co/140x140/FF0000/white?text=LBA'">
                 </a>
             </div>
             
@@ -1295,7 +1296,7 @@ window.addEventListener('load', function() {
             </button>
         </div>
         
-        <!-- Mobile Dropdown Menu (Hidden by default, shows when hamburger clicked) -->
+        <!-- Mobile Dropdown Menu (Starts HIDDEN - closed by default) -->
         <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100 mt-2">
             <div class="flex flex-col space-y-2 py-4">
                 <a href="#about" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">About</a>
@@ -1308,10 +1309,8 @@ window.addEventListener('load', function() {
                 <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Contact</a>
                 <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red hover:bg-gray-50 font-medium py-2 px-3 rounded-lg transition">Dashboard</a>
                 
-                <!-- Divider -->
                 <div class="border-t border-gray-100 my-2"></div>
                 
-                <!-- Become a Member in Dropdown -->
                 <a href="directory.html" onclick="closeMobileMenu()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-full font-bold text-center hover:shadow-lg transition mt-2">
                     <i class="fas fa-user-plus mr-2"></i> Become a Member
                 </a>
@@ -1334,6 +1333,15 @@ window.addEventListener('load', function() {
 </nav>
 
 <style>
+    /* Ensure menu starts hidden */
+    #mobileMenu {
+        display: none;
+    }
+    
+    #mobileMenu:not(.hidden) {
+        display: block;
+    }
+    
     /* Mobile menu animation */
     #mobileMenu {
         transition: all 0.3s ease;
@@ -1363,10 +1371,15 @@ window.addEventListener('load', function() {
 </style>
 
 <script>
-    // Mobile menu toggle function
+    // Mobile menu toggle function - Menu starts CLOSED
     document.addEventListener('DOMContentLoaded', function() {
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
+        
+        // Ensure menu starts hidden
+        if (mobileMenu) {
+            mobileMenu.classList.add('hidden');
+        }
         
         if (mobileMenuBtn && mobileMenu) {
             mobileMenuBtn.addEventListener('click', function(e) {
@@ -1413,8 +1426,8 @@ window.addEventListener('load', function() {
         const mobileMenu = document.getElementById('mobileMenu');
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         
-        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-            if (!mobileMenu.contains(event.target) && !mobileMenuBtn?.contains(event.target)) {
+        if (mobileMenu && mobileMenuBtn && !mobileMenu.classList.contains('hidden')) {
+            if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
                 closeMobileMenu();
             }
         }
@@ -1427,6 +1440,7 @@ window.addEventListener('load', function() {
         }
     });
 </script>
+    
     <!-- Hero Section -->
 <section class="hero-bg pt-32 pb-20 px-4 text-white">
     <div class="container mx-auto text-center">
