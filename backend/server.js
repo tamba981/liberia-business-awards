@@ -118,6 +118,7 @@ const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
+console.log('📁 Uploads directory:', uploadDir);
 
 // ============ RATE LIMITING ============
 const authLimiter = rateLimit({
@@ -1475,22 +1476,35 @@ app.delete('/api/business/nominations/:id', authenticate, authorize('business'),
 // ============ VIEW DOCUMENT (INLINE) ============
 app.get('/api/business/documents/:id/view', authenticate, authorize('business'), async (req, res) => {
     try {
+        console.log('🔍 View document request for ID:', req.params.id);
+        
         const document = await BusinessDocument.findOne({
             _id: req.params.id,
             business_id: req.user._id
         });
         
         if (!document) {
+            console.log('❌ Document not found in database');
             return res.status(404).json({ success: false, message: 'Document not found' });
         }
         
+        console.log('📄 Document found:', {
+            name: document.name,
+            file_url: document.file_url,
+            business_id: document.business_id
+        });
+        
         // Construct full file path
         const filePath = path.join(__dirname, document.file_url);
+        console.log('📁 Full file path:', filePath);
         
         // Check if file exists
         if (!fs.existsSync(filePath)) {
+            console.log('❌ File not found on server at:', filePath);
             return res.status(404).json({ success: false, message: 'File not found on server' });
         }
+        
+        console.log('✅ File exists, streaming...');
         
         // Get file extension and set appropriate content type
         const ext = path.extname(document.file_name || document.file_url).toLowerCase();
@@ -1525,6 +1539,11 @@ app.get('/api/business/documents/:id/view', authenticate, authorize('business'),
         // Stream the file
         const fileStream = fs.createReadStream(filePath);
         fileStream.pipe(res);
+        
+        fileStream.on('error', (err) => {
+            console.error('Stream error:', err);
+            res.status(500).json({ success: false, message: 'Error streaming file' });
+        });
         
     } catch (error) {
         console.error('View document error:', error);
