@@ -1,39 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- CRITICAL: Authentication check - MUST be first script -->
-    <script>
-        (function() {
-            const token = localStorage.getItem('lba_auth_token');
-            const userRole = localStorage.getItem('lba_user_role');
-            
-            if (!token || userRole !== 'business') {
-                localStorage.removeItem('lba_auth_token');
-                localStorage.removeItem('lba_user_data');
-                localStorage.removeItem('lba_user_role');
-                window.location.replace('../login.html');
-                return;
+
+<!-- CRITICAL: Authentication check - MUST be first script -->
+<script>
+    (function() {
+        const token = localStorage.getItem('lba_auth_token');
+        const userRole = localStorage.getItem('lba_user_role');
+        
+        // If no token or not business user, redirect immediately
+        if (!token || userRole !== 'business') {
+            localStorage.removeItem('lba_auth_token');
+            localStorage.removeItem('lba_user_data');
+            localStorage.removeItem('lba_user_role');
+            window.location.replace('../login.html');
+            return;
+        }
+        
+        // Async verification - don't block, but show loading
+        fetch('https://liberia-business-awards-production.up.railway.app/api/auth/verify', {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-            
-            fetch('https://liberia-business-awards-production.up.railway.app/api/auth/verify', {
-                method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => {
-                if (!response.ok) throw new Error('Invalid token');
-                return response.json();
-            }).then(data => {
-                if (!data.success || data.user.role !== 'business') {
-                    throw new Error('Not business user');
-                }
-            }).catch(() => {
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Invalid token');
+            return response.json();
+        })
+        .then(data => {
+            if (!data.success || data.user?.role !== 'business') {
+                throw new Error('Not business user');
+            }
+            // Token is valid - let the page load
+            console.log('✅ Authentication verified');
+        })
+        .catch((error) => {
+            console.error('Auth failed:', error);
+            // Only clear and redirect if we're not already on login page
+            if (!window.location.pathname.includes('login.html')) {
                 localStorage.clear();
                 window.location.replace('../login.html');
-            });
-        })();
-    </script>
+            }
+        });
+    })();
+</script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Dashboard - Liberia Business Awards</title>
