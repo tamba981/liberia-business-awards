@@ -1216,7 +1216,7 @@
         // ============================================
         // CONFIGURATION
         // ============================================
-        const BACKEND_URL = 'https://liberia-business-awards-production.up.railway.app/api';
+        const BACKEND_URL = 'https://liberia-business-awards-production.up.railway.app';
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
         const SESSION_TIMEOUT = 60 * 60 * 1000;
         const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -1342,16 +1342,17 @@
         throw new Error('No authentication token');
     }
     
-    // FIXED: Build the URL correctly
+    // FIXED: Remove duplicate /api
     let url;
     if (endpoint.startsWith('http')) {
         url = endpoint;
     } else if (endpoint.startsWith('/api/')) {
+        // endpoint already has /api/, so just prepend base URL
         url = `${BACKEND_URL}${endpoint}`;
     } else if (endpoint.startsWith('/')) {
-        url = `${BACKEND_URL}${endpoint}`;
+        url = `${BACKEND_URL}/api${endpoint}`;
     } else {
-        url = `${BACKEND_URL}/${endpoint}`;
+        url = `${BACKEND_URL}/api/${endpoint}`;
     }
     
     console.log('🌐 API Request:', url);
@@ -1364,7 +1365,6 @@
         } 
     };
     
-    // Don't set Content-Type for FormData
     if (!(options.body instanceof FormData)) {
         defaultOptions.headers['Content-Type'] = 'application/json';
     }
@@ -1381,7 +1381,6 @@
         console.log('📡 Response status:', response.status);
         
         if (response.status === 401) {
-            console.error('❌ Authentication failed - token invalid or expired');
             showToast('Session expired. Please login again.', 'error');
             localStorage.removeItem('lba_auth_token');
             localStorage.removeItem('lba_user_data');
@@ -1395,13 +1394,11 @@
             throw new Error('Forbidden');
         }
         
-        // For responses that might not be JSON
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             return await response.json();
         }
         
-        // For non-JSON responses, just return success
         if (response.ok) {
             return { success: true };
         }
@@ -1413,7 +1410,7 @@
         throw error;
     }
 }
-
+        
         async function loadAllData() {
             showLoading();
             try { await Promise.all([loadProfile(), loadNominations(), loadDocuments(), loadNotifications()]); }
@@ -2053,6 +2050,17 @@ async function deleteDocument(id) {
         }
 
         // ============================================
+        // MISSING FUNCTION - ADD THIS
+        // ============================================
+        function showNominationModal(id) {
+            if (id) {
+                showToast(`Editing nomination ${id}`, 'info');
+            } else {
+                openNominationFromFrontend();
+            }
+        }
+
+        // ============================================
         // UTILITY FUNCTIONS
         // ============================================
         function hideModal(modalId) {
@@ -2083,6 +2091,7 @@ async function deleteDocument(id) {
             window.location.href = '../login.html';
         }
 
+        
         window.switchPage = switchPage;
         window.showProfileModal = showProfileModal;
         window.showNominationModal = showNominationModal;
