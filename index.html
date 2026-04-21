@@ -1321,39 +1321,99 @@ window.addEventListener('load', function() {
 </nav>
 
     <!-- ============================================ -->
-<!-- SCROLLING ANNOUNCEMENT TICKER - STICKY VERSION -->
+<!-- SCROLLING ANNOUNCEMENT TICKER - ALWAYS VISIBLE -->
 <!-- ============================================ -->
 <style>
     .announcement-bar {
         background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
         color: white;
-        padding: 12px 0;
+        padding: 10px 0;
         overflow: hidden;
-        position: sticky;
-        top: 0;
-        z-index: 48;
+        position: relative;
         border-bottom: 2px solid #FF0000;
         border-top: 1px solid rgba(255,255,255,0.1);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        width: 100%;
+        z-index: 47;
     }
     
-    /* Adjust for when navbar is also sticky */
-    .announcement-bar.sticky-active {
-        top: 70px; /* Adjust based on your navbar height */
+    .scrolling-wrapper {
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+        width: 100%;
     }
     
-    .scrolling-wrapper { overflow: hidden; white-space: nowrap; position: relative; }
-    .scrolling-content { display: inline-block; animation: scrollText 30s linear infinite; white-space: nowrap; }
-    .scrolling-content:hover { animation-play-state: paused; }
-    .scrolling-item { display: inline-block; margin: 0 30px; font-size: 0.95rem; font-weight: 500; }
-    .scrolling-item i { margin-right: 8px; color: #FF0000; }
-    .scrolling-item a { color: white; text-decoration: none; transition: all 0.3s ease; padding: 5px 10px; border-radius: 30px; }
-    .scrolling-item a:hover { color: #FF0000; background: rgba(255,255,255,0.1); }
-    .scrolling-badge { background: #FF0000; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; margin-left: 10px; vertical-align: middle; }
-    .scrolling-badge-green { background: #10B981; }
-    .scrolling-badge-blue { background: #3B82F6; }
-    @keyframes scrollText { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-    @media (max-width: 768px) { .scrolling-item { margin: 0 15px; font-size: 0.8rem; } .scrolling-badge { font-size: 0.6rem; padding: 2px 6px; } }
+    .scrolling-content {
+        display: inline-block;
+        animation: scrollText 30s linear infinite;
+        white-space: nowrap;
+    }
+    
+    .scrolling-content:hover {
+        animation-play-state: paused;
+    }
+    
+    .scrolling-item {
+        display: inline-block;
+        margin: 0 30px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .scrolling-item i {
+        margin-right: 8px;
+        color: #FF0000;
+    }
+    
+    .scrolling-item a {
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        padding: 5px 10px;
+        border-radius: 30px;
+    }
+    
+    .scrolling-item a:hover {
+        color: #FF0000;
+        background: rgba(255,255,255,0.1);
+    }
+    
+    .scrolling-badge {
+        background: #FF0000;
+        color: white;
+        font-size: 0.65rem;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+    
+    .scrolling-badge-green {
+        background: #10B981;
+    }
+    
+    .scrolling-badge-blue {
+        background: #3B82F6;
+    }
+    
+    @keyframes scrollText {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+    
+    @media (max-width: 768px) {
+        .scrolling-item {
+            margin: 0 15px;
+            font-size: 0.75rem;
+        }
+        .scrolling-badge {
+            font-size: 0.55rem;
+            padding: 2px 6px;
+        }
+        .announcement-bar {
+            padding: 8px 0;
+        }
+    }
 </style>
 
 <div class="announcement-bar">
@@ -1404,27 +1464,7 @@ window.addEventListener('load', function() {
             container.innerHTML = html;
         }
     };
-    
-    // Handle scroll to adjust announcement bar position
-    document.addEventListener('DOMContentLoaded', function() {
-        const announcementBar = document.querySelector('.announcement-bar');
-        const navbar = document.getElementById('navbar');
-        
-        if (announcementBar && navbar) {
-            window.addEventListener('scroll', function() {
-                const navbarHeight = navbar.offsetHeight;
-                if (window.scrollY > 50) {
-                    announcementBar.style.top = navbarHeight + 'px';
-                    announcementBar.classList.add('sticky-active');
-                } else {
-                    announcementBar.style.top = '0';
-                    announcementBar.classList.remove('sticky-active');
-                }
-            });
-        }
-    });
 </script>
-
     
     <!-- Hero Section -->
     <section class="hero-bg pt-32 pb-20 px-4 text-white">
