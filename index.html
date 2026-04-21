@@ -1320,8 +1320,8 @@ window.addEventListener('load', function() {
 </div>
 </nav>
 
-    <!-- ============================================ -->
-<!-- SCROLLING ANNOUNCEMENT TICKER - ALWAYS VISIBLE -->
+<!-- ============================================ -->
+<!-- SCROLLING ANNOUNCEMENT TICKER - STICKY/FIXED -->
 <!-- ============================================ -->
 <style>
     .announcement-bar {
@@ -1329,11 +1329,17 @@ window.addEventListener('load', function() {
         color: white;
         padding: 10px 0;
         overflow: hidden;
-        position: relative;
+        position: sticky;
+        top: 0;
+        z-index: 48;
         border-bottom: 2px solid #FF0000;
         border-top: 1px solid rgba(255,255,255,0.1);
         width: 100%;
-        z-index: 47;
+    }
+    
+    /* Adjust position when navbar is also sticky */
+    .announcement-bar.sticky-adjusted {
+        top: 70px; /* Adjust based on your navbar height on desktop */
     }
     
     .scrolling-wrapper {
@@ -1413,10 +1419,13 @@ window.addEventListener('load', function() {
         .announcement-bar {
             padding: 8px 0;
         }
+        .announcement-bar.sticky-adjusted {
+            top: 60px; /* Adjust for mobile navbar height */
+        }
     }
 </style>
 
-<div class="announcement-bar">
+<div class="announcement-bar" id="announcementBar">
     <div class="scrolling-wrapper">
         <div class="scrolling-content">
             <span class="scrolling-item"><i class="fas fa-star"></i><a href="lba-directory.html">✨ Become a Member Today! Get Listed in Liberia's Premier Business Directory</a><span class="scrolling-badge">NEW</span></span>
@@ -1464,6 +1473,34 @@ window.addEventListener('load', function() {
             container.innerHTML = html;
         }
     };
+    
+    // Handle scroll to keep announcement bar visible below navbar
+    document.addEventListener('DOMContentLoaded', function() {
+        const announcementBar = document.getElementById('announcementBar');
+        const navbar = document.getElementById('navbar');
+        
+        if (announcementBar && navbar) {
+            // Set initial top position based on navbar height
+            const navbarHeight = navbar.offsetHeight;
+            announcementBar.style.top = navbarHeight + 'px';
+            
+            // Update on scroll
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 10) {
+                    announcementBar.style.top = navbarHeight + 'px';
+                    announcementBar.style.position = 'sticky';
+                } else {
+                    announcementBar.style.top = navbarHeight + 'px';
+                }
+            });
+            
+            // Update on resize
+            window.addEventListener('resize', function() {
+                const newNavbarHeight = navbar.offsetHeight;
+                announcementBar.style.top = newNavbarHeight + 'px';
+            });
+        }
+    });
 </script>
     
     <!-- Hero Section -->
