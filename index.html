@@ -11906,92 +11906,53 @@ console.log('✅ Voting system frontend fixes applied');
     });
 </script>
 
- <!-- ============================================ -->
-<!-- NON-INTRUSIVE CORNER POP-UP AD SYSTEM -->
-<!-- Image & Video Support - Doesn't block user interaction -->
+<!-- ============================================ -->
+<!-- NON-INTRUSIVE POP-UP AD SYSTEM (Bottom-Right Corner) -->
+<!-- Supports: Images, Videos, Custom HTML -->
 <!-- ============================================ -->
 <style>
-    /* Corner Pop-up Container */
-    .corner-ad-container {
+    /* Non-intrusive Popup - Bottom Right Corner */
+    .ad-popup-container {
         position: fixed;
-        bottom: 20px;
+        bottom: 140px;
         right: 20px;
-        z-index: 10000;
-        max-width: 360px;
-        width: calc(100% - 40px);
-        animation: slideInRight 0.4s ease-out;
-    }
-    
-    .corner-ad-container.left {
-        right: auto;
-        left: 20px;
-        animation: slideInLeft 0.4s ease-out;
-    }
-    
-    .corner-ad-container.top-right {
-        bottom: auto;
-        top: 20px;
-        right: 20px;
-        animation: slideInDown 0.4s ease-out;
-    }
-    
-    .corner-ad-container.top-left {
-        bottom: auto;
-        top: 20px;
-        left: 20px;
-        animation: slideInDown 0.4s ease-out;
-    }
-    
-    @keyframes slideInRight {
-        from { transform: translateX(400px); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes slideInLeft {
-        from { transform: translateX(-400px); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes slideInDown {
-        from { transform: translateY(-100px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-    
-    /* Ad Card */
-    .corner-ad-card {
+        width: 320px;
+        max-width: calc(100vw - 40px);
         background: white;
         border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+        z-index: 9998;
         overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
+        transform: translateX(400px);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         border: 1px solid rgba(255, 0, 0, 0.2);
-        cursor: pointer;
     }
     
-    .corner-ad-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+    .ad-popup-container.active {
+        transform: translateX(0);
+        opacity: 1;
     }
     
-    /* Ad Header */
-    .corner-ad-header {
+    /* Popup Header */
+    .ad-popup-header {
         background: linear-gradient(135deg, #FF0000, #87CEEB);
-        padding: 8px 15px;
+        padding: 10px 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         color: white;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 600;
     }
     
-    .corner-ad-header span {
+    .ad-popup-header span {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 8px;
     }
     
-    .corner-ad-close {
+    .ad-popup-close {
         background: rgba(255, 255, 255, 0.2);
         border: none;
         color: white;
@@ -12003,356 +11964,290 @@ console.log('✅ Voting system frontend fixes applied');
         transition: all 0.2s;
     }
     
-    .corner-ad-close:hover {
+    .ad-popup-close:hover {
         background: rgba(255, 255, 255, 0.4);
         transform: scale(1.1);
     }
     
-    /* Ad Body */
-    .corner-ad-body {
-        display: flex;
-        gap: 12px;
-        padding: 12px;
+    /* Popup Body */
+    .ad-popup-body {
+        padding: 15px;
+        text-align: center;
     }
     
-    /* Ad Media */
-    .corner-ad-media {
-        flex-shrink: 0;
-        width: 80px;
-        height: 80px;
+    /* Image Ad */
+    .ad-popup-image {
+        width: 100%;
+        border-radius: 12px;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+    
+    /* Video Ad */
+    .ad-popup-video {
+        width: 100%;
         border-radius: 12px;
         overflow: hidden;
-        background: #f0f0f0;
+        margin-bottom: 10px;
     }
     
-    .corner-ad-media img,
-    .corner-ad-media video {
+    .ad-popup-video iframe,
+    .ad-popup-video video {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: 180px;
+        border: none;
     }
     
-    /* Ad Info */
-    .corner-ad-info {
-        flex: 1;
-    }
-    
-    .corner-ad-title {
-        font-size: 15px;
+    /* Custom Content Ad */
+    .ad-popup-title {
+        font-size: 16px;
         font-weight: 700;
         color: #1a202c;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
     }
     
-    .corner-ad-description {
-        font-size: 12px;
+    .ad-popup-description {
+        font-size: 13px;
         color: #666;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         line-height: 1.4;
     }
     
-    .corner-ad-btn {
+    .ad-popup-btn {
         display: inline-block;
         background: #FF0000;
         color: white;
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
+        padding: 8px 20px;
+        border-radius: 30px;
         text-decoration: none;
-        transition: all 0.2s;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s;
     }
     
-    .corner-ad-btn:hover {
+    .ad-popup-btn:hover {
         background: #cc0000;
         transform: scale(1.02);
     }
     
-    /* Large Image Ad (Full width) */
-    .corner-ad-card.image-full .corner-ad-body {
-        flex-direction: column;
-        padding: 0;
-    }
-    
-    .corner-ad-card.image-full .corner-ad-media {
-        width: 100%;
-        height: auto;
-        border-radius: 0;
-    }
-    
-    .corner-ad-card.image-full .corner-ad-media img {
-        width: 100%;
-        height: auto;
-    }
-    
-    .corner-ad-card.image-full .corner-ad-info {
-        padding: 12px;
-    }
-    
-    /* Video Ad */
-    .corner-ad-card.video .corner-ad-media {
-        width: 100%;
-        height: auto;
-        border-radius: 0;
-    }
-    
-    .corner-ad-card.video .corner-ad-body {
-        flex-direction: column;
-        padding: 0;
-    }
-    
-    .corner-ad-card.video video {
-        width: 100%;
-        height: auto;
-    }
-    
-    /* Progress Bar */
-    .corner-ad-progress {
+    /* Timer Bar */
+    .ad-popup-timer-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
         height: 3px;
         background: #FF0000;
-        width: 0%;
-        transition: width 0.1s linear;
+        width: 100%;
+        transform-origin: left;
+        animation: timerProgress 10s linear forwards;
     }
     
-    /* Mobile Responsive */
-    @media (max-width: 480px) {
-        .corner-ad-container {
-            max-width: 320px;
-            bottom: 15px;
-            right: 15px;
+    @keyframes timerProgress {
+        from { transform: scaleX(1); }
+        to { transform: scaleX(0); }
+    }
+    
+    /* Different duration classes */
+    .timer-8s { animation-duration: 8s; }
+    .timer-10s { animation-duration: 10s; }
+    .timer-12s { animation-duration: 12s; }
+    .timer-15s { animation-duration: 15s; }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .ad-popup-container {
+            bottom: 120px;
+            right: 10px;
+            width: 280px;
         }
-        .corner-ad-title {
-            font-size: 13px;
-        }
-        .corner-ad-description {
-            font-size: 11px;
-        }
-        .corner-ad-media {
-            width: 65px;
-            height: 65px;
+        .ad-popup-video iframe,
+        .ad-popup-video video {
+            height: 150px;
         }
     }
 </style>
 
 <script>
 // ============================================
-// NON-INTRUSIVE CORNER POP-UP AD SYSTEM
-// Users can interact with website while ads are visible
+// NON-INTRUSIVE POP-UP AD SYSTEM
+// Appears in bottom-right corner, doesn't block user activity
+// Rotates every 10 seconds
 // ============================================
 
-const CornerAdManager = {
-    // Ad Queue
+const PopupAdManager = {
+    // Ad Queue - Add your ads here
     adQueue: [
         {
             id: 1,
-            type: "compact", // "compact", "image-full", "video"
-            title: "✨ Become a Member!",
+            type: "image",
+            title: "Become a Member Today!",
             description: "Get listed in Liberia's Premier Business Directory",
             mediaUrl: "images/LBA-cover.png",
-            ctaText: "Join Now",
+            ctaText: "Join Now →",
             ctaLink: "/lba-directory.html",
-            duration: 10000, // 10 seconds visible
-            delay: 3000,
-            position: "bottom-right", // "bottom-right", "bottom-left", "top-right", "top-left"
-            frequency: "once_per_session"
+            duration: 10000 // 10 seconds display time
         },
         {
             id: 2,
-            type: "compact",
-            title: "🏆 Nominations Open!",
+            type: "image",
+            title: "Nominations Now Open!",
             description: "Nominate Your Business for LBA 3.0",
             mediaUrl: "images/logo.png",
-            ctaText: "Nominate",
+            ctaText: "Nominate Now →",
             ctaLink: "/#nominateModal",
-            duration: 10000,
-            delay: 5000,
-            position: "bottom-right",
-            frequency: "once_per_session"
+            duration: 10000
         },
         {
             id: 3,
-            type: "compact",
-            title: "🚀 Premium Packages",
-            description: "Starting at $25/month - Get Verified Today!",
-            mediaUrl: "",
-            ctaText: "Upgrade",
+            type: "custom",
+            title: "🚀 Limited Time Offer",
+            description: "Premium Directory Packages Starting at $25/month - Get Verified Today!",
+            ctaText: "Upgrade Now",
             ctaLink: "/lba-directory.html",
-            duration: 10000,
-            delay: 7000,
-            position: "bottom-right",
-            frequency: "once_per_session"
+            duration: 10000
         },
         {
             id: 4,
-            type: "image-full",
-            title: "📢 Advertise With Us",
-            description: "Reach 50,000+ Monthly Visitors",
-            mediaUrl: "images/LBA-cover.png",
-            ctaText: "View Packages",
-            ctaLink: "/advertise.html",
-            duration: 12000,
-            delay: 10000,
-            position: "bottom-right",
-            frequency: "once_per_session"
+            type: "video",
+            title: "Watch Our Latest Event",
+            description: "Liberia Business Awards Highlights",
+            mediaUrl: "https://www.youtube.com/embed/bIsGGJ1Zm44",
+            ctaText: "Watch Full Video",
+            ctaLink: "https://www.youtube.com/@LiberiaBusinessAwards",
+            duration: 10000,
+            isYouTube: true
         },
         {
             id: 5,
-            type: "compact",
-            title: "🤝 Partner With LBA",
-            description: "Sponsor the Biggest Business Event",
-            mediaUrl: "",
-            ctaText: "Learn More",
+            type: "image",
+            title: "Partner With LBA",
+            description: "Sponsor the Biggest Business Event in Liberia",
+            mediaUrl: "images/LBA-cover.png",
+            ctaText: "Become a Partner",
             ctaLink: "/#partnership",
-            duration: 10000,
-            delay: 13000,
-            position: "bottom-right",
-            frequency: "once_per_session"
+            duration: 10000
         },
         {
             id: 6,
-            type: "video",
-            title: "Watch Our Event Highlights",
-            description: "Liberia Business Awards 2025",
-            mediaUrl: "https://www.youtube.com/embed/bIsGGJ1Zm44",
-            ctaText: "Watch Now",
-            ctaLink: "https://www.youtube.com/@LiberiaBusinessAwards",
-            duration: 15000,
-            delay: 16000,
-            position: "bottom-right",
-            frequency: "once_per_session",
-            isYouTube: true
+            type: "custom",
+            title: "📢 Advertise With Us",
+            description: "Reach 50,000+ Monthly Visitors",
+            ctaText: "View Packages",
+            ctaLink: "/advertise.html",
+            duration: 10000
+        },
+        {
+            id: 7,
+            type: "image",
+            title: "List Your Business for FREE",
+            description: "Join 500+ Liberian Businesses in our Directory",
+            mediaUrl: "images/logo.png",
+            ctaText: "Get Listed",
+            ctaLink: "/lba-directory.html",
+            duration: 10000
         }
     ],
     
-    currentAd: null,
-    currentTimeout: null,
-    progressInterval: null,
-    isVisible: false,
-    adContainer: null,
+    currentAdIndex: 0,
+    isShowing: false,
+    rotationInterval: null,
+    currentContainer: null,
     
-    // Check if ad should be shown
-    shouldShowAd: function(ad) {
-        const storageKey = `corner_ad_${ad.id}_shown`;
-        const sessionKey = `corner_ad_${ad.id}_session`;
-        
-        switch(ad.frequency) {
-            case "once_per_session":
-                return !sessionStorage.getItem(sessionKey);
-            case "once_per_day":
-                const lastShown = localStorage.getItem(storageKey);
-                if (!lastShown) return true;
-                const lastDate = new Date(parseInt(lastShown));
-                const today = new Date();
-                return lastDate.toDateString() !== today.toDateString();
-            default:
-                return true;
-        }
-    },
-    
-    // Mark ad as shown
-    markAdAsShown: function(ad) {
-        const storageKey = `corner_ad_${ad.id}_shown`;
-        const sessionKey = `corner_ad_${ad.id}_session`;
-        sessionStorage.setItem(sessionKey, 'true');
-        localStorage.setItem(storageKey, Date.now().toString());
-    },
-    
-    // Create ad HTML
-    createAdHTML: function(ad) {
-        let mediaHtml = '';
-        let bodyClass = '';
+    // Create popup HTML
+    createPopupHTML: function(ad) {
+        let contentHtml = '';
+        const timerClass = `timer-${Math.floor(ad.duration / 1000)}s`;
         
         switch(ad.type) {
-            case "compact":
-                bodyClass = 'compact';
-                if (ad.mediaUrl) {
-                    mediaHtml = `
-                        <div class="corner-ad-media">
-                            <img src="${ad.mediaUrl}" alt="${ad.title}" loading="lazy">
-                        </div>
-                    `;
-                }
-                break;
-                
-            case "image-full":
-                bodyClass = 'image-full';
-                mediaHtml = `
-                    <div class="corner-ad-media">
-                        <img src="${ad.mediaUrl}" alt="${ad.title}" style="width:100%; height:auto;" loading="lazy">
-                    </div>
+            case "image":
+                contentHtml = `
+                    <img src="${ad.mediaUrl}" alt="${ad.title}" class="ad-popup-image" onclick="window.location.href='${ad.ctaLink}'" style="cursor: pointer;">
+                    <div class="ad-popup-title">${ad.title}</div>
+                    <div class="ad-popup-description">${ad.description}</div>
+                    <a href="${ad.ctaLink}" class="ad-popup-btn">${ad.ctaText}</a>
                 `;
                 break;
                 
             case "video":
-                bodyClass = 'video';
                 if (ad.isYouTube) {
-                    mediaHtml = `
-                        <div class="corner-ad-media">
-                            <iframe src="${ad.mediaUrl}?autoplay=1&mute=1&playsinline=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%; height:180px;"></iframe>
+                    contentHtml = `
+                        <div class="ad-popup-video">
+                            <iframe src="${ad.mediaUrl}?autoplay=1&mute=1&controls=0&modestbranding=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         </div>
+                        <div class="ad-popup-title">${ad.title}</div>
+                        <div class="ad-popup-description">${ad.description}</div>
+                        <a href="${ad.ctaLink}" class="ad-popup-btn" target="_blank">${ad.ctaText}</a>
                     `;
                 } else {
-                    mediaHtml = `
-                        <div class="corner-ad-media">
+                    contentHtml = `
+                        <div class="ad-popup-video">
                             <video autoplay muted loop playsinline>
                                 <source src="${ad.mediaUrl}" type="video/mp4">
                             </video>
                         </div>
+                        <div class="ad-popup-title">${ad.title}</div>
+                        <div class="ad-popup-description">${ad.description}</div>
+                        <a href="${ad.ctaLink}" class="ad-popup-btn">${ad.ctaText}</a>
                     `;
                 }
+                break;
+                
+            case "custom":
+                contentHtml = `
+                    <div style="font-size: 32px; margin-bottom: 5px;">🎉</div>
+                    <div class="ad-popup-title">${ad.title}</div>
+                    <div class="ad-popup-description">${ad.description}</div>
+                    <a href="${ad.ctaLink}" class="ad-popup-btn">${ad.ctaText}</a>
+                `;
                 break;
         }
         
         return `
-            <div class="corner-ad-card ${bodyClass}" onclick="event.stopPropagation(); window.location.href='${ad.ctaLink}'">
-                <div class="corner-ad-header">
+            <div class="ad-popup-container" id="adPopupContainer">
+                <div class="ad-popup-header">
                     <span><i class="fas fa-ad"></i> Advertisement</span>
-                    <button class="corner-ad-close" onclick="event.stopPropagation(); CornerAdManager.closeAd()">✕</button>
+                    <button class="ad-popup-close" onclick="PopupAdManager.closePopup()">✕</button>
                 </div>
-                ${mediaHtml}
-                <div class="corner-ad-body">
-                    <div class="corner-ad-info">
-                        <div class="corner-ad-title">${ad.title}</div>
-                        <div class="corner-ad-description">${ad.description}</div>
-                        <a href="${ad.ctaLink}" class="corner-ad-btn" onclick="event.stopPropagation()">${ad.ctaText} →</a>
-                    </div>
+                <div class="ad-popup-body">
+                    ${contentHtml}
                 </div>
-                <div class="corner-ad-progress" id="cornerAdProgress"></div>
+                <div class="ad-popup-timer-bar ${timerClass}" id="adTimerBar"></div>
             </div>
         `;
     },
     
-    // Show ad
-    showAd: function(ad) {
-        if (this.isVisible) return;
-        if (!this.shouldShowAd(ad)) return;
+    // Show popup
+    showPopup: function(ad) {
+        // Remove existing popup
+        this.closePopup(true);
         
-        // Remove existing ad container
-        if (this.adContainer) {
-            this.adContainer.remove();
-        }
+        // Create popup container
+        const popupDiv = document.createElement('div');
+        popupDiv.id = 'popupAdWidget';
+        popupDiv.innerHTML = this.createPopupHTML(ad);
+        document.body.appendChild(popupDiv);
         
-        // Create container
-        this.adContainer = document.createElement('div');
-        this.adContainer.className = `corner-ad-container ${ad.position || 'bottom-right'}`;
-        this.adContainer.innerHTML = this.createAdHTML(ad);
-        document.body.appendChild(this.adContainer);
+        this.currentContainer = document.getElementById('adPopupContainer');
         
-        this.currentAd = ad;
-        this.isVisible = true;
-        this.markAdAsShown(ad);
-        
-        // Start progress bar animation
-        this.startProgressBar(ad.duration);
+        // Trigger animation
+        setTimeout(() => {
+            if (this.currentContainer) {
+                this.currentContainer.classList.add('active');
+            }
+        }, 50);
         
         // Auto close after duration
-        this.currentTimeout = setTimeout(() => {
-            this.closeAd();
+        this.autoCloseTimeout = setTimeout(() => {
+            this.closePopup();
+            // Schedule next ad after close
+            this.scheduleNextAd();
         }, ad.duration);
         
-        // Track analytics
+        this.isShowing = true;
+        
+        // Track in analytics
         if (typeof gtag !== 'undefined') {
-            gtag('event', 'corner_ad_view', {
+            gtag('event', 'popup_ad_view', {
                 'ad_id': ad.id,
                 'ad_title': ad.title,
                 'ad_type': ad.type
@@ -12360,106 +12255,145 @@ const CornerAdManager = {
         }
     },
     
-    // Start progress bar
-    startProgressBar: function(duration) {
-        const progressBar = document.getElementById('cornerAdProgress');
-        if (!progressBar) return;
-        
-        const startTime = Date.now();
-        
-        if (this.progressInterval) clearInterval(this.progressInterval);
-        
-        this.progressInterval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const progress = (elapsed / duration) * 100;
-            if (progressBar) {
-                progressBar.style.width = `${Math.min(progress, 100)}%`;
-            }
-            if (elapsed >= duration) {
-                clearInterval(this.progressInterval);
-            }
-        }, 50);
-    },
-    
-    // Close current ad
-    closeAd: function() {
-        if (this.adContainer) {
-            this.adContainer.style.opacity = '0';
-            this.adContainer.style.transform = 'translateX(100%)';
+    // Close popup
+    closePopup: function(skipNext = false) {
+        if (this.currentContainer) {
+            this.currentContainer.classList.remove('active');
             setTimeout(() => {
-                if (this.adContainer) this.adContainer.remove();
-                this.isVisible = false;
-                this.currentAd = null;
-            }, 300);
+                const widget = document.getElementById('popupAdWidget');
+                if (widget) widget.remove();
+                this.currentContainer = null;
+            }, 400);
         }
         
-        if (this.currentTimeout) clearTimeout(this.currentTimeout);
-        if (this.progressInterval) clearInterval(this.progressInterval);
+        if (this.autoCloseTimeout) clearTimeout(this.autoCloseTimeout);
+        this.isShowing = false;
         
-        // Track close
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'corner_ad_close', {
-                'event_category': 'ad_interaction'
-            });
+        if (!skipNext) {
+            // Track close
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'popup_ad_close', {
+                    'event_category': 'ad_interaction'
+                });
+            }
         }
     },
     
-    // Start ad rotation
-    startAdRotation: function() {
-        const availableAds = this.adQueue.filter(ad => this.shouldShowAd(ad));
+    // Schedule next ad
+    scheduleNextAd: function() {
+        if (this.rotationInterval) clearTimeout(this.rotationInterval);
         
-        if (availableAds.length === 0) {
-            console.log('📢 No more ads to show this session');
+        this.rotationInterval = setTimeout(() => {
+            if (!this.isShowing) {
+                this.showNextAd();
+            }
+        }, 2000); // 2 second gap between ads
+    },
+    
+    // Show next ad in rotation
+    showNextAd: function() {
+        const ad = this.adQueue[this.currentAdIndex % this.adQueue.length];
+        this.currentAdIndex++;
+        this.showPopup(ad);
+    },
+    
+    // Start the ad rotation
+    startAdRotation: function() {
+        // Check if user has opted out (optional)
+        const userOptOut = localStorage.getItem('popupAdsOptOut');
+        if (userOptOut === 'true') {
+            console.log('📢 User has opted out of popup ads');
             return;
         }
         
-        let cumulativeDelay = 0;
-        
-        availableAds.forEach((ad, index) => {
-            const delay = ad.delay + cumulativeDelay;
-            setTimeout(() => {
-                if (!this.isVisible) {
-                    this.showAd(ad);
-                }
-            }, delay);
-            cumulativeDelay += ad.duration + 5000; // +5 seconds gap between ads
-        });
+        // Start after 5 seconds
+        setTimeout(() => {
+            this.showNextAd();
+        }, 5000);
     },
     
-    // Add new ad
+    // Stop rotation
+    stopAdRotation: function() {
+        if (this.rotationInterval) clearTimeout(this.rotationInterval);
+        if (this.autoCloseTimeout) clearTimeout(this.autoCloseTimeout);
+        this.closePopup(true);
+    },
+    
+    // Opt out (user can hide ads)
+    optOut: function() {
+        localStorage.setItem('popupAdsOptOut', 'true');
+        this.stopAdRotation();
+    },
+    
+    // Opt in
+    optIn: function() {
+        localStorage.removeItem('popupAdsOptOut');
+        this.startAdRotation();
+    },
+    
+    // Manually add a new ad
     addAd: function(adData) {
         this.adQueue.push(adData);
-        console.log(`✅ New corner ad added: ${adData.title}`);
+        console.log(`✅ New popup ad added: ${adData.title}`);
     }
 };
 
-// Initialize on page load
+// Initialize popup ads when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-        CornerAdManager.startAdRotation();
-    }, 2000);
+    // Start showing popup ads after page loads
+    PopupAdManager.startAdRotation();
 });
 
-// Helper functions for customers
-function addCustomerCornerAd(businessName, description, imageUrl, ctaLink, ctaText, type = "compact") {
-    CornerAdManager.addAd({
-        id: CornerAdManager.adQueue.length + 1,
-        type: type,
+// Add an opt-out link in footer (optional)
+function addAdOptOutLink() {
+    const footer = document.querySelector('footer');
+    if (footer) {
+        const optOutLink = document.createElement('a');
+        optOutLink.href = 'javascript:void(0)';
+        optOutLink.textContent = 'Hide Ads';
+        optOutLink.style.cssText = 'color: #888; font-size: 12px; margin-left: 15px; text-decoration: none;';
+        optOutLink.onclick = function() {
+            PopupAdManager.optOut();
+            alert('Ads have been hidden for this session. Refresh to see them again.');
+        };
+        footer.appendChild(optOutLink);
+    }
+}
+
+// Example: Add a customer image ad
+function addCustomerImageAd(businessName, imageUrl, ctaLink, ctaText, description = "") {
+    PopupAdManager.addAd({
+        id: PopupAdManager.adQueue.length + 1,
+        type: "image",
         title: businessName,
         description: description,
         mediaUrl: imageUrl,
         ctaText: ctaText,
         ctaLink: ctaLink,
-        duration: 10000,
-        delay: 5000,
-        position: "bottom-right",
-        frequency: "once_per_session"
+        duration: 10000
     });
 }
 
-// Example: addCustomerCornerAd("ABC Store", "Get 20% off your first order", "images/abc-ad.jpg", "https://abcstore.com", "Shop Now", "compact");
-</script>
+// Example: Add a customer video ad
+function addCustomerVideoAd(businessName, videoUrl, ctaLink, ctaText) {
+    PopupAdManager.addAd({
+        id: PopupAdManager.adQueue.length + 1,
+        type: "video",
+        title: businessName,
+        description: "Watch our promotional video",
+        mediaUrl: videoUrl,
+        ctaText: ctaText,
+        ctaLink: ctaLink,
+        duration: 10000,
+        isYouTube: videoUrl.includes('youtube') || videoUrl.includes('youtu.be')
+    });
+}
 
+// Usage examples:
+// addCustomerImageAd("ABC Store", "images/abc-ad.jpg", "https://abcstore.com", "Shop Now", "Get 20% off!");
+// addCustomerVideoAd("XYZ Company", "https://www.youtube.com/embed/VIDEO_ID", "https://xyz.com", "Watch Now");
+</script>
+    
 </body>
 
 </html>
