@@ -1,15 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const BusinessUser = require('../models/BusinessUser');
-const Document = require('../models/Document'); // You need this model
+const Document = require('../models/Document');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 
-// Configure multer for file uploads
+// ============================================
+// MULTER CONFIGURATION FOR FILE UPLOADS
+// ============================================
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadDir = path.join(__dirname, '../uploads/documents');
+        // Create directory if it doesn't exist
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -32,11 +36,13 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ 
     storage: storage, 
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: fileFilter
 });
 
-// Authentication middleware
+// ============================================
+// AUTHENTICATION MIDDLEWARE
+// ============================================
 const authenticateBusiness = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
@@ -44,8 +50,7 @@ const authenticateBusiness = async (req, res, next) => {
             return res.status(401).json({ success: false, message: 'No token provided' });
         }
         
-        const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         
         const business = await BusinessUser.findById(decoded.userId);
         if (!business || business.status !== 'active') {
@@ -60,12 +65,16 @@ const authenticateBusiness = async (req, res, next) => {
     }
 };
 
-// Simple test route
+// ============================================
+// TEST ROUTE
+// ============================================
 router.get('/business/test', (req, res) => {
     res.json({ message: 'Business routes working!' });
 });
 
-// Business Registration
+// ============================================
+// BUSINESS REGISTRATION
+// ============================================
 router.post('/business/register', async (req, res) => {
     try {
         const { email, password, business_name, contact_name, phone, business_type } = req.body;
@@ -163,7 +172,7 @@ router.get('/business/documents', authenticateBusiness, async (req, res) => {
         const skip = (page - 1) * limit;
         
         const documents = await Document.find({ businessId: req.user.userId })
-            .sort({ createdAt: -1 })
+            .sort({ uploaded_at: -1 })
             .skip(skip)
             .limit(limit);
         
@@ -189,6 +198,8 @@ router.post('/business/documents', authenticateBusiness, upload.single('document
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
         
+        const BACKEND_URL = process.env.BACKEND_URL || 'https://liberia-business-awards-production.up.railway.app';
+        
         const document = new Document({
             businessId: req.user.userId,
             name: req.body.name,
@@ -196,7 +207,7 @@ router.post('/business/documents', authenticateBusiness, upload.single('document
             fileType: req.file.mimetype,
             fileSize: req.file.size,
             filePath: `/uploads/documents/${req.file.filename}`,
-            fileUrl: `${process.env.BACKEND_URL || 'https://liberia-business-awards-production.up.railway.app'}/uploads/documents/${req.file.filename}`,
+            fileUrl: `${BACKEND_URL}/uploads/documents/${req.file.filename}`,
             uploaded_at: new Date()
         });
         
@@ -304,93 +315,6 @@ router.delete('/business/documents/:id', authenticateBusiness, async (req, res) 
         res.json({ success: true, message: 'Document deleted' });
     } catch (error) {
         console.error('Delete document error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// ============================================
-// NOTIFICATIONS ROUTES
-// ============================================
-
-// Get notifications
-router.get('/business/notifications', authenticateBusiness, async (req, res) => {
-    try {
-        const Notification = require('../models/Notification');
-        const notifications = await Notification.find({ businessId: req.user.userId })
-            .sort({ createdAt: -1 })
-            .limit(50);
-        
-        res.json({ success: true, notifications: notifications });
-    } catch (error) {
-        console.error('Get notifications error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// Mark notification as read
-router.post('/business/notifications/:id/read', authenticateBusiness, async (req, res) => {
-    try {
-        const Notification = require('../models/Notification');
-        await Notification.updateOne(
-            { _id: req.params.id, businessId: req.user.userId },
-            { read: true }
-        );
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Mark read error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// Mark all notifications as read
-router.post('/business/notifications/read-all', authenticateBusiness, async (req, res) => {
-    try {
-        const Notification = require('../models/Notification');
-        await Notification.updateMany(
-            { businessId: req.user.userId, read: false },
-            { read: true }
-        );
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Mark all read error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-// ============================================
-// NOMINATIONS ROUTES
-// ============================================
-
-// Get nominations
-router.get('/business/nominations', authenticateBusiness, async (req, res) => {
-    try {
-        const Nomination = require('../models/Nomination');
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-        const status = req.query.status;
-        
-        let query = { businessId: req.user.userId };
-        if (status && status !== 'all') {
-            query.status = status;
-        }
-        
-        const nominations = await Nomination.find(query)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
-        
-        const total = await Nomination.countDocuments(query);
-        
-        res.json({
-            success: true,
-            nominations: nominations,
-            total: total,
-            page: page,
-            pages: Math.ceil(total / limit)
-        });
-    } catch (error) {
-        console.error('Get nominations error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
