@@ -1216,7 +1216,7 @@
         // ============================================
         // CONFIGURATION
         // ============================================
-        const BACKEND_URL = 'https://liberia-business-awards-production.up.railway.app/api';
+        const BACKEND_URL = 'https://liberia-business-awards-production.up.railway.app';
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
         const SESSION_TIMEOUT = 60 * 60 * 1000;
         const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -1333,21 +1333,56 @@
         }
 
         async function apiRequest(endpoint, options = {}) {
-            const token = localStorage.getItem('lba_auth_token');
-            const defaultOptions = { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' } };
-            if (options.body instanceof FormData) delete defaultOptions.headers['Content-Type'];
-            const fetchOptions = { ...defaultOptions, ...options, headers: { ...defaultOptions.headers, ...options.headers } };
-            try {
-                let cleanEndpoint = endpoint;
-                if (cleanEndpoint.startsWith('/api/')) cleanEndpoint = cleanEndpoint.substring(4);
-                const url = `${BACKEND_URL}${cleanEndpoint}`;
-                const response = await fetch(url, fetchOptions);
-                if (response.status === 401) { showToast('Session expired. Please login again.', 'error'); setTimeout(logout, 2000); throw new Error('Unauthorized'); }
-                if (response.status === 403) { showToast('Access denied', 'error'); throw new Error('Forbidden'); }
-                if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.message || `HTTP ${response.status}`); }
-                return await response.json();
-            } catch (error) { console.error('API Error:', error); throw error; }
+    const token = localStorage.getItem('lba_auth_token');
+    const defaultOptions = {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         }
+    };
+    
+    if (options.body instanceof FormData) {
+        delete defaultOptions.headers['Content-Type'];
+    }
+    
+    const fetchOptions = { ...defaultOptions, ...options, headers: { ...defaultOptions.headers, ...options.headers } };
+    
+    try {
+        // Ensure endpoint starts with /api
+        let cleanEndpoint = endpoint;
+        if (!cleanEndpoint.startsWith('/api') && !cleanEndpoint.startsWith('http')) {
+            cleanEndpoint = `/api${cleanEndpoint}`;
+        }
+        
+        // Build URL correctly - BACKEND_URL already has no trailing slash
+        const url = `${BACKEND_URL}${cleanEndpoint}`;
+        console.log('API Request URL:', url); // Debug log
+        
+        const response = await fetch(url, fetchOptions);
+        
+        if (response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            setTimeout(logout, 2000);
+            throw new Error('Unauthorized');
+        }
+        
+        if (response.status === 403) {
+            showToast('Access denied', 'error');
+            throw new Error('Forbidden');
+        }
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
 
         async function loadAllData() {
             showLoading();
@@ -1654,143 +1689,161 @@
         function editNomination(id) { if (confirm('Edit this nomination?')) showNominationModal(id); }
 
         // ============================================
-        // DOCUMENTS FUNCTIONS - FIXED VIEW/DOWNLOAD
-        // ============================================
-        async function loadDocuments() {
-            try {
-                const page = appState.documents.currentPage;
-                const data = await apiRequest(`/api/business/documents?page=${page}&limit=12`);
-                if (data.success) {
-                    appState.documents.data = data.documents || data.data || [];
-                    appState.documents.total = data.total || data.pagination?.total || 0;
-                    appState.documents.totalPages = data.pages || data.pagination?.pages || 1;
-                    displayDocuments();
-                    updateDocumentsPagination();
-                    document.getElementById('documentsCount').textContent = appState.documents.total;
-                    document.getElementById('documentsUploaded').textContent = appState.documents.total;
-                    document.getElementById('totalDocuments').textContent = appState.documents.total;
-                }
-            } catch (error) { console.error('Documents load error:', error); }
-        }
+// DOCUMENTS FUNCTIONS - COMPLETELY FIXED
+// ============================================
 
-        function displayDocuments() {
-            const grid = document.getElementById('documentsGrid');
-            const documents = appState.documents.data;
-            if (documents.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><i class="fas fa-file-upload" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i><p>No documents uploaded yet</p><button class="btn btn-primary btn-sm" onclick="showUploadModal()" style="margin-top: 10px;"><i class="fas fa-upload"></i> Upload Your First Document</button></div>`;
-                return;
-            }
-            grid.innerHTML = documents.map(doc => {
-                const icon = doc.type?.includes('pdf') ? 'fa-file-pdf' : doc.type?.includes('image') ? 'fa-file-image' : 'fa-file';
-                return `
-                    <div class="document-card">
-                        <div class="document-icon"><i class="fas ${icon}"></i></div>
-                        <div class="document-info"><div class="document-name">${doc.name || 'Document'}</div><div class="document-date">Uploaded: ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'Recent'}</div></div>
-                        <div class="document-actions">
-                            <button onclick="viewDocument('${doc._id}')"><i class="fas fa-eye"></i></button>
-                            <button onclick="downloadDocument('${doc._id}')"><i class="fas fa-download"></i></button>
-                            <button onclick="deleteDocument('${doc._id}')"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+async function loadDocuments() {
+    try {
+        const page = appState.documents.currentPage;
+        const data = await apiRequest(`/api/business/documents?page=${page}&limit=12`);
+        if (data.success) {
+            appState.documents.data = data.documents || data.data || [];
+            appState.documents.total = data.total || data.pagination?.total || 0;
+            appState.documents.totalPages = data.pages || data.pagination?.pages || 1;
+            displayDocuments();
+            updateDocumentsPagination();
+            document.getElementById('documentsCount').textContent = appState.documents.total;
+            document.getElementById('documentsUploaded').textContent = appState.documents.total;
+            document.getElementById('totalDocuments').textContent = appState.documents.total;
         }
+    } catch (error) { console.error('Documents load error:', error); }
+}
 
-        function updateDocumentsPagination() {
-            const pagination = document.getElementById('documentsPagination');
-            const { currentPage, totalPages } = appState.documents;
-            if (totalPages <= 1) { pagination.innerHTML = ''; return; }
-            let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changeDocumentsPage(${i})">${i}</button>`;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    html += `<span class="page-btn" disabled>...</span>`;
-                }
-            }
-            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
-            pagination.innerHTML = html;
-        }
+function displayDocuments() {
+    const grid = document.getElementById('documentsGrid');
+    const documents = appState.documents.data;
+    if (documents.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><i class="fas fa-file-upload" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i><p>No documents uploaded yet</p><button class="btn btn-primary btn-sm" onclick="showUploadModal()" style="margin-top: 10px;"><i class="fas fa-upload"></i> Upload Your First Document</button></div>`;
+        return;
+    }
+    grid.innerHTML = documents.map(doc => {
+        const icon = doc.type?.includes('pdf') ? 'fa-file-pdf' : doc.type?.includes('image') ? 'fa-file-image' : 'fa-file';
+        const fileType = doc.mimeType || doc.type || '';
+        const isViewable = fileType.includes('pdf') || fileType.includes('image') || fileType.includes('text');
+        return `
+            <div class="document-card">
+                <div class="document-icon"><i class="fas ${icon}"></i></div>
+                <div class="document-info">
+                    <div class="document-name">${escapeHtml(doc.name || 'Document')}</div>
+                    <div class="document-date">Uploaded: ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'Recent'}</div>
+                </div>
+                <div class="document-actions">
+                    ${isViewable ? `<button onclick="viewDocument('${doc._id}')" title="View"><i class="fas fa-eye"></i></button>` : ''}
+                    <button onclick="downloadDocument('${doc._id}')" title="Download"><i class="fas fa-download"></i></button>
+                    <button onclick="deleteDocument('${doc._id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
 
-        function changeDocumentsPage(page) {
-            appState.documents.currentPage = page;
-            loadDocuments();
-        }
+// Helper function to escape HTML
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
 
-        // FIXED: View Document with correct URL (no double /api)
-        function viewDocument(id) {
-            const token = localStorage.getItem('lba_auth_token');
-            const url = `${BACKEND_URL.replace('/api', '')}/api/business/documents/${id}/view`;
-            window.open(url, '_blank');
-        }
-
-        // FIXED: Download Document with correct URL (no double /api)
-        function downloadDocument(id) {
-            const token = localStorage.getItem('lba_auth_token');
-            const url = `${BACKEND_URL.replace('/api', '')}/api/business/documents/${id}/download`;
-            window.open(url, '_blank');
-        }
-
-        async function deleteDocument(id) {
-            if (!confirm('Delete this document? This action cannot be undone.')) return;
-            try {
-                const response = await apiRequest(`/api/business/documents/${id}`, { method: 'DELETE' });
-                if (response.success) { showToast('Document deleted', 'success'); await loadDocuments(); }
-            } catch (error) { showToast(error.message || 'Failed to delete document', 'error'); }
-        }
-
-        function showUploadModal() {
-            document.getElementById('uploadForm').reset();
-            document.getElementById('fileInfo').style.display = 'none';
-            document.getElementById('uploadModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function handleFileSelect(file) {
-            if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-                showToast('File type not allowed. Please upload PDF, DOC, DOCX, JPG, or PNG.', 'error');
-                document.getElementById('documentFile').value = '';
-                return;
-            }
-            if (file.size > MAX_FILE_SIZE) {
-                showToast('File too large. Maximum size is 10MB.', 'error');
-                document.getElementById('documentFile').value = '';
-                return;
-            }
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileInfo').style.display = 'flex';
-        }
-
-        function clearFile() {
-            document.getElementById('documentFile').value = '';
-            document.getElementById('fileInfo').style.display = 'none';
-        }
-
-        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const file = document.getElementById('documentFile').files[0];
-            if (!file) { showToast('Please select a file', 'error'); return; }
-            const documentName = document.getElementById('documentName').value.trim();
-            if (!documentName) { showToast('Please enter a document name', 'error'); return; }
-            const uploadBtn = document.getElementById('uploadBtn');
-            const originalText = uploadBtn.innerHTML;
-            try {
-                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-                uploadBtn.disabled = true;
-                const formData = new FormData();
-                formData.append('document', file);
-                formData.append('name', documentName);
-                formData.append('type', document.getElementById('documentType').value);
-                const response = await apiRequest('/api/business/documents', { method: 'POST', body: formData });
-                if (response.success) {
-                    showToast('Document uploaded successfully', 'success');
-                    hideModal('uploadModal');
-                    await loadDocuments();
-                }
-            } catch (error) { showToast(error.message || 'Upload failed', 'error'); }
-            finally { uploadBtn.innerHTML = originalText; uploadBtn.disabled = false; }
+// FIXED: View Document
+async function viewDocument(id) {
+    const token = localStorage.getItem('lba_auth_token');
+    const url = `${BACKEND_URL}/api/business/documents/${id}/view`;
+    
+    showToast('Loading document...', 'info');
+    
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to load document');
+        }
+        
+        const blob = await response.blob();
+        const fileUrl = URL.createObjectURL(blob);
+        window.open(fileUrl, '_blank');
+        setTimeout(() => URL.revokeObjectURL(fileUrl), 5000);
+    } catch (error) {
+        console.error('View error:', error);
+        showToast(error.message || 'Could not load document. Please try again.', 'error');
+    }
+}
 
+// FIXED: Download Document
+async function downloadDocument(id) {
+    const token = localStorage.getItem('lba_auth_token');
+    const url = `${BACKEND_URL}/api/business/documents/${id}/download`;
+    
+    showToast('Preparing download...', 'info');
+    
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Download failed');
+        
+        const blob = await response.blob();
+        
+        // Get filename from Content-Disposition or use default
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `document-${id}`;
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        } else {
+            // Try to get extension from content type
+            const contentType = response.headers.get('Content-Type');
+            if (contentType === 'application/pdf') filename += '.pdf';
+            else if (contentType === 'image/jpeg') filename += '.jpg';
+            else if (contentType === 'image/png') filename += '.png';
+            else filename += '.file';
+        }
+        
+        const fileUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = fileUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(fileUrl);
+        showToast('Download complete!', 'success');
+    } catch (error) {
+        console.error('Download error:', error);
+        showToast('Could not download document. Please try again.', 'error');
+    }
+}
+
+async function deleteDocument(id) {
+    if (!confirm('Delete this document? This action cannot be undone.')) return;
+    try {
+        const response = await apiRequest(`/api/business/documents/${id}`, { method: 'DELETE' });
+        if (response.success) { 
+            showToast('Document deleted', 'success'); 
+            await loadDocuments(); 
+        }
+    } catch (error) { 
+        showToast(error.message || 'Failed to delete document', 'error'); 
+    }
+}
+
+function showUploadModal() {
+    document.getElementById('uploadForm').reset();
+    document.getElementById('fileInfo').style.display = 'none';
+    document.getElementById('uploadModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+        
         // ============================================
         // NOTIFICATIONS FUNCTIONS
         // ============================================
