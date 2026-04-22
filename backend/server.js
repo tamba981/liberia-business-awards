@@ -157,6 +157,14 @@ app.use('/uploads', express.static(uploadDir, {
         res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
     }
 }));
+
+// Handle preflight OPTIONS request for static files
+app.options('/uploads/*', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    res.sendStatus(200);
+});
 // ============ RATE LIMITING ============
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -169,7 +177,8 @@ app.set('trust proxy', 1);
 
 app.use(helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }  
 }));
 
 app.use(express.json({ limit: '50mb' }));
