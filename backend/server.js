@@ -128,17 +128,6 @@ if (!fs.existsSync(uploadDir)) {
 console.log('📁 Uploads directory:', uploadDir);
 console.log('✅ Uploads directory writable:', fs.constants.W_OK);
 
-// Serve static files from uploads directory - FIXED for Railway
-console.log('📁 Serving static files from:', uploadDir);
-app.use('/uploads', express.static(uploadDir, {
-    setHeaders: (res, filePath) => {
-        // Set proper content type based on file extension
-        const ext = path.extname(filePath).toLowerCase();
-        if (ext === '.pdf') res.setHeader('Content-Type', 'application/pdf');
-        if (ext === '.jpg' || ext === '.jpeg') res.setHeader('Content-Type', 'image/jpeg');
-        if (ext === '.png') res.setHeader('Content-Type', 'image/png');
-    }
-}));
 
 // Log directory permissions for debugging
 try {
@@ -153,6 +142,21 @@ try {
     console.error('Could not check uploads directory permissions:', err);
 }
 
+// Add CORS headers for static files
+app.use('/uploads', express.static(uploadDir, {
+    setHeaders: (res, filePath) => {
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext === '.pdf') res.setHeader('Content-Type', 'application/pdf');
+        if (ext === '.jpg' || ext === '.jpeg') res.setHeader('Content-Type', 'image/jpeg');
+        if (ext === '.png') res.setHeader('Content-Type', 'image/png');
+        
+        // Add these CORS headers
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    }
+}));
 // ============ RATE LIMITING ============
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
