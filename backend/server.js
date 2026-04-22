@@ -184,18 +184,6 @@ app.use(session({
     }
 }));
 
-// Serve static files from uploads directory - FIXED for Railway
-console.log('📁 Serving static files from:', uploadDir);
-app.use('/uploads', express.static(uploadDir, {
-    setHeaders: (res, filePath) => {
-        // Set proper content type based on file extension
-        const ext = path.extname(filePath).toLowerCase();
-        if (ext === '.pdf') res.setHeader('Content-Type', 'application/pdf');
-        if (ext === '.jpg' || ext === '.jpeg') res.setHeader('Content-Type', 'image/jpeg');
-        if (ext === '.png') res.setHeader('Content-Type', 'image/png');
-    }
-}));
-
 // ============ FILE UPLOAD CONFIGURATION ============
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -2179,58 +2167,6 @@ async function startServer() {
         console.log('\n🚀 System ready!');
     });
 
-    // Upload document
-app.post('/api/business/documents', authenticate, authorize('business'), upload.single('document'), async (req, res) => {
-    try {
-        console.log('📤 Upload request received');
-        console.log('File:', req.file);
-        console.log('Body:', req.body);
-        
-        if (!req.file) {
-            console.log('❌ No file in request');
-            return res.status(400).json({ success: false, message: 'No file uploaded' });
-        }
-        
-        const { name, type } = req.body;
-        
-        if (!name) {
-            return res.status(400).json({ success: false, message: 'Document name is required' });
-        }
-        
-        // IMPORTANT: Store the correct file path for retrieval
-        const fileUrl = `/uploads/${req.file.filename}`;
-        
-        console.log('💾 Saving document:', { name, type, fileUrl, filename: req.file.filename });
-        
-        const document = new BusinessDocument({
-            business_id: req.user._id,
-            name,
-            type: type || 'other',
-            file_url: fileUrl,
-            file_name: req.file.originalname,
-            file_size: req.file.size,
-            mime_type: req.file.mimetype
-        });
-        
-        await document.save();
-        
-        console.log('✅ Document saved with ID:', document._id);
-        
-        res.status(201).json({
-            success: true,
-            message: 'Document uploaded successfully',
-            document: {
-                _id: document._id,
-                name: document.name,
-                type: document.type,
-                file_url: document.file_url
-            }
-        });
-    } catch (error) {
-        console.error('Upload error:', error);
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
 
     server.on('error', (error) => {
         console.error('❌ Server error:', error);
@@ -2241,7 +2177,6 @@ app.post('/api/business/documents', authenticate, authorize('business'), upload.
 // Diagnostic endpoint - Check what files are in uploads
 app.get('/api/debug/uploads-list', authenticate, authorize('business'), async (req, res) => {
     try {
-        const uploadDir = path.join(__dirname, 'uploads');
         const files = fs.existsSync(uploadDir) ? fs.readdirSync(uploadDir) : [];
         
         const documents = await BusinessDocument.find({ business_id: req.user._id });
