@@ -1726,7 +1726,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// FIXED: View Document - Opens in new tab with correct URL
+// FIXED: View Document - Pass token in URL for new tab
 function viewDocument(id) {
     if (!id) {
         showToast('Invalid document ID', 'error');
@@ -1740,8 +1740,8 @@ function viewDocument(id) {
         return;
     }
     
-    // Use BACKEND_URL directly (it already includes /api)
-    const url = `${BACKEND_URL}/business/documents/${id}/view`;
+    // Pass token as query parameter for new tab
+    const url = `${BACKEND_URL}/business/documents/${id}/view?token=${encodeURIComponent(token)}`;
     
     console.log('Opening view URL:', url);
     window.open(url, '_blank');
