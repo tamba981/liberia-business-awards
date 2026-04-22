@@ -1726,7 +1726,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// FIXED: View Document - Pass token in URL for new tab
+// FIXED: View Document - Handle images specially
 function viewDocument(id) {
     if (!id) {
         showToast('Invalid document ID', 'error');
@@ -1740,71 +1740,103 @@ function viewDocument(id) {
         return;
     }
     
-    // Pass token as query parameter for new tab
-    const url = `${BACKEND_URL}/business/documents/${id}/view?token=${encodeURIComponent(token)}`;
+    // First, get document info to check file type
+    fetch(`${BACKEND_URL}/business/documents?limit=100`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const doc = data.documents?.find(d => d._id === id);
+        if (doc && doc.file_url) {
+            const ext = doc.file_url.split('.').pop().toLowerCase();
+            const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            
+            if (imageExts.includes(ext)) {
+    // For images, download and display using blob to avoid CORS
+    const downloadUrl = `${BACKEND_URL}/business/documents/${id}/download?token=${encodeURIComponent(token)}`;
     
-    console.log('Opening view URL:', url);
-    window.open(url, '_blank');
-}
-
-// FIXED: Download Document
-async function downloadDocument(id) {
-    if (!id) {
-        showToast('Invalid document ID', 'error');
-        return;
-    }
+    // Open new window with loading indicator immediately
+    const newWindow = window.open();
+    newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Loading Image...</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+            <style>
+                body {
+                    margin: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                    background: #f5f7fb;
+                    font-family: 'Poppins', sans-serif;
+                }
+                .loading-container {
+                    text-align: center;
+                }
+                .loading-container i {
+                    font-size: 48px;
+                    color: #FF0000;
+                    margin-bottom: 15px;
+                }
+                .loading-container p {
+                    color: #64748b;
+                    font-size: 14px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="loading-container">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading image...</p>
+            </div>
+        </body>
+        </html>
+    `);
     
-    const token = localStorage.getItem('lba_auth_token');
-    if (!token) {
-        showToast('Please login again', 'error');
-        logout();
-        return;
-    }
-    
-    try {
-        // Use BACKEND_URL directly (it already includes /api)
-        const url = `${BACKEND_URL}/business/documents/${id}/download`;
-        
-        console.log('Download URL:', url);
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
+    // Fetch the image
+    fetch(downloadUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to load image');
+        return response.blob();
+    })
+    .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        // Replace loading screen with the image
+        newWindow.document.body.innerHTML = `
+            <div style="margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:#f5f7fb;">
+                <img src="${blobUrl}" style="max-width:100%; max-height:100vh; box-shadow:0 5px 30px rgba(0,0,0,0.2);">
+            </div>
+        `;
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    })
+    .catch((error) => {
+        console.error('Image load error:', error);
+        newWindow.document.body.innerHTML = `
+            <div style="text-align:center; color:#EF4444; padding:50px; font-family:'Poppins',sans-serif;">
+                <i class="fas fa-exclamation-circle" style="font-size:48px; margin-bottom:15px;"></i>
+                <p>Failed to load image</p>
+                <p style="font-size:12px; color:#64748b;">${error.message}</p>
+            </div>
+        `;
+    });
+}else {
+                // For PDFs and other files, open directly
+                window.open(`${BACKEND_URL}/business/documents/${id}/view?token=${encodeURIComponent(token)}`, '_blank');
             }
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Download error response:', errorText);
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        } else {
+            // Fallback
+            window.open(`${BACKEND_URL}/business/documents/${id}/view?token=${encodeURIComponent(token)}`, '_blank');
         }
-        
-        // Get filename from Content-Disposition
-        let filename = 'document';
-        const contentDisposition = response.headers.get('Content-Disposition');
-        if (contentDisposition) {
-            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (match && match[1]) {
-                filename = match[1].replace(/['"]/g, '');
-            }
-        }
-        
-        const blob = await response.blob();
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(downloadUrl);
-        
-        showToast('Download started', 'success');
-    } catch (error) {
-        console.error('Download error:', error);
-        showToast(error.message || 'Failed to download document', 'error');
-    }
+    })
+    .catch(() => {
+        // Fallback
+        window.open(`${BACKEND_URL}/business/documents/${id}/view?token=${encodeURIComponent(token)}`, '_blank');
+    });
 }
 
 function changeDocumentsPage(page) {
