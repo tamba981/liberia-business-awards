@@ -113,14 +113,23 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@liberiabusinessawardslr.co
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
-// Create uploads directory
-const uploadDir = path.join(__dirname, 'uploads');
+// ============ FILE UPLOAD CONFIGURATION - RAILWAY VOLUME READY ============
+// Use Railway volume path if available, otherwise local ./uploads
+const uploadDir = process.env.RAILWAY_VOLUME_MOUNT_PATH 
+    ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'uploads')
+    : path.join(__dirname, 'uploads');
+
+// Ensure directory exists
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
     console.log('📁 Created uploads directory at:', uploadDir);
-} else {
-    console.log('📁 Uploads directory already exists at:', uploadDir);
 }
+
+console.log('📁 Uploads directory:', uploadDir);
+console.log('✅ Uploads directory writable:', fs.constants.W_OK);
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(uploadDir));
 
 // Log directory permissions for debugging
 try {
