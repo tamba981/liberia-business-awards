@@ -37,6 +37,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Dashboard - Liberia Business Awards</title>
+
+    
     
     <script src="/dashboard/security-monitor.js"></script>
     <meta name="csrf-token" content="">
@@ -1635,6 +1637,30 @@
 // DOCUMENTS FUNCTIONS - COMPLETELY FIXED
 // ============================================
 
+function updateDocumentsPagination() {
+    const pagination = document.getElementById('documentsPagination');
+    if (!pagination) return;
+    
+    const { currentPage, totalPages } = appState.documents;
+    if (totalPages <= 1) { 
+        pagination.innerHTML = ''; 
+        return; 
+    }
+    
+    let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changeDocumentsPage(${i})">${i}</button>`;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changeDocumentsPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
 async function loadDocuments() {
     try {
         const page = appState.documents.currentPage;
@@ -1803,6 +1829,17 @@ async function deleteDocument(id) {
     }
 }
 
+function showNominationModal(id) {
+    if (id) {
+        // Edit existing nomination
+        console.log('Edit nomination:', id);
+        showToast('Edit nomination feature coming soon', 'info');
+    } else {
+        // Create new nomination
+        openNominationFromFrontend();
+    }
+}
+        
 function showUploadModal() {
     document.getElementById('uploadForm').reset();
     document.getElementById('fileInfo').style.display = 'none';
