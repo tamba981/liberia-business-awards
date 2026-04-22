@@ -128,8 +128,17 @@ if (!fs.existsSync(uploadDir)) {
 console.log('📁 Uploads directory:', uploadDir);
 console.log('✅ Uploads directory writable:', fs.constants.W_OK);
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static(uploadDir));
+// Serve static files from uploads directory - FIXED for Railway
+console.log('📁 Serving static files from:', uploadDir);
+app.use('/uploads', express.static(uploadDir, {
+    setHeaders: (res, filePath) => {
+        // Set proper content type based on file extension
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext === '.pdf') res.setHeader('Content-Type', 'application/pdf');
+        if (ext === '.jpg' || ext === '.jpeg') res.setHeader('Content-Type', 'image/jpeg');
+        if (ext === '.png') res.setHeader('Content-Type', 'image/png');
+    }
+}));
 
 // Log directory permissions for debugging
 try {
@@ -175,8 +184,17 @@ app.use(session({
     }
 }));
 
-// Serve static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static files from uploads directory - FIXED for Railway
+console.log('📁 Serving static files from:', uploadDir);
+app.use('/uploads', express.static(uploadDir, {
+    setHeaders: (res, filePath) => {
+        // Set proper content type based on file extension
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext === '.pdf') res.setHeader('Content-Type', 'application/pdf');
+        if (ext === '.jpg' || ext === '.jpeg') res.setHeader('Content-Type', 'image/jpeg');
+        if (ext === '.png') res.setHeader('Content-Type', 'image/png');
+    }
+}));
 
 // ============ FILE UPLOAD CONFIGURATION ============
 const storage = multer.diskStorage({
@@ -1497,7 +1515,7 @@ app.delete('/api/business/nominations/:id', authenticate, authorize('business'),
     }
 });
 
-// ============ VIEW DOCUMENT (INLINE) ============
+// ============ VIEW DOCUMENT (INLINE) - FIXED ============
 app.get('/api/business/documents/:id/view', authenticate, authorize('business'), async (req, res) => {
     try {
         console.log('🔍 View document request for ID:', req.params.id);
@@ -1515,59 +1533,49 @@ app.get('/api/business/documents/:id/view', authenticate, authorize('business'),
         console.log('📄 Document found:', {
             name: document.name,
             file_url: document.file_url,
-            business_id: document.business_id
+            file_name: document.file_name
         });
         
-        // Construct full file path
-        const filePath = path.join(__dirname, document.file_url);
-        console.log('📁 Full file path:', filePath);
+        // Get just the filename from the stored path
+        const fileName = path.basename(document.file_url);
+        const filePath = path.join(__dirname, 'uploads', fileName);
+        
+        console.log('📁 Looking for file at:', filePath);
         
         // Check if file exists
         if (!fs.existsSync(filePath)) {
-            console.log('❌ File not found on server at:', filePath);
+            console.log('❌ File not found at:', filePath);
+            // Try alternative path
+            const altPath = path.join('/app/uploads', fileName);
+            console.log('📁 Trying alternative path:', altPath);
+            if (fs.existsSync(altPath)) {
+                console.log('✅ Found file at alternative path');
+                return res.sendFile(altPath);
+            }
             return res.status(404).json({ success: false, message: 'File not found on server' });
         }
         
-        console.log('✅ File exists, streaming...');
-        
-        // Get file extension and set appropriate content type
-        const ext = path.extname(document.file_name || document.file_url).toLowerCase();
+        // Get file extension
+        const ext = path.extname(document.file_name || fileName).toLowerCase();
         let contentType = 'application/octet-stream';
         
         switch(ext) {
-            case '.pdf':
-                contentType = 'application/pdf';
-                break;
-            case '.jpg':
-            case '.jpeg':
-                contentType = 'image/jpeg';
-                break;
-            case '.png':
-                contentType = 'image/png';
-                break;
-            case '.gif':
-                contentType = 'image/gif';
-                break;
-            case '.doc':
-                contentType = 'application/msword';
-                break;
-            case '.docx':
-                contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-                break;
+            case '.pdf': contentType = 'application/pdf'; break;
+            case '.jpg': case '.jpeg': contentType = 'image/jpeg'; break;
+            case '.png': contentType = 'image/png'; break;
+            case '.gif': contentType = 'image/gif'; break;
+            case '.doc': contentType = 'application/msword'; break;
+            case '.docx': contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; break;
         }
+        
+        console.log('📄 Serving file with Content-Type:', contentType);
         
         // Set headers for inline viewing
         res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', `inline; filename="${document.name || 'document'}${ext}"`);
+        res.setHeader('Content-Disposition', `inline; filename="${document.name}${ext}"`);
         
-        // Stream the file
-        const fileStream = fs.createReadStream(filePath);
-        fileStream.pipe(res);
-        
-        fileStream.on('error', (err) => {
-            console.error('Stream error:', err);
-            res.status(500).json({ success: false, message: 'Error streaming file' });
-        });
+        // Send file
+        res.sendFile(filePath);
         
     } catch (error) {
         console.error('View document error:', error);
@@ -1575,9 +1583,11 @@ app.get('/api/business/documents/:id/view', authenticate, authorize('business'),
     }
 });
 
-// ============ DOWNLOAD DOCUMENT ============
+// ============ DOWNLOAD DOCUMENT - FIXED ============
 app.get('/api/business/documents/:id/download', authenticate, authorize('business'), async (req, res) => {
     try {
+        console.log('⬇️ Download document request for ID:', req.params.id);
+        
         const document = await BusinessDocument.findOne({
             _id: req.params.id,
             business_id: req.user._id
@@ -1587,27 +1597,22 @@ app.get('/api/business/documents/:id/download', authenticate, authorize('busines
             return res.status(404).json({ success: false, message: 'Document not found' });
         }
         
-        // Construct full file path
-        const filePath = path.join(__dirname, document.file_url);
+        const fileName = path.basename(document.file_url);
+        const filePath = path.join(__dirname, 'uploads', fileName);
         
-        // Check if file exists
         if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ success: false, message: 'File not found on server' });
+            const altPath = path.join('/app/uploads', fileName);
+            if (fs.existsSync(altPath)) {
+                return res.download(altPath, `${document.name}${path.extname(document.file_name || fileName)}`);
+            }
+            return res.status(404).json({ success: false, message: 'File not found' });
         }
         
-        // Get file extension
-        const ext = path.extname(document.file_name || document.file_url);
-        
-        // Set headers for download (force download)
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename="${document.name || 'document'}${ext}"`);
-        
-        // Stream the file
-        const fileStream = fs.createReadStream(filePath);
-        fileStream.pipe(res);
+        const ext = path.extname(document.file_name || fileName);
+        res.download(filePath, `${document.name}${ext}`);
         
     } catch (error) {
-        console.error('Download document error:', error);
+        console.error('Download error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
@@ -2233,5 +2238,27 @@ app.post('/api/business/documents', authenticate, authorize('business'), upload.
     });
 }
 
-
+// Diagnostic endpoint - Check what files are in uploads
+app.get('/api/debug/uploads-list', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const uploadDir = path.join(__dirname, 'uploads');
+        const files = fs.existsSync(uploadDir) ? fs.readdirSync(uploadDir) : [];
+        
+        const documents = await BusinessDocument.find({ business_id: req.user._id });
+        
+        res.json({
+            success: true,
+            uploads_directory: uploadDir,
+            physical_files: files,
+            database_documents: documents.map(d => ({
+                id: d._id,
+                name: d.name,
+                stored_path: d.file_url,
+                filename_from_path: path.basename(d.file_url)
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 startServer();
