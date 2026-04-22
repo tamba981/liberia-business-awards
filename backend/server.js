@@ -655,9 +655,10 @@ app.post('/api/auth/verify', async (req, res) => {
 
 // ============ AUTHENTICATION MIDDLEWARE ============
 
-// JWT Token verification middleware
+// Update authenticate middleware to check query token
 const authenticate = async (req, res, next) => {
     try {
+        // Check Authorization header first, then query parameter
         const token = req.header('Authorization')?.replace('Bearer ', '') || 
                      req.query.token ||
                      req.body.token;
@@ -1576,6 +1577,7 @@ app.get('/api/business/documents/:id/view', authenticate, authorize('business'),
 });
 
 // ============ DOWNLOAD DOCUMENT - FIXED ============
+// Update your download endpoint to handle images properly
 app.get('/api/business/documents/:id/download', authenticate, authorize('business'), async (req, res) => {
     try {
         console.log('⬇️ Download document request for ID:', req.params.id);
@@ -1595,13 +1597,37 @@ app.get('/api/business/documents/:id/download', authenticate, authorize('busines
         if (!fs.existsSync(filePath)) {
             const altPath = path.join('/app/uploads', fileName);
             if (fs.existsSync(altPath)) {
-                return res.download(altPath, `${document.name}${path.extname(document.file_name || fileName)}`);
+                // FIXED: Set proper headers for images
+                const ext = path.extname(document.file_name || fileName).toLowerCase();
+                let contentType = 'application/octet-stream';
+                
+                if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+                else if (ext === '.png') contentType = 'image/png';
+                else if (ext === '.gif') contentType = 'image/gif';
+                else if (ext === '.pdf') contentType = 'application/pdf';
+                else if (ext === '.doc') contentType = 'application/msword';
+                else if (ext === '.docx') contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                
+                res.setHeader('Content-Type', contentType);
+                res.setHeader('Content-Disposition', `attachment; filename="${document.name}${ext}"`);
+                return res.sendFile(altPath);
             }
             return res.status(404).json({ success: false, message: 'File not found' });
         }
         
-        const ext = path.extname(document.file_name || fileName);
-        res.download(filePath, `${document.name}${ext}`);
+        const ext = path.extname(document.file_name || fileName).toLowerCase();
+        let contentType = 'application/octet-stream';
+        
+        if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+        else if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.gif') contentType = 'image/gif';
+        else if (ext === '.pdf') contentType = 'application/pdf';
+        else if (ext === '.doc') contentType = 'application/msword';
+        else if (ext === '.docx') contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${document.name}${ext}"`);
+        res.sendFile(filePath);
         
     } catch (error) {
         console.error('Download error:', error);
