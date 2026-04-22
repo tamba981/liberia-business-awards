@@ -1738,9 +1738,8 @@ function viewDocument(id) {
         return;
     }
     
-    // Use the correct backend URL structure - NO extra /api
-    const baseUrl = BACKEND_URL.replace(/\/api$/, '');
-    const url = `${baseUrl}/api/business/documents/${id}/view`;
+    // Use BACKEND_URL directly (it already includes /api)
+    const url = `${BACKEND_URL}/business/documents/${id}/view`;
     
     console.log('Opening view URL:', url);
     window.open(url, '_blank');
@@ -1761,8 +1760,8 @@ async function downloadDocument(id) {
     }
     
     try {
-        const baseUrl = BACKEND_URL.replace(/\/api$/, '');
-        const url = `${baseUrl}/api/business/documents/${id}/download`;
+        // Use BACKEND_URL directly (it already includes /api)
+        const url = `${BACKEND_URL}/business/documents/${id}/download`;
         
         console.log('Download URL:', url);
         
@@ -1806,6 +1805,10 @@ async function downloadDocument(id) {
     }
 }
 
+function changeDocumentsPage(page) {
+    appState.documents.currentPage = page;
+    loadDocuments();
+}        
 async function deleteDocument(id) {
     if (!confirm('⚠️ Delete this document? This action cannot be undone.')) return;
     
