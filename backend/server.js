@@ -2174,10 +2174,64 @@ async function startServer() {
         console.log('\n🚀 System ready!');
     });
 
+    // Upload document
+app.post('/api/business/documents', authenticate, authorize('business'), upload.single('document'), async (req, res) => {
+    try {
+        console.log('📤 Upload request received');
+        console.log('File:', req.file);
+        console.log('Body:', req.body);
+        
+        if (!req.file) {
+            console.log('❌ No file in request');
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+        
+        const { name, type } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ success: false, message: 'Document name is required' });
+        }
+        
+        // IMPORTANT: Store the correct file path for retrieval
+        const fileUrl = `/uploads/${req.file.filename}`;
+        
+        console.log('💾 Saving document:', { name, type, fileUrl, filename: req.file.filename });
+        
+        const document = new BusinessDocument({
+            business_id: req.user._id,
+            name,
+            type: type || 'other',
+            file_url: fileUrl,
+            file_name: req.file.originalname,
+            file_size: req.file.size,
+            mime_type: req.file.mimetype
+        });
+        
+        await document.save();
+        
+        console.log('✅ Document saved with ID:', document._id);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Document uploaded successfully',
+            document: {
+                _id: document._id,
+                name: document.name,
+                type: document.type,
+                file_url: document.file_url
+            }
+        });
+    } catch (error) {
+        console.error('Upload error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
     server.on('error', (error) => {
         console.error('❌ Server error:', error);
         process.exit(1);
     });
 }
+
 
 startServer();
