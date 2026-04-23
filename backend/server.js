@@ -1821,6 +1821,169 @@ app.delete('/api/business/documents/:id', authenticate, authorize('business'), a
     }
 });
 
+// ============ ADMIN DOCUMENT MANAGEMENT ROUTES ============
+// Get all documents for a specific business (admin only)
+app.get('/api/admin/businesses/:businessId/documents', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { businessId } = req.params;
+        const { page = 1, limit = 50 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        // Verify business exists
+        const business = await BusinessUser.findById(businessId);
+        if (!business) {
+            return res.status(404).json({ success: false, message: 'Business not found' });
+        }
+        
+        const documents = await BusinessDocument.find({ business_id: businessId })
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await BusinessDocument.countDocuments({ business_id: businessId });
+        
+        res.json({
+            success: true,
+            documents: documents.map(d => ({
+                _id: d._id,
+                name: d.name,
+                type: d.type,
+                file_url: d.file_url,
+                file_name: d.file_name,
+                file_size: d.file_size,
+                uploaded_at: d.created_at
+            })),
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Admin get documents error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Upload document for a specific business (admin only)
+app.post('/api/admin/businesses/:businessId/documents', authenticate, authorize('admin'), upload.single('document'), async (req, res) => {
+    try {
+        const { businessId } = req.params;
+        const { name, type } = req.body;
+        
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+        
+        if (!name) {
+            return res.status(400).json({ success: false, message: 'Document name is required' });
+        }
+        
+        // Verify business exists
+        const business = await BusinessUser.findById(businessId);
+        if (!business) {
+            return res.status(404).json({ success: false, message: 'Business not found' });
+        }
+        
+        const fileUrl = `/uploads/${req.file.filename}`;
+        
+        const document = new BusinessDocument({
+            business_id: businessId,
+            name,
+            type: type || 'other',
+            file_url: fileUrl,
+            file_name: req.file.originalname,
+            file_size: req.file.size,
+            mime_type: req.file.mimetype
+        });
+        
+        await document.save();
+        
+        // Create notification for the business
+        const notification = new Notification({
+            business_id: businessId,
+            title: 'New Document Uploaded',
+            message: `Admin has uploaded "${name}" to your account.`,
+            type: 'info',
+            read: false
+        });
+        await notification.save();
+        
+        // Also send email notification
+        try {
+            const emailHtml = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #FF0000;">New Document Uploaded</h2>
+                    <p>Dear ${business.business_name},</p>
+                    <p>An administrator has uploaded a new document to your business account:</p>
+                    <ul>
+                        <li><strong>Document:</strong> ${name}</li>
+                        <li><strong>Type:</strong> ${type || 'other'}</li>
+                        <li><strong>Uploaded:</strong> ${new Date().toLocaleString()}</li>
+                    </ul>
+                    <p>Please log in to your dashboard to view this document.</p>
+                    <hr>
+                    <p style="font-size: 12px; color: #666;">Liberia Business Awards</p>
+                </div>
+            `;
+            
+            if (emailTransporter) {
+                await emailTransporter.sendMail({
+                    from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
+                    to: business.email,
+                    subject: `New Document Uploaded - ${name}`,
+                    html: emailHtml
+                });
+            }
+            console.log(`📧 Document upload notification sent to ${business.email}`);
+        } catch (emailError) {
+            console.error('Email notification failed:', emailError);
+        }
+        
+        res.status(201).json({
+            success: true,
+            message: 'Document uploaded successfully',
+            document: {
+                _id: document._id,
+                name: document.name,
+                type: document.type,
+                file_url: document.file_url
+            }
+        });
+    } catch (error) {
+        console.error('Admin upload document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete document (admin only)
+app.delete('/api/admin/documents/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const document = await BusinessDocument.findById(req.params.id);
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        // Delete file from filesystem
+        const filePath = path.join(__dirname, document.file_url);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        
+        await BusinessDocument.findByIdAndDelete(req.params.id);
+        
+        res.json({
+            success: true,
+            message: 'Document deleted successfully'
+        });
+    } catch (error) {
+        console.error('Admin delete document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============ BUSINESS NOTIFICATION ROUTES ============
 
 // Get notifications
