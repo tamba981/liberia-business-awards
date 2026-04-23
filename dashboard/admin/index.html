@@ -4307,6 +4307,10 @@ window.closeModal = function(modalId) {
     hideModal(modalId);
 };
 
+// Alias showAnnouncementModal
+window.showAnnouncementModal = function() {
+    showAnnouncementsModal();
+};
 
 // Fix generateReport to generateSheetReport
 window.generateReport = function(type, format) {
@@ -4344,6 +4348,7 @@ console.log('✅ Voting system fully integrated and ready!');
         window.showBusinessModal = showBusinessModal;
         window.hideModal = hideModal;
         window.showTroubleshootingGuide = showTroubleshootingGuide;
+        window.showAnnouncementModal = showAnnouncementModal;
         window.showAnalyticsModal = showAnalyticsModal;
         window.showCategoriesModal = showCategoriesModal;
         window.showJudgesModal = showJudgesModal;
@@ -5924,56 +5929,32 @@ async function deleteBusinessAccount(businessId, businessName) {
 // ============================================
 // ANNOUNCEMENTS MANAGEMENT
 // ============================================
-// ============================================
-// SIMPLIFIED ANNOUNCEMENTS MANAGEMENT - FIXED
-// ============================================
-
-async function showAnnouncementsModal() {
-    try {
-        hideAllModals();
-        
-        const modal = document.getElementById('announcementsModal');
-        if (modal) {
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            await loadAnnouncementsFromAPI();
-        } else {
-            console.error('Announcements modal not found');
-        }
-    } catch (error) {
-        console.error('Error showing announcements modal:', error);
-    }
+function showAnnouncementsModal() {
+    hideAllModals();
+    document.getElementById('announcementsModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadAnnouncements();
 }
 
-async function loadAnnouncementsFromAPI() {
-    const tbody = document.getElementById('announcementsTableBody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading announcements...</td></tr>';
-    
+async function loadAnnouncements() {
     try {
         const token = localStorage.getItem('lba_auth_token');
         const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
         const data = await response.json();
         
-        if (data.success && data.announcements) {
-            displayAnnouncementsInTable(data.announcements);
-        } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No announcements found</td></tr>';
+        if (data.success) {
+            displayAnnouncements(data.announcements);
+            updateAnnouncementCount();
         }
     } catch (error) {
         console.error('Error loading announcements:', error);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #EF4444;">Error loading announcements</td></tr>';
     }
 }
 
-function displayAnnouncementsInTable(announcements) {
+function displayAnnouncements(announcements) {
     const tbody = document.getElementById('announcementsTableBody');
-    if (!tbody) return;
-    
     if (!announcements || announcements.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No announcements found</td></tr>';
         return;
@@ -5986,8 +5967,8 @@ function displayAnnouncementsInTable(announcements) {
             <td><span class="status-badge status-${a.status === 'published' ? 'active' : 'pending'}">${a.status}</span></td>
             <td>${new Date(a.created_at).toLocaleDateString()}</td>
             <td>
-                <button class="sheet-btn secondary" onclick='editAnnouncementItem("${a._id}")'><i class="fas fa-edit"></i></button>
-                <button class="sheet-btn danger" onclick='deleteAnnouncementItem("${a._id}")'><i class="fas fa-trash"></i></button>
+                <button class="sheet-btn secondary" onclick="editAnnouncement('${a._id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" onclick="deleteAnnouncement('${a._id}')"><i class="fas fa-trash"></i></button>
             </td>
         </tr>
     `).join('');
@@ -6000,33 +5981,30 @@ function showAddAnnouncementModal() {
     document.getElementById('addAnnouncementModal').classList.add('active');
 }
 
-async function editAnnouncementItem(id) {
+async function editAnnouncement(id) {
     try {
         const token = localStorage.getItem('lba_auth_token');
         const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
+        const announcement = data.announcements.find(a => a._id === id);
         
-        if (data.success && data.announcements) {
-            const announcement = data.announcements.find(a => a._id === id);
-            if (announcement) {
-                document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
-                document.getElementById('announcementId').value = announcement._id;
-                document.getElementById('announcementTitle').value = announcement.title;
-                document.getElementById('announcementDescription').value = announcement.description;
-                document.getElementById('announcementImage').value = announcement.image || '';
-                document.getElementById('announcementStatus').value = announcement.status;
-                document.getElementById('addAnnouncementModal').classList.add('active');
-            }
+        if (announcement) {
+            document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+            document.getElementById('announcementId').value = announcement._id;
+            document.getElementById('announcementTitle').value = announcement.title;
+            document.getElementById('announcementDescription').value = announcement.description;
+            document.getElementById('announcementImage').value = announcement.image || '';
+            document.getElementById('announcementStatus').value = announcement.status;
+            document.getElementById('addAnnouncementModal').classList.add('active');
         }
     } catch (error) {
         console.error('Error editing announcement:', error);
-        showNotification('Error loading announcement', 'error');
     }
 }
 
-async function saveAnnouncementItem() {
+async function saveAnnouncement() {
     const id = document.getElementById('announcementId').value;
     const data = {
         title: document.getElementById('announcementTitle').value,
@@ -6034,11 +6012,6 @@ async function saveAnnouncementItem() {
         image: document.getElementById('announcementImage').value,
         status: document.getElementById('announcementStatus').value
     };
-    
-    if (!data.title || !data.description) {
-        showNotification('Title and description are required', 'warning');
-        return;
-    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
@@ -6061,18 +6034,14 @@ async function saveAnnouncementItem() {
         if (result.success) {
             showNotification(id ? 'Announcement updated!' : 'Announcement created!', 'success');
             hideModal('addAnnouncementModal');
-            await loadAnnouncementsFromAPI();
-            updateAnnouncementCount();
-        } else {
-            showNotification(result.message || 'Error saving announcement', 'error');
+            loadAnnouncements();
         }
     } catch (error) {
-        console.error('Error saving announcement:', error);
         showNotification('Error saving announcement', 'error');
     }
 }
 
-async function deleteAnnouncementItem(id) {
+async function deleteAnnouncement(id) {
     if (!confirm('Delete this announcement?')) return;
     
     try {
@@ -6082,17 +6051,11 @@ async function deleteAnnouncementItem(id) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        const result = await response.json();
-        
-        if (result.success) {
+        if (response.ok) {
             showNotification('Announcement deleted', 'success');
-            await loadAnnouncementsFromAPI();
-            updateAnnouncementCount();
-        } else {
-            showNotification('Error deleting announcement', 'error');
+            loadAnnouncements();
         }
     } catch (error) {
-        console.error('Error deleting announcement:', error);
         showNotification('Error deleting announcement', 'error');
     }
 }
@@ -6104,22 +6067,9 @@ async function updateAnnouncementCount() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        
-        const count = data.success && data.announcements ? data.announcements.length : 0;
-        const countElement = document.getElementById('announcementCount');
-        if (countElement) countElement.textContent = count;
-    } catch (error) {
-        console.error('Error updating count:', error);
-    }
+        document.getElementById('announcementCount').textContent = data.announcements?.length || 0;
+    } catch (error) {}
 }
-
-// Export to global scope
-window.showAnnouncementsModal = showAnnouncementsModal;
-window.showAddAnnouncementModal = showAddAnnouncementModal;
-window.saveAnnouncementItem = saveAnnouncementItem;
-window.editAnnouncementItem = editAnnouncementItem;
-window.deleteAnnouncementItem = deleteAnnouncementItem;
-
 
 // ============================================
 // JUDGES MANAGEMENT
@@ -6427,6 +6377,25 @@ async function deleteUser(id) {
 // ============================================
 // ANALYTICS
 // ============================================
+async function showAnalyticsModal() {
+    hideAllModals();
+    document.getElementById('analyticsModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/analytics`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAnalytics(data.analytics);
+        }
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+    }
+}
 
 function displayAnalytics(analytics) {
     const content = document.getElementById('analyticsContent');
@@ -6563,6 +6532,13 @@ async function saveSettings() {
     }
 }
 
+// Override the existing placeholder functions
+window.showAnnouncementsModal = showAnnouncementsModal;
+window.showJudgesModal = showJudgesModal;
+window.showUsersModal = showUsersModal;
+window.showAnalyticsModal = showAnalyticsModal;
+window.showReportsModal = showReportsModal;
+window.showSettingsModal = showSettingsModal;
 
 // Also add category functions
 function showCategoriesModal() {
@@ -7198,8 +7174,8 @@ function createAnnouncementsModal() {
             <div class="modal-body">
                 <div style="margin-bottom: 20px; text-align: right;">
                     <button class="sheet-btn" onclick="showAddAnnouncementModal()">
-                    <i class="fas fa-plus"></i> New Announcement
-                </button>
+                        <i class="fas fa-plus"></i> New Announcement
+                    </button>
                 </div>
                 
                 <div class="data-table-container">
@@ -7718,6 +7694,7 @@ async function saveSettings() {
 
 // ============ EXPORT ALL NEW FUNCTIONS TO GLOBAL SCOPE ============
 window.showAnnouncementModal = showAnnouncementModal;
+window.showAnnouncementsModal = showAnnouncementModal;
 window.showCategoriesModal = showCategoriesModal;
 window.showReportsModal = showReportsModal;
 window.showSettingsModal = showSettingsModal;
@@ -8261,7 +8238,7 @@ window.refreshBusinessDocuments = refreshBusinessDocuments;
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button type="button" class="sheet-btn warning" onclick="hideModal('addAnnouncementModal')" style="flex: 1;">Cancel</button>
-                    <button type="button" class="sheet-btn" onclick="saveAnnouncementItem()">Save Announcement</button>
+                    <button type="button" class="sheet-btn" onclick="saveAnnouncement()" style="flex: 2;">Save Announcement</button>
                 </div>
             </form>
         </div>
