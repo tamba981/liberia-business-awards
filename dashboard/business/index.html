@@ -801,6 +801,8 @@
     font-weight: 600;
 }
 
+
+
 .type-grant { background: #D1FAE5; color: #059669; }
 .type-funding { background: #DBEAFE; color: #2563EB; }
 .type-training { background: #FEF3C7; color: #D97706; }
@@ -1436,6 +1438,7 @@
             notifications: { data: [], unreadCount: 0 },
             settings: { emailNotifications: true, smsNotifications: false, browserNotifications: true },
             currentPage: 'dashboard', loading: false, sessionTimer: null, lastActivity: Date.now()
+            currentOpportunity: null
         };
 
          // ADD THESE RIGHT AFTER appState (around line 1165):
@@ -2596,31 +2599,37 @@ function displayOpportunities(opportunities) {
 
 async function viewOpportunityDetails(id) {
     try {
+        console.log('🔍 Viewing opportunity:', id);
+        
         const response = await fetch(`${BACKEND_URL}/opportunities/${id}`);
         const data = await response.json();
         
         if (data.success && data.opportunity) {
-            currentOpportunity = data.opportunity;
+            appState.currentOpportunity = data.opportunity;
             const opp = data.opportunity;
             const deadline = new Date(opp.deadline);
             const isExpired = deadline < new Date();
             
             document.getElementById('opportunityModalTitle').textContent = opp.title;
             
+            // Get the modal body element
+            const modalBody = document.querySelector('#opportunityModal .modal-body');
+            
+            // Update the opportunity details HTML
             document.getElementById('opportunityDetails').innerHTML = `
                 <div style="margin-bottom: 20px;">
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <span class="opportunity-type type-${opp.type}" style="font-size: 14px;">${opp.type.toUpperCase()}</span>
-                        ${opp.featured ? '<span class="opportunity-badge featured" style="position: relative; display: inline-block;">⭐ Featured</span>' : ''}
+                        ${opp.featured ? '<span class="opportunity-badge featured" style="position: relative; display: inline-block; background: #FF0000; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">⭐ Featured</span>' : ''}
                     </div>
                     
-                    <div class="opportunity-deadline ${isExpired ? 'urgent' : ''}" style="margin-bottom: 20px;">
+                    <div class="opportunity-deadline ${isExpired ? 'urgent' : ''}" style="margin-bottom: 20px; padding: 12px; background: ${isExpired ? '#FEF2F2' : '#f8fafc'}; border-radius: 8px;">
                         <i class="fas fa-calendar-alt"></i>
                         <span>Deadline: ${deadline.toLocaleDateString()}</span>
                         ${!isExpired ? `<span style="margin-left: auto;">${Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24))} days left</span>` : '<span style="margin-left: auto; color: #EF4444;">Expired</span>'}
                     </div>
                     
-                    ${opp.image_url ? `<img src="${opp.image_url}" style="width: 100%; border-radius: 12px; margin-bottom: 20px;">` : ''}
+                    ${opp.image_url ? `<img src="${opp.image_url}" style="width: 100%; border-radius: 12px; margin-bottom: 20px;" onerror="this.style.display='none'">` : ''}
                     
                     <h4 style="margin-bottom: 10px; color: #FF0000;">📋 Description</h4>
                     <p style="margin-bottom: 20px; line-height: 1.6;">${escapeHtml(opp.description)}</p>
@@ -2646,15 +2655,24 @@ async function viewOpportunityDetails(id) {
                 </div>
             `;
             
+            // Show internal application form if not expired
             const applicationForm = document.getElementById('applicationForm');
-            if (!isExpired && !opp.application_link) {
-                applicationForm.style.display = 'block';
-            } else {
-                applicationForm.style.display = 'none';
+            if (applicationForm) {
+                if (!isExpired && !opp.application_link) {
+                    applicationForm.style.display = 'block';
+                } else {
+                    applicationForm.style.display = 'none';
+                }
             }
             
-            document.getElementById('opportunityModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
+            // Show the modal
+            const modal = document.getElementById('opportunityModal');
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        } else {
+            showToast('Opportunity not found', 'error');
         }
     } catch (error) {
         console.error('Error loading opportunity details:', error);
@@ -2663,12 +2681,15 @@ async function viewOpportunityDetails(id) {
 }
 
 async function submitApplication() {
-    if (!currentOpportunity) return;
+    if (!appState.currentOpportunity) {
+        showToast('No opportunity selected', 'error');
+        return;
+    }
     
     const message = document.getElementById('applicationMessage').value;
     
     try {
-        const response = await apiRequest(`/api/opportunities/${currentOpportunity._id}/apply`, {
+        const response = await apiRequest(`/api/opportunities/${appState.currentOpportunity._id}/apply`, {
             method: 'POST',
             body: JSON.stringify({ message })
         });
@@ -2681,9 +2702,10 @@ async function submitApplication() {
             showToast(response.message || 'Failed to submit application', 'error');
         }
     } catch (error) {
+        console.error('Submit application error:', error);
         showToast(error.message || 'Error submitting application', 'error');
     }
-}  
+}
     </script>
 </body>
 </html>
