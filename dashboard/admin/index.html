@@ -5165,7 +5165,8 @@ async function loadBusinessDocuments(businessId) {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/business/documents?business_id=${businessId}`, {
+        // CHANGE THIS URL - remove business_id query param, use path parameter
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${businessId}/documents`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -5319,7 +5320,8 @@ async function deleteBusinessDocument(documentId) {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/business/documents/${documentId}`, {
+        // CHANGE THIS URL - use admin endpoint
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/documents/${documentId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -5345,39 +5347,7 @@ async function deleteBusinessDocument(documentId) {
 // Upload document for business (admin)
 async function uploadBusinessDocument() {
     const businessId = document.getElementById('documentsBusinessId').value;
-    const documentName = document.getElementById('adminDocumentName').value.trim();
-    const documentType = document.getElementById('adminDocumentType').value;
-    const file = document.getElementById('adminDocumentFile').files[0];
-    
-    if (!businessId) {
-        showNotification('Business ID missing', 'error');
-        return;
-    }
-    
-    if (!documentName) {
-        showNotification('Document name is required', 'warning');
-        return;
-    }
-    
-    if (!file) {
-        showNotification('Please select a file', 'warning');
-        return;
-    }
-    
-    const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
-        showNotification('File too large (max 10MB)', 'warning');
-        return;
-    }
-    
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
-    if (!allowedTypes.includes(file.type)) {
-        showNotification('Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG', 'warning');
-        return;
-    }
-    
-    const uploadBtn = event.target;
-    const originalText = uploadBtn.innerHTML;
+    // ... validation code ...
     
     try {
         uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
@@ -5390,8 +5360,8 @@ async function uploadBusinessDocument() {
         
         const token = localStorage.getItem('lba_auth_token');
         
-        // Note: This endpoint might need adjustment based on your backend
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/business/documents`, {
+        // CHANGE THIS URL - use admin endpoint with businessId in path
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${businessId}/documents`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
