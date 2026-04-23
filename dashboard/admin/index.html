@@ -1503,7 +1503,7 @@
                         </div>
                     </a>
                     
-                    <a href="#" class="action-card" onclick="showAnnouncementsModal()">
+                    <a href="#" class="action-card" onclick="showAnnouncementModal()">
                         <div class="action-icon">
                             <i class="fas fa-bullhorn"></i>
                         </div>
@@ -6042,13 +6042,6 @@ async function saveAnnouncementItem() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        
-        // ===== ADD THESE DEBUG CONSOLE LOGS HERE =====
-        console.log('🔐 Token exists:', !!token);
-        console.log('🔐 Token value (first 20 chars):', token ? token.substring(0, 20) + '...' : 'null');
-        console.log('📝 Saving announcement:', { id, data, url: id ? `${API_BASE.replace('/api', '')}/api/admin/announcements/${id}` : `${API_BASE.replace('/api', '')}/api/admin/announcements` });
-        // ===== END OF DEBUG LOGS =====
-        
         const url = id 
             ? `${API_BASE.replace('/api', '')}/api/admin/announcements/${id}`
             : `${API_BASE.replace('/api', '')}/api/admin/announcements`;
@@ -7173,7 +7166,221 @@ async function toggleCategoryStatus(id, currentStatus) {
 // Replace the placeholder showCategoriesModal with the real one
 window.showCategoriesModal = showCategoriesModal;
 
+// Update showAnnouncementModal to use real data
+async function showAnnouncementModal() {
+    hideAllModals();
+    
+    // Check if modal exists, if not create it
+    let modal = document.getElementById('announcementsModal');
+    if (!modal) {
+        createAnnouncementsModal();
+        modal = document.getElementById('announcementsModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Load announcements
+    await loadAnnouncementsData();
+}
 
+// Create announcements modal if not exists
+function createAnnouncementsModal() {
+    const modalHTML = `
+    <div class="modal" id="announcementsModal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-bullhorn"></i> Announcements Management</h2>
+                <button class="modal-close" onclick="hideModal('announcementsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; text-align: right;">
+                    <button class="sheet-btn" onclick="showAddAnnouncementModal()">
+                    <i class="fas fa-plus"></i> New Announcement
+                </button>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcementsTableBody">
+                            <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addAnnouncementModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2 id="announcementModalTitle">Add Announcement</h2>
+                <button class="modal-close" onclick="hideModal('addAnnouncementModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="announcementForm">
+                    <input type="hidden" id="announcementId">
+                    
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" id="announcementTitle" class="sheet-btn secondary" style="width: 100%;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea id="announcementDescription" rows="4" class="sheet-btn secondary" style="width: 100%;" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Image URL (optional)</label>
+                        <input type="url" id="announcementImage" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="announcementStatus" class="sheet-btn secondary" style="width: 100%;">
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addAnnouncementModal')" style="flex: 1;">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveAnnouncement()" style="flex: 2;">Save Announcement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Load announcements data
+async function loadAnnouncementsData() {
+    const tbody = document.getElementById('announcementsTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading announcements...</td></tr>';
+    
+    try {
+        const result = await fetchAnnouncements();
+        
+        if (result.success && result.announcements) {
+            displayAnnouncements(result.announcements);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No announcements found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading announcements:', error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #EF4444;">Error loading announcements</td></tr>';
+    }
+}
+
+// Display announcements
+function displayAnnouncements(announcements) {
+    const tbody = document.getElementById('announcementsTableBody');
+    if (!tbody) return;
+    
+    if (!announcements || announcements.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No announcements found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = announcements.map(a => `
+        <tr>
+            <td><strong>${escapeHtml(a.title)}</strong></td>
+            <td>${escapeHtml(a.description.substring(0, 100))}...</td>
+            <td><span class="status-badge status-${a.status === 'published' ? 'active' : 'pending'}">${a.status}</span></td>
+            <td>${new Date(a.timestamp).toLocaleDateString()}</td>
+            <td>
+                <button class="sheet-btn secondary" onclick="editAnnouncement('${a.id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" onclick="deleteAnnouncement('${a.id}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Show add announcement modal
+function showAddAnnouncementModal() {
+    document.getElementById('announcementModalTitle').textContent = 'Add Announcement';
+    document.getElementById('announcementForm').reset();
+    document.getElementById('announcementId').value = '';
+    document.getElementById('addAnnouncementModal').classList.add('active');
+}
+
+// Edit announcement
+async function editAnnouncement(id) {
+    try {
+        const result = await fetchAnnouncements();
+        if (result.success && result.announcements) {
+            const announcement = result.announcements.find(a => a.id === id);
+            if (announcement) {
+                document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+                document.getElementById('announcementId').value = announcement.id;
+                document.getElementById('announcementTitle').value = announcement.title;
+                document.getElementById('announcementDescription').value = announcement.description;
+                document.getElementById('announcementImage').value = announcement.image || '';
+                document.getElementById('announcementStatus').value = announcement.status;
+                document.getElementById('addAnnouncementModal').classList.add('active');
+            }
+        }
+    } catch (error) {
+        console.error('Error editing announcement:', error);
+        showNotification('Error loading announcement', 'error');
+    }
+}
+
+// Save announcement
+async function saveAnnouncement() {
+    const announcementData = {
+        title: document.getElementById('announcementTitle').value,
+        description: document.getElementById('announcementDescription').value,
+        image: document.getElementById('announcementImage').value,
+        status: document.getElementById('announcementStatus').value
+    };
+    
+    if (!announcementData.title || !announcementData.description) {
+        showNotification('Title and description are required', 'warning');
+        return;
+    }
+    
+    try {
+        const result = await createAnnouncement(announcementData);
+        
+        if (result.success) {
+            showNotification('Announcement created!', 'success');
+            hideModal('addAnnouncementModal');
+            loadAnnouncementsData();
+        } else {
+            showNotification(result.error || 'Error saving announcement', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving announcement:', error);
+        showNotification('Error saving announcement', 'error');
+    }
+}
+
+// Delete announcement
+async function deleteAnnouncement(id) {
+    if (!confirm('Delete this announcement?')) return;
+    
+    showNotification('Delete functionality coming soon', 'info');
+}
 
 // ============ UPDATE ENHANCED ANALYTICS MODAL ============
 async function showAnalyticsModal() {
