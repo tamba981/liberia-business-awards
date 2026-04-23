@@ -1395,13 +1395,18 @@
             document.getElementById('profileAddress').textContent = profile.address || profile.business_address || '-';
             
             if (profile.logo) {
-                document.getElementById('profileLogoImg').src = profile.logo;
-                document.getElementById('profileLogoImg').style.display = 'block';
-                document.getElementById('profileLogoIcon').style.display = 'none';
-                document.getElementById('profilePageLogo').src = profile.logo;
-                document.getElementById('profilePageLogo').style.display = 'block';
-                document.getElementById('profilePageLogoIcon').style.display = 'none';
-            }
+                let logoUrl = profile.logo;
+        if (logoUrl.startsWith('/uploads/')) {
+            logoUrl = `${BACKEND_URL.replace('/api', '')}${logoUrl}`;
+        }
+        document.getElementById('profileLogoImg').src = logoUrl;
+        document.getElementById('profileLogoImg').style.display = 'block';
+        document.getElementById('profileLogoIcon').style.display = 'none';
+        document.getElementById('profilePageLogo').src = logoUrl;
+        document.getElementById('profilePageLogo').style.display = 'block';
+        document.getElementById('profilePageLogoIcon').style.display = 'none';
+    }
+}
             
             const completion = calculateProfileCompletion(profile);
             document.getElementById('profileCompletion').textContent = completion + '%';
@@ -1515,67 +1520,77 @@
             else if (type === 'international') document.getElementById('internationalFields').classList.remove('hidden');
         });
 
-        document.getElementById('nominationFormModal').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const submitBtn = document.getElementById('nominationSubmitModalBtn');
-            const originalText = submitBtn.innerHTML;
-            try {
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-                submitBtn.disabled = true;
-                
-                const formData = {
-                    formType: 'nomination',
-                    nominationType: document.getElementById('nominationType').value,
-                    county: document.getElementById('county').value,
-                    africaCountry: document.getElementById('africaCountry').value,
-                    internationalCountry: document.getElementById('internationalCountry').value,
-                    businessName: document.getElementById('nomBusinessName').value,
-                    category: document.getElementById('nomCategory').value,
-                    reason: document.getElementById('nomReason').value,
-                    yourName: document.getElementById('nomYourName').value,
-                    yourEmail: document.getElementById('nomYourEmail').value,
-                    relationship: document.getElementById('nomRelationship').value,
-                    source: 'business_dashboard',
-                    timestamp: new Date().toISOString()
-                };
-                
-                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(formData)
-                });
-                
-                showToast('✅ Nomination submitted successfully!', 'success');
-                hideModal('nominationModal');
-                document.getElementById('nominationFormModal').reset();
-                document.getElementById('liberiaFields').classList.add('hidden');
-                document.getElementById('africaFields').classList.add('hidden');
-                document.getElementById('internationalFields').classList.add('hidden');
-                
-            } catch (error) {
-                showToast('❌ Failed to submit nomination', 'error');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
+       document.getElementById('nominationFormModal').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const submitBtn = document.getElementById('nominationSubmitModalBtn');
+    const originalText = submitBtn.innerHTML;
+    try {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        submitBtn.disabled = true;
+        
+        // Send to your backend API instead of Google Sheets
+        const nominationData = {
+            title: document.getElementById('nomBusinessName').value,
+            category: document.getElementById('nomCategory').value,
+            year: new Date().getFullYear(),
+            description: document.getElementById('nomReason').value,
+            achievements: [],
+            status: 'submitted'
+        };
+        
+        const response = await apiRequest('/business/nominations', {
+            method: 'POST',
+            body: JSON.stringify(nominationData)
         });
+        
+        if (response.success) {
+            showToast('✅ Nomination submitted successfully!', 'success');
+            hideModal('nominationModal');
+            document.getElementById('nominationFormModal').reset();
+            document.getElementById('liberiaFields').classList.add('hidden');
+            document.getElementById('africaFields').classList.add('hidden');
+            document.getElementById('internationalFields').classList.add('hidden');
+            // Reload nominations
+            await loadNominations();
+            await loadAllData();
+        } else {
+            throw new Error(response.message || 'Submission failed');
+        }
+        
+    } catch (error) {
+        console.error('Nomination error:', error);
+        showToast(error.message || '❌ Failed to submit nomination', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
 
         async function loadNominations() {
-            try {
-                const page = appState.nominations.currentPage;
-                const filter = appState.nominations.filter !== 'all' ? `&status=${appState.nominations.filter}` : '';
-                const data = await apiRequest(`/api/business/nominations?page=${page}&limit=10${filter}`);
-                if (data.success) {
-                    appState.nominations.data = data.nominations || data.data || [];
-                    appState.nominations.total = data.total || data.pagination?.total || 0;
-                    appState.nominations.totalPages = data.pages || data.pagination?.pages || 1;
-                    updateNominationsCount();
-                    displayNominations();
-                    updateNominationsPagination();
-                }
-            } catch (error) { console.error('Nominations load error:', error); showToast('Could not load nominations', 'warning'); }
+    try {
+        const page = appState.nominations.currentPage;
+        const filter = appState.nominations.filter !== 'all' ? `&status=${appState.nominations.filter}` : '';
+        // FIXED: Remove extra /api/ from endpoint
+        const data = await apiRequest(`/business/nominations?page=${page}&limit=10${filter}`);
+        if (data.success) {
+            appState.nominations.data = data.nominations || data.data || [];
+            appState.nominations.total = data.total || data.pagination?.total || 0;
+            appState.nominations.totalPages = data.pages || data.pagination?.pages || 1;
+            updateNominationsCount();
+            displayNominations();
+            updateNominationsPagination();
+        } else {
+            console.log('No nominations data:', data);
+            appState.nominations.data = [];
+            displayNominations();
         }
+    } catch (error) { 
+        console.error('Nominations load error:', error); 
+        showToast('Could not load nominations', 'warning');
+        appState.nominations.data = [];
+        displayNominations();
+    }
+}
 
         function updateNominationsCount() {
             const nominations = appState.nominations.data;
@@ -1654,6 +1669,38 @@
 
         function viewNomination(id) { showToast(`Viewing nomination details`, 'info'); }
         function editNomination(id) { if (confirm('Edit this nomination?')) showNominationModal(id); }
+
+        async function createTestNomination() {
+    try {
+        const testData = {
+            title: "Test Nomination " + new Date().toLocaleString(),
+            category: "startup-of-the-year",
+            year: 2025,
+            description: "This is a test nomination to verify the system is working.",
+            achievements: ["Achievement 1", "Achievement 2"],
+            status: "submitted"
+        };
+        
+        const response = await apiRequest('/business/nominations', {
+            method: 'POST',
+            body: JSON.stringify(testData)
+        });
+        
+        if (response.success) {
+            showToast('Test nomination created!', 'success');
+            await loadNominations();
+            await loadAllData();
+        } else {
+            showToast('Failed to create test nomination', 'error');
+        }
+    } catch (error) {
+        console.error('Test nomination error:', error);
+        showToast(error.message, 'error');
+    }
+}
+
+// Add a button somewhere temporarily:
+// <button onclick="createTestNomination()">Create Test Nomination</button>
 
         // ============================================
 // DOCUMENTS FUNCTIONS - COMPLETELY FIXED
@@ -2001,6 +2048,28 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
                 showToast('All notifications marked as read', 'success');
             } catch (error) { showToast('Failed to mark notifications as read', 'error'); }
         }
+
+        // Add this function to test notifications
+async function testNotification() {
+    try {
+        // Create a test notification (you'll need to add this endpoint or test existing)
+        const response = await apiRequest('/business/notifications', {
+            method: 'GET'
+        });
+        console.log('Notifications response:', response);
+        if (response.success && response.notifications) {
+            showToast(`Found ${response.notifications.length} notifications`, 'info');
+        } else {
+            showToast('No notifications found. The notifications system may need setup.', 'warning');
+        }
+    } catch (error) {
+        console.error('Notification test error:', error);
+        showToast('Notifications system not fully configured yet', 'warning');
+    }
+}
+
+// Call this to test
+// testNotification();
 
         // ============================================
         // SETTINGS FUNCTIONS
