@@ -6020,7 +6020,6 @@ async function saveAnnouncement() {
         return;
     }
     
-    // Get the save button and show loading state
     const saveBtn = document.querySelector('#addAnnouncementModal .sheet-btn[onclick="saveAnnouncement()"]');
     const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
     if (saveBtn) {
@@ -6028,91 +6027,52 @@ async function saveAnnouncement() {
         saveBtn.disabled = true;
     }
     
-    let googleSheetsSuccess = false;
-    let backendSuccess = false;
-    let googleSheetsError = null;
-    let backendError = null;
-    
-    // ============================================
-    // STEP 1: Save to Google Sheets (via Apps Script)
-    // ============================================
     try {
         console.log('📤 Saving announcement to Google Sheets...');
-        const googleResult = await createAnnouncement(announcementData);
-        
-        if (googleResult.success) {
-            googleSheetsSuccess = true;
-            console.log('✅ Saved to Google Sheets');
-        } else {
-            googleSheetsError = googleResult.error || 'Google Sheets save failed';
-            console.warn('⚠️ Google Sheets save:', googleSheetsError);
-        }
-    } catch (error) {
-        googleSheetsError = error.message;
-        console.error('❌ Google Sheets error:', error);
-    }
-    
-    // ============================================
-    // STEP 2: Save to Backend API (with authentication)
-    // ============================================
-    try {
-        console.log('📤 Saving announcement to Backend API...');
-        const token = localStorage.getItem('lba_auth_token');
-        
-        if (!token) {
-            throw new Error('Authentication token not found');
-        }
-        
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(announcementData)
+        const formData = new URLSearchParams({
+            formType: 'announcement',
+            title: announcementData.title,
+            description: announcementData.description,
+            image: announcementData.image || '',
+            status: announcementData.status || 'draft',
+            created_by: dashboardState.user.email || 'admin',
+            source: 'dashboard',
+            timestamp: new Date().toISOString()
         });
-        
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+
         const result = await response.json();
         
-        if (response.ok && result.success) {
-            backendSuccess = true;
-            console.log('✅ Saved to Backend API');
+        if (result.success) {
+            showNotification('✅ Announcement saved successfully!', 'success');
+            hideModal('addAnnouncementModal');
+            
+            // Refresh the announcements display
+            if (typeof loadAnnouncementsData === 'function') {
+                await loadAnnouncementsData();
+            }
+            if (typeof loadAnnouncements === 'function') {
+                await loadAnnouncements();
+            }
+            
+            document.getElementById('announcementForm').reset();
         } else {
-            backendError = result.message || `HTTP ${response.status}: ${response.statusText}`;
-            console.warn('⚠️ Backend API save:', backendError);
+            showNotification('Failed: ' + (result.error || 'Unknown error'), 'error');
         }
+        
     } catch (error) {
-        backendError = error.message;
-        console.error('❌ Backend API error:', error);
-    }
-    
-    // ============================================
-    // STEP 3: Show appropriate notification
-    // ============================================
-    if (googleSheetsSuccess && backendSuccess) {
-        showNotification('✅ Announcement saved to Google Sheets and Database!', 'success');
-        hideModal('addAnnouncementModal');
-        loadAnnouncementsData();
-        // Also refresh the announcements list from the modal
-        if (typeof loadAnnouncements === 'function') {
-            loadAnnouncements();
+        console.error('❌ Error:', error);
+        showNotification('Error: ' + error.message, 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
         }
-    } else if (googleSheetsSuccess) {
-        showNotification('⚠️ Saved to Google Sheets only. Backend save failed: ' + (backendError || 'Unknown error'), 'warning');
-        hideModal('addAnnouncementModal');
-        loadAnnouncementsData();
-    } else if (backendSuccess) {
-        showNotification('⚠️ Saved to Database only. Google Sheets save failed: ' + (googleSheetsError || 'Unknown error'), 'warning');
-        hideModal('addAnnouncementModal');
-        loadAnnouncementsData();
-    } else {
-        showNotification('❌ Failed to save announcement to both systems. Check console for details.', 'error');
-    }
-    
-    // Restore button
-    if (saveBtn) {
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
     }
 }
         
