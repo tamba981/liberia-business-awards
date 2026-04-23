@@ -7183,26 +7183,25 @@ function submitNominationForm() {
     return true;
 }
 
-// Partnership Form - UPDATED to match Apps Script expectations
+// Partnership Form
 function submitPartnershipForm() {
     console.log('🤝 Submitting partnership form...');
     
-    // Use the exact field names that Apps Script expects
     const formData = {
-        'Your Name': document.getElementById('partner-name')?.value || '',
-        'Company Name': document.getElementById('partner-company')?.value || '',
-        'Email Address': document.getElementById('partner-email')?.value || '',
-        'Phone Number': document.getElementById('partner-phone')?.value || '',
-        'Partnership Interest': document.getElementById('partner-interest')?.value || '',
-        'Message': document.getElementById('partner-message')?.value || '',
-        formType: 'partnership'
+        name: document.getElementById('partner-name')?.value || '',
+        company: document.getElementById('partner-company')?.value || '',
+        email: document.getElementById('partner-email')?.value || '',
+        phone: document.getElementById('partner-phone')?.value || '',
+        interest: document.getElementById('partner-interest')?.value || '',
+        message: document.getElementById('partner-message')?.value || ''
     };
     
     // Validate
-    if (!formData['Your Name'] || !formData['Company Name'] || !formData['Email Address'] || 
-        !formData['Phone Number'] || !formData['Partnership Interest'] || !formData['Message']) {
-        showNotification('⚠️ Please fill in all fields', 'error');
-        return false;
+    for (let [key, value] of Object.entries(formData)) {
+        if (!value) {
+            showNotification('⚠️ Please fill in all fields', 'error');
+            return false;
+        }
     }
     
     return submitFormDual(formData, 'partner');
