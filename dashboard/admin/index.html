@@ -7145,24 +7145,8 @@ async function toggleCategoryStatus(id, currentStatus) {
 // Replace the placeholder showCategoriesModal with the real one
 window.showCategoriesModal = showCategoriesModal;
 
-// Update showAnnouncementModal to use real data
-async function showAnnouncementModal() {
-    hideAllModals();
-    
-    // Check if modal exists, if not create it
-    let modal = document.getElementById('announcementsModal');
-    if (!modal) {
-        createAnnouncementsModal();
-        modal = document.getElementById('announcementsModal');
-    }
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Load announcements
-    await loadAnnouncementsData();
-}
-
+// Alias for backward compatibility - showAnnouncementModal now points to showAnnouncementsModal
+window.showAnnouncementModal = showAnnouncementsModal;
 // Create announcements modal if not exists
 function createAnnouncementsModal() {
     const modalHTML = `
