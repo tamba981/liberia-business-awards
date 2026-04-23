@@ -5257,7 +5257,7 @@ function getFileIcon(fileUrl) {
     return 'fa-file';
 }
 
-// View business document (opens in new tab)
+// View business document (admin version)
 function viewBusinessDocument(documentId) {
     const token = localStorage.getItem('lba_auth_token');
     if (!token) {
@@ -5265,11 +5265,12 @@ function viewBusinessDocument(documentId) {
         return;
     }
     
-    const url = `${API_BASE.replace('/api', '')}/api/business/documents/${documentId}/view?token=${encodeURIComponent(token)}`;
+    // Use admin view endpoint
+    const url = `${API_BASE.replace('/api', '')}/api/admin/documents/${documentId}/view?token=${encodeURIComponent(token)}`;
     window.open(url, '_blank');
 }
 
-// Download business document
+// Download business document (admin version)
 async function downloadBusinessDocument(documentId) {
     const token = localStorage.getItem('lba_auth_token');
     if (!token) {
@@ -5278,13 +5279,18 @@ async function downloadBusinessDocument(documentId) {
     }
     
     try {
-        const url = `${API_BASE.replace('/api', '')}/api/business/documents/${documentId}/download?token=${encodeURIComponent(token)}`;
+        // Use admin download endpoint instead of business endpoint
+        const url = `${API_BASE.replace('/api', '')}/api/admin/documents/${documentId}/download?token=${encodeURIComponent(token)}`;
         
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (!response.ok) throw new Error('Download failed');
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Download error:', errorText);
+            throw new Error(`Download failed: ${response.status}`);
+        }
         
         const blob = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
@@ -5310,7 +5316,7 @@ async function downloadBusinessDocument(documentId) {
         showNotification('Download started', 'success');
     } catch (error) {
         console.error('Download error:', error);
-        showNotification('Failed to download document', 'error');
+        showNotification(error.message || 'Failed to download document', 'error');
     }
 }
 
@@ -5347,7 +5353,40 @@ async function deleteBusinessDocument(documentId) {
 // Upload document for business (admin)
 async function uploadBusinessDocument() {
     const businessId = document.getElementById('documentsBusinessId').value;
-    // ... validation code ...
+    const documentName = document.getElementById('adminDocumentName').value.trim();
+    const documentType = document.getElementById('adminDocumentType').value;
+    const file = document.getElementById('adminDocumentFile').files[0];
+    
+    if (!businessId) {
+        showNotification('Business ID missing', 'error');
+        return;
+    }
+    
+    if (!documentName) {
+        showNotification('Document name is required', 'warning');
+        return;
+    }
+    
+    if (!file) {
+        showNotification('Please select a file', 'warning');
+        return;
+    }
+    
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showNotification('File too large (max 10MB)', 'warning');
+        return;
+    }
+    
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG', 'warning');
+        return;
+    }
+    
+    // Get the upload button reference properly
+    const uploadBtn = event.target;
+    const originalText = uploadBtn.innerHTML;
     
     try {
         uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
@@ -5360,7 +5399,7 @@ async function uploadBusinessDocument() {
         
         const token = localStorage.getItem('lba_auth_token');
         
-        // CHANGE THIS URL - use admin endpoint with businessId in path
+        // Use admin endpoint with businessId in path
         const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${businessId}/documents`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
