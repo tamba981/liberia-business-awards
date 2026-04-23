@@ -443,6 +443,19 @@ const opportunityApplicationSchema = new mongoose.Schema({
 
 const OpportunityApplication = mongoose.model('OpportunityApplication', opportunityApplicationSchema);
 
+// ============ ANNOUNCEMENT SCHEMA ============
+const announcementSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    image: { type: String },
+    status: { type: String, enum: ['published', 'draft'], default: 'draft' },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+});
+
+const Announcement = mongoose.model('Announcement', announcementSchema);
+
 // ============ BUSINESS DOCUMENT SCHEMA ============
 const businessDocumentSchema = new mongoose.Schema({
     business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
@@ -1610,6 +1623,121 @@ app.get('/api/admin/opportunities/:id/applications', authenticate, authorize('ad
         res.json({
             success: true,
             applications
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ANNOUNCEMENT ROUTES ============
+
+// Get all announcements (public/business view - only published)
+app.get('/api/announcements', async (req, res) => {
+    try {
+        const announcements = await Announcement.find({ status: 'published' })
+            .sort({ created_at: -1 });
+        
+        res.json({
+            success: true,
+            announcements
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Get all announcements (including drafts)
+app.get('/api/admin/announcements', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const announcements = await Announcement.find()
+            .sort({ created_at: -1 });
+        
+        res.json({
+            success: true,
+            announcements: announcements.map(a => ({
+                _id: a._id,
+                title: a.title,
+                description: a.description,
+                image: a.image,
+                status: a.status,
+                created_at: a.created_at
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Create announcement
+app.post('/api/admin/announcements', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { title, description, image, status } = req.body;
+        
+        if (!title || !description) {
+            return res.status(400).json({ success: false, message: 'Title and description are required' });
+        }
+        
+        const announcement = new Announcement({
+            title,
+            description,
+            image: image || '',
+            status: status || 'draft',
+            created_by: req.user._id
+        });
+        
+        await announcement.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Announcement created successfully',
+            announcement
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Update announcement
+app.put('/api/admin/announcements/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const announcement = await Announcement.findById(req.params.id);
+        
+        if (!announcement) {
+            return res.status(404).json({ success: false, message: 'Announcement not found' });
+        }
+        
+        const { title, description, image, status } = req.body;
+        
+        if (title) announcement.title = title;
+        if (description) announcement.description = description;
+        if (image !== undefined) announcement.image = image;
+        if (status) announcement.status = status;
+        announcement.updated_at = new Date();
+        
+        await announcement.save();
+        
+        res.json({
+            success: true,
+            message: 'Announcement updated successfully',
+            announcement
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Delete announcement
+app.delete('/api/admin/announcements/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const announcement = await Announcement.findByIdAndDelete(req.params.id);
+        
+        if (!announcement) {
+            return res.status(404).json({ success: false, message: 'Announcement not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Announcement deleted successfully'
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
