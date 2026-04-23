@@ -995,6 +995,13 @@
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger-color);
         }
+
+.type-grant { background: #D1FAE5; color: #059669; }
+.type-funding { background: #DBEAFE; color: #2563EB; }
+.type-training { background: #FEF3C7; color: #D97706; }
+.type-networking { background: #E0E7FF; color: #4338CA; }
+.type-award { background: #FCE7F3; color: #DB2777; }
+.type-partnership { background: #CCFBF1; color: #0F766E; }
         
         /* Loading States */
         .loading {
@@ -1291,7 +1298,11 @@
                         <span>Business Spotlight</span>
                         <span class="badge" id="spotlightCount">0</span>
                     </a>
-                    
+
+                    <a href="#" class="menu-item" onclick="showOpportunitiesModal()">
+        <i class="fas fa-bullhorn"></i>
+        <span>Opportunities</span>
+    </a>
                     <a href="#" class="menu-item" onclick="showCategoriesModal()">
                         <i class="fas fa-list-alt"></i>
                         <span>Categories</span>
@@ -1321,146 +1332,8 @@
                     </a>
                 </div>
 
-                // Add to sidebar menu (around where other menu items are)
-<a href="#" class="menu-item" onclick="showOpportunitiesModal()">
-    <i class="fas fa-bullhorn"></i>
-    <span>Opportunities</span>
-</a>
 
-// Functions for admin
-async function showOpportunitiesModal() {
-    hideAllModals();
-    document.getElementById('opportunitiesModal').classList.add('active');
-    await loadOpportunitiesList();
-}
-
-async function loadOpportunitiesList() {
-    const token = localStorage.getItem('lba_auth_token');
-    const response = await fetch(`${API_BASE.replace('/api', '')}/api/opportunities`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await response.json();
-    if (data.success) displayOpportunitiesList(data.opportunities);
-}
-
-function displayOpportunitiesList(opportunities) {
-    const tbody = document.getElementById('opportunitiesTableBody');
-    if (!opportunities || opportunities.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">No opportunities found</td></tr>';
-        return;
-    }
-    tbody.innerHTML = opportunities.map(opp => `
-        <tr>
-            <td><strong>${escapeHtml(opp.title)}</strong></td>
-            <td><span class="status-badge type-${opp.type}">${opp.type}</span></td>
-            <td>${new Date(opp.deadline).toLocaleDateString()}</td>
-            <td><span class="status-badge status-${opp.status}">${opp.status}</span></td>
-            <td>${opp.featured ? '⭐ Featured' : ''}</td>
-            <td>
-                <button class="sheet-btn secondary" onclick="editOpportunity('${opp._id}')"><i class="fas fa-edit"></i></button>
-                <button class="sheet-btn danger" onclick="deleteOpportunity('${opp._id}')"><i class="fas fa-trash"></i></button>
-                <button class="sheet-btn" onclick="viewOpportunityApplications('${opp._id}')"><i class="fas fa-users"></i> Apps</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function showAddOpportunityModal() {
-    document.getElementById('opportunityForm').reset();
-    document.getElementById('opportunityId').value = '';
-    document.getElementById('opportunityModalTitle').textContent = 'Add Opportunity';
-    document.getElementById('addOpportunityModal').classList.add('active');
-}
-
-async function editOpportunity(id) {
-    const token = localStorage.getItem('lba_auth_token');
-    const response = await fetch(`${API_BASE.replace('/api', '')}/api/opportunities/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await response.json();
-    if (data.success && data.opportunity) {
-        const opp = data.opportunity;
-        document.getElementById('opportunityId').value = opp._id;
-        document.getElementById('oppTitle').value = opp.title;
-        document.getElementById('oppType').value = opp.type;
-        document.getElementById('oppDescription').value = opp.description;
-        document.getElementById('oppRequirements').value = opp.requirements || '';
-        document.getElementById('oppBenefits').value = opp.benefits || '';
-        document.getElementById('oppLink').value = opp.application_link || '';
-        document.getElementById('oppImage').value = opp.image_url || '';
-        document.getElementById('oppStatus').value = opp.status;
-        document.getElementById('oppFeatured').checked = opp.featured;
-        const deadline = new Date(opp.deadline);
-        deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
-        document.getElementById('oppDeadline').value = deadline.toISOString().slice(0, 16);
-        document.getElementById('opportunityModalTitle').textContent = 'Edit Opportunity';
-        document.getElementById('addOpportunityModal').classList.add('active');
-    }
-}
-
-document.getElementById('opportunityForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const id = document.getElementById('opportunityId').value;
-    const data = {
-        title: document.getElementById('oppTitle').value,
-        type: document.getElementById('oppType').value,
-        description: document.getElementById('oppDescription').value,
-        requirements: document.getElementById('oppRequirements').value,
-        benefits: document.getElementById('oppBenefits').value,
-        deadline: document.getElementById('oppDeadline').value,
-        application_link: document.getElementById('oppLink').value,
-        image_url: document.getElementById('oppImage').value,
-        status: document.getElementById('oppStatus').value,
-        featured: document.getElementById('oppFeatured').checked
-    };
-    const token = localStorage.getItem('lba_auth_token');
-    const url = id ? `${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}` : `${API_BASE.replace('/api', '')}/api/admin/opportunities`;
-    const method = id ? 'PUT' : 'POST';
-    const response = await fetch(url, {
-        method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    const result = await response.json();
-    if (result.success) {
-        showNotification(id ? 'Opportunity updated!' : 'Opportunity created!', 'success');
-        hideModal('addOpportunityModal');
-        loadOpportunitiesList();
-    } else {
-        showNotification('Error saving opportunity', 'error');
-    }
-});
-
-async function deleteOpportunity(id) {
-    if (!confirm('Delete this opportunity?')) return;
-    const token = localStorage.getItem('lba_auth_token');
-    const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}`, {
-        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const result = await response.json();
-    if (result.success) {
-        showNotification('Opportunity deleted', 'success');
-        loadOpportunitiesList();
-    }
-}
-
-async function viewOpportunityApplications(id) {
-    const token = localStorage.getItem('lba_auth_token');
-    const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}/applications`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await response.json();
-    if (data.success && data.applications.length > 0) {
-        let message = `Applications for this opportunity:\n\n`;
-        data.applications.forEach(app => {
-            message += `📌 ${app.business_name}\n   Contact: ${app.contact_name} (${app.contact_email})\n   Applied: ${new Date(app.applied_at).toLocaleDateString()}\n   Status: ${app.status}\n\n`;
-        });
-        alert(message);
-    } else {
-        showNotification('No applications yet', 'info');
-    }
-}
-
-                <!-- ADD THIS NEW BUSINESS MANAGEMENT SECTION -->
+<!-- ADD THIS NEW BUSINESS MANAGEMENT SECTION -->
 <div class="menu-section">
     <h4>Business Management</h4>
     <a href="#" class="menu-item" onclick="showBusinessApprovalModal()">
@@ -3207,6 +3080,22 @@ function updateSheetStatsDisplay(data) {
             document.body.style.overflow = 'auto';
         }
 
+        function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
         // ============================================
         // UTILITY FUNCTIONS
         // ============================================
@@ -3348,6 +3237,212 @@ function updateSheetStatsDisplay(data) {
             showNotification('Refreshing dashboard data...', 'info');
         }
 
+
+        // ============================================
+// OPPORTUNITIES MANAGEMENT FUNCTIONS
+// ============================================
+
+async function showOpportunitiesModal() {
+    hideAllModals();
+    const modal = document.getElementById('opportunitiesModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        await loadOpportunitiesList();
+    }
+}
+
+async function loadOpportunitiesList() {
+    const tbody = document.getElementById('opportunitiesTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/opportunities`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.opportunities) {
+            displayOpportunitiesList(data.opportunities);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No opportunities found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading opportunities:', error);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading opportunities</td></tr>';
+    }
+}
+
+function displayOpportunitiesList(opportunities) {
+    const tbody = document.getElementById('opportunitiesTableBody');
+    if (!opportunities || opportunities.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No opportunities found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = opportunities.map(opp => `
+        <tr>
+            <td><strong>${escapeHtml(opp.title)}</strong></td>
+            <td><span class="status-badge type-${opp.type}">${opp.type}</span></td>
+            <td>${new Date(opp.deadline).toLocaleDateString()}</td>
+            <td><span class="status-badge status-${opp.status === 'active' ? 'active' : 'pending'}">${opp.status}</span></td>
+            <td>${opp.featured ? '⭐ Featured' : ''}</td>
+            <td>
+                <button class="sheet-btn secondary" onclick="editOpportunity('${opp._id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" onclick="deleteOpportunity('${opp._id}')"><i class="fas fa-trash"></i></button>
+                <button class="sheet-btn" onclick="viewOpportunityApplications('${opp._id}')"><i class="fas fa-users"></i> Apps</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showAddOpportunityModal() {
+    document.getElementById('opportunityForm').reset();
+    document.getElementById('opportunityId').value = '';
+    document.getElementById('opportunityModalTitle').textContent = 'Add Opportunity';
+    document.getElementById('addOpportunityModal').classList.add('active');
+}
+
+async function editOpportunity(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/opportunities/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.opportunity) {
+            const opp = data.opportunity;
+            document.getElementById('opportunityId').value = opp._id;
+            document.getElementById('oppTitle').value = opp.title;
+            document.getElementById('oppType').value = opp.type;
+            document.getElementById('oppDescription').value = opp.description;
+            document.getElementById('oppRequirements').value = opp.requirements || '';
+            document.getElementById('oppBenefits').value = opp.benefits || '';
+            document.getElementById('oppLink').value = opp.application_link || '';
+            document.getElementById('oppImage').value = opp.image_url || '';
+            document.getElementById('oppStatus').value = opp.status;
+            document.getElementById('oppFeatured').checked = opp.featured;
+            
+            const deadline = new Date(opp.deadline);
+            deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
+            document.getElementById('oppDeadline').value = deadline.toISOString().slice(0, 16);
+            
+            document.getElementById('opportunityModalTitle').textContent = 'Edit Opportunity';
+            document.getElementById('addOpportunityModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error editing opportunity:', error);
+        showNotification('Error loading opportunity details', 'error');
+    }
+}
+
+// Set up form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('opportunityForm');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('opportunityId').value;
+            const data = {
+                title: document.getElementById('oppTitle').value,
+                type: document.getElementById('oppType').value,
+                description: document.getElementById('oppDescription').value,
+                requirements: document.getElementById('oppRequirements').value,
+                benefits: document.getElementById('oppBenefits').value,
+                deadline: document.getElementById('oppDeadline').value,
+                application_link: document.getElementById('oppLink').value,
+                image_url: document.getElementById('oppImage').value,
+                status: document.getElementById('oppStatus').value,
+                featured: document.getElementById('oppFeatured').checked
+            };
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const url = id ? `${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}` : `${API_BASE.replace('/api', '')}/api/admin/opportunities`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(id ? 'Opportunity updated!' : 'Opportunity created!', 'success');
+                    hideModal('addOpportunityModal');
+                    loadOpportunitiesList();
+                } else {
+                    showNotification(result.message || 'Error saving opportunity', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving opportunity:', error);
+                showNotification('Error saving opportunity', 'error');
+            }
+        });
+    }
+});
+
+async function deleteOpportunity(id) {
+    if (!confirm('Delete this opportunity?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Opportunity deleted', 'success');
+            loadOpportunitiesList();
+        } else {
+            showNotification('Error deleting opportunity', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting opportunity:', error);
+        showNotification('Error deleting opportunity', 'error');
+    }
+}
+
+async function viewOpportunityApplications(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}/applications`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.applications.length > 0) {
+            let message = `Applications for this opportunity:\n\n`;
+            data.applications.forEach(app => {
+                message += `📌 ${app.business_name}\n   Contact: ${app.contact_name} (${app.contact_email})\n   Applied: ${new Date(app.applied_at).toLocaleDateString()}\n   Status: ${app.status}\n\n`;
+            });
+            alert(message);
+        } else {
+            showNotification('No applications yet', 'info');
+        }
+    } catch (error) {
+        console.error('Error loading applications:', error);
+        showNotification('Error loading applications', 'error');
+    }
+}
+
+// Make functions global
+window.showOpportunitiesModal = showOpportunitiesModal;
+window.showAddOpportunityModal = showAddOpportunityModal;
+window.editOpportunity = editOpportunity;
+window.deleteOpportunity = deleteOpportunity;
+window.viewOpportunityApplications = viewOpportunityApplications;
         // ============================================
         // MODAL SHORTCUT FUNCTIONS
         // ============================================
@@ -3356,17 +3451,11 @@ function updateSheetStatsDisplay(data) {
             switchSheet('businesses');
         }
 
-        function showSheetsModal() {
-            showNominationsModal();
-        }
 
         function showSheetsModal() {
     showAnnouncementsModal();
 }
 
-        function showAnalyticsModal() {
-            showNotification();
-}
 
         function showCategoriesModal() {
             showNotification();
@@ -8436,17 +8525,31 @@ window.refreshBusinessDocuments = refreshBusinessDocuments;
         </div>
         <div class="modal-body">
             <div class="stats-grid" style="margin-bottom: 30px;">
-                 <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('businesses', 'csv')">
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('businesses', 'csv')">
                     <h3>Businesses Report</h3>
                     <p>Export all businesses to CSV</p>
                 </div>
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('nominations', 'csv')">
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('nominations', 'csv')">
                     <h3>Nominations Report</h3>
                     <p>Export all nominations to CSV</p>
                 </div>
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('judges', 'csv')">
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('judges', 'csv')">
                     <h3>Judges Report</h3>
                     <p>Export all judges to CSV</p>
+                </div>
+            </div>
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('categories', 'csv')">
+                    <h3>Categories Report</h3>
+                    <p>Export all categories to CSV</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('announcements', 'csv')">
+                    <h3>Announcements Report</h3>
+                    <p>Export all announcements to CSV</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('spotlight', 'csv')">
+                    <h3>Spotlight Report</h3>
+                    <p>Export all spotlights to CSV</p>
                 </div>
             </div>
         </div>
