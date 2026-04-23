@@ -4307,10 +4307,6 @@ window.closeModal = function(modalId) {
     hideModal(modalId);
 };
 
-// Alias showAnnouncementModal
-window.showAnnouncementModal = function() {
-    showAnnouncementsModal();
-};
 
 // Fix generateReport to generateSheetReport
 window.generateReport = function(type, format) {
@@ -4348,7 +4344,6 @@ console.log('✅ Voting system fully integrated and ready!');
         window.showBusinessModal = showBusinessModal;
         window.hideModal = hideModal;
         window.showTroubleshootingGuide = showTroubleshootingGuide;
-        window.showAnnouncementModal = showAnnouncementModal;
         window.showAnalyticsModal = showAnalyticsModal;
         window.showCategoriesModal = showCategoriesModal;
         window.showJudgesModal = showJudgesModal;
@@ -6377,25 +6372,6 @@ async function deleteUser(id) {
 // ============================================
 // ANALYTICS
 // ============================================
-async function showAnalyticsModal() {
-    hideAllModals();
-    document.getElementById('analyticsModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/analytics`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-            displayAnalytics(data.analytics);
-        }
-    } catch (error) {
-        console.error('Error loading analytics:', error);
-    }
-}
 
 function displayAnalytics(analytics) {
     const content = document.getElementById('analyticsContent');
@@ -6532,13 +6508,6 @@ async function saveSettings() {
     }
 }
 
-// Override the existing placeholder functions
-window.showAnnouncementsModal = showAnnouncementsModal;
-window.showJudgesModal = showJudgesModal;
-window.showUsersModal = showUsersModal;
-window.showAnalyticsModal = showAnalyticsModal;
-window.showReportsModal = showReportsModal;
-window.showSettingsModal = showSettingsModal;
 
 // Also add category functions
 function showCategoriesModal() {
@@ -7694,7 +7663,6 @@ async function saveSettings() {
 
 // ============ EXPORT ALL NEW FUNCTIONS TO GLOBAL SCOPE ============
 window.showAnnouncementModal = showAnnouncementModal;
-window.showAnnouncementsModal = showAnnouncementModal;
 window.showCategoriesModal = showCategoriesModal;
 window.showReportsModal = showReportsModal;
 window.showSettingsModal = showSettingsModal;
