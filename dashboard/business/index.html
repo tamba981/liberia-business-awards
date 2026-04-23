@@ -691,7 +691,176 @@
             .logo-upload { flex-direction: column; text-align: center; }
             .settings-item { flex-direction: column; gap: 15px; text-align: center; }
         }
-    </style>
+
+        /* Opportunities Grid */
+.opportunities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+}
+
+.opportunity-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+}
+
+.opportunity-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    border-color: var(--lba-blue);
+}
+
+.opportunity-image {
+    height: 160px;
+    background: linear-gradient(135deg, #FF0000, #87CEEB);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.opportunity-image i {
+    font-size: 48px;
+    color: white;
+    opacity: 0.9;
+}
+
+.opportunity-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--lba-red);
+}
+
+.opportunity-badge.featured {
+    left: 15px;
+    right: auto;
+    background: #FF0000;
+    color: white;
+}
+
+.opportunity-content {
+    padding: 20px;
+}
+
+.opportunity-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--lba-dark);
+}
+
+.opportunity-description {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.opportunity-deadline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--danger-color);
+    margin-bottom: 15px;
+    padding: 8px 12px;
+    background: #FEF2F2;
+    border-radius: 8px;
+}
+
+.opportunity-deadline.urgent {
+    background: #FEE2E2;
+    color: #DC2626;
+    font-weight: 600;
+}
+
+.opportunity-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.opportunity-type {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.type-grant { background: #D1FAE5; color: #059669; }
+.type-funding { background: #DBEAFE; color: #2563EB; }
+.type-training { background: #FEF3C7; color: #D97706; }
+.type-networking { background: #E0E7FF; color: #4338CA; }
+.type-award { background: #FCE7F3; color: #DB2777; }
+.type-partnership { background: #CCFBF1; color: #0F766E; }
+
+.apply-btn {
+    background: var(--lba-red);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.apply-btn:hover {
+    background: #cc0000;
+    transform: translateY(-2px);
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.page-btn:hover {
+    background: var(--lba-red);
+    color: white;
+    border-color: var(--lba-red);
+}
+
+.page-btn.active {
+    background: var(--lba-red);
+    color: white;
+    border-color: var(--lba-red);
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -723,6 +892,12 @@
                     <span>Documents</span>
                     <span class="badge" id="documentsCount">0</span>
                 </div>
+
+                <div class="menu-item" data-page="opportunities">
+    <i class="fas fa-bullhorn"></i>
+    <span>Opportunity Center</span>
+    <span class="badge" id="opportunitiesCount">0</span>
+</div>
                 
                 <div class="menu-item" data-page="notifications">
                     <i class="fas fa-bell"></i>
@@ -913,6 +1088,60 @@
                     <div class="pagination" id="documentsPagination"></div>
                 </div>
             </div>
+
+            <!-- Opportunities Section -->
+<div id="opportunitiesPage" class="page" style="display: none;">
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-bullhorn"></i> Opportunity Center</h2>
+            <div style="display: flex; gap: 10px;">
+                <select id="opportunityTypeFilter" onchange="loadOpportunities(1)" class="sheet-btn secondary" style="padding: 8px 15px;">
+                    <option value="all">All Types</option>
+                    <option value="grant">Grants</option>
+                    <option value="funding">Funding</option>
+                    <option value="training">Training</option>
+                    <option value="networking">Networking</option>
+                    <option value="award">Awards</option>
+                    <option value="partnership">Partnership</option>
+                </select>
+                <button class="sheet-btn secondary" onclick="loadOpportunities(1)">
+               <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            </div>
+        </div>
+        
+        <div id="opportunitiesList" class="opportunities-grid" style="display: grid; gap: 20px;">
+            <div style="text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading opportunities...</p>
+            </div>
+        </div>
+        
+        <div class="pagination" id="opportunitiesPagination"></div>
+    </div>
+</div>
+
+<!-- Opportunity Details Modal -->
+<div class="modal" id="opportunityModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="opportunityModalTitle">Opportunity Details</h2>
+            <button class="modal-close" onclick="hideModal('opportunityModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="opportunityDetails"></div>
+            <div id="applicationForm" style="display: none; margin-top: 20px;">
+                <h3>Apply for this Opportunity</h3>
+                <textarea id="applicationMessage" rows="4" class="sheet-btn secondary" style="width: 100%; margin: 10px 0;" placeholder="Tell us why you're interested in this opportunity..."></textarea>
+                <button class="btn btn-primary" onclick="submitApplication()">
+                    <i class="fas fa-paper-plane"></i> Submit Application
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
             
             <div id="notificationsPage" class="page" style="display: none;">
                 <div class="content-section">
@@ -1209,6 +1438,10 @@
             currentPage: 'dashboard', loading: false, sessionTimer: null, lastActivity: Date.now()
         };
 
+         // ADD THESE RIGHT AFTER appState (around line 1165):
+let opportunitiesCurrentPage = 1;
+let opportunitiesTotalPages = 1;              
+
         // ============================================
         // INITIALIZATION
         // ============================================
@@ -1302,12 +1535,13 @@
             document.getElementById(page + 'Page').style.display = 'block';
             document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
             document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
-            const titles = { dashboard: 'Dashboard', profile: 'Business Profile', nominations: 'My Nominations', documents: 'Documents', notifications: 'Notifications', settings: 'Settings' };
+            const titles = { dashboard: 'Dashboard',  profile: 'Business Profile',  nominations: 'My Nominations', documents: 'Documents', opportunities: 'Opportunity Center',notifications: 'Notifications', settings: 'Settings' };
             document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
             appState.currentPage = page;
             if (page === 'nominations' && appState.nominations.data.length === 0) loadNominations();
             else if (page === 'documents' && appState.documents.data.length === 0) loadDocuments();
             else if (page === 'notifications') loadNotifications();
+             else if (page === 'opportunities') loadOpportunities(1);
         }
 
         async function apiRequest(endpoint, options = {}) {
@@ -1857,6 +2091,8 @@ function viewDocument(id) {
                     color: #64748b;
                     font-size: 14px;
                 }
+
+                
             </style>
         </head>
         <body>
@@ -2001,6 +2237,8 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
     }
 });
 
+
+        
         // ============================================
         // NOTIFICATIONS FUNCTIONS
         // ============================================
@@ -2228,8 +2466,224 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         window.BACKEND_URL = BACKEND_URL;
         window.API_BASE = BACKEND_URL;
         window.refreshActivities = function() { loadAllData(); showToast('Dashboard refreshed', 'success'); };
-        
         console.log('✅ Business Dashboard fully functional');
+
+      // ============================================
+// OPPORTUNITIES FUNCTIONS
+// ============================================
+
+let currentOpportunity = null;
+
+async function loadOpportunities(page = 1) {
+    const container = document.getElementById('opportunitiesList');
+    const typeFilter = document.getElementById('opportunityTypeFilter')?.value || 'all';
+    
+    container.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading opportunities...</p>
+        </div>
+    `;
+    
+    try {
+        const url = `${BACKEND_URL}/opportunities?${typeFilter !== 'all' ? `type=${typeFilter}&` : ''}page=${page}&limit=12`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success && data.opportunities) {
+            opportunitiesCurrentPage = data.pagination?.page || page;
+            opportunitiesTotalPages = data.pagination?.pages || 1;
+            displayOpportunities(data.opportunities);
+            updateOpportunitiesPagination();
+        } else {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                    <i class="fas fa-calendar-times" style="font-size: 48px; color: #cbd5e0;"></i>
+                    <p style="margin-top: 15px;">No opportunities available at this time</p>
+                    <p style="font-size: 13px; color: #64748b;">Check back later for new opportunities</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading opportunities:', error);
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p style="margin-top: 15px;">Error loading opportunities</p>
+            </div>
+        `;
+    }
+}
+
+function updateOpportunitiesPagination() {
+    const pagination = document.getElementById('opportunitiesPagination');
+    if (!pagination) return;
+    
+    if (opportunitiesTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${opportunitiesCurrentPage === 1 ? 'disabled' : ''} onclick="loadOpportunities(${opportunitiesCurrentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= opportunitiesTotalPages; i++) {
+        if (i === 1 || i === opportunitiesTotalPages || (i >= opportunitiesCurrentPage - 2 && i <= opportunitiesCurrentPage + 2)) {
+            html += `<button class="page-btn ${i === opportunitiesCurrentPage ? 'active' : ''}" onclick="loadOpportunities(${i})">${i}</button>`;
+        } else if (i === opportunitiesCurrentPage - 3 || i === opportunitiesCurrentPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${opportunitiesCurrentPage === opportunitiesTotalPages ? 'disabled' : ''} onclick="loadOpportunities(${opportunitiesCurrentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}        
+
+function displayOpportunities(opportunities) {
+    const container = document.getElementById('opportunitiesList');
+    
+    if (!opportunities || opportunities.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-calendar-times" style="font-size: 48px; color: #cbd5e0;"></i>
+                <p style="margin-top: 15px;">No opportunities available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = opportunities.map(opp => {
+        const deadline = new Date(opp.deadline);
+        const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+        const isUrgent = daysLeft <= 7 && daysLeft > 0;
+        
+        let typeIcon = '';
+        switch(opp.type) {
+            case 'grant': typeIcon = '💰'; break;
+            case 'funding': typeIcon = '💵'; break;
+            case 'training': typeIcon = '📚'; break;
+            case 'networking': typeIcon = '🤝'; break;
+            case 'award': typeIcon = '🏆'; break;
+            case 'partnership': typeIcon = '🤝'; break;
+            default: typeIcon = '📢';
+        }
+        
+        return `
+            <div class="opportunity-card" onclick="viewOpportunityDetails('${opp._id}')">
+                <div class="opportunity-image">
+                    <i class="fas ${opp.type === 'grant' ? 'fa-hand-holding-usd' : opp.type === 'funding' ? 'fa-chart-line' : opp.type === 'training' ? 'fa-chalkboard-user' : opp.type === 'networking' ? 'fa-users' : opp.type === 'award' ? 'fa-trophy' : 'fa-bullhorn'}"></i>
+                    ${opp.featured ? '<span class="opportunity-badge featured"><i class="fas fa-star"></i> Featured</span>' : ''}
+                    <span class="opportunity-badge">${typeIcon} ${opp.type.charAt(0).toUpperCase() + opp.type.slice(1)}</span>
+                </div>
+                <div class="opportunity-content">
+                    <h3 class="opportunity-title">${escapeHtml(opp.title)}</h3>
+                    <p class="opportunity-description">${escapeHtml(opp.description.substring(0, 120))}${opp.description.length > 120 ? '...' : ''}</p>
+                    <div class="opportunity-deadline ${isUrgent ? 'urgent' : ''}">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Deadline: ${deadline.toLocaleDateString()}</span>
+                        ${daysLeft > 0 ? `<span style="margin-left: auto;">${daysLeft} days left</span>` : '<span style="margin-left: auto; color: #EF4444;">Expired</span>'}
+                    </div>
+                    <div class="opportunity-footer">
+                        <span class="opportunity-type type-${opp.type}">${opp.type.toUpperCase()}</span>
+                        <button class="apply-btn" onclick="event.stopPropagation(); viewOpportunityDetails('${opp._id}')">
+                            <i class="fas fa-arrow-right"></i> View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function viewOpportunityDetails(id) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/opportunities/${id}`);
+        const data = await response.json();
+        
+        if (data.success && data.opportunity) {
+            currentOpportunity = data.opportunity;
+            const opp = data.opportunity;
+            const deadline = new Date(opp.deadline);
+            const isExpired = deadline < new Date();
+            
+            document.getElementById('opportunityModalTitle').textContent = opp.title;
+            
+            document.getElementById('opportunityDetails').innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <span class="opportunity-type type-${opp.type}" style="font-size: 14px;">${opp.type.toUpperCase()}</span>
+                        ${opp.featured ? '<span class="opportunity-badge featured" style="position: relative; display: inline-block;">⭐ Featured</span>' : ''}
+                    </div>
+                    
+                    <div class="opportunity-deadline ${isExpired ? 'urgent' : ''}" style="margin-bottom: 20px;">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Deadline: ${deadline.toLocaleDateString()}</span>
+                        ${!isExpired ? `<span style="margin-left: auto;">${Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24))} days left</span>` : '<span style="margin-left: auto; color: #EF4444;">Expired</span>'}
+                    </div>
+                    
+                    ${opp.image_url ? `<img src="${opp.image_url}" style="width: 100%; border-radius: 12px; margin-bottom: 20px;">` : ''}
+                    
+                    <h4 style="margin-bottom: 10px; color: #FF0000;">📋 Description</h4>
+                    <p style="margin-bottom: 20px; line-height: 1.6;">${escapeHtml(opp.description)}</p>
+                    
+                    ${opp.requirements ? `
+                        <h4 style="margin-bottom: 10px; color: #FF0000;">✅ Requirements</h4>
+                        <p style="margin-bottom: 20px; line-height: 1.6;">${escapeHtml(opp.requirements)}</p>
+                    ` : ''}
+                    
+                    ${opp.benefits ? `
+                        <h4 style="margin-bottom: 10px; color: #FF0000;">🎯 Benefits</h4>
+                        <p style="margin-bottom: 20px; line-height: 1.6;">${escapeHtml(opp.benefits)}</p>
+                    ` : ''}
+                    
+                    ${opp.application_link ? `
+                        <div style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 12px;">
+                            <h4 style="margin-bottom: 10px;">🔗 External Application</h4>
+                            <a href="${opp.application_link}" target="_blank" class="btn btn-primary" style="display: inline-block;">
+                                <i class="fas fa-external-link-alt"></i> Apply on External Site
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            const applicationForm = document.getElementById('applicationForm');
+            if (!isExpired && !opp.application_link) {
+                applicationForm.style.display = 'block';
+            } else {
+                applicationForm.style.display = 'none';
+            }
+            
+            document.getElementById('opportunityModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    } catch (error) {
+        console.error('Error loading opportunity details:', error);
+        showToast('Error loading opportunity details', 'error');
+    }
+}
+
+async function submitApplication() {
+    if (!currentOpportunity) return;
+    
+    const message = document.getElementById('applicationMessage').value;
+    
+    try {
+        const response = await apiRequest(`/api/opportunities/${currentOpportunity._id}/apply`, {
+            method: 'POST',
+            body: JSON.stringify({ message })
+        });
+        
+        if (response.success) {
+            showToast('Application submitted successfully!', 'success');
+            hideModal('opportunityModal');
+            document.getElementById('applicationMessage').value = '';
+        } else {
+            showToast(response.message || 'Failed to submit application', 'error');
+        }
+    } catch (error) {
+        showToast(error.message || 'Error submitting application', 'error');
+    }
+}  
     </script>
 </body>
 </html>
