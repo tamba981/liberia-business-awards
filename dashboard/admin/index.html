@@ -4727,6 +4727,10 @@ function displayBusinesses(businesses) {
                                 <i class="fas fa-trash"></i> Delete
                             </button>
                         ` : ''}
+
+                        <button class="sheet-btn secondary" style="background: #8B5CF6; color: white; padding: 6px 12px;" onclick="viewBusinessDocuments('${business._id}', '${escapeHtml(business.business_name)}')">
+            <i class="fas fa-file-alt"></i> Docs
+        </button>
                         <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="viewBusinessDetails('${business._id}')">
                             <i class="fas fa-eye"></i> View
                         </button>
@@ -5081,6 +5085,410 @@ async function createBusinessAccount() {
     }
 }
 
+// ============================================
+// BUSINESS DOCUMENTS MANAGEMENT
+// ============================================
+
+// Show documents for a specific business
+async function viewBusinessDocuments(businessId, businessName) {
+    hideAllModals();
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('businessDocumentsModal');
+    if (!modal) {
+        createBusinessDocumentsModal();
+        modal = document.getElementById('businessDocumentsModal');
+    }
+    
+    // Set business info in modal
+    document.getElementById('documentsBusinessName').textContent = businessName;
+    document.getElementById('documentsBusinessId').value = businessId;
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Load documents
+    await loadBusinessDocuments(businessId);
+}
+
+// Create business documents modal
+function createBusinessDocumentsModal() {
+    const modalHTML = `
+    <div class="modal" id="businessDocumentsModal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-file-alt"></i> Business Documents: <span id="documentsBusinessName">Loading...</span></h2>
+                <button class="modal-close" onclick="hideModal('businessDocumentsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="documentsBusinessId">
+                
+                <!-- Document Upload Section -->
+                <div class="quick-actions-panel" style="margin-bottom: 20px;">
+                    <h4><i class="fas fa-upload"></i> Upload Document for Business</h4>
+                    <div style="display: flex; gap: 15px; align-items: flex-end;">
+                        <div style="flex: 2;">
+                            <label>Document Name</label>
+                            <input type="text" id="adminDocumentName" class="sheet-btn secondary" style="width: 100%;" placeholder="e.g., Business License">
+                        </div>
+                        <div style="flex: 2;">
+                            <label>Document Type</label>
+                            <select id="adminDocumentType" class="sheet-btn secondary" style="width: 100%;">
+                                <option value="registration">Registration Certificate</option>
+                                <option value="tax">Tax Clearance</option>
+                                <option value="license">Business License</option>
+                                <option value="financial">Financial Statement</option>
+                                <option value="certificate">Award Certificate</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div style="flex: 2;">
+                            <label>File</label>
+                            <input type="file" id="adminDocumentFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                        </div>
+                        <div>
+                            <button class="sheet-btn" onclick="uploadBusinessDocument()">
+                                <i class="fas fa-upload"></i> Upload
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Documents List -->
+                <div class="sheets-viewer">
+                    <div class="sheets-viewer-header">
+                        <h4><i class="fas fa-folder-open"></i> Business Documents</h4>
+                        <button class="sheet-btn secondary" onclick="refreshBusinessDocuments()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="businessDocumentsList" style="padding: 20px; min-height: 300px; max-height: 400px; overflow-y: auto;">
+                        <div style="text-align: center; padding: 50px;">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p>Loading documents...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Load business documents from API
+async function loadBusinessDocuments(businessId) {
+    const container = document.getElementById('businessDocumentsList');
+    if (!container) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/business/documents?business_id=${businessId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.documents) {
+            displayBusinessDocuments(data.documents);
+        } else {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #64748b;">
+                    <i class="fas fa-folder-open" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <p>No documents found for this business</p>
+                    <p style="font-size: 12px;">Use the upload form above to add documents</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading documents:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <p>Error loading documents</p>
+                <p style="font-size: 12px;">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Display business documents
+function displayBusinessDocuments(documents) {
+    const container = document.getElementById('businessDocumentsList');
+    if (!container) return;
+    
+    if (!documents || documents.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #64748b;">
+                <i class="fas fa-folder-open" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <p>No documents found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div style="display: grid; gap: 15px;">
+            ${documents.map(doc => `
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FF000020, #87CEEB20); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas ${getFileIcon(doc.file_url)} fa-2x" style="color: #FF0000;"></i>
+                        </div>
+                        <div>
+                            <h4 style="font-weight: 600; margin-bottom: 5px;">${escapeHtml(doc.name)}</h4>
+                            <div style="display: flex; gap: 15px; font-size: 12px; color: #64748b;">
+                                <span><i class="fas fa-tag"></i> ${doc.type || 'other'}</span>
+                                <span><i class="fas fa-calendar"></i> ${new Date(doc.uploaded_at).toLocaleDateString()}</span>
+                                <span><i class="fas fa-file"></i> ${doc.file_name || 'Document'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="sheet-btn secondary" style="padding: 8px 12px;" onclick="viewBusinessDocument('${doc._id}')" title="View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="sheet-btn" style="padding: 8px 12px;" onclick="downloadBusinessDocument('${doc._id}')" title="Download">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="sheet-btn danger" style="padding: 8px 12px;" onclick="deleteBusinessDocument('${doc._id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Get file icon based on extension
+function getFileIcon(fileUrl) {
+    if (!fileUrl) return 'fa-file';
+    const ext = fileUrl.split('.').pop().toLowerCase();
+    if (ext === 'pdf') return 'fa-file-pdf';
+    if (ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif') return 'fa-file-image';
+    if (ext === 'doc' || ext === 'docx') return 'fa-file-word';
+    if (ext === 'xls' || ext === 'xlsx') return 'fa-file-excel';
+    return 'fa-file';
+}
+
+// View business document (opens in new tab)
+function viewBusinessDocument(documentId) {
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        showNotification('Authentication required', 'error');
+        return;
+    }
+    
+    const url = `${API_BASE.replace('/api', '')}/api/business/documents/${documentId}/view?token=${encodeURIComponent(token)}`;
+    window.open(url, '_blank');
+}
+
+// Download business document
+async function downloadBusinessDocument(documentId) {
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        showNotification('Authentication required', 'error');
+        return;
+    }
+    
+    try {
+        const url = `${API_BASE.replace('/api', '')}/api/business/documents/${documentId}/download?token=${encodeURIComponent(token)}`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Download failed');
+        
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        
+        // Get filename from Content-Disposition
+        let filename = 'document';
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+        
+        showNotification('Download started', 'success');
+    } catch (error) {
+        console.error('Download error:', error);
+        showNotification('Failed to download document', 'error');
+    }
+}
+
+// Delete business document
+async function deleteBusinessDocument(documentId) {
+    if (!confirm('⚠️ Delete this document? This action cannot be undone.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/business/documents/${documentId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Document deleted successfully', 'success');
+            // Refresh documents list
+            const businessId = document.getElementById('documentsBusinessId').value;
+            if (businessId) {
+                await loadBusinessDocuments(businessId);
+            }
+        } else {
+            throw new Error(data.message || 'Delete failed');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        showNotification('Failed to delete document', 'error');
+    }
+}
+
+// Upload document for business (admin)
+async function uploadBusinessDocument() {
+    const businessId = document.getElementById('documentsBusinessId').value;
+    const documentName = document.getElementById('adminDocumentName').value.trim();
+    const documentType = document.getElementById('adminDocumentType').value;
+    const file = document.getElementById('adminDocumentFile').files[0];
+    
+    if (!businessId) {
+        showNotification('Business ID missing', 'error');
+        return;
+    }
+    
+    if (!documentName) {
+        showNotification('Document name is required', 'warning');
+        return;
+    }
+    
+    if (!file) {
+        showNotification('Please select a file', 'warning');
+        return;
+    }
+    
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showNotification('File too large (max 10MB)', 'warning');
+        return;
+    }
+    
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG', 'warning');
+        return;
+    }
+    
+    const uploadBtn = event.target;
+    const originalText = uploadBtn.innerHTML;
+    
+    try {
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        uploadBtn.disabled = true;
+        
+        const formData = new FormData();
+        formData.append('document', file);
+        formData.append('name', documentName);
+        formData.append('type', documentType);
+        
+        const token = localStorage.getItem('lba_auth_token');
+        
+        // Note: This endpoint might need adjustment based on your backend
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/business/documents`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Document uploaded successfully', 'success');
+            
+            // Clear form
+            document.getElementById('adminDocumentName').value = '';
+            document.getElementById('adminDocumentType').value = 'other';
+            document.getElementById('adminDocumentFile').value = '';
+            
+            // Refresh documents list
+            await loadBusinessDocuments(businessId);
+            
+            // Also send notification to business
+            await sendDocumentUploadNotification(businessId, documentName);
+        } else {
+            throw new Error(data.message || 'Upload failed');
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        showNotification(error.message || 'Failed to upload document', 'error');
+    } finally {
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+    }
+}
+
+// Send notification to business about new document
+async function sendDocumentUploadNotification(businessId, documentName) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        
+        // First get business email
+        const businessResponse = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${businessId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const businessData = await businessResponse.json();
+        const business = businessData.business;
+        
+        if (business && business.email) {
+            // Send email via Google Apps Script
+            await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    formType: 'document_uploaded',
+                    email: business.email,
+                    businessName: business.business_name,
+                    documentName: documentName,
+                    timestamp: new Date().toISOString()
+                })
+            });
+            
+            showNotification(`Notification sent to ${business.email}`, 'success');
+        }
+    } catch (error) {
+        console.error('Failed to send notification:', error);
+    }
+}
+
+function refreshBusinessDocuments() {
+    const businessId = document.getElementById('documentsBusinessId').value;
+    if (businessId) {
+        loadBusinessDocuments(businessId);
+    }
+}
+
+// Add a "View Documents" button to the business details modal
+// Update the business details display to include documents button
+        
 // Enhanced view business details - WITH DELETE BUTTON
 async function viewBusinessDetails(id) {
     hideAllModals();
@@ -5179,10 +5587,14 @@ async function viewBusinessDetails(id) {
                                 <i class="fas fa-trash"></i> Delete Business
                             </button>
                         ` : ''}
+                        <button class="sheet-btn" style="background: #8B5CF6; flex: 1;" onclick="viewBusinessDocuments('${business._id}', '${escapeHtml(business.business_name)}')">
+        <i class="fas fa-file-alt"></i> View Documents
+    </button>
                         <button class="sheet-btn secondary" onclick="hideModal('businessDetailsModal')">
                             <i class="fas fa-times"></i> Close
                         </button>
                     </div>
+                    
                 `;
             } else {
                 content.innerHTML = `
@@ -7077,7 +7489,15 @@ window.fetchSystemUsers = fetchSystemUsers;
 window.fetchSpotlights = fetchSpotlights;
 window.fetchNominations = fetchNominations;
 window.submitNomination = submitNomination;     
-
+// ============================================
+// EXPORT DOCUMENT FUNCTIONS TO GLOBAL SCOPE
+// ============================================
+window.viewBusinessDocuments = viewBusinessDocuments;
+window.viewBusinessDocument = viewBusinessDocument;
+window.downloadBusinessDocument = downloadBusinessDocument;
+window.deleteBusinessDocument = deleteBusinessDocument;
+window.uploadBusinessDocument = uploadBusinessDocument;
+window.refreshBusinessDocuments = refreshBusinessDocuments;
 
 </script>
     
