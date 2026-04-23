@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Liberia Business Awards</title>
+
+    
     
     <!-- Advanced Security Protection -->
 <script src="/dashboard/security-monitor.js"></script>
@@ -1318,6 +1320,145 @@
                         <span>Reports</span>
                     </a>
                 </div>
+
+                // Add to sidebar menu (around where other menu items are)
+<a href="#" class="menu-item" onclick="showOpportunitiesModal()">
+    <i class="fas fa-bullhorn"></i>
+    <span>Opportunities</span>
+</a>
+
+// Functions for admin
+async function showOpportunitiesModal() {
+    hideAllModals();
+    document.getElementById('opportunitiesModal').classList.add('active');
+    await loadOpportunitiesList();
+}
+
+async function loadOpportunitiesList() {
+    const token = localStorage.getItem('lba_auth_token');
+    const response = await fetch(`${API_BASE.replace('/api', '')}/api/opportunities`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (data.success) displayOpportunitiesList(data.opportunities);
+}
+
+function displayOpportunitiesList(opportunities) {
+    const tbody = document.getElementById('opportunitiesTableBody');
+    if (!opportunities || opportunities.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">No opportunities found</td></tr>';
+        return;
+    }
+    tbody.innerHTML = opportunities.map(opp => `
+        <tr>
+            <td><strong>${escapeHtml(opp.title)}</strong></td>
+            <td><span class="status-badge type-${opp.type}">${opp.type}</span></td>
+            <td>${new Date(opp.deadline).toLocaleDateString()}</td>
+            <td><span class="status-badge status-${opp.status}">${opp.status}</span></td>
+            <td>${opp.featured ? '⭐ Featured' : ''}</td>
+            <td>
+                <button class="sheet-btn secondary" onclick="editOpportunity('${opp._id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" onclick="deleteOpportunity('${opp._id}')"><i class="fas fa-trash"></i></button>
+                <button class="sheet-btn" onclick="viewOpportunityApplications('${opp._id}')"><i class="fas fa-users"></i> Apps</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showAddOpportunityModal() {
+    document.getElementById('opportunityForm').reset();
+    document.getElementById('opportunityId').value = '';
+    document.getElementById('opportunityModalTitle').textContent = 'Add Opportunity';
+    document.getElementById('addOpportunityModal').classList.add('active');
+}
+
+async function editOpportunity(id) {
+    const token = localStorage.getItem('lba_auth_token');
+    const response = await fetch(`${API_BASE.replace('/api', '')}/api/opportunities/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (data.success && data.opportunity) {
+        const opp = data.opportunity;
+        document.getElementById('opportunityId').value = opp._id;
+        document.getElementById('oppTitle').value = opp.title;
+        document.getElementById('oppType').value = opp.type;
+        document.getElementById('oppDescription').value = opp.description;
+        document.getElementById('oppRequirements').value = opp.requirements || '';
+        document.getElementById('oppBenefits').value = opp.benefits || '';
+        document.getElementById('oppLink').value = opp.application_link || '';
+        document.getElementById('oppImage').value = opp.image_url || '';
+        document.getElementById('oppStatus').value = opp.status;
+        document.getElementById('oppFeatured').checked = opp.featured;
+        const deadline = new Date(opp.deadline);
+        deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
+        document.getElementById('oppDeadline').value = deadline.toISOString().slice(0, 16);
+        document.getElementById('opportunityModalTitle').textContent = 'Edit Opportunity';
+        document.getElementById('addOpportunityModal').classList.add('active');
+    }
+}
+
+document.getElementById('opportunityForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('opportunityId').value;
+    const data = {
+        title: document.getElementById('oppTitle').value,
+        type: document.getElementById('oppType').value,
+        description: document.getElementById('oppDescription').value,
+        requirements: document.getElementById('oppRequirements').value,
+        benefits: document.getElementById('oppBenefits').value,
+        deadline: document.getElementById('oppDeadline').value,
+        application_link: document.getElementById('oppLink').value,
+        image_url: document.getElementById('oppImage').value,
+        status: document.getElementById('oppStatus').value,
+        featured: document.getElementById('oppFeatured').checked
+    };
+    const token = localStorage.getItem('lba_auth_token');
+    const url = id ? `${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}` : `${API_BASE.replace('/api', '')}/api/admin/opportunities`;
+    const method = id ? 'PUT' : 'POST';
+    const response = await fetch(url, {
+        method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (result.success) {
+        showNotification(id ? 'Opportunity updated!' : 'Opportunity created!', 'success');
+        hideModal('addOpportunityModal');
+        loadOpportunitiesList();
+    } else {
+        showNotification('Error saving opportunity', 'error');
+    }
+});
+
+async function deleteOpportunity(id) {
+    if (!confirm('Delete this opportunity?')) return;
+    const token = localStorage.getItem('lba_auth_token');
+    const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}`, {
+        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const result = await response.json();
+    if (result.success) {
+        showNotification('Opportunity deleted', 'success');
+        loadOpportunitiesList();
+    }
+}
+
+async function viewOpportunityApplications(id) {
+    const token = localStorage.getItem('lba_auth_token');
+    const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/opportunities/${id}/applications`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (data.success && data.applications.length > 0) {
+        let message = `Applications for this opportunity:\n\n`;
+        data.applications.forEach(app => {
+            message += `📌 ${app.business_name}\n   Contact: ${app.contact_name} (${app.contact_email})\n   Applied: ${new Date(app.applied_at).toLocaleDateString()}\n   Status: ${app.status}\n\n`;
+        });
+        alert(message);
+    } else {
+        showNotification('No applications yet', 'info');
+    }
+}
 
                 <!-- ADD THIS NEW BUSINESS MANAGEMENT SECTION -->
 <div class="menu-section">
@@ -8015,6 +8156,70 @@ window.refreshBusinessDocuments = refreshBusinessDocuments;
     </div>
 </div>
 
+ <!-- Opportunities Management Modal -->
+<div class="modal" id="opportunitiesModal">
+    <div class="modal-content" style="max-width: 1000px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-bullhorn"></i> Manage Opportunities</h2>
+            <button class="modal-close" onclick="hideModal('opportunitiesModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px; text-align: right;">
+                <button class="sheet-btn" onclick="showAddOpportunityModal()">
+                    <i class="fas fa-plus"></i> Add Opportunity
+                </button>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Title</th><th>Type</th><th>Deadline</th><th>Status</th><th>Featured</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="opportunitiesTableBody">
+                        <tr><td colspan="6" style="text-align: center;">Loading...</td><tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Opportunity Modal -->
+<div class="modal" id="addOpportunityModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="opportunityModalTitle">Add Opportunity</h2>
+            <button class="modal-close" onclick="hideModal('addOpportunityModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="opportunityForm">
+                <input type="hidden" id="opportunityId">
+                <div class="form-group"><label>Title *</label><input type="text" id="oppTitle" class="sheet-btn secondary" style="width: 100%;" required></div>
+                <div class="form-group">
+                    <label>Type *</label>
+                    <select id="oppType" class="sheet-btn secondary" style="width: 100%;" required>
+                        <option value="grant">Grant</option><option value="funding">Funding</option>
+                        <option value="training">Training</option><option value="networking">Networking</option>
+                        <option value="award">Award</option><option value="partnership">Partnership</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Description *</label><textarea id="oppDescription" rows="4" class="sheet-btn secondary" style="width: 100%;" required></textarea></div>
+                <div class="form-group"><label>Requirements</label><textarea id="oppRequirements" rows="3" class="sheet-btn secondary" style="width: 100%;"></textarea></div>
+                <div class="form-group"><label>Benefits</label><textarea id="oppBenefits" rows="3" class="sheet-btn secondary" style="width: 100%;"></textarea></div>
+                <div class="form-group"><label>Deadline *</label><input type="datetime-local" id="oppDeadline" class="sheet-btn secondary" style="width: 100%;" required></div>
+                <div class="form-group"><label>External Link</label><input type="url" id="oppLink" class="sheet-btn secondary" style="width: 100%;" placeholder="https://..."></div>
+                <div class="form-group"><label>Image URL</label><input type="url" id="oppImage" class="sheet-btn secondary" style="width: 100%;" placeholder="https://..."></div>
+                <div class="form-group"><label>Status</label><select id="oppStatus" class="sheet-btn secondary" style="width: 100%;"><option value="active">Active</option><option value="draft">Draft</option><option value="expired">Expired</option></select></div>
+                <div class="form-group"><label><input type="checkbox" id="oppFeatured"> Featured Opportunity</label></div>
+                <div style="display: flex; gap: 10px;"><button type="button" class="sheet-btn warning" onclick="hideModal('addOpportunityModal')" style="flex: 1;">Cancel</button><button type="submit" class="sheet-btn" style="flex: 2;">Save Opportunity</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+    
 <!-- ============ JUDGES MODAL ============ -->
 <div class="modal" id="judgesModal">
     <div class="modal-content" style="max-width: 1200px;">
