@@ -1437,7 +1437,7 @@
             documents: { data: [], currentPage: 1, totalPages: 1, total: 0 },
             notifications: { data: [], unreadCount: 0 },
             settings: { emailNotifications: true, smsNotifications: false, browserNotifications: true },
-            currentPage: 'dashboard', loading: false, sessionTimer: null, lastActivity: Date.now()
+            currentPage: 'dashboard', loading: false, sessionTimer: null, lastActivity: Date.now(),
             currentOpportunity: null
         };
 
@@ -2587,7 +2587,7 @@ function displayOpportunities(opportunities) {
                     </div>
                     <div class="opportunity-footer">
                         <span class="opportunity-type type-${opp.type}">${opp.type.toUpperCase()}</span>
-                        <button class="apply-btn" onclick="event.stopPropagation(); viewOpportunityDetails('${opp._id}')">
+                        <button class="apply-btn" onclick="event.stopPropagation(); viewOpportunityDetails('${opp._id}'); return false;">
                             <i class="fas fa-arrow-right"></i> View Details
                         </button>
                     </div>
