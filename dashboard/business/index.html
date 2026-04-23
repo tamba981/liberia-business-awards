@@ -1643,7 +1643,7 @@ document.getElementById('nominationFormModal').addEventListener('submit', async 
                     <td>${n.category || 'General'}</td>
                     <td>${n.year || new Date().getFullYear()}</td>
                     <td><span class="status-badge status-${n.status || 'draft'}">${(n.status || 'draft').replace(/_/g, ' ').toUpperCase()}</span></td>
-                    <td>${n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Recent'}</td>
+                    <td>${n.created_at && !isNaN(new Date(n.created_at).getTime()) ? new Date(n.created_at).toLocaleDateString() : 'Recent'}</td>
                     <td>${n.score ? n.score + '%' : '-'}</td>
                     <td><div class="action-buttons"><button class="action-btn view" onclick="viewNomination('${n._id}')"><i class="fas fa-eye"></i></button></div></td>
                 </tr>
@@ -1652,22 +1652,32 @@ document.getElementById('nominationFormModal').addEventListener('submit', async 
         }
 
         function displayRecentNominations() {
-            const tbody = document.getElementById('recentNominationsList');
-            const recent = appState.nominations.data.slice(0, 5);
-            if (recent.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-award" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i><p>No nominations yet</p><button class="btn btn-primary btn-sm" onclick="openNominationFromFrontend()" style="margin-top: 10px;"><i class="fas fa-plus"></i> Submit Your First Nomination</button></td></tr>`;
-                return;
+    const tbody = document.getElementById('recentNominationsList');
+    const recent = appState.nominations.data.slice(0, 5);
+    if (recent.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-award" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i><p>No nominations yet</p><button class="btn btn-primary btn-sm" onclick="openNominationFromFrontend()" style="margin-top: 10px;"><i class="fas fa-plus"></i> Submit Your First Nomination</button></td></tr>`;
+        return;
+    }
+    tbody.innerHTML = recent.map(n => {
+        // FIX: Handle invalid date
+        let formattedDate = 'Recent';
+        if (n.created_at) {
+            const date = new Date(n.created_at);
+            if (!isNaN(date.getTime())) {
+                formattedDate = date.toLocaleDateString();
             }
-            tbody.innerHTML = recent.map(n => `
-                <tr>
-                    <td><strong>${n.title || 'Untitled'}</strong></td>
-                    <td>${n.category || 'General'}</td>
-                    <td><span class="status-badge status-${n.status || 'draft'}">${(n.status || 'draft').replace(/_/g, ' ').toUpperCase()}</span></td>
-                    <td>${n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Recent'}</td>
-                    <td><button class="action-btn view" onclick="viewNomination('${n._id}')"><i class="fas fa-eye"></i> View</button></td>
-                </tr>
-            `).join('');
         }
+        return `
+            <tr>
+                <td><strong>${escapeHtml(n.title || 'Untitled')}</strong></td>
+                <td>${escapeHtml(n.category || 'General')}</td>
+                <td><span class="status-badge status-${n.status || 'draft'}">${(n.status || 'draft').replace(/_/g, ' ').toUpperCase()}</span></td>
+                <td>${formattedDate}</td>
+                <td><button class="action-btn view" onclick="viewNomination('${n._id}')"><i class="fas fa-eye"></i> View</button></td>
+            </tr>
+        `;
+    }).join('');
+}
 
         function updateNominationsPagination() {
             const pagination = document.getElementById('nominationsPagination');
@@ -2007,23 +2017,33 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         }
 
         function displayNotifications() {
-            const list = document.getElementById('notificationsList');
-            const notifications = appState.notifications.data;
-            if (notifications.length === 0) {
-                list.innerHTML = `<div style="text-align: center; padding: 60px;"><i class="fas fa-bell-slash" style="font-size: 48px; color: #cbd5e0;"></i><p style="margin-top: 20px;">No notifications</p></div>`;
-                return;
+    const list = document.getElementById('notificationsList');
+    const notifications = appState.notifications.data;
+    if (notifications.length === 0) {
+        list.innerHTML = `<div style="text-align: center; padding: 60px;"><i class="fas fa-bell-slash" style="font-size: 48px; color: #cbd5e0;"></i><p style="margin-top: 20px;">No notifications</p></div>`;
+        return;
+    }
+    list.innerHTML = notifications.map(n => {
+        const iconColor = n.type === 'success' ? '#10B981' : n.type === 'warning' ? '#F59E0B' : n.type === 'error' ? '#EF4444' : '#3B82F6';
+        const icon = n.type === 'success' ? 'check-circle' : n.type === 'warning' ? 'exclamation-triangle' : n.type === 'error' ? 'exclamation-circle' : 'info-circle';
+        
+        // FIX: Handle invalid date properly
+        let formattedDate = 'Just now';
+        if (n.created_at) {
+            const date = new Date(n.created_at);
+            if (!isNaN(date.getTime())) {
+                formattedDate = date.toLocaleString();
             }
-            list.innerHTML = notifications.map(n => {
-                const iconColor = n.type === 'success' ? '#10B981' : n.type === 'warning' ? '#F59E0B' : n.type === 'error' ? '#EF4444' : '#3B82F6';
-                const icon = n.type === 'success' ? 'check-circle' : n.type === 'warning' ? 'exclamation-triangle' : n.type === 'error' ? 'exclamation-circle' : 'info-circle';
-                return `
-                    <div class="notification-item ${n.read ? '' : 'unread'}" onclick="markNotificationRead('${n._id}')">
-                        <div class="notification-icon" style="background: ${iconColor}20; color: ${iconColor};"><i class="fas fa-${icon}"></i></div>
-                        <div class="notification-content"><div class="notification-title">${n.title}</div><div class="notification-message">${n.message}</div><div class="notification-time">${new Date(n.created_at).toLocaleString()}</div></div>
-                    </div>
-                `;
-            }).join('');
         }
+        
+        return `
+            <div class="notification-item ${n.read ? '' : 'unread'}" onclick="markNotificationRead('${n._id}')">
+                <div class="notification-icon" style="background: ${iconColor}20; color: ${iconColor};"><i class="fas fa-${icon}"></i></div>
+                <div class="notification-content"><div class="notification-title">${escapeHtml(n.title)}</div><div class="notification-message">${escapeHtml(n.message)}</div><div class="notification-time">${formattedDate}</div></div>
+            </div>
+        `;
+    }).join('');
+}
 
         async function markNotificationRead(id) {
             try {
