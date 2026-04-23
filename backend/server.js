@@ -409,6 +409,40 @@ const nominationSchema = new mongoose.Schema({
     rejection_reason: { type: String }
 }, { timestamps: true });
 
+// ============ OPPORTUNITY SCHEMA ============
+const opportunitySchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    type: { type: String, enum: ['grant', 'funding', 'training', 'networking', 'award', 'partnership', 'other'], required: true },
+    description: { type: String, required: true },
+    requirements: { type: String },
+    benefits: { type: String },
+    deadline: { type: Date, required: true },
+    application_link: { type: String },
+    image_url: { type: String },
+    status: { type: String, enum: ['active', 'expired', 'draft'], default: 'active' },
+    featured: { type: Boolean, default: false },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+});
+
+const Opportunity = mongoose.model('Opportunity', opportunitySchema);
+
+// ============ OPPORTUNITY APPLICATION SCHEMA ============
+const opportunityApplicationSchema = new mongoose.Schema({
+    opportunity_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Opportunity', required: true },
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
+    business_name: { type: String, required: true },
+    contact_name: { type: String, required: true },
+    contact_email: { type: String, required: true },
+    contact_phone: { type: String },
+    message: { type: String },
+    status: { type: String, enum: ['pending', 'reviewed', 'accepted', 'rejected'], default: 'pending' },
+    applied_at: { type: Date, default: Date.now }
+});
+
+const OpportunityApplication = mongoose.model('OpportunityApplication', opportunityApplicationSchema);
+
 // ============ BUSINESS DOCUMENT SCHEMA ============
 const businessDocumentSchema = new mongoose.Schema({
     business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
@@ -1376,6 +1410,206 @@ app.put('/api/business/profile', authenticate, authorize('business'), upload.sin
                 phone: business.phone,
                 logo: business.logo
             }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ OPPORTUNITY ROUTES ============
+
+// Get all active opportunities (public/business view)
+app.get('/api/opportunities', async (req, res) => {
+    try {
+        const { type, featured, limit = 20, page = 1 } = req.query;
+        let query = { status: 'active', deadline: { $gte: new Date() } };
+        
+        if (type && type !== 'all') query.type = type;
+        if (featured === 'true') query.featured = true;
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const opportunities = await Opportunity.find(query)
+            .sort({ featured: -1, deadline: 1, created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await Opportunity.countDocuments(query);
+        
+        res.json({
+            success: true,
+            opportunities: opportunities,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single opportunity
+app.get('/api/opportunities/:id', async (req, res) => {
+    try {
+        const opportunity = await Opportunity.findById(req.params.id);
+        if (!opportunity) {
+            return res.status(404).json({ success: false, message: 'Opportunity not found' });
+        }
+        res.json({ success: true, opportunity });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Create opportunity
+app.post('/api/admin/opportunities', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { title, type, description, requirements, benefits, deadline, application_link, image_url, status, featured } = req.body;
+        
+        if (!title || !type || !description || !deadline) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const opportunity = new Opportunity({
+            title,
+            type,
+            description,
+            requirements,
+            benefits,
+            deadline: new Date(deadline),
+            application_link,
+            image_url,
+            status: status || 'active',
+            featured: featured || false,
+            created_by: req.user._id
+        });
+        
+        await opportunity.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Opportunity created successfully',
+            opportunity
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Update opportunity
+app.put('/api/admin/opportunities/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const opportunity = await Opportunity.findById(req.params.id);
+        if (!opportunity) {
+            return res.status(404).json({ success: false, message: 'Opportunity not found' });
+        }
+        
+        const { title, type, description, requirements, benefits, deadline, application_link, image_url, status, featured } = req.body;
+        
+        if (title) opportunity.title = title;
+        if (type) opportunity.type = type;
+        if (description) opportunity.description = description;
+        if (requirements) opportunity.requirements = requirements;
+        if (benefits) opportunity.benefits = benefits;
+        if (deadline) opportunity.deadline = new Date(deadline);
+        if (application_link) opportunity.application_link = application_link;
+        if (image_url) opportunity.image_url = image_url;
+        if (status) opportunity.status = status;
+        if (featured !== undefined) opportunity.featured = featured;
+        opportunity.updated_at = new Date();
+        
+        await opportunity.save();
+        
+        res.json({
+            success: true,
+            message: 'Opportunity updated successfully',
+            opportunity
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Delete opportunity
+app.delete('/api/admin/opportunities/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const opportunity = await Opportunity.findByIdAndDelete(req.params.id);
+        if (!opportunity) {
+            return res.status(404).json({ success: false, message: 'Opportunity not found' });
+        }
+        res.json({ success: true, message: 'Opportunity deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Business: Apply for opportunity
+app.post('/api/opportunities/:id/apply', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const opportunity = await Opportunity.findById(req.params.id);
+        if (!opportunity) {
+            return res.status(404).json({ success: false, message: 'Opportunity not found' });
+        }
+        
+        if (opportunity.status !== 'active' || new Date(opportunity.deadline) < new Date()) {
+            return res.status(400).json({ success: false, message: 'This opportunity is no longer available' });
+        }
+        
+        const { message } = req.body;
+        
+        // Check if already applied
+        const existingApplication = await OpportunityApplication.findOne({
+            opportunity_id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        if (existingApplication) {
+            return res.status(400).json({ success: false, message: 'You have already applied for this opportunity' });
+        }
+        
+        const application = new OpportunityApplication({
+            opportunity_id: req.params.id,
+            business_id: req.user._id,
+            business_name: req.user.business_name,
+            contact_name: req.user.contact_name || req.user.name,
+            contact_email: req.user.email,
+            contact_phone: req.user.phone,
+            message: message || ''
+        });
+        
+        await application.save();
+        
+        // Create notification for admin
+        const adminNotification = new Notification({
+            business_id: req.user._id,
+            title: 'New Opportunity Application',
+            message: `${req.user.business_name} has applied for "${opportunity.title}"`,
+            type: 'info',
+            read: false
+        });
+        await adminNotification.save();
+        
+        res.json({
+            success: true,
+            message: 'Application submitted successfully!'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get applications for an opportunity (admin only)
+app.get('/api/admin/opportunities/:id/applications', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const applications = await OpportunityApplication.find({ opportunity_id: req.params.id })
+            .sort({ applied_at: -1 });
+        
+        res.json({
+            success: true,
+            applications
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
