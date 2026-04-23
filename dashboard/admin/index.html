@@ -5453,7 +5453,7 @@ async function sendDocumentUploadNotification(businessId, documentName) {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     formType: 'document_uploaded',
-                    email: business.email,
+                    email: business.email,  // ← This should be business.email
                     businessName: business.business_name,
                     documentName: documentName,
                     timestamp: new Date().toISOString()
