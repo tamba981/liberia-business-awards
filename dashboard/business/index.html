@@ -37,30 +37,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Dashboard - Liberia Business Awards</title>
-    
-    <!-- Anti-Console Security -->
-<script>
-(function() {
-    const noop = function() {};
-    const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace'];
-    methods.forEach(m => { if (window.console && window.console[m]) window.console[m] = noop; });
-    
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    
-    document.addEventListener('keydown', e => {
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's')) {
-            e.preventDefault();
-            return false;
-        }
-    });
-    
-    let devToolsOpen = false;
-    Object.defineProperty(window, 'outerWidth', { get: function() { devToolsOpen = true; return window.innerWidth; }, set: function() {} });
-    setInterval(() => { if (devToolsOpen) { localStorage.clear(); window.location.href = '/dashboard/login.html'; } devToolsOpen = false; }, 1000);
-})();
-</script>
-    
-    <script src="/dashboard/security-monitor.js"></script>
 
     
     <meta name="csrf-token" content="">
@@ -1395,18 +1371,13 @@
             document.getElementById('profileAddress').textContent = profile.address || profile.business_address || '-';
             
             if (profile.logo) {
-                let logoUrl = profile.logo;
-        if (logoUrl.startsWith('/uploads/')) {
-            logoUrl = `${BACKEND_URL.replace('/api', '')}${logoUrl}`;
-        }
-        document.getElementById('profileLogoImg').src = logoUrl;
-        document.getElementById('profileLogoImg').style.display = 'block';
-        document.getElementById('profileLogoIcon').style.display = 'none';
-        document.getElementById('profilePageLogo').src = logoUrl;
-        document.getElementById('profilePageLogo').style.display = 'block';
-        document.getElementById('profilePageLogoIcon').style.display = 'none';
-    }
-}
+                document.getElementById('profileLogoImg').src = profile.logo;
+                document.getElementById('profileLogoImg').style.display = 'block';
+                document.getElementById('profileLogoIcon').style.display = 'none';
+                document.getElementById('profilePageLogo').src = profile.logo;
+                document.getElementById('profilePageLogo').style.display = 'block';
+                document.getElementById('profilePageLogoIcon').style.display = 'none';
+            }
             
             const completion = calculateProfileCompletion(profile);
             document.getElementById('profileCompletion').textContent = completion + '%';
@@ -1453,39 +1424,54 @@
             document.body.style.overflow = 'hidden';
         }
 
-        document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const submitBtn = document.getElementById('profileSaveBtn');
-            const originalText = submitBtn.innerHTML;
-            try {
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                submitBtn.disabled = true;
-                const businessName = document.getElementById('editBusinessName').value.trim();
-                if (!businessName) { showToast('Business name is required', 'error'); return; }
-                const formData = new FormData();
-                formData.append('business_name', businessName);
-                formData.append('business_category', document.getElementById('editBusinessCategory').value);
-                formData.append('industry', document.getElementById('editIndustry').value);
-                formData.append('contact_name', document.getElementById('editContactName').value);
-                formData.append('phone', document.getElementById('editPhone').value);
-                formData.append('location', document.getElementById('editLocation').value);
-                formData.append('website', document.getElementById('editWebsite').value);
-                formData.append('address', document.getElementById('editAddress').value);
-                formData.append('description', document.getElementById('editDescription').value);
-                const logoFile = document.getElementById('logoUpload').files[0];
-                if (logoFile) formData.append('logo', logoFile);
-                const response = await apiRequest('/api/business/profile', { method: 'PUT', body: formData });
-                if (response.success) {
-                    showToast('Profile updated successfully!', 'success');
-                    hideModal('profileEditModal');
-                    await loadProfile();
-                    const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
-                    userData.name = businessName;
-                    localStorage.setItem('lba_user_data', JSON.stringify(userData));
-                }
-            } catch (error) { showToast(error.message || 'Failed to update profile', 'error'); }
-            finally { submitBtn.innerHTML = originalText; submitBtn.disabled = false; }
-        });
+        // Update the profile update response handling
+document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const submitBtn = document.getElementById('profileSaveBtn');
+    const originalText = submitBtn.innerHTML;
+    try {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
+        const businessName = document.getElementById('editBusinessName').value.trim();
+        if (!businessName) { showToast('Business name is required', 'error'); return; }
+        const formData = new FormData();
+        formData.append('business_name', businessName);
+        formData.append('business_category', document.getElementById('editBusinessCategory').value);
+        formData.append('industry', document.getElementById('editIndustry').value);
+        formData.append('contact_name', document.getElementById('editContactName').value);
+        formData.append('phone', document.getElementById('editPhone').value);
+        formData.append('location', document.getElementById('editLocation').value);
+        formData.append('website', document.getElementById('editWebsite').value);
+        formData.append('address', document.getElementById('editAddress').value);
+        formData.append('description', document.getElementById('editDescription').value);
+        const logoFile = document.getElementById('logoUpload').files[0];
+        if (logoFile) formData.append('logo', logoFile);
+        
+        const response = await apiRequest('/api/business/profile', { method: 'PUT', body: formData });
+        if (response.success) {
+            showToast('Profile updated successfully!', 'success');
+            hideModal('profileEditModal');
+            await loadProfile();
+            
+            // FIX: Also update the user data in localStorage
+            if (response.profile && response.profile.logo) {
+                const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+                userData.logo = response.profile.logo;
+                userData.name = businessName;
+                localStorage.setItem('lba_user_data', JSON.stringify(userData));
+            }
+            
+            // Force refresh of profile display
+            updateProfileDisplay();
+        }
+    } catch (error) { 
+        showToast(error.message || 'Failed to update profile', 'error'); 
+    }
+    finally { 
+        submitBtn.innerHTML = originalText; 
+        submitBtn.disabled = false; 
+    }
+});
 
         document.getElementById('logoUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -1505,6 +1491,21 @@
         // ============================================
         // NOMINATION FUNCTIONS - FRONTEND STYLE
         // ============================================
+
+        async function createNotification(title, message, type = 'info') {
+    try {
+        const response = await apiRequest('/api/business/notifications', {
+            method: 'POST',
+            body: JSON.stringify({ title, message, type })
+        });
+        if (response.success) {
+            console.log('✅ Notification created:', title);
+        }
+    } catch (error) {
+        console.error('Failed to create notification:', error);
+    }
+}
+
         function openNominationFromFrontend() {
             document.getElementById('nominationModal').classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1520,7 +1521,8 @@
             else if (type === 'international') document.getElementById('internationalFields').classList.remove('hidden');
         });
 
-       document.getElementById('nominationFormModal').addEventListener('submit', async function(e) {
+        // Update the nomination form submission to save to backend
+document.getElementById('nominationFormModal').addEventListener('submit', async function(e) {
     e.preventDefault();
     const submitBtn = document.getElementById('nominationSubmitModalBtn');
     const originalText = submitBtn.innerHTML;
@@ -1528,38 +1530,69 @@
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
         submitBtn.disabled = true;
         
-        // Send to your backend API instead of Google Sheets
+        // Prepare data for backend
         const nominationData = {
             title: document.getElementById('nomBusinessName').value,
             category: document.getElementById('nomCategory').value,
-            year: new Date().getFullYear(),
             description: document.getElementById('nomReason').value,
-            achievements: [],
-            status: 'submitted'
+            year: new Date().getFullYear(),
+            status: 'submitted',
+            achievements: []
         };
         
-        const response = await apiRequest('/business/nominations', {
+        // Save to backend
+        const backendResponse = await apiRequest('/api/business/nominations', {
             method: 'POST',
             body: JSON.stringify(nominationData)
         });
         
-        if (response.success) {
+        if (backendResponse.success) {
+
+            await createNotification(
+                'Nomination Submitted', 
+                `Your nomination for "${nominationData.title}" has been submitted for review.`,
+                'success'
+            ); 
+            
+            // Also send to Google Sheets for record keeping
+            const formData = {
+                formType: 'nomination',
+                nominationType: document.getElementById('nominationType').value,
+                county: document.getElementById('county').value,
+                africaCountry: document.getElementById('africaCountry').value,
+                internationalCountry: document.getElementById('internationalCountry').value,
+                businessName: document.getElementById('nomBusinessName').value,
+                category: document.getElementById('nomCategory').value,
+                reason: document.getElementById('nomReason').value,
+                yourName: document.getElementById('nomYourName').value,
+                yourEmail: document.getElementById('nomYourEmail').value,
+                relationship: document.getElementById('nomRelationship').value,
+                source: 'business_dashboard',
+                timestamp: new Date().toISOString()
+            };
+            
+            await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(formData)
+            });
+            
             showToast('✅ Nomination submitted successfully!', 'success');
             hideModal('nominationModal');
             document.getElementById('nominationFormModal').reset();
             document.getElementById('liberiaFields').classList.add('hidden');
             document.getElementById('africaFields').classList.add('hidden');
             document.getElementById('internationalFields').classList.add('hidden');
+            
             // Reload nominations
             await loadNominations();
-            await loadAllData();
         } else {
-            throw new Error(response.message || 'Submission failed');
+            showToast(backendResponse.message || 'Failed to submit nomination', 'error');
         }
-        
     } catch (error) {
         console.error('Nomination error:', error);
-        showToast(error.message || '❌ Failed to submit nomination', 'error');
+        showToast('❌ Failed to submit nomination', 'error');
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
@@ -1567,30 +1600,20 @@
 });
 
         async function loadNominations() {
-    try {
-        const page = appState.nominations.currentPage;
-        const filter = appState.nominations.filter !== 'all' ? `&status=${appState.nominations.filter}` : '';
-        // FIXED: Remove extra /api/ from endpoint
-        const data = await apiRequest(`/business/nominations?page=${page}&limit=10${filter}`);
-        if (data.success) {
-            appState.nominations.data = data.nominations || data.data || [];
-            appState.nominations.total = data.total || data.pagination?.total || 0;
-            appState.nominations.totalPages = data.pages || data.pagination?.pages || 1;
-            updateNominationsCount();
-            displayNominations();
-            updateNominationsPagination();
-        } else {
-            console.log('No nominations data:', data);
-            appState.nominations.data = [];
-            displayNominations();
+            try {
+                const page = appState.nominations.currentPage;
+                const filter = appState.nominations.filter !== 'all' ? `&status=${appState.nominations.filter}` : '';
+                const data = await apiRequest(`/api/business/nominations?page=${page}&limit=10${filter}`);
+                if (data.success) {
+                    appState.nominations.data = data.nominations || data.data || [];
+                    appState.nominations.total = data.total || data.pagination?.total || 0;
+                    appState.nominations.totalPages = data.pages || data.pagination?.pages || 1;
+                    updateNominationsCount();
+                    displayNominations();
+                    updateNominationsPagination();
+                }
+            } catch (error) { console.error('Nominations load error:', error); showToast('Could not load nominations', 'warning'); }
         }
-    } catch (error) { 
-        console.error('Nominations load error:', error); 
-        showToast('Could not load nominations', 'warning');
-        appState.nominations.data = [];
-        displayNominations();
-    }
-}
 
         function updateNominationsCount() {
             const nominations = appState.nominations.data;
@@ -1669,38 +1692,6 @@
 
         function viewNomination(id) { showToast(`Viewing nomination details`, 'info'); }
         function editNomination(id) { if (confirm('Edit this nomination?')) showNominationModal(id); }
-
-        async function createTestNomination() {
-    try {
-        const testData = {
-            title: "Test Nomination " + new Date().toLocaleString(),
-            category: "startup-of-the-year",
-            year: 2025,
-            description: "This is a test nomination to verify the system is working.",
-            achievements: ["Achievement 1", "Achievement 2"],
-            status: "submitted"
-        };
-        
-        const response = await apiRequest('/business/nominations', {
-            method: 'POST',
-            body: JSON.stringify(testData)
-        });
-        
-        if (response.success) {
-            showToast('Test nomination created!', 'success');
-            await loadNominations();
-            await loadAllData();
-        } else {
-            showToast('Failed to create test nomination', 'error');
-        }
-    } catch (error) {
-        console.error('Test nomination error:', error);
-        showToast(error.message, 'error');
-    }
-}
-
-// Add a button somewhere temporarily:
-// <button onclick="createTestNomination()">Create Test Nomination</button>
 
         // ============================================
 // DOCUMENTS FUNCTIONS - COMPLETELY FIXED
@@ -2048,28 +2039,6 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
                 showToast('All notifications marked as read', 'success');
             } catch (error) { showToast('Failed to mark notifications as read', 'error'); }
         }
-
-        // Add this function to test notifications
-async function testNotification() {
-    try {
-        // Create a test notification (you'll need to add this endpoint or test existing)
-        const response = await apiRequest('/business/notifications', {
-            method: 'GET'
-        });
-        console.log('Notifications response:', response);
-        if (response.success && response.notifications) {
-            showToast(`Found ${response.notifications.length} notifications`, 'info');
-        } else {
-            showToast('No notifications found. The notifications system may need setup.', 'warning');
-        }
-    } catch (error) {
-        console.error('Notification test error:', error);
-        showToast('Notifications system not fully configured yet', 'warning');
-    }
-}
-
-// Call this to test
-// testNotification();
 
         // ============================================
         // SETTINGS FUNCTIONS
