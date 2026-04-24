@@ -2712,6 +2712,190 @@ async function submitApplication() {
         showToast(error.message || 'Error submitting application', 'error');
     }
 }
+
+// ============================================
+// BUSINESS SPOTLIGHT STORY SUBMISSION
+// ============================================
+
+async function showBusinessSpotlightModal() {
+    try {
+        // Load categories first
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${BACKEND_URL}/spotlight/categories`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        let categoriesHtml = '<option value="">Select Category</option>';
+        if (data.success && data.categories) {
+            categoriesHtml += data.categories.map(c => `<option value="${c._id}">${escapeHtml(c.name)}</option>`).join('');
+        }
+        
+        const modalHtml = `
+            <div class="modal" id="businessSpotlightModal">
+                <div class="modal-content" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-newspaper"></i> Share Your Business Story</h2>
+                        <button class="modal-close" onclick="hideModal('businessSpotlightModal')"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="businessSpotlightForm">
+                            <div class="form-group">
+                                <label>Story Title *</label>
+                                <input type="text" id="storyTitle" class="sheet-btn secondary" style="width: 100%;" required maxlength="200">
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="storyCategory" class="sheet-btn secondary" style="width: 100%;" required>
+                                    ${categoriesHtml}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Business Name *</label>
+                                <input type="text" id="storyBusinessName" class="sheet-btn secondary" style="width: 100%;" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Short Excerpt *</label>
+                                <textarea id="storyExcerpt" rows="3" class="sheet-btn secondary" style="width: 100%;" required placeholder="Brief summary of your story..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Full Story *</label>
+                                <textarea id="storyContent" rows="6" class="sheet-btn secondary" style="width: 100%;" required placeholder="Share your inspiring business journey..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Featured Image URL</label>
+                                <input type="url" id="storyImage" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                                <small style="color: #64748b;">Upload image to your profile first, then paste URL here</small>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button type="button" class="btn btn-secondary" onclick="hideModal('businessSpotlightModal')" style="flex: 1;">Cancel</button>
+                                <button type="submit" class="btn btn-primary" style="flex: 2;">Submit for Review</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existing = document.getElementById('businessSpotlightModal');
+        if (existing) existing.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Add form submit handler
+        document.getElementById('businessSpotlightForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const storyData = {
+                title: document.getElementById('storyTitle').value,
+                category_id: document.getElementById('storyCategory').value,
+                business_name: document.getElementById('storyBusinessName').value,
+                excerpt: document.getElementById('storyExcerpt').value,
+                content: document.getElementById('storyContent').value,
+                featured_image: document.getElementById('storyImage').value,
+                status: 'draft',
+                author_name: appState.profile?.contact_name || appState.user?.name || 'Business Owner',
+                business_owner: appState.profile?.contact_name || ''
+            };
+            
+            if (!storyData.title || !storyData.category_id || !storyData.business_name || !storyData.excerpt || !storyData.content) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            submitBtn.disabled = true;
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${BACKEND_URL}/business/spotlight/stories`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(storyData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Your story has been submitted for review!', 'success');
+                    hideModal('businessSpotlightModal');
+                    
+                    // Create notification
+                    await createNotification(
+                        'Spotlight Story Submitted',
+                        `Your story "${storyData.title}" has been submitted for admin review.`,
+                        'info'
+                    );
+                } else {
+                    showToast(result.message || 'Failed to submit story', 'error');
+                }
+            } catch (error) {
+                console.error('Submit story error:', error);
+                showToast('Error submitting story', 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
+        document.getElementById('businessSpotlightModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+    } catch (error) {
+        console.error('Error loading spotlight modal:', error);
+        showToast('Error loading form', 'error');
+    }
+}
+
+// Add business spotlight submission endpoint to your server.js
+// (Add this right after the admin spotlight routes)
+app.post('/api/business/spotlight/stories', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { title, category_id, business_name, excerpt, content, featured_image, author_name, business_owner } = req.body;
+        
+        if (!title || !category_id || !business_name || !excerpt || !content) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        // Generate slug from title
+        const slug = title.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '') + '-' + Date.now();
+        
+        const story = new SpotlightStory({
+            title,
+            slug,
+            category_id,
+            status: 'draft',
+            business_name,
+            business_owner: business_owner || req.user.contact_name || '',
+            author_name: author_name || req.user.contact_name || req.user.business_name,
+            excerpt,
+            content,
+            featured_image: featured_image || '',
+            created_by: req.user._id
+        });
+        
+        await story.save();
+        
+        // Notify admin
+        const admin = await Admin.findOne({ role: 'super_admin' });
+        if (admin) {
+            // Optional: Send email notification to admin
+            console.log(`📢 New spotlight story submitted: ${title} by ${business_name}`);
+        }
+        
+        res.status(201).json({ success: true, message: 'Story submitted for review', story });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
     </script>
 </body>
 </html>
