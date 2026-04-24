@@ -5958,25 +5958,41 @@ async function loadAnnouncements() {
 
 function displayAnnouncements(announcements) {
     const tbody = document.getElementById('announcementsTableBody');
+    if (!tbody) return;
+    
     if (!announcements || announcements.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No announcements found</td></tr>';
         return;
     }
     
-    tbody.innerHTML = announcements.map(a => `
-        <tr>
-            <td><strong>${escapeHtml(a.title)}</strong></td>
-            <td>${escapeHtml(a.description.substring(0, 100))}...</td>
-            <td><span class="status-badge status-${a.status === 'published' ? 'active' : 'pending'}">${a.status}</span></td>
-            <td>${new Date(a.created_at).toLocaleDateString()}</td>
-            <td>
-                <button class="sheet-btn secondary" onclick="editAnnouncement('${a._id}')"><i class="fas fa-edit"></i></button>
-                <button class="sheet-btn danger" onclick="deleteAnnouncement('${a._id}')"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = announcements.map(a => {
+        // Get announcement ID - Apps Script returns 'id' property
+        const annId = a.id || a._id;
+        
+        // Fix date parsing
+        let displayDate = 'Invalid Date';
+        if (a.timestamp) {
+            const date = new Date(a.timestamp);
+            if (!isNaN(date.getTime())) {
+                displayDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(a.title)}</strong></td>
+                <td>${escapeHtml((a.description || '').substring(0, 100))}...</td>
+                <td><span class="status-badge status-${a.status === 'published' ? 'active' : 'pending'}">${a.status || 'draft'}</span></td>
+                <td>${displayDate}</td>
+                <td>
+                    <button class="sheet-btn secondary" onclick="editAnnouncement('${annId}')"><i class="fas fa-edit"></i></button>
+                    <button class="sheet-btn danger" onclick="deleteAnnouncement('${annId}')"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
-
+        
 function showAddAnnouncementModal() {
     document.getElementById('announcementModalTitle').textContent = 'Add Announcement';
     document.getElementById('announcementForm').reset();
@@ -5984,29 +6000,40 @@ function showAddAnnouncementModal() {
     document.getElementById('addAnnouncementModal').classList.add('active');
 }
 
-// Edit announcement
-async function editAnnouncement(id) {
+ async function editAnnouncement(id) {
+    console.log('📝 Editing announcement with ID:', id);
+    
     try {
         const result = await fetchAnnouncements();
+        console.log('📋 Fetched announcements:', result);
+        
         if (result.success && result.announcements) {
-            const announcement = result.announcements.find(a => a.id === id);
+            // Find by id - handle both 'id' and '_id' properties
+            const announcement = result.announcements.find(a => a.id === id || a._id === id);
+            
             if (announcement) {
+                console.log('✅ Found announcement:', announcement);
+                
                 document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
-                document.getElementById('announcementId').value = announcement.id;
-                document.getElementById('announcementTitle').value = announcement.title;
-                document.getElementById('announcementDescription').value = announcement.description;
+                document.getElementById('announcementId').value = announcement.id || announcement._id;
+                document.getElementById('announcementTitle').value = announcement.title || '';
+                document.getElementById('announcementDescription').value = announcement.description || '';
                 document.getElementById('announcementImage').value = announcement.image || '';
-                document.getElementById('announcementStatus').value = announcement.status;
+                document.getElementById('announcementStatus').value = announcement.status || 'draft';
                 document.getElementById('addAnnouncementModal').classList.add('active');
             } else {
+                console.error('❌ Announcement not found with ID:', id);
                 showNotification('Announcement not found', 'error');
             }
+        } else {
+            console.error('❌ Failed to fetch announcements:', result);
+            showNotification('Failed to load announcement data', 'error');
         }
     } catch (error) {
-        console.error('Error editing announcement:', error);
-        showNotification('Error loading announcement', 'error');
+        console.error('❌ Error editing announcement:', error);
+        showNotification('Error loading announcement: ' + error.message, 'error');
     }
-}
+}       
 
 async function saveAnnouncement() {
     const announcementData = {
