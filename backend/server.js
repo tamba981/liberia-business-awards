@@ -1668,7 +1668,9 @@ app.get('/api/admin/announcements', authenticate, authorize('admin'), async (req
     }
 });
 
-// Admin: Create announcement
+// ============ ADMIN ANNOUNCEMENTS WITH NOTIFICATIONS ============
+
+// Admin: Create announcement AND notify all businesses
 app.post('/api/admin/announcements', authenticate, authorize('admin'), async (req, res) => {
     try {
         const { title, description, image, status } = req.body;
@@ -1677,6 +1679,7 @@ app.post('/api/admin/announcements', authenticate, authorize('admin'), async (re
             return res.status(400).json({ success: false, message: 'Title and description are required' });
         }
         
+        // Save announcement to database
         const announcement = new Announcement({
             title,
             description,
@@ -1687,62 +1690,123 @@ app.post('/api/admin/announcements', authenticate, authorize('admin'), async (re
         
         await announcement.save();
         
+        // If published, send notifications to all businesses
+        if (status === 'published') {
+            console.log('📢 Sending announcement notifications to all businesses...');
+            
+            // Get all approved businesses
+            const businesses = await BusinessUser.find({ status: 'approved' }).select('_id email business_name');
+            
+            let notificationCount = 0;
+            
+            // Create notifications for each business
+            for (const business of businesses) {
+                try {
+                    const notification = new Notification({
+                        business_id: business._id,
+                        title: `📢 New Announcement: ${title}`,
+                        message: description.substring(0, 200),
+                        type: 'info',
+                        read: false
+                    });
+                    await notification.save();
+                    notificationCount++;
+                } catch (notifError) {
+                    console.error(`Failed to create notification for ${business.email}:`, notifError);
+                }
+            }
+            
+            console.log(`✅ Created ${notificationCount} notifications for businesses`);
+            
+            // Also send email notifications (optional - can be moved to a background job)
+            try {
+                for (const business of businesses) {
+                    await sendAnnouncementEmail(business.email, business.business_name, title, description);
+                }
+                console.log(`📧 Sent email notifications to ${businesses.length} businesses`);
+            } catch (emailError) {
+                console.error('Email sending error:', emailError);
+            }
+        }
+        
         res.status(201).json({
             success: true,
             message: 'Announcement created successfully',
-            announcement
+            announcement: {
+                _id: announcement._id,
+                title: announcement.title,
+                description: announcement.description,
+                image: announcement.image,
+                status: announcement.status,
+                created_at: announcement.created_at
+            }
         });
+        
     } catch (error) {
+        console.error('Create announcement error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// Admin: Update announcement
-app.put('/api/admin/announcements/:id', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const announcement = await Announcement.findById(req.params.id);
-        
-        if (!announcement) {
-            return res.status(404).json({ success: false, message: 'Announcement not found' });
+// Helper function to send announcement email
+async function sendAnnouncementEmail(email, businessName, title, description) {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'liberiabusinessawards@gmail.com',
+            pass: process.env.GMAIL_APP_PASSWORD
         }
-        
-        const { title, description, image, status } = req.body;
-        
-        if (title) announcement.title = title;
-        if (description) announcement.description = description;
-        if (image !== undefined) announcement.image = image;
-        if (status) announcement.status = status;
-        announcement.updated_at = new Date();
-        
-        await announcement.save();
-        
-        res.json({
-            success: true,
-            message: 'Announcement updated successfully',
-            announcement
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// Admin: Delete announcement
-app.delete('/api/admin/announcements/:id', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const announcement = await Announcement.findByIdAndDelete(req.params.id);
-        
-        if (!announcement) {
-            return res.status(404).json({ success: false, message: 'Announcement not found' });
-        }
-        
-        res.json({
-            success: true,
-            message: 'Announcement deleted successfully'
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
+    });
+    
+    const htmlBody = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Announcement - Liberia Business Awards</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #1a202c; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); padding: 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; color: white; }
+        .content { padding: 30px; }
+        .badge { display: inline-block; background: #FF0000; color: white; padding: 6px 16px; border-radius: 30px; font-size: 12px; font-weight: 600; margin-bottom: 20px; }
+        .btn { display: inline-block; background: #FF0000; color: white; padding: 12px 28px; text-decoration: none; border-radius: 40px; font-weight: 600; margin-top: 20px; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📢 Liberia Business Awards</h1>
+        </div>
+        <div class="content">
+            <div style="text-align: center;">
+                <div class="badge">NEW ANNOUNCEMENT</div>
+            </div>
+            <h2 style="color: #FF0000;">${title}</h2>
+            <p>Dear ${businessName},</p>
+            <p>${description}</p>
+            <div style="text-align: center;">
+                <a href="https://liberiabusinessawardslr.com/dashboard/business.html" class="btn" target="_blank">
+                    View in Dashboard
+                </a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} Liberia Business Awards | Recognizing Local Excellence, Celebrating National Impact</p>
+        </div>
+    </div>
+</body>
+</html>`;
+    
+    await transporter.sendMail({
+        from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
+        to: email,
+        subject: `📢 New Announcement: ${title}`,
+        html: htmlBody
+    });
+}
 
 // ============ BUSINESS NOMINATION ROUTES ============
 
