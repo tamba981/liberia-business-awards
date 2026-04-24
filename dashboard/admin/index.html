@@ -5975,13 +5975,13 @@ function displayAnnouncements(announcements) {
     }
     
     tbody.innerHTML = announcements.map(a => {
-        // Get announcement ID - Apps Script returns 'id' property
-        const annId = a.id || a._id;
+        // IMPORTANT: Get the correct ID - Backend uses '_id', Google Sheets uses 'id'
+        const annId = a._id || a.id;
         
         // Fix date parsing
         let displayDate = 'Invalid Date';
-        if (a.timestamp) {
-            const date = new Date(a.timestamp);
+        if (a.timestamp || a.created_at) {
+            const date = new Date(a.timestamp || a.created_at);
             if (!isNaN(date.getTime())) {
                 displayDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
@@ -5994,8 +5994,8 @@ function displayAnnouncements(announcements) {
                 <td><span class="status-badge status-${a.status === 'published' ? 'active' : 'pending'}">${a.status || 'draft'}</span></td>
                 <td>${displayDate}</td>
                 <td>
-                    <button class="sheet-btn secondary" onclick="editAnnouncement('${annId}')"><i class="fas fa-edit"></i></button>
-                    <button class="sheet-btn danger" onclick="deleteAnnouncement('${annId}')"><i class="fas fa-trash"></i></button>
+                    <button class="sheet-btn secondary" onclick="editAnnouncement('${annId}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="sheet-btn danger" onclick="deleteAnnouncement('${annId}')"><i class="fas fa-trash"></i> Delete</button>
                 </td>
             </tr>
         `;
@@ -7508,32 +7508,69 @@ function showAddAnnouncementModal() {
     document.getElementById('addAnnouncementModal').classList.add('active');
 }
 
-// Edit announcement
 async function editAnnouncement(id) {
+    console.log('📝 EDIT called with ID:', id, 'Type:', typeof id);
+    
+    // Make sure id is a string
+    const idStr = String(id);
+    console.log('📝 Normalized ID:', idStr);
+    
     try {
-        const result = await fetchAnnouncements();
-        if (result.success && result.announcements) {
-            const announcement = result.announcements.find(a => a.id === id);
-            if (announcement) {
-                document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
-                document.getElementById('announcementId').value = announcement.id;
-                document.getElementById('announcementTitle').value = announcement.title;
-                document.getElementById('announcementDescription').value = announcement.description;
-                document.getElementById('announcementImage').value = announcement.image || '';
-                document.getElementById('announcementStatus').value = announcement.status;
-                document.getElementById('addAnnouncementModal').classList.add('active');
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        console.log('📋 API Response:', data);
+        
+        let announcement = null;
+        
+        if (data.success && data.announcements) {
+            // Find by _id (MongoDB uses _id)
+            announcement = data.announcements.find(a => a._id === idStr);
+            if (!announcement) {
+                // Try by id
+                announcement = data.announcements.find(a => a.id === idStr);
+            }
+            console.log('🔍 Found in Backend:', announcement);
+        }
+        
+        // If not found in backend, try Google Sheets
+        if (!announcement) {
+            const sheetsResult = await fetchAnnouncements();
+            console.log('📋 Sheets Result:', sheetsResult);
+            if (sheetsResult.success && sheetsResult.announcements) {
+                announcement = sheetsResult.announcements.find(a => a.id === idStr || a._id === idStr);
+                console.log('🔍 Found in Sheets:', announcement);
             }
         }
+        
+        if (announcement) {
+            document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+            document.getElementById('announcementId').value = announcement._id || announcement.id;
+            document.getElementById('announcementTitle').value = announcement.title || '';
+            document.getElementById('announcementDescription').value = announcement.description || '';
+            document.getElementById('announcementImage').value = announcement.image || '';
+            document.getElementById('announcementStatus').value = announcement.status || 'draft';
+            document.getElementById('addAnnouncementModal').classList.add('active');
+            console.log('✅ Modal opened for editing');
+        } else {
+            console.error('❌ Announcement NOT found with ID:', idStr);
+            alert('Announcement not found. ID: ' + idStr);
+        }
     } catch (error) {
-        console.error('Error editing announcement:', error);
-        showNotification('Error loading announcement', 'error');
+        console.error('❌ Error editing announcement:', error);
+        alert('Error: ' + error.message);
     }
 }
 
-
-
-// Delete announcement from Google Sheets
 async function deleteAnnouncement(id) {
+    console.log('🗑️ DELETE called with ID:', id, 'Type:', typeof id);
+    
+    const idStr = String(id);
+    console.log('🗑️ Normalized ID:', idStr);
+    
     if (!confirm('⚠️ Are you sure you want to delete this announcement? This action cannot be undone.')) {
         return;
     }
@@ -7545,40 +7582,36 @@ async function deleteAnnouncement(id) {
         deleteBtn.disabled = true;
     }
     
+    let backendSuccess = false;
+    
     try {
-        showNotification('Deleting announcement...', 'info');
+        // Delete from Backend API
+        const token = localStorage.getItem('lba_auth_token');
+        console.log('🗑️ Sending DELETE request to:', `${API_BASE.replace('/api', '')}/api/admin/announcements/${idStr}`);
         
-        // Call Google Apps Script to delete
-        const formData = new URLSearchParams({
-            formType: 'delete_announcement',
-            announcementId: id,
-            timestamp: new Date().toISOString()
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements/${idStr}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData
-        });
-
+        
         const result = await response.json();
+        console.log('🗑️ DELETE response:', result);
         
-        if (result.success) {
+        if (response.ok && result.success) {
+            backendSuccess = true;
+            console.log('✅ Deleted from Backend API');
             showNotification('✅ Announcement deleted successfully!', 'success');
-            // Refresh both announcement lists
-            if (typeof loadAnnouncementsData === 'function') {
-                await loadAnnouncementsData();
-            }
-            if (typeof loadAnnouncements === 'function') {
-                await loadAnnouncements();
-            }
+            
+            // Refresh the announcements list
+            await loadAnnouncements();
         } else {
-            showNotification('❌ Failed to delete: ' + (result.error || 'Unknown error'), 'error');
+            console.error('❌ Backend delete failed:', result);
+            showNotification('Delete failed: ' + (result.message || 'Unknown error'), 'error');
         }
         
     } catch (error) {
-        console.error('Delete error:', error);
-        showNotification('Error deleting announcement: ' + error.message, 'error');
+        console.error('❌ Delete error:', error);
+        showNotification('Error: ' + error.message, 'error');
     } finally {
         if (deleteBtn) {
             deleteBtn.innerHTML = originalText;
