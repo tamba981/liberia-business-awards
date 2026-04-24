@@ -4369,438 +4369,544 @@ console.log('✅ Voting system fully integrated and ready!');
         // SPOTLIGHT MANAGEMENT SYSTEM
         // ============================================
 
-        // Spotlight State
-        let spotlightCategories = [];
-        let spotlightStories = [];
-        let currentStoryFilter = 'all';
-        let spotlightSearchTerm = '';
+        // ============================================
+// COMPLETE FIXED BUSINESS SPOTLIGHT SYSTEM
+// ============================================
 
-        // ============ MODAL OPEN/CLOSE ============
-        function showSpotlightModal() {
-            hideAllModals();
-            const modal = document.getElementById('spotlightModal');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            
-            // Load data
-            loadSpotlightCategories();
-            loadSpotlightStories();
+// Spotlight State
+let spotlightCategories = [];
+let spotlightStories = [];
+
+// Show Spotlight Modal
+function showSpotlightModal() {
+    hideAllModals();
+    const modal = document.getElementById('spotlightModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        loadSpotlightCategories();
+        loadSpotlightStories();
+    }
+}
+
+// Load Categories from Google Sheets
+async function loadSpotlightCategories() {
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSpotlightCategories`);
+        const text = await response.text();
+        
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.log('No categories data, using default');
+            data = { success: true, categories: [] };
         }
-
-        // ============ LOAD CATEGORIES ============
-        async function loadSpotlightCategories() {
-            try {
-                const response = await fetch(`${API_BASE}/news/categories`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    spotlightCategories = data.categories || [];
-                    
-                    // Update categories grid
-                    const grid = document.getElementById('categoriesGrid');
-                    if (grid) {
-                        if (spotlightCategories.length === 0) {
-                            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No categories yet</p>';
-                        } else {
-                            grid.innerHTML = spotlightCategories.map(cat => `
-                                <div style="background: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${cat.color || '#FF0000'}; display: flex; justify-content: space-between; align-items: center;">
-                                    <span><i class="fas ${cat.icon || 'fa-tag'}"></i> ${cat.name}</span>
-                                    <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 12px;">${cat.article_count || 0}</span>
-                                </div>
-                            `).join('');
-                        }
-                    }
-                    
-                    // Update category filter dropdown
-                    const filter = document.getElementById('categoryFilter');
-                    if (filter) {
-                        filter.innerHTML = '<option value="all">All Categories</option>' + 
-                            spotlightCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
-                    }
-                    
-                    // Update category select in story modal
-                    const select = document.getElementById('storyCategory');
-                    if (select) {
-                        select.innerHTML = '<option value="">Select Category</option>' + 
-                            spotlightCategories.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
-                    }
-                    
-                    document.getElementById('totalCategories').textContent = spotlightCategories.length;
-                }
-            } catch (error) {
-                console.error('Error loading categories:', error);
-                showNotification('Error loading categories', 'error');
-            }
+        
+        if (data.success && data.categories) {
+            spotlightCategories = data.categories;
+        } else {
+            spotlightCategories = [
+                { id: '1', name: 'Success Stories', icon: 'fa-star', color: '#FF0000' },
+                { id: '2', name: 'Innovation', icon: 'fa-lightbulb', color: '#87CEEB' },
+                { id: '3', name: 'Community Impact', icon: 'fa-hand-holding-heart', color: '#10B981' }
+            ];
         }
+        
+        displaySpotlightCategories();
+        updateCategoryFilter();
+        
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        spotlightCategories = [
+            { id: '1', name: 'Success Stories', icon: 'fa-star', color: '#FF0000' },
+            { id: '2', name: 'Innovation', icon: 'fa-lightbulb', color: '#87CEEB' },
+            { id: '3', name: 'Community Impact', icon: 'fa-hand-holding-heart', color: '#10B981' }
+        ];
+        displaySpotlightCategories();
+        updateCategoryFilter();
+    }
+}
 
-        // ============ LOAD STORIES ============
-        async function loadSpotlightStories() {
-            try {
-                const response = await fetch(`${API_BASE}/news/articles?limit=100`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    spotlightStories = data.articles || [];
-                    
-                    // Update stats
-                    document.getElementById('totalStories').textContent = spotlightStories.length;
-                    document.getElementById('publishedStories').textContent = spotlightStories.filter(s => s.status === 'published').length;
-                    document.getElementById('draftStories').textContent = spotlightStories.filter(s => s.status === 'draft').length;
-                    document.getElementById('spotlightCount').textContent = spotlightStories.length;
-                    
-                    displayStories();
-                }
-            } catch (error) {
-                console.error('Error loading stories:', error);
-                showNotification('Error loading stories', 'error');
-            }
+// Display Categories Grid
+function displaySpotlightCategories() {
+    const grid = document.getElementById('categoriesGrid');
+    if (!grid) return;
+    
+    if (spotlightCategories.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No categories yet</p>';
+        document.getElementById('totalCategories').textContent = '0';
+        return;
+    }
+    
+    grid.innerHTML = spotlightCategories.map(cat => `
+        <div style="background: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${cat.color || '#FF0000'}; display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fas ${cat.icon || 'fa-tag'}"></i> ${escapeHtml(cat.name)}</span>
+            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 12px;">${spotlightStories.filter(s => s.category_id === cat.id).length}</span>
+        </div>
+    `).join('');
+    
+    document.getElementById('totalCategories').textContent = spotlightCategories.length;
+}
+
+// Update Category Dropdown Filter
+function updateCategoryFilter() {
+    const filter = document.getElementById('categoryFilter');
+    if (!filter) return;
+    
+    filter.innerHTML = '<option value="all">All Categories</option>' + 
+        spotlightCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    
+    const select = document.getElementById('storyCategory');
+    if (select) {
+        select.innerHTML = '<option value="">Select Category</option>' + 
+            spotlightCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    }
+}
+
+// Load Stories from Google Sheets
+async function loadSpotlightStories() {
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSpotlightStories`);
+        const text = await response.text();
+        
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            data = { success: true, stories: [] };
         }
-
-        // ============ DISPLAY STORIES ============
-        function displayStories() {
-            const container = document.getElementById('storiesList');
-            if (!container) return;
-            
-            let filtered = spotlightStories;
-            
-            // Apply category filter
-            if (currentStoryFilter !== 'all') {
-                filtered = filtered.filter(s => s.category_id === currentStoryFilter);
-            }
-            
-            // Apply search
-            if (spotlightSearchTerm) {
-                const term = spotlightSearchTerm.toLowerCase();
-                filtered = filtered.filter(s => 
-                    s.title.toLowerCase().includes(term) || 
-                    s.business_name.toLowerCase().includes(term)
-                );
-            }
-            
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 50px; color: #64748b;">
-                        <i class="fas fa-newspaper" style="font-size: 48px; margin-bottom: 20px;"></i>
-                        <p>No stories found</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = filtered.map(story => {
-                const category = spotlightCategories.find(c => c._id === story.category_id) || { name: 'Uncategorized' };
-                return `
-                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
-                            <img src="${story.featured_image || '/images/placeholder.jpg'}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 5px;" onerror="this.src='https://via.placeholder.com/60x40'">
-                            <div>
-                                <h4 style="font-weight: 600; margin-bottom: 5px;">${story.title}</h4>
-                                <div style="display: flex; gap: 15px; font-size: 13px; color: #64748b;">
-                                    <span><i class="fas fa-building"></i> ${story.business_name}</span>
-                                    <span><i class="fas fa-tag"></i> ${category.name}</span>
-                                    <span><i class="fas fa-user"></i> ${story.author_name}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <span class="status-badge status-${story.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${story.status}</span>
-                            <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editStory('${story._id}')"><i class="fas fa-edit"></i></button>
-                            <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteStory('${story._id}')"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+        
+        if (data.success && data.stories) {
+            spotlightStories = data.stories;
+        } else {
+            spotlightStories = [];
         }
+        
+        updateSpotlightStats();
+        displaySpotlightStories();
+        
+    } catch (error) {
+        console.error('Error loading stories:', error);
+        spotlightStories = [];
+        updateSpotlightStats();
+        displaySpotlightStories();
+    }
+}
 
-        // ============ FILTER STORIES ============
-        function filterStoriesByCategory() {
-            currentStoryFilter = document.getElementById('categoryFilter').value;
-            displayStories();
-        }
+// Update Stats Display
+function updateSpotlightStats() {
+    const total = spotlightStories.length;
+    const published = spotlightStories.filter(s => s.status === 'published').length;
+    const drafts = spotlightStories.filter(s => s.status === 'draft').length;
+    
+    document.getElementById('totalStories').textContent = total;
+    document.getElementById('publishedStories').textContent = published;
+    document.getElementById('draftStories').textContent = drafts;
+    document.getElementById('spotlightCount').textContent = total;
+}
 
-        function searchSpotlight() {
-            spotlightSearchTerm = document.getElementById('spotlightSearch').value;
-            displayStories();
-        }
-
-        // ============ STORY CRUD ============
-        function openAddStoryModal() {
-            document.getElementById('storyModalTitle').textContent = 'Add New Story';
-            document.getElementById('storyForm').reset();
-            document.getElementById('storyId').value = '';
-            document.getElementById('imagePreview').style.display = 'none';
-            
-            // Set default date to now
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('storyPublishedDate').value = now.toISOString().slice(0, 16);
-            
-            openModal('storyModal');
-        }
-
-        async function editStory(id) {
-            const story = spotlightStories.find(s => s._id === id);
-            if (!story) return;
-            
-            document.getElementById('storyModalTitle').textContent = 'Edit Story';
-            document.getElementById('storyId').value = story._id;
-            document.getElementById('storyTitle').value = story.title || '';
-            document.getElementById('storySlug').value = story.slug || '';
-            document.getElementById('storyCategory').value = story.category_id || '';
-            document.getElementById('storyStatus').value = story.status || 'draft';
-            document.getElementById('storyBusinessName').value = story.business_name || '';
-            document.getElementById('storyBusinessOwner').value = story.business_owner || '';
-            document.getElementById('storyAuthorName').value = story.author_name || '';
-            document.getElementById('storyAuthorBio').value = story.author_bio || '';
-            document.getElementById('storyExcerpt').value = story.excerpt || '';
-            document.getElementById('storyContent').value = story.content || '';
-            document.getElementById('storyImage').value = story.featured_image || '';
-            document.getElementById('storyFeatured').checked = story.is_featured || false;
-            document.getElementById('storyBreaking').checked = story.is_breaking || false;
-            document.getElementById('storyInterview').checked = story.is_interview || false;
-            
-            if (story.published_at) {
-                const date = new Date(story.published_at);
-                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-                document.getElementById('storyPublishedDate').value = date.toISOString().slice(0, 16);
-            }
-            
-            if (story.featured_image) {
-                document.getElementById('imagePreview').src = story.featured_image;
-                document.getElementById('imagePreview').style.display = 'block';
-            }
-            
-            openModal('storyModal');
-        }
-
-        async function saveStory() {
-            try {
-                const storyData = {
-                    title: document.getElementById('storyTitle').value,
-                    slug: document.getElementById('storySlug').value,
-                    category_id: document.getElementById('storyCategory').value,
-                    status: document.getElementById('storyStatus').value,
-                    business_name: document.getElementById('storyBusinessName').value,
-                    business_owner: document.getElementById('storyBusinessOwner').value,
-                    author_name: document.getElementById('storyAuthorName').value,
-                    author_bio: document.getElementById('storyAuthorBio').value,
-                    excerpt: document.getElementById('storyExcerpt').value,
-                    content: document.getElementById('storyContent').value,
-                    featured_image: document.getElementById('storyImage').value,
-                    is_featured: document.getElementById('storyFeatured').checked,
-                    is_breaking: document.getElementById('storyBreaking').checked,
-                    is_interview: document.getElementById('storyInterview').checked,
-                    published_at: document.getElementById('storyPublishedDate').value
-                };
-                
-                const storyId = document.getElementById('storyId').value;
-                const url = storyId ? 
-                    `${API_BASE}/admin/articles/${storyId}` : 
-                    `${API_BASE}/admin/articles`;
-                const method = storyId ? 'PUT' : 'POST';
-                
-                const token = localStorage.getItem('lba_auth_token');
-                
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(storyData)
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification(storyId ? 'Story updated!' : 'Story created!', 'success');
-                    closeModal('storyModal');
-                    loadSpotlightStories();
-                } else {
-                    showNotification('Error saving story', 'error');
-                }
-            } catch (error) {
-                console.error('Save error:', error);
-                showNotification('Error saving story', 'error');
-            }
-        }
-
-        async function deleteStory(id) {
-            if (!confirm('Are you sure you want to delete this story?')) return;
-            
-            try {
-                const token = localStorage.getItem('lba_auth_token');
-                const response = await fetch(`${API_BASE}/admin/articles/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification('Story deleted!', 'success');
-                    loadSpotlightStories();
-                } else {
-                    showNotification('Error deleting story', 'error');
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-                showNotification('Error deleting story', 'error');
-            }
-        }
-
-        // ============ CATEGORY MANAGEMENT ============
-        function openCategoryManager() {
-            closeModal('spotlightModal');
-            displayCategoryList();
-            openModal('categoryManagerModal');
-        }
-
-        function displayCategoryList() {
-            const container = document.getElementById('categoryList');
-            if (!container) return;
-            
-            if (spotlightCategories.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #64748b;">No categories yet</p>';
-                return;
-            }
-            
-            container.innerHTML = spotlightCategories.map(cat => `
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+// Display Stories
+function displaySpotlightStories() {
+    const container = document.getElementById('storiesList');
+    if (!container) return;
+    
+    let filtered = [...spotlightStories];
+    
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (categoryFilter && categoryFilter.value !== 'all') {
+        filtered = filtered.filter(s => s.category_id === categoryFilter.value);
+    }
+    
+    const searchTerm = document.getElementById('spotlightSearch');
+    if (searchTerm && searchTerm.value) {
+        const term = searchTerm.value.toLowerCase();
+        filtered = filtered.filter(s => 
+            s.title.toLowerCase().includes(term) || 
+            s.business_name.toLowerCase().includes(term)
+        );
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #64748b;">
+                <i class="fas fa-newspaper" style="font-size: 48px; margin-bottom: 20px;"></i>
+                <p>No stories found</p>
+                <button class="sheet-btn" onclick="openAddStoryModal()" style="margin-top: 15px;">
+                    <i class="fas fa-plus"></i> Create Your First Story
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = filtered.map(story => {
+        const category = spotlightCategories.find(c => c.id === story.category_id) || { name: 'General', color: '#64748b' };
+        const date = story.published_at ? new Date(story.published_at).toLocaleDateString() : (story.created_at ? new Date(story.created_at).toLocaleDateString() : 'N/A');
+        
+        return `
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; padding: 18px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
+                    <img src="${story.featured_image || '/images/placeholder.jpg'}" style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/70x50?text=No+Image'">
                     <div>
-                        <h4 style="font-weight: 600;"><i class="fas ${cat.icon || 'fa-tag'}" style="color: ${cat.color || '#FF0000'};"></i> ${cat.name}</h4>
-                        <small style="color: #64748b;">${cat.description || ''}</small>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editCategory('${cat._id}')"><i class="fas fa-edit"></i></button>
-                        <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteCategory('${cat._id}')"><i class="fas fa-trash"></i></button>
+                        <h4 style="font-weight: 600; margin-bottom: 5px; font-size: 16px;">${escapeHtml(story.title)}</h4>
+                        <div style="display: flex; gap: 15px; font-size: 12px; color: #64748b; flex-wrap: wrap;">
+                            <span><i class="fas fa-building"></i> ${escapeHtml(story.business_name)}</span>
+                            <span><i class="fas fa-tag" style="color: ${category.color}"></i> ${escapeHtml(category.name)}</span>
+                            <span><i class="fas fa-calendar"></i> ${date}</span>
+                        </div>
                     </div>
                 </div>
-            `).join('');
-        }
+                <div style="display: flex; gap: 8px;">
+                    <span class="status-badge status-${story.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${story.status}</span>
+                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editStory('${story.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteStory('${story.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
 
-        function openAddCategoryModal() {
-            document.getElementById('categoryModalTitle').textContent = 'Add Category';
-            document.getElementById('categoryForm').reset();
-            document.getElementById('categoryId').value = '';
-            document.getElementById('categoryColor').value = '#FF0000';
-            openModal('addCategoryModal');
-        }
+// Filter Stories
+function filterStoriesByCategory() {
+    displaySpotlightStories();
+}
 
-        function editCategory(id) {
-            const category = spotlightCategories.find(c => c._id === id);
-            if (!category) return;
-            
-            document.getElementById('categoryModalTitle').textContent = 'Edit Category';
-            document.getElementById('categoryId').value = category._id;
-            document.getElementById('categoryName').value = category.name || '';
-            document.getElementById('categorySlug').value = category.slug || '';
-            document.getElementById('categoryDescription').value = category.description || '';
-            document.getElementById('categoryIcon').value = category.icon || '';
-            document.getElementById('categoryColor').value = category.color || '#FF0000';
-            document.getElementById('categoryOrder').value = category.display_order || 1;
-            
-            openModal('addCategoryModal');
-        }
+function searchSpotlight() {
+    displaySpotlightStories();
+}
 
-        async function saveCategory() {
-            try {
-                const categoryData = {
-                    name: document.getElementById('categoryName').value,
-                    slug: document.getElementById('categorySlug').value,
-                    description: document.getElementById('categoryDescription').value,
-                    icon: document.getElementById('categoryIcon').value,
-                    color: document.getElementById('categoryColor').value,
-                    display_order: parseInt(document.getElementById('categoryOrder').value) || 1
-                };
-                
-                const categoryId = document.getElementById('categoryId').value;
-                const url = categoryId ? 
-                    `${API_BASE}/admin/categories/${categoryId}` : 
-                    `${API_BASE}/admin/categories`;
-                const method = categoryId ? 'PUT' : 'POST';
-                
-                const token = localStorage.getItem('lba_auth_token');
-                
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(categoryData)
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification(categoryId ? 'Category updated!' : 'Category created!', 'success');
-                    closeModal('addCategoryModal');
-                    loadSpotlightCategories();
-                    displayCategoryList();
-                } else {
-                    showNotification('Error saving category', 'error');
-                }
-            } catch (error) {
-                console.error('Save category error:', error);
-                showNotification('Error saving category', 'error');
-            }
-        }
+// Open Add Story Modal
+function openAddStoryModal() {
+    document.getElementById('storyModalTitle').textContent = 'Add New Story';
+    const form = document.getElementById('storyForm');
+    if (form) form.reset();
+    document.getElementById('storyId').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const dateField = document.getElementById('storyPublishedDate');
+    if (dateField) dateField.value = now.toISOString().slice(0, 16);
+    
+    document.getElementById('storyModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
 
-        async function deleteCategory(id) {
-            if (!confirm('Are you sure? Stories in this category will be uncategorized.')) return;
-            
-            try {
-                const token = localStorage.getItem('lba_auth_token');
-                const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification('Category deleted!', 'success');
-                    loadSpotlightCategories();
-                    displayCategoryList();
-                    loadSpotlightStories();
-                } else {
-                    showNotification('Error deleting category', 'error');
-                }
-            } catch (error) {
-                console.error('Delete category error:', error);
-                showNotification('Error deleting category', 'error');
-            }
-        }
+// Edit Story
+async function editStory(id) {
+    const story = spotlightStories.find(s => s.id === id);
+    if (!story) {
+        showNotification('Story not found', 'error');
+        return;
+    }
+    
+    document.getElementById('storyModalTitle').textContent = 'Edit Story';
+    document.getElementById('storyId').value = story.id;
+    document.getElementById('storyTitle').value = story.title || '';
+    document.getElementById('storySlug').value = story.slug || '';
+    document.getElementById('storyCategory').value = story.category_id || '';
+    document.getElementById('storyStatus').value = story.status || 'draft';
+    document.getElementById('storyBusinessName').value = story.business_name || '';
+    document.getElementById('storyBusinessOwner').value = story.business_owner || '';
+    document.getElementById('storyAuthorName').value = story.author_name || '';
+    document.getElementById('storyAuthorBio').value = story.author_bio || '';
+    document.getElementById('storyExcerpt').value = story.excerpt || '';
+    document.getElementById('storyContent').value = story.content || '';
+    document.getElementById('storyImage').value = story.featured_image || '';
+    document.getElementById('storyFeatured').checked = story.is_featured || false;
+    document.getElementById('storyBreaking').checked = story.is_breaking || false;
+    document.getElementById('storyInterview').checked = story.is_interview || false;
+    
+    if (story.published_at) {
+        const date = new Date(story.published_at);
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        document.getElementById('storyPublishedDate').value = date.toISOString().slice(0, 16);
+    }
+    
+    if (story.featured_image) {
+        const preview = document.getElementById('imagePreview');
+        preview.src = story.featured_image;
+        preview.style.display = 'block';
+    }
+    
+    document.getElementById('storyModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
 
-        // ============ AUTO-GENERATE SLUG ============
-        document.getElementById('storyTitle')?.addEventListener('input', function(e) {
+// Save Story to Google Sheets
+async function saveStory() {
+    const storyId = document.getElementById('storyId').value;
+    
+    const storyData = {
+        formType: storyId ? 'update_spotlight_story' : 'spotlight_story',
+        title: document.getElementById('storyTitle').value,
+        slug: document.getElementById('storySlug').value,
+        category_id: document.getElementById('storyCategory').value,
+        status: document.getElementById('storyStatus').value,
+        business_name: document.getElementById('storyBusinessName').value,
+        business_owner: document.getElementById('storyBusinessOwner').value,
+        author_name: document.getElementById('storyAuthorName').value,
+        author_bio: document.getElementById('storyAuthorBio').value,
+        excerpt: document.getElementById('storyExcerpt').value,
+        content: document.getElementById('storyContent').value,
+        featured_image: document.getElementById('storyImage').value,
+        is_featured: document.getElementById('storyFeatured').checked ? 'true' : 'false',
+        is_breaking: document.getElementById('storyBreaking').checked ? 'true' : 'false',
+        is_interview: document.getElementById('storyInterview').checked ? 'true' : 'false',
+        published_at: document.getElementById('storyPublishedDate').value,
+        created_by: dashboardState.user?.email || 'admin',
+        timestamp: new Date().toISOString()
+    };
+    
+    if (storyId) {
+        storyData.id = storyId;
+    }
+    
+    if (!storyData.title || !storyData.business_name || !storyData.category_id) {
+        showNotification('Title, Business Name, and Category are required', 'warning');
+        return;
+    }
+    
+    const saveBtn = event?.target;
+    const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
+    if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+    }
+    
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(storyData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(storyId ? 'Story updated!' : 'Story created!', 'success');
+            hideModal('storyModal');
+            await loadSpotlightStories();
+            document.getElementById('storyForm').reset();
+        } else {
+            showNotification(result.error || 'Error saving story', 'error');
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        showNotification('Error saving story', 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    }
+}
+
+// Delete Story
+async function deleteStory(id) {
+    if (!confirm('⚠️ Are you sure you want to delete this story? This action cannot be undone.')) return;
+    
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                formType: 'delete_spotlight_story',
+                storyId: id,
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Story deleted successfully!', 'success');
+            await loadSpotlightStories();
+        } else {
+            showNotification(result.error || 'Error deleting story', 'error');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        showNotification('Error deleting story', 'error');
+    }
+}
+
+// Category Management Functions
+function openCategoryManager() {
+    closeModal('spotlightModal');
+    displayCategoryList();
+    openModal('categoryManagerModal');
+}
+
+function displayCategoryList() {
+    const container = document.getElementById('categoryList');
+    if (!container) return;
+    
+    if (spotlightCategories.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #64748b;">No categories yet</p>';
+        return;
+    }
+    
+    container.innerHTML = spotlightCategories.map(cat => `
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h4 style="font-weight: 600;"><i class="fas ${cat.icon || 'fa-tag'}" style="color: ${cat.color || '#FF0000'};"></i> ${escapeHtml(cat.name)}</h4>
+                <small style="color: #64748b;">${cat.description || ''}</small>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editCategory('${cat.id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteCategory('${cat.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openAddCategoryModal() {
+    document.getElementById('categoryModalTitle').textContent = 'Add Category';
+    const form = document.getElementById('categoryForm');
+    if (form) form.reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryColor').value = '#FF0000';
+    openModal('addCategoryModal');
+}
+
+function editCategory(id) {
+    const category = spotlightCategories.find(c => c.id === id);
+    if (!category) return;
+    
+    document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+    document.getElementById('categoryId').value = category.id;
+    document.getElementById('categoryName').value = category.name || '';
+    document.getElementById('categorySlug').value = category.slug || '';
+    document.getElementById('categoryDescription').value = category.description || '';
+    document.getElementById('categoryIcon').value = category.icon || '';
+    document.getElementById('categoryColor').value = category.color || '#FF0000';
+    document.getElementById('categoryOrder').value = category.display_order || 1;
+    openModal('addCategoryModal');
+}
+
+async function saveCategory() {
+    const categoryId = document.getElementById('categoryId').value;
+    
+    const categoryData = {
+        formType: categoryId ? 'update_spotlight_category' : 'spotlight_category',
+        name: document.getElementById('categoryName').value,
+        slug: document.getElementById('categorySlug').value,
+        description: document.getElementById('categoryDescription').value,
+        icon: document.getElementById('categoryIcon').value,
+        color: document.getElementById('categoryColor').value,
+        display_order: document.getElementById('categoryOrder').value,
+        timestamp: new Date().toISOString()
+    };
+    
+    if (categoryId) {
+        categoryData.id = categoryId;
+    }
+    
+    if (!categoryData.name) {
+        showNotification('Category name is required', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(categoryData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(categoryId ? 'Category updated!' : 'Category created!', 'success');
+            hideModal('addCategoryModal');
+            await loadSpotlightCategories();
+            displayCategoryList();
+        } else {
+            showNotification(result.error || 'Error saving category', 'error');
+        }
+    } catch (error) {
+        console.error('Save category error:', error);
+        showNotification('Error saving category', 'error');
+    }
+}
+
+async function deleteCategory(id) {
+    if (!confirm(`Delete this category? Stories will remain but become uncategorized.`)) return;
+    
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                formType: 'delete_spotlight_category',
+                categoryId: id,
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Category deleted!', 'success');
+            hideModal('categoryManagerModal');
+            await loadSpotlightCategories();
+            await loadSpotlightStories();
+        } else {
+            showNotification(result.error || 'Error deleting category', 'error');
+        }
+    } catch (error) {
+        console.error('Delete category error:', error);
+        showNotification('Error deleting category', 'error');
+    }
+}
+
+// Auto-generate slug from title
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('storyTitle');
+    if (titleInput) {
+        titleInput.addEventListener('input', function(e) {
             if (!document.getElementById('storyId').value) {
                 const slug = e.target.value
                     .toLowerCase()
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/(^-|-$)/g, '');
-                document.getElementById('storySlug').value = slug;
+                const slugField = document.getElementById('storySlug');
+                if (slugField) slugField.value = slug;
             }
         });
-
-        // ============ IMAGE PREVIEW ============
-        document.getElementById('storyImage')?.addEventListener('input', function(e) {
+    }
+    
+    const imageInput = document.getElementById('storyImage');
+    if (imageInput) {
+        imageInput.addEventListener('input', function(e) {
             const preview = document.getElementById('imagePreview');
-            if (e.target.value) {
+            if (e.target.value && preview) {
                 preview.src = e.target.value;
                 preview.style.display = 'block';
-            } else {
+            } else if (preview) {
                 preview.style.display = 'none';
             }
         });
+    }
+});
 
-        // ============ EXPORT FUNCTION ============
-        window.showSpotlightModal = showSpotlightModal;
+// Export functions to global scope
+window.showSpotlightModal = showSpotlightModal;
+window.filterStoriesByCategory = filterStoriesByCategory;
+window.searchSpotlight = searchSpotlight;
+window.openAddStoryModal = openAddStoryModal;
+window.editStory = editStory;
+window.saveStory = saveStory;
+window.deleteStory = deleteStory;
+window.openCategoryManager = openCategoryManager;
+window.openAddCategoryModal = openAddCategoryModal;
+window.editCategory = editCategory;
+window.saveCategory = saveCategory;
+window.deleteCategory = deleteCategory;
+
+console.log('✅ Business Spotlight System Ready');
 
         // ============================================
 // ENHANCED BUSINESS MANAGEMENT FUNCTIONS
