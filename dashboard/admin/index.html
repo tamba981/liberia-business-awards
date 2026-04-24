@@ -7340,35 +7340,7 @@ async function editAnnouncement(id) {
     }
 }
 
-// Save announcement
-async function saveAnnouncement() {
-    const announcementData = {
-        title: document.getElementById('announcementTitle').value,
-        description: document.getElementById('announcementDescription').value,
-        image: document.getElementById('announcementImage').value,
-        status: document.getElementById('announcementStatus').value
-    };
-    
-    if (!announcementData.title || !announcementData.description) {
-        showNotification('Title and description are required', 'warning');
-        return;
-    }
-    
-    try {
-        const result = await createAnnouncement(announcementData);
-        
-        if (result.success) {
-            showNotification('Announcement created!', 'success');
-            hideModal('addAnnouncementModal');
-            loadAnnouncementsData();
-        } else {
-            showNotification(result.error || 'Error saving announcement', 'error');
-        }
-    } catch (error) {
-        console.error('Error saving announcement:', error);
-        showNotification('Error saving announcement', 'error');
-    }
-}
+
 
 // Delete announcement
 async function deleteAnnouncement(id) {
