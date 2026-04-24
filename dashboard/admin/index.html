@@ -5984,26 +5984,27 @@ function showAddAnnouncementModal() {
     document.getElementById('addAnnouncementModal').classList.add('active');
 }
 
+// Edit announcement
 async function editAnnouncement(id) {
     try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        const announcement = data.announcements.find(a => a._id === id);
-        
-        if (announcement) {
-            document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
-            document.getElementById('announcementId').value = announcement._id;
-            document.getElementById('announcementTitle').value = announcement.title;
-            document.getElementById('announcementDescription').value = announcement.description;
-            document.getElementById('announcementImage').value = announcement.image || '';
-            document.getElementById('announcementStatus').value = announcement.status;
-            document.getElementById('addAnnouncementModal').classList.add('active');
+        const result = await fetchAnnouncements();
+        if (result.success && result.announcements) {
+            const announcement = result.announcements.find(a => a.id === id);
+            if (announcement) {
+                document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+                document.getElementById('announcementId').value = announcement.id;
+                document.getElementById('announcementTitle').value = announcement.title;
+                document.getElementById('announcementDescription').value = announcement.description;
+                document.getElementById('announcementImage').value = announcement.image || '';
+                document.getElementById('announcementStatus').value = announcement.status;
+                document.getElementById('addAnnouncementModal').classList.add('active');
+            } else {
+                showNotification('Announcement not found', 'error');
+            }
         }
     } catch (error) {
         console.error('Error editing announcement:', error);
+        showNotification('Error loading announcement', 'error');
     }
 }
 
@@ -7320,7 +7321,8 @@ async function loadAnnouncementsData() {
     }
 }
 
-// Display announcements
+
+// Display announcements with proper date parsing
 function displayAnnouncements(announcements) {
     const tbody = document.getElementById('announcementsTableBody');
     if (!tbody) return;
@@ -7333,17 +7335,20 @@ function displayAnnouncements(announcements) {
     tbody.innerHTML = announcements.map(a => {
         // Fix date parsing
         let displayDate = 'Invalid Date';
+        let sortableDate = new Date(0);
+        
         if (a.timestamp) {
             const date = new Date(a.timestamp);
             if (!isNaN(date.getTime())) {
                 displayDate = date.toLocaleDateString();
+                sortableDate = date;
             }
         }
         
         return `
             <tr>
                 <td><strong>${escapeHtml(a.title)}</strong></td>
-                <td>${escapeHtml(a.description?.substring(0, 100) || '')}...</td>
+                <td>${escapeHtml((a.description || '').substring(0, 100))}...</td>
                 <td><span class="status-badge status-${a.status === 'published' ? 'active' : 'pending'}">${a.status || 'draft'}</span></td>
                 <td>${displayDate}</td>
                 <td>
@@ -7353,7 +7358,9 @@ function displayAnnouncements(announcements) {
             </tr>
         `;
     }).join('');
-}
+}        
+        
+        
 // Show add announcement modal
 function showAddAnnouncementModal() {
     document.getElementById('announcementModalTitle').textContent = 'Add Announcement';
@@ -7386,11 +7393,59 @@ async function editAnnouncement(id) {
 
 
 
-// Delete announcement
+// Delete announcement from Google Sheets
 async function deleteAnnouncement(id) {
-    if (!confirm('Delete this announcement?')) return;
+    if (!confirm('⚠️ Are you sure you want to delete this announcement? This action cannot be undone.')) {
+        return;
+    }
     
-    showNotification('Delete functionality coming soon', 'info');
+    const deleteBtn = event?.target;
+    const originalText = deleteBtn ? deleteBtn.innerHTML : 'Delete';
+    if (deleteBtn) {
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        deleteBtn.disabled = true;
+    }
+    
+    try {
+        showNotification('Deleting announcement...', 'info');
+        
+        // Call Google Apps Script to delete
+        const formData = new URLSearchParams({
+            formType: 'delete_announcement',
+            announcementId: id,
+            timestamp: new Date().toISOString()
+        });
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('✅ Announcement deleted successfully!', 'success');
+            // Refresh both announcement lists
+            if (typeof loadAnnouncementsData === 'function') {
+                await loadAnnouncementsData();
+            }
+            if (typeof loadAnnouncements === 'function') {
+                await loadAnnouncements();
+            }
+        } else {
+            showNotification('❌ Failed to delete: ' + (result.error || 'Unknown error'), 'error');
+        }
+        
+    } catch (error) {
+        console.error('Delete error:', error);
+        showNotification('Error deleting announcement: ' + error.message, 'error');
+    } finally {
+        if (deleteBtn) {
+            deleteBtn.innerHTML = originalText;
+            deleteBtn.disabled = false;
+        }
+    }
 }
 
 // ============ UPDATE ENHANCED ANALYTICS MODAL ============
