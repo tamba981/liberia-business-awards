@@ -2847,6 +2847,291 @@ app.delete('/api/admin/businesses/:id', authenticate, authorize('admin'), async 
     }
 });
 
+// ============================================
+// SPOTLIGHT MANAGEMENT SYSTEM - BACKEND ENDPOINTS
+// ============================================
+
+// Spotlight Category Schema
+const spotlightCategorySchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    description: { type: String, default: '' },
+    icon: { type: String, default: 'fa-tag' },
+    color: { type: String, default: '#FF0000' },
+    display_order: { type: Number, default: 1 },
+    status: { type: String, enum: ['active', 'inactive'], default: 'active' }
+}, { timestamps: true });
+
+// Spotlight Story Schema
+const spotlightStorySchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'SpotlightCategory', required: true },
+    status: { type: String, enum: ['published', 'draft'], default: 'draft' },
+    business_name: { type: String, required: true },
+    business_owner: { type: String, default: '' },
+    author_name: { type: String, required: true },
+    author_bio: { type: String, default: '' },
+    excerpt: { type: String, required: true },
+    content: { type: String, required: true },
+    featured_image: { type: String, default: '' },
+    is_featured: { type: Boolean, default: false },
+    is_breaking: { type: Boolean, default: false },
+    is_interview: { type: Boolean, default: false },
+    published_at: { type: Date, default: Date.now },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' }
+}, { timestamps: true });
+
+const SpotlightCategory = mongoose.model('SpotlightCategory', spotlightCategorySchema);
+const SpotlightStory = mongoose.model('SpotlightStory', spotlightStorySchema);
+
+// ============ SPOTLIGHT CATEGORY ROUTES ============
+
+// Get all categories (public)
+app.get('/api/spotlight/categories', async (req, res) => {
+    try {
+        const categories = await SpotlightCategory.find({ status: 'active' }).sort({ display_order: 1 });
+        res.json({ success: true, categories });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get all stories (public)
+app.get('/api/spotlight/stories', async (req, res) => {
+    try {
+        const { category, limit = 20, page = 1 } = req.query;
+        let query = { status: 'published' };
+        
+        if (category && category !== 'all') {
+            query.category_id = category;
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const stories = await SpotlightStory.find(query)
+            .populate('category_id', 'name color icon')
+            .sort({ is_featured: -1, published_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await SpotlightStory.countDocuments(query);
+        
+        res.json({
+            success: true,
+            stories,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single story (public)
+app.get('/api/spotlight/stories/:slug', async (req, res) => {
+    try {
+        const story = await SpotlightStory.findOne({ slug: req.params.slug, status: 'published' })
+            .populate('category_id', 'name color icon');
+        
+        if (!story) {
+            return res.status(404).json({ success: false, message: 'Story not found' });
+        }
+        
+        // Increment view count (optional)
+        res.json({ success: true, story });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN SPOTLIGHT ROUTES ============
+
+// Admin: Get all categories
+app.get('/api/admin/spotlight/categories', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const categories = await SpotlightCategory.find().sort({ display_order: 1 });
+        res.json({ success: true, categories });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Create category
+app.post('/api/admin/spotlight/categories', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { name, slug, description, icon, color, display_order } = req.body;
+        
+        if (!name || !slug) {
+            return res.status(400).json({ success: false, message: 'Name and slug are required' });
+        }
+        
+        const existing = await SpotlightCategory.findOne({ slug });
+        if (existing) {
+            return res.status(400).json({ success: false, message: 'Category with this slug already exists' });
+        }
+        
+        const category = new SpotlightCategory({
+            name, slug, description, icon, color, display_order
+        });
+        
+        await category.save();
+        res.status(201).json({ success: true, category });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Update category
+app.put('/api/admin/spotlight/categories/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { name, slug, description, icon, color, display_order, status } = req.body;
+        
+        const category = await SpotlightCategory.findById(req.params.id);
+        if (!category) {
+            return res.status(404).json({ success: false, message: 'Category not found' });
+        }
+        
+        if (slug && slug !== category.slug) {
+            const existing = await SpotlightCategory.findOne({ slug });
+            if (existing) {
+                return res.status(400).json({ success: false, message: 'Category with this slug already exists' });
+            }
+            category.slug = slug;
+        }
+        
+        if (name) category.name = name;
+        if (description !== undefined) category.description = description;
+        if (icon) category.icon = icon;
+        if (color) category.color = color;
+        if (display_order !== undefined) category.display_order = display_order;
+        if (status) category.status = status;
+        
+        await category.save();
+        res.json({ success: true, category });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Delete category
+app.delete('/api/admin/spotlight/categories/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const category = await SpotlightCategory.findById(req.params.id);
+        if (!category) {
+            return res.status(404).json({ success: false, message: 'Category not found' });
+        }
+        
+        // Un-categorize stories with this category
+        await SpotlightStory.updateMany(
+            { category_id: req.params.id },
+            { category_id: null }
+        );
+        
+        await SpotlightCategory.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Category deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Get all stories
+app.get('/api/admin/spotlight/stories', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const stories = await SpotlightStory.find()
+            .populate('category_id', 'name color')
+            .sort({ created_at: -1 });
+        
+        res.json({ success: true, stories });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Create story
+app.post('/api/admin/spotlight/stories', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const storyData = req.body;
+        
+        if (!storyData.title || !storyData.slug || !storyData.category_id || !storyData.business_name || !storyData.author_name || !storyData.excerpt || !storyData.content) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const existing = await SpotlightStory.findOne({ slug: storyData.slug });
+        if (existing) {
+            return res.status(400).json({ success: false, message: 'Story with this slug already exists' });
+        }
+        
+        const story = new SpotlightStory({
+            ...storyData,
+            created_by: req.user._id,
+            published_at: storyData.status === 'published' ? new Date() : null
+        });
+        
+        await story.save();
+        
+        // Populate category for response
+        await story.populate('category_id', 'name color');
+        
+        res.status(201).json({ success: true, story });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Update story
+app.put('/api/admin/spotlight/stories/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const story = await SpotlightStory.findById(req.params.id);
+        if (!story) {
+            return res.status(404).json({ success: false, message: 'Story not found' });
+        }
+        
+        const updateData = req.body;
+        
+        if (updateData.slug && updateData.slug !== story.slug) {
+            const existing = await SpotlightStory.findOne({ slug: updateData.slug });
+            if (existing) {
+                return res.status(400).json({ success: false, message: 'Story with this slug already exists' });
+            }
+        }
+        
+        Object.assign(story, updateData);
+        
+        // Update published_at if status changed to published
+        if (updateData.status === 'published' && story.status !== 'published') {
+            story.published_at = new Date();
+        }
+        
+        await story.save();
+        await story.populate('category_id', 'name color');
+        
+        res.json({ success: true, story });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Delete story
+app.delete('/api/admin/spotlight/stories/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const story = await SpotlightStory.findByIdAndDelete(req.params.id);
+        if (!story) {
+            return res.status(404).json({ success: false, message: 'Story not found' });
+        }
+        
+        res.json({ success: true, message: 'Story deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+console.log('✅ Spotlight Management System Ready');
+
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
