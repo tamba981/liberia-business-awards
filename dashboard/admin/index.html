@@ -6009,40 +6009,53 @@ function showAddAnnouncementModal() {
     document.getElementById('addAnnouncementModal').classList.add('active');
 }
 
- async function editAnnouncement(id) {
+ // Edit announcement - Fetch from Backend API first, fallback to Google Sheets
+async function editAnnouncement(id) {
     console.log('📝 Editing announcement with ID:', id);
     
     try {
-        const result = await fetchAnnouncements();
-        console.log('📋 Fetched announcements:', result);
+        // Try to get from Backend API first
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
-        if (result.success && result.announcements) {
-            // Find by id - handle both 'id' and '_id' properties
-            const announcement = result.announcements.find(a => a.id === id || a._id === id);
-            
-            if (announcement) {
-                console.log('✅ Found announcement:', announcement);
-                
-                document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
-                document.getElementById('announcementId').value = announcement.id || announcement._id;
-                document.getElementById('announcementTitle').value = announcement.title || '';
-                document.getElementById('announcementDescription').value = announcement.description || '';
-                document.getElementById('announcementImage').value = announcement.image || '';
-                document.getElementById('announcementStatus').value = announcement.status || 'draft';
-                document.getElementById('addAnnouncementModal').classList.add('active');
-            } else {
-                console.error('❌ Announcement not found with ID:', id);
-                showNotification('Announcement not found', 'error');
+        const data = await response.json();
+        
+        let announcement = null;
+        
+        if (data.success && data.announcements) {
+            // Find in backend data
+            announcement = data.announcements.find(a => a._id === id);
+        }
+        
+        // If not found in backend, try Google Sheets
+        if (!announcement) {
+            const sheetsResult = await fetchAnnouncements();
+            if (sheetsResult.success && sheetsResult.announcements) {
+                announcement = sheetsResult.announcements.find(a => a.id === id || a._id === id);
             }
+        }
+        
+        if (announcement) {
+            console.log('✅ Found announcement:', announcement);
+            
+            document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+            document.getElementById('announcementId').value = announcement._id || announcement.id;
+            document.getElementById('announcementTitle').value = announcement.title || '';
+            document.getElementById('announcementDescription').value = announcement.description || '';
+            document.getElementById('announcementImage').value = announcement.image || '';
+            document.getElementById('announcementStatus').value = announcement.status || 'draft';
+            document.getElementById('addAnnouncementModal').classList.add('active');
         } else {
-            console.error('❌ Failed to fetch announcements:', result);
-            showNotification('Failed to load announcement data', 'error');
+            console.error('❌ Announcement not found with ID:', id);
+            showNotification('Announcement not found', 'error');
         }
     } catch (error) {
         console.error('❌ Error editing announcement:', error);
         showNotification('Error loading announcement: ' + error.message, 'error');
     }
-}       
+}
 
 async function saveAnnouncement() {
     const announcementData = {
@@ -6161,33 +6174,80 @@ async function saveAnnouncement() {
     }
 }
         
+// Delete announcement - Delete from both Backend API and Google Sheets
 async function deleteAnnouncement(id) {
-    if (!confirm('Are you sure you want to delete this announcement?')) return;
+    if (!confirm('⚠️ Are you sure you want to delete this announcement? This action cannot be undone.')) {
+        return;
+    }
     
     const deleteBtn = event?.target;
     const originalText = deleteBtn ? deleteBtn.innerHTML : 'Delete';
+    if (deleteBtn) {
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        deleteBtn.disabled = true;
+    }
+    
+    let backendSuccess = false;
+    let sheetsSuccess = false;
     
     try {
         showNotification('Deleting announcement...', 'info');
         
-        // Delete from Google Sheets
-        const formData = new URLSearchParams({
-            formType: 'delete_announcement',
-            announcementId: id,
-            timestamp: new Date().toISOString()
-        });
-
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData
-        });
-
-        const result = await response.json();
+        // ============================================
+        // STEP 1: Delete from Backend API
+        // ============================================
+        try {
+            const token = localStorage.getItem('lba_auth_token');
+            const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/announcements/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                backendSuccess = true;
+                console.log('✅ Deleted from Backend API');
+            } else {
+                console.warn('⚠️ Backend delete failed:', result);
+            }
+        } catch (backendError) {
+            console.error('❌ Backend delete error:', backendError);
+        }
         
-        if (result.success) {
+        // ============================================
+        // STEP 2: Delete from Google Sheets (backup)
+        // ============================================
+        try {
+            const formData = new URLSearchParams({
+                formType: 'delete_announcement',
+                announcementId: id,
+                timestamp: new Date().toISOString()
+            });
+
+            const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                sheetsSuccess = true;
+                console.log('✅ Deleted from Google Sheets');
+            }
+        } catch (sheetsError) {
+            console.error('❌ Google Sheets delete error:', sheetsError);
+        }
+        
+        // ============================================
+        // STEP 3: Show result and refresh
+        // ============================================
+        if (backendSuccess || sheetsSuccess) {
             showNotification('✅ Announcement deleted successfully!', 'success');
-            // Refresh the announcements list
+            
+            // Refresh both announcement lists
             if (typeof loadAnnouncementsData === 'function') {
                 await loadAnnouncementsData();
             }
@@ -6195,12 +6255,17 @@ async function deleteAnnouncement(id) {
                 await loadAnnouncements();
             }
         } else {
-            showNotification('Failed to delete: ' + (result.error || 'Unknown error'), 'error');
+            showNotification('❌ Failed to delete announcement', 'error');
         }
         
     } catch (error) {
         console.error('Delete error:', error);
         showNotification('Error deleting announcement: ' + error.message, 'error');
+    } finally {
+        if (deleteBtn) {
+            deleteBtn.innerHTML = originalText;
+            deleteBtn.disabled = false;
+        }
     }
 }
         
