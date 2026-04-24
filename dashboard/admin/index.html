@@ -4365,17 +4365,16 @@ console.log('✅ Voting system fully integrated and ready!');
         console.log('🔗 Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
         console.log('🎯 Features: Real-time Google Sheets integration with sample data fallback');
 
-        // ============================================
-        // SPOTLIGHT MANAGEMENT SYSTEM
-        // ============================================
-
-        // ============================================
+   // ============================================
 // COMPLETE FIXED BUSINESS SPOTLIGHT SYSTEM
+// USING YOUR BACKEND API - NO GOOGLE SHEETS
 // ============================================
 
 // Spotlight State
 let spotlightCategories = [];
 let spotlightStories = [];
+let currentStoryFilter = 'all';
+let spotlightSearchTerm = '';
 
 // Show Spotlight Modal
 function showSpotlightModal() {
@@ -4389,39 +4388,39 @@ function showSpotlightModal() {
     }
 }
 
-// Load Categories from Google Sheets
+// Load Categories from Backend API
 async function loadSpotlightCategories() {
     try {
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSpotlightCategories`);
-        const text = await response.text();
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/spotlight/categories`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (e) {
-            console.log('No categories data, using default');
-            data = { success: true, categories: [] };
-        }
+        const data = await response.json();
         
         if (data.success && data.categories) {
             spotlightCategories = data.categories;
         } else {
+            // Default categories if none exist
             spotlightCategories = [
-                { id: '1', name: 'Success Stories', icon: 'fa-star', color: '#FF0000' },
-                { id: '2', name: 'Innovation', icon: 'fa-lightbulb', color: '#87CEEB' },
-                { id: '3', name: 'Community Impact', icon: 'fa-hand-holding-heart', color: '#10B981' }
+                { _id: '1', name: 'Success Stories', icon: 'fa-star', color: '#FF0000' },
+                { _id: '2', name: 'Innovation', icon: 'fa-lightbulb', color: '#87CEEB' },
+                { _id: '3', name: 'Community Impact', icon: 'fa-hand-holding-heart', color: '#10B981' },
+                { _id: '4', name: 'Women Entrepreneurs', icon: 'fa-female', color: '#8B5CF6' },
+                { _id: '5', name: 'Business Interviews', icon: 'fa-microphone', color: '#F59E0B' }
             ];
         }
         
         displaySpotlightCategories();
         updateCategoryFilter();
+        document.getElementById('totalCategories').textContent = spotlightCategories.length;
         
     } catch (error) {
         console.error('Error loading categories:', error);
         spotlightCategories = [
-            { id: '1', name: 'Success Stories', icon: 'fa-star', color: '#FF0000' },
-            { id: '2', name: 'Innovation', icon: 'fa-lightbulb', color: '#87CEEB' },
-            { id: '3', name: 'Community Impact', icon: 'fa-hand-holding-heart', color: '#10B981' }
+            { _id: '1', name: 'Success Stories', icon: 'fa-star', color: '#FF0000' },
+            { _id: '2', name: 'Innovation', icon: 'fa-lightbulb', color: '#87CEEB' },
+            { _id: '3', name: 'Community Impact', icon: 'fa-hand-holding-heart', color: '#10B981' }
         ];
         displaySpotlightCategories();
         updateCategoryFilter();
@@ -4435,18 +4434,15 @@ function displaySpotlightCategories() {
     
     if (spotlightCategories.length === 0) {
         grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No categories yet</p>';
-        document.getElementById('totalCategories').textContent = '0';
         return;
     }
     
     grid.innerHTML = spotlightCategories.map(cat => `
         <div style="background: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${cat.color || '#FF0000'}; display: flex; justify-content: space-between; align-items: center;">
             <span><i class="fas ${cat.icon || 'fa-tag'}"></i> ${escapeHtml(cat.name)}</span>
-            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 12px;">${spotlightStories.filter(s => s.category_id === cat.id).length}</span>
+            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 12px;">${spotlightStories.filter(s => s.category_id === cat._id).length}</span>
         </div>
     `).join('');
-    
-    document.getElementById('totalCategories').textContent = spotlightCategories.length;
 }
 
 // Update Category Dropdown Filter
@@ -4455,27 +4451,24 @@ function updateCategoryFilter() {
     if (!filter) return;
     
     filter.innerHTML = '<option value="all">All Categories</option>' + 
-        spotlightCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+        spotlightCategories.map(c => `<option value="${c._id}">${escapeHtml(c.name)}</option>`).join('');
     
     const select = document.getElementById('storyCategory');
     if (select) {
         select.innerHTML = '<option value="">Select Category</option>' + 
-            spotlightCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+            spotlightCategories.map(c => `<option value="${c._id}">${escapeHtml(c.name)}</option>`).join('');
     }
 }
 
-// Load Stories from Google Sheets
+// Load Stories from Backend API
 async function loadSpotlightStories() {
     try {
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSpotlightStories`);
-        const text = await response.text();
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/spotlight/stories`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (e) {
-            data = { success: true, stories: [] };
-        }
+        const data = await response.json();
         
         if (data.success && data.stories) {
             spotlightStories = data.stories;
@@ -4541,7 +4534,7 @@ function displaySpotlightStories() {
     }
     
     container.innerHTML = filtered.map(story => {
-        const category = spotlightCategories.find(c => c.id === story.category_id) || { name: 'General', color: '#64748b' };
+        const category = spotlightCategories.find(c => c._id === story.category_id) || { name: 'General', color: '#64748b' };
         const date = story.published_at ? new Date(story.published_at).toLocaleDateString() : (story.created_at ? new Date(story.created_at).toLocaleDateString() : 'N/A');
         
         return `
@@ -4559,8 +4552,8 @@ function displaySpotlightStories() {
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <span class="status-badge status-${story.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${story.status}</span>
-                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editStory('${story.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteStory('${story.id}')"><i class="fas fa-trash"></i></button>
+                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editStory('${story._id}')"><i class="fas fa-edit"></i></button>
+                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteStory('${story._id}')"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
         `;
@@ -4595,14 +4588,14 @@ function openAddStoryModal() {
 
 // Edit Story
 async function editStory(id) {
-    const story = spotlightStories.find(s => s.id === id);
+    const story = spotlightStories.find(s => s._id === id);
     if (!story) {
         showNotification('Story not found', 'error');
         return;
     }
     
     document.getElementById('storyModalTitle').textContent = 'Edit Story';
-    document.getElementById('storyId').value = story.id;
+    document.getElementById('storyId').value = story._id;
     document.getElementById('storyTitle').value = story.title || '';
     document.getElementById('storySlug').value = story.slug || '';
     document.getElementById('storyCategory').value = story.category_id || '';
@@ -4634,12 +4627,11 @@ async function editStory(id) {
     document.body.style.overflow = 'hidden';
 }
 
-// Save Story to Google Sheets
+// Save Story to Backend API
 async function saveStory() {
     const storyId = document.getElementById('storyId').value;
     
     const storyData = {
-        formType: storyId ? 'update_spotlight_story' : 'spotlight_story',
         title: document.getElementById('storyTitle').value,
         slug: document.getElementById('storySlug').value,
         category_id: document.getElementById('storyCategory').value,
@@ -4651,17 +4643,11 @@ async function saveStory() {
         excerpt: document.getElementById('storyExcerpt').value,
         content: document.getElementById('storyContent').value,
         featured_image: document.getElementById('storyImage').value,
-        is_featured: document.getElementById('storyFeatured').checked ? 'true' : 'false',
-        is_breaking: document.getElementById('storyBreaking').checked ? 'true' : 'false',
-        is_interview: document.getElementById('storyInterview').checked ? 'true' : 'false',
-        published_at: document.getElementById('storyPublishedDate').value,
-        created_by: dashboardState.user?.email || 'admin',
-        timestamp: new Date().toISOString()
+        is_featured: document.getElementById('storyFeatured').checked,
+        is_breaking: document.getElementById('storyBreaking').checked,
+        is_interview: document.getElementById('storyInterview').checked,
+        published_at: document.getElementById('storyPublishedDate').value
     };
-    
-    if (storyId) {
-        storyData.id = storyId;
-    }
     
     if (!storyData.title || !storyData.business_name || !storyData.category_id) {
         showNotification('Title, Business Name, and Category are required', 'warning');
@@ -4676,10 +4662,19 @@ async function saveStory() {
     }
     
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(storyData)
+        const token = localStorage.getItem('lba_auth_token');
+        const url = storyId 
+            ? `${API_BASE.replace('/api', '')}/api/admin/spotlight/stories/${storyId}`
+            : `${API_BASE.replace('/api', '')}/api/admin/spotlight/stories`;
+        const method = storyId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(storyData)
         });
         
         const result = await response.json();
@@ -4690,7 +4685,7 @@ async function saveStory() {
             await loadSpotlightStories();
             document.getElementById('storyForm').reset();
         } else {
-            showNotification(result.error || 'Error saving story', 'error');
+            showNotification(result.message || 'Error saving story', 'error');
         }
     } catch (error) {
         console.error('Save error:', error);
@@ -4708,14 +4703,10 @@ async function deleteStory(id) {
     if (!confirm('⚠️ Are you sure you want to delete this story? This action cannot be undone.')) return;
     
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                formType: 'delete_spotlight_story',
-                storyId: id,
-                timestamp: new Date().toISOString()
-            })
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/spotlight/stories/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const result = await response.json();
@@ -4724,7 +4715,7 @@ async function deleteStory(id) {
             showNotification('Story deleted successfully!', 'success');
             await loadSpotlightStories();
         } else {
-            showNotification(result.error || 'Error deleting story', 'error');
+            showNotification(result.message || 'Error deleting story', 'error');
         }
     } catch (error) {
         console.error('Delete error:', error);
@@ -4755,8 +4746,8 @@ function displayCategoryList() {
                 <small style="color: #64748b;">${cat.description || ''}</small>
             </div>
             <div style="display: flex; gap: 8px;">
-                <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editCategory('${cat.id}')"><i class="fas fa-edit"></i></button>
-                <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteCategory('${cat.id}')"><i class="fas fa-trash"></i></button>
+                <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editCategory('${cat._id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteCategory('${cat._id}')"><i class="fas fa-trash"></i></button>
             </div>
         </div>
     `).join('');
@@ -4772,11 +4763,11 @@ function openAddCategoryModal() {
 }
 
 function editCategory(id) {
-    const category = spotlightCategories.find(c => c.id === id);
+    const category = spotlightCategories.find(c => c._id === id);
     if (!category) return;
     
     document.getElementById('categoryModalTitle').textContent = 'Edit Category';
-    document.getElementById('categoryId').value = category.id;
+    document.getElementById('categoryId').value = category._id;
     document.getElementById('categoryName').value = category.name || '';
     document.getElementById('categorySlug').value = category.slug || '';
     document.getElementById('categoryDescription').value = category.description || '';
@@ -4790,19 +4781,13 @@ async function saveCategory() {
     const categoryId = document.getElementById('categoryId').value;
     
     const categoryData = {
-        formType: categoryId ? 'update_spotlight_category' : 'spotlight_category',
         name: document.getElementById('categoryName').value,
         slug: document.getElementById('categorySlug').value,
         description: document.getElementById('categoryDescription').value,
         icon: document.getElementById('categoryIcon').value,
         color: document.getElementById('categoryColor').value,
-        display_order: document.getElementById('categoryOrder').value,
-        timestamp: new Date().toISOString()
+        display_order: parseInt(document.getElementById('categoryOrder').value) || 1
     };
-    
-    if (categoryId) {
-        categoryData.id = categoryId;
-    }
     
     if (!categoryData.name) {
         showNotification('Category name is required', 'warning');
@@ -4810,10 +4795,19 @@ async function saveCategory() {
     }
     
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(categoryData)
+        const token = localStorage.getItem('lba_auth_token');
+        const url = categoryId 
+            ? `${API_BASE.replace('/api', '')}/api/admin/spotlight/categories/${categoryId}`
+            : `${API_BASE.replace('/api', '')}/api/admin/spotlight/categories`;
+        const method = categoryId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(categoryData)
         });
         
         const result = await response.json();
@@ -4824,7 +4818,7 @@ async function saveCategory() {
             await loadSpotlightCategories();
             displayCategoryList();
         } else {
-            showNotification(result.error || 'Error saving category', 'error');
+            showNotification(result.message || 'Error saving category', 'error');
         }
     } catch (error) {
         console.error('Save category error:', error);
@@ -4836,14 +4830,10 @@ async function deleteCategory(id) {
     if (!confirm(`Delete this category? Stories will remain but become uncategorized.`)) return;
     
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                formType: 'delete_spotlight_category',
-                categoryId: id,
-                timestamp: new Date().toISOString()
-            })
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/spotlight/categories/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const result = await response.json();
@@ -4854,7 +4844,7 @@ async function deleteCategory(id) {
             await loadSpotlightCategories();
             await loadSpotlightStories();
         } else {
-            showNotification(result.error || 'Error deleting category', 'error');
+            showNotification(result.message || 'Error deleting category', 'error');
         }
     } catch (error) {
         console.error('Delete category error:', error);
@@ -4906,9 +4896,9 @@ window.editCategory = editCategory;
 window.saveCategory = saveCategory;
 window.deleteCategory = deleteCategory;
 
-console.log('✅ Business Spotlight System Ready');
-
-        // ============================================
+console.log('✅ Business Spotlight System Ready - Using Backend API');     
+        
+// ============================================
 // ENHANCED BUSINESS MANAGEMENT FUNCTIONS
 // ============================================
  
