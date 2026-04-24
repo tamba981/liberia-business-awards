@@ -405,6 +405,42 @@
                 flex-direction: column;
             }
         }
+
+        .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.page-btn:hover {
+    background: var(--lba-red);
+    color: white;
+    border-color: var(--lba-red);
+}
+
+.page-btn.active {
+    background: var(--lba-red);
+    color: white;
+    border-color: var(--lba-red);
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}    
     </style>
 </head>
 <body>
@@ -516,132 +552,199 @@
         </div>
     </footer>
 
-    <script>
-        // Your actual data from MongoDB
-        const categories = [
-            { name: "Startup Spotlight", slug: "startup-spotlight", count: 1 },
-            { name: "SME Success", slug: "sme-success", count: 1 },
-            { name: "Women Entrepreneurs", slug: "women-entrepreneurs", count: 1 },
-            { name: "Business Interviews", slug: "business-interviews", count: 1 }
-        ];
-
-        const articles = [
-            {
-                id: 1,
-                category: "Startup Spotlight",
-                title: "How J-Palm Liberia is Transforming Agriculture",
-                excerpt: "From small beginnings to international recognition, discover how J-Palm Liberia is revolutionizing sustainable palm oil production.",
-                business: "J-Palm Liberia",
-                owner: "Mahmud Johnson",
-                image: "/images/featured/jpalm.jpg",
-                slug: "jpalm-liberia-transforming-agriculture"
-            },
-            {
-                id: 2,
-                category: "SME Success",
-                title: "Annita: Building Africa's Digital Heartbeat",
-                excerpt: "Liberia's first startup showcased at IATF 2025 - a platform integrating e-commerce, fintech, and AI.",
-                business: "Annita",
-                owner: "Christopher O. Fallah",
-                image: "/images/featured/annita.jpg",
-                slug: "annita-building-africa-digital-heartbeat"
-            },
-            {
-                id: 3,
-                category: "Women Entrepreneurs",
-                title: "Liberian Girls Lunchbox: Empowering Through Food",
-                excerpt: "Social enterprise providing nutritious meals while training young women in culinary arts.",
-                business: "Liberian Girls Lunchbox",
-                business_owner: "Christollie Ade Suah",
-                image: "/images/featured/lunchbox.jpg",
-                slug: "liberian-girls-lunchbox-empowering"
-            },
-            {
-                id: 4,
-                category: "Business Interviews",
-                title: "Gonet Academy: Empowering Minds, Transforming Futures",
-                excerpt: "Professional development academy that has certified 500+ professionals across 12 cohorts.",
-                business: "Gonet Academy",
-                business_owner: "Mohammed Kerkulah",
-                image: "/images/featured/gonet.jpg",
-                slug: "gonet-academy-empowering-minds"
-            }
-        ];
-
-        function openNominateModal() {
-            if (typeof window.openModal === 'function') {
-                window.openModal('nominateModal');
-            } else {
-                window.location.href = '/#nominate';
+      <script>
+        // ============================================
+        // SPOTLIGHT PUBLIC PAGE - USING BACKEND API
+        // ============================================
+        
+        const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentCategory = 'all';
+        let allCategories = [];
+        
+        // Load categories from backend
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/spotlight/categories`);
+                const data = await response.json();
+                
+                if (data.success && data.categories) {
+                    allCategories = data.categories;
+                    displayCategories();
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
             }
         }
-
-        function displayArticles(filterCategory = 'all') {
-            const grid = document.getElementById('articlesGrid');
+        
+        function displayCategories() {
+            const container = document.getElementById('categoriesList');
+            if (!container) return;
             
-            const filteredArticles = filterCategory === 'all' 
-                ? articles 
-                : articles.filter(a => a.category === filterCategory);
+            let totalStories = 0;
             
-            if (filteredArticles.length === 0) {
-                grid.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
-                        <i class="fas fa-newspaper" style="font-size: 48px; color: #cbd5e0;"></i>
-                        <p style="margin-top: 20px; color: #64748b;">No stories in this category yet.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            grid.innerHTML = filteredArticles.map(article => `
-                <div class="article-card">
-                    <div class="card-image">
-                        <img src="${article.image}" 
-                             alt="${article.business}"
-                             onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/FF0000/ffffff?text=${article.business.replace(/ /g, '+')}';">
-                    </div>
-                    <div class="card-content">
-                        <span class="card-category">${article.category}</span>
-                        <h3 class="card-title">${article.title}</h3>
-                        <p class="card-excerpt">${article.excerpt}</p>
-                        <div class="card-footer">
-                            <span class="card-business">
-                                <i class="fas fa-building"></i> ${article.business}
-                            </span>
-                            <a href="/spotlight/${article.slug}" class="read-more">
-                                Read Story <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            // Display categories
-            const categoriesList = document.getElementById('categoriesList');
-            categoriesList.innerHTML = `
-                <span class="category-item active" onclick="displayArticles('all'); document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active')); this.classList.add('active');">
-                    All Stories <span class="category-count">${articles.length}</span>
+            container.innerHTML = `
+                <span class="category-item ${currentCategory === 'all' ? 'active' : ''}" onclick="loadStories('all', 1)">
+                    All Stories <span class="category-count" id="totalCount">0</span>
                 </span>
-                ${categories.map(cat => `
-                    <span class="category-item" onclick="displayArticles('${cat.name}'); document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active')); this.classList.add('active');">
-                        ${cat.name} <span class="category-count">${cat.count}</span>
+                ${allCategories.map(cat => `
+                    <span class="category-item ${currentCategory === cat._id ? 'active' : ''}" onclick="loadStories('${cat._id}', 1)">
+                        ${cat.name} <span class="category-count">0</span>
                     </span>
                 `).join('')}
             `;
-
-            // Display all articles
-            displayArticles('all');
-
-            // Newsletter form
-            document.getElementById('newsletterForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert('Thank you for subscribing! You\'ll receive our weekly spotlight stories.');
-                this.reset();
+        }
+        
+        // Load stories from backend
+        async function loadStories(category = currentCategory, page = 1) {
+            currentCategory = category;
+            currentPage = page;
+            
+            const grid = document.getElementById('articlesGrid');
+            grid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading stories...</p>
+                </div>
+            `;
+            
+            try {
+                let url = `${API_BASE}/spotlight/stories?page=${page}&limit=9`;
+                if (category !== 'all') {
+                    url += `&category=${category}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.stories) {
+                    displayStories(data.stories);
+                    totalPages = data.pagination?.pages || 1;
+                    updatePagination();
+                    updateCategoryCounts(data);
+                } else {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                            <i class="fas fa-newspaper" style="font-size: 48px; color: #cbd5e0;"></i>
+                            <p style="margin-top: 20px;">No stories found</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading stories:', error);
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                        <p style="margin-top: 20px;">Error loading stories</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayStories(stories) {
+            const grid = document.getElementById('articlesGrid');
+            
+            grid.innerHTML = stories.map(story => {
+                const category = story.category_id || { name: 'General', color: '#FF0000' };
+                return `
+                    <div class="article-card">
+                        <div class="card-image">
+                            <img src="${story.featured_image || '/images/placeholder.jpg'}" 
+                                 alt="${story.business_name}"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/FF0000/ffffff?text=${story.business_name.replace(/ /g, '+')}';">
+                        </div>
+                        <div class="card-content">
+                            <span class="card-category" style="background: ${category.color || '#FF0000'}">${category.name}</span>
+                            <h3 class="card-title">${escapeHtml(story.title)}</h3>
+                            <p class="card-excerpt">${escapeHtml(story.excerpt.substring(0, 120))}${story.excerpt.length > 120 ? '...' : ''}</p>
+                            <div class="card-footer">
+                                <span class="card-business">
+                                    <i class="fas fa-building"></i> ${escapeHtml(story.business_name)}
+                                </span>
+                                <a href="/spotlight/${story.slug}" class="read-more">
+                                    Read Story <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            if (!pagination) return;
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="loadStories(currentCategory, ${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="loadStories(currentCategory, ${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span class="page-btn" disabled>...</span>`;
+                }
+            }
+            
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="loadStories(currentCategory, ${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+            pagination.innerHTML = html;
+        }
+        
+        function updateCategoryCounts(data) {
+            // Update category counts from the response
+            const categorySpans = document.querySelectorAll('.category-item');
+            categorySpans.forEach(span => {
+                const countSpan = span.querySelector('.category-count');
+                if (countSpan) {
+                    // This would need the backend to return counts per category
+                    countSpan.textContent = '0';
+                }
             });
+            
+            const totalCount = data.pagination?.total || 0;
+            const totalSpan = document.querySelector('.category-item.active .category-count');
+            if (totalSpan) totalSpan.textContent = totalCount;
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function openNominateModal() {
+            window.location.href = '/#nominate';
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+            loadStories('all', 1);
+            
+            // Newsletter form
+            const newsletterForm = document.getElementById('newsletterForm');
+            if (newsletterForm) {
+                newsletterForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('Thank you for subscribing! You\'ll receive our weekly spotlight stories.');
+                    this.reset();
+                });
+            }
         });
-    </script>
+        
+        // Add pagination container
+        const articlesSection = document.querySelector('.articles-section .container');
+        const paginationDiv = document.createElement('div');
+        paginationDiv.id = 'pagination';
+        paginationDiv.className = 'pagination';
+        articlesSection.appendChild(paginationDiv);
+    </script>  
+   
 </body>
 </html>
