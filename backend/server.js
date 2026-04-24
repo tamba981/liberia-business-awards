@@ -1748,6 +1748,79 @@ app.post('/api/admin/announcements', authenticate, authorize('admin'), async (re
     }
 });
 
+
+// Admin: Delete announcement
+app.delete('/api/admin/announcements/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const announcement = await Announcement.findById(req.params.id);
+        
+        if (!announcement) {
+            return res.status(404).json({ success: false, message: 'Announcement not found' });
+        }
+        
+        await Announcement.findByIdAndDelete(req.params.id);
+        
+        // Also delete associated notifications (optional)
+        await Notification.deleteMany({ related_id: req.params.id });
+        
+        res.json({
+            success: true,
+            message: 'Announcement deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete announcement error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Admin: Update announcement
+app.put('/api/admin/announcements/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { title, description, image, status } = req.body;
+        
+        const announcement = await Announcement.findById(req.params.id);
+        
+        if (!announcement) {
+            return res.status(404).json({ success: false, message: 'Announcement not found' });
+        }
+        
+        // Update fields
+        if (title) announcement.title = title;
+        if (description) announcement.description = description;
+        if (image !== undefined) announcement.image = image;
+        if (status) announcement.status = status;
+        announcement.updated_at = new Date();
+        
+        await announcement.save();
+        
+        // If status changed to published, send notifications
+        if (status === 'published' && announcement.status !== 'published') {
+            const businesses = await BusinessUser.find({ status: 'approved' }).select('_id email business_name');
+            
+            for (const business of businesses) {
+                const notification = new Notification({
+                    business_id: business._id,
+                    title: `📢 Announcement Updated: ${title}`,
+                    message: description.substring(0, 200),
+                    type: 'info',
+                    read: false,
+                    related_id: announcement._id
+                });
+                await notification.save();
+            }
+        }
+        
+        res.json({
+            success: true,
+            message: 'Announcement updated successfully',
+            announcement
+        });
+    } catch (error) {
+        console.error('Update announcement error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Helper function to send announcement email
 async function sendAnnouncementEmail(email, businessName, title, description) {
     const transporter = nodemailer.createTransport({
