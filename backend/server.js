@@ -2949,6 +2949,154 @@ app.get('/api/spotlight/stories/:slug', async (req, res) => {
     }
 });
 
+// ============================================
+// BUSINESS SPOTLIGHT SUBMISSION ENDPOINT
+// ============================================
+
+// Business: Submit a spotlight story (creates as draft for admin approval)
+app.post('/api/business/spotlight/stories', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { title, category_id, excerpt, content, featured_image } = req.body;
+        
+        if (!title || !category_id || !excerpt || !content) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        // Generate slug from title
+        const slug = title.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '') + '-' + Date.now();
+        
+        const story = new SpotlightStory({
+            title,
+            slug,
+            category_id,
+            status: 'draft',  // Always draft until admin approves
+            business_name: req.user.business_name,
+            business_owner: req.user.contact_name || '',
+            author_name: req.user.contact_name || req.user.business_name,
+            excerpt,
+            content,
+            featured_image: featured_image || '',
+            created_by: req.user._id
+        });
+        
+        await story.save();
+        
+        // Create notification for admin (optional - you can log or send email)
+        console.log(`📢 New spotlight story submitted: "${title}" by ${req.user.business_name}`);
+        
+        // Create notification for the business
+        const notification = new Notification({
+            business_id: req.user._id,
+            title: 'Spotlight Story Submitted',
+            message: `Your story "${title}" has been submitted for review. You'll be notified once approved.`,
+            type: 'info',
+            read: false
+        });
+        await notification.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Your story has been submitted for review!',
+            story: {
+                _id: story._id,
+                title: story.title,
+                status: story.status
+            }
+        });
+        
+    } catch (error) {
+        console.error('Business spotlight submission error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Business: Get my submitted spotlight stories
+app.get('/api/business/spotlight/stories', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const stories = await SpotlightStory.find({ created_by: req.user._id })
+            .populate('category_id', 'name color')
+            .sort({ created_at: -1 });
+        
+        res.json({
+            success: true,
+            stories: stories.map(s => ({
+                _id: s._id,
+                title: s.title,
+                slug: s.slug,
+                status: s.status,
+                category: s.category_id,
+                excerpt: s.excerpt,
+                featured_image: s.featured_image,
+                created_at: s.created_at,
+                published_at: s.published_at
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Business: Edit my own spotlight story (only if draft)
+app.put('/api/business/spotlight/stories/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const story = await SpotlightStory.findOne({
+            _id: req.params.id,
+            created_by: req.user._id
+        });
+        
+        if (!story) {
+            return res.status(404).json({ success: false, message: 'Story not found' });
+        }
+        
+        // Only allow editing if status is draft
+        if (story.status !== 'draft') {
+            return res.status(403).json({ success: false, message: 'Cannot edit story after submission' });
+        }
+        
+        const { title, category_id, excerpt, content, featured_image } = req.body;
+        
+        if (title) story.title = title;
+        if (category_id) story.category_id = category_id;
+        if (excerpt) story.excerpt = excerpt;
+        if (content) story.content = content;
+        if (featured_image !== undefined) story.featured_image = featured_image;
+        
+        await story.save();
+        
+        res.json({
+            success: true,
+            message: 'Story updated successfully',
+            story
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Business: Delete my own spotlight story (only if draft)
+app.delete('/api/business/spotlight/stories/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const story = await SpotlightStory.findOneAndDelete({
+            _id: req.params.id,
+            created_by: req.user._id,
+            status: 'draft'
+        });
+        
+        if (!story) {
+            return res.status(404).json({ success: false, message: 'Story not found or cannot be deleted' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Story deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============ ADMIN SPOTLIGHT ROUTES ============
 
 // Admin: Get all categories
