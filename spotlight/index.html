@@ -553,6 +553,17 @@
     </footer>
 
       <script>
+
+          // Unregister any existing service workers (fixes the error)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+            registration.unregister();
+            console.log('Service Worker unregistered');
+        }
+    });
+}
+          
         // ============================================
         // SPOTLIGHT PUBLIC PAGE - USING BACKEND API
         // ============================================
