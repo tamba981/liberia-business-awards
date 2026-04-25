@@ -1245,6 +1245,16 @@
                 display: flex;
             }
         }
+
+        .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+        
     </style>
 </head>
 <body>
@@ -8012,249 +8022,411 @@ window.deleteBusinessDocument = deleteBusinessDocument;
 window.uploadBusinessDocument = uploadBusinessDocument;
 window.refreshBusinessDocuments = refreshBusinessDocuments;
 
+// ============================================
+// SPOTLIGHT DIAGNOSTIC FUNCTION
+// ============================================
+async function diagnoseSpotlight() {
+    console.log('🔍 SPOTLIGHT DIAGNOSTIC START');
+    console.log('=================================');
+    
+    // 1. Check authentication
+    const token = localStorage.getItem('lba_auth_token');
+    console.log('1. Auth Token present:', !!token);
+    if (token) {
+        console.log('   Token preview:', token.substring(0, 50) + '...');
+    }
+    
+    // 2. Test categories API directly
+    console.log('\n2. Testing Categories API...');
+    try {
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/spotlight/categories`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        console.log('   Status:', response.status, response.statusText);
+        
+        const data = await response.json();
+        console.log('   Response:', data);
+        
+        if (data.success && data.categories) {
+            console.log(`   ✅ Found ${data.categories.length} categories`);
+            data.categories.forEach(cat => {
+                console.log(`     - ${cat.name} (ID: ${cat._id})`);
+            });
+        } else {
+            console.log('   ❌ No categories found or API error');
+            
+            // Try to create a default category
+            console.log('\n3. Attempting to create default categories...');
+            await createDefaultSpotlightCategories();
+        }
+    } catch (error) {
+        console.error('   ❌ API Error:', error.message);
+    }
+    
+    // 3. Check modal elements
+    console.log('\n4. Checking DOM elements:');
+    console.log('   - storyCategory select:', !!document.getElementById('storyCategory'));
+    console.log('   - categoryFilter select:', !!document.getElementById('categoryFilter'));
+    console.log('   - categoriesGrid:', !!document.getElementById('categoriesGrid'));
+    console.log('   - storiesList:', !!document.getElementById('storiesList'));
+    
+    console.log('\n✅ Diagnostic complete');
+}
+
+// Helper function to create default categories directly via API
+async function createDefaultSpotlightCategories() {
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        console.error('No auth token - cannot create categories');
+        return;
+    }
+    
+    const defaultCategories = [
+        { name: 'Success Stories', slug: 'success-stories', icon: 'fa-star', color: '#FF0000', display_order: 1 },
+        { name: 'Innovation', slug: 'innovation', icon: 'fa-lightbulb', color: '#87CEEB', display_order: 2 },
+        { name: 'Community Impact', slug: 'community-impact', icon: 'fa-hand-holding-heart', color: '#10B981', display_order: 3 },
+        { name: 'Women Entrepreneurs', slug: 'women-entrepreneurs', icon: 'fa-female', color: '#8B5CF6', display_order: 4 },
+        { name: 'Business Interviews', slug: 'business-interviews', icon: 'fa-microphone', color: '#F59E0B', display_order: 5 }
+    ];
+    
+    for (const cat of defaultCategories) {
+        try {
+            const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/spotlight/categories`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(cat)
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                console.log(`   ✅ Created category: ${cat.name}`);
+            } else {
+                console.log(`   ⚠️ Failed to create ${cat.name}:`, result.message);
+            }
+        } catch (err) {
+            console.error(`   ❌ Error creating ${cat.name}:`, err.message);
+        }
+    }
+    
+    // Refresh categories after creation
+    console.log('\n5. Refreshing categories...');
+    await loadSpotlightCategories();
+    await loadSpotlightStories();
+}
+
+// Add a manual refresh button to the Spotlight modal (optional)
+function addSpotlightRefreshButton() {
+    const actionBar = document.querySelector('#spotlightModal .modal-body .action-bar');
+    if (actionBar) {
+        const refreshBtn = document.createElement('button');
+        refreshBtn.className = 'sheet-btn secondary';
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+        refreshBtn.onclick = async () => {
+            showNotification('Refreshing spotlight data...', 'info');
+            await loadSpotlightCategories();
+            await loadSpotlightStories();
+            showNotification('Data refreshed!', 'success');
+        };
+        actionBar.appendChild(refreshBtn);
+    }
+}
+
+// Override the openAddStoryModal to show diagnostic info
+const originalOpenAddStoryModal = window.openAddStoryModal;
+window.openAddStoryModal = function() {
+    console.log('📝 Opening Add Story Modal - Current categories:', spotlightCategories.length);
+    if (spotlightCategories.length === 0) {
+        console.warn('⚠️ No categories loaded! Run diagnoseSpotlight() to fix');
+        showNotification('No categories found! Creating default categories...', 'warning');
+        diagnoseSpotlight();
+    }
+    originalOpenAddStoryModal();
+};
+
+// Run diagnostic on page load (after existing DOMContentLoaded)
+setTimeout(() => {
+    console.log('🔧 Running spotlight diagnostic...');
+    diagnoseSpotlight();
+}, 3000);
+
+// Add to window
+window.diagnoseSpotlight = diagnoseSpotlight;
 </script>
     
-    <!-- ============ SPOTLIGHT MANAGEMENT MODAL ============ -->
-    <div class="modal" id="spotlightModal">
-        <div class="modal-content" style="max-width: 1400px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
-                <h2><i class="fas fa-newspaper"></i> Business Spotlight Management</h2>
-                <button class="modal-close" onclick="closeModal('spotlightModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- Stats Cards -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
-                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #FF0000;">
-                        <h3 style="font-size: 28px; color: #FF0000;" id="totalStories">0</h3>
-                        <p style="color: #64748b; font-size: 14px;">Total Stories</p>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
-                        <h3 style="font-size: 28px; color: #10B981;" id="publishedStories">0</h3>
-                        <p style="color: #64748b; font-size: 14px;">Published</p>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #F59E0B;">
-                        <h3 style="font-size: 28px; color: #F59E0B;" id="draftStories">0</h3>
-                        <p style="color: #64748b; font-size: 14px;">Drafts</p>
-                    </div>
-                    <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #8B5CF6;">
-                        <h3 style="font-size: 28px; color: #8B5CF6;" id="totalCategories">0</h3>
-                        <p style="color: #64748b; font-size: 14px;">Categories</p>
-                    </div>
-                </div>
-
-                <!-- Action Bar -->
-                <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; gap: 10px; flex: 1; max-width: 400px;">
-                        <input type="text" id="spotlightSearch" placeholder="Search stories..." style="flex: 1; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
-                        <button class="sheet-btn" onclick="searchSpotlight()" style="padding: 10px 20px;">Search</button>
-                    </div>
-                    <div>
-                        <button class="sheet-btn" onclick="openAddStoryModal()" style="margin-right: 10px;">
-                            <i class="fas fa-plus"></i> New Story
-                        </button>
-                        <button class="sheet-btn secondary" onclick="openCategoryManager()">
-                            <i class="fas fa-tags"></i> Categories
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Categories Grid -->
-                <div style="margin-bottom: 25px;">
-                    <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-tags" style="color: #FF0000;"></i> Categories
-                    </h4>
-                    <div id="categoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
-                </div>
-
-                <!-- Stories Table -->
-                <div class="sheets-viewer">
-                    <div class="sheets-viewer-header">
-                        <h4><i class="fas fa-newspaper"></i> All Stories</h4>
-                        <select id="categoryFilter" onchange="filterStoriesByCategory()" style="padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
-                            <option value="all">All Categories</option>
-                        </select>
-                    </div>
-                    <div id="storiesList" style="padding: 20px; min-height: 400px; max-height: 500px; overflow-y: auto;"></div>
-                </div>
-            </div>
+   <!-- ============ SPOTLIGHT MANAGEMENT MODAL ============ -->
+<div class="modal" id="spotlightModal">
+    <div class="modal-content" style="max-width: 1400px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-newspaper"></i> Business Spotlight Management</h2>
+            <button class="modal-close" onclick="closeModal('spotlightModal')">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-    </div>
-
-    <!-- ============ ADD/EDIT STORY MODAL ============ -->
-    <div class="modal" id="storyModal">
-        <div class="modal-content" style="max-width: 900px;">
-            <div class="modal-header">
-                <h2 id="storyModalTitle">Add New Story</h2>
-                <button class="modal-close" onclick="closeModal('storyModal')">
-                    <i class="fas fa-times"></i>
-                </button>
+        <div class="modal-body">
+            <!-- Stats Cards -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #FF0000;">
+                    <h3 style="font-size: 28px; color: #FF0000;" id="totalStories">0</h3>
+                    <p style="color: #64748b; font-size: 14px;">Total Stories</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #10B981;">
+                    <h3 style="font-size: 28px; color: #10B981;" id="publishedStories">0</h3>
+                    <p style="color: #64748b; font-size: 14px;">Published</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #F59E0B;">
+                    <h3 style="font-size: 28px; color: #F59E0B;" id="draftStories">0</h3>
+                    <p style="color: #64748b; font-size: 14px;">Drafts</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #8B5CF6;">
+                    <h3 style="font-size: 28px; color: #8B5CF6;" id="totalCategories">0</h3>
+                    <p style="color: #64748b; font-size: 14px;">Categories</p>
+                </div>
             </div>
-            <div class="modal-body">
-                <form id="storyForm">
-                    <input type="hidden" id="storyId">
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div class="form-group">
-                            <label>Title *</label>
-                            <input type="text" id="storyTitle" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Slug *</label>
-                            <input type="text" id="storySlug" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                        </div>
-                    </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div class="form-group">
-                            <label>Category *</label>
-                            <select id="storyCategory" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                                <option value="">Select Category</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Status</label>
-                            <select id="storyStatus" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
-                                <option value="published">Published</option>
-                                <option value="draft">Draft</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div class="form-group">
-                            <label>Business Name *</label>
-                            <input type="text" id="storyBusinessName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Business Owner</label>
-                            <input type="text" id="storyBusinessOwner" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div class="form-group">
-                            <label>Author Name *</label>
-                            <input type="text" id="storyAuthorName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Author Bio</label>
-                            <input type="text" id="storyAuthorBio" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
-                        </div>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>Excerpt *</label>
-                        <textarea id="storyExcerpt" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required></textarea>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>Full Content *</label>
-                        <textarea id="storyContent" rows="4" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required></textarea>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>Featured Image URL *</label>
-                        <input type="text" id="storyImage" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required placeholder="/images/featured/your-image.jpg">
-                        <img id="imagePreview" style="max-width: 200px; max-height: 100px; margin-top: 10px; display: none; border-radius: 5px;">
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div class="form-group">
-                            <label>Published Date</label>
-                            <input type="datetime-local" id="storyPublishedDate" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
-                        </div>
-                        <div class="form-group">
-                            <label>Flags</label>
-                            <div style="display: flex; gap: 15px; padding: 10px 0;">
-                                <label><input type="checkbox" id="storyFeatured"> Featured</label>
-                                <label><input type="checkbox" id="storyBreaking"> Breaking</label>
-                                <label><input type="checkbox" id="storyInterview"> Interview</label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="sheet-btn warning" onclick="closeModal('storyModal')">Cancel</button>
-                <button class="sheet-btn" onclick="saveStory()">Save Story</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ CATEGORY MANAGER MODAL ============ -->
-    <div class="modal" id="categoryManagerModal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2>Manage Categories</h2>
-                <button class="modal-close" onclick="closeModal('categoryManagerModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div style="margin-bottom: 20px;">
-                    <button class="sheet-btn" onclick="openAddCategoryModal()" style="width: 100%;">
-                        <i class="fas fa-plus"></i> Add New Category
+            <!-- Action Bar - ADD NEW STORY BUTTON IS HERE -->
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; gap: 10px; flex: 1; max-width: 400px;">
+                    <input type="text" id="spotlightSearch" placeholder="Search stories..." style="flex: 1; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 8px;" onkeyup="searchSpotlight()">
+                    <button class="sheet-btn" onclick="searchSpotlight()" style="padding: 10px 20px;">Search</button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="sheet-btn" onclick="openAddStoryModal()" style="background: linear-gradient(135deg, #FF0000, #cc0000);">
+                        <i class="fas fa-plus"></i> Add New Story
+                    </button>
+                    <button class="sheet-btn secondary" onclick="openCategoryManager()">
+                        <i class="fas fa-tags"></i> Manage Categories
                     </button>
                 </div>
-                <div id="categoryList" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Categories Grid -->
+            <div style="margin-bottom: 25px;">
+                <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-tags" style="color: #FF0000;"></i> Categories
+                </h4>
+                <div id="categoriesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
+            </div>
+
+            <!-- Filter Row -->
+            <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <label style="font-weight: 600; margin-right: 10px;">Filter by Category:</label>
+                    <select id="categoryFilter" onchange="filterStoriesByCategory()" style="padding: 8px 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                        <option value="all">All Categories</option>
+                    </select>
+                </div>
+                <div>
+                    <span id="storiesCount" style="color: #64748b; font-size: 14px;">0 stories</span>
+                </div>
+            </div>
+
+            <!-- Stories Table -->
+            <div class="sheets-viewer">
+                <div class="sheets-viewer-header">
+                    <h4><i class="fas fa-newspaper"></i> All Stories</h4>
+                </div>
+                <div id="storiesList" style="padding: 20px; min-height: 400px; max-height: 500px; overflow-y: auto;"></div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- ============ ADD/EDIT CATEGORY MODAL ============ -->
-    <div class="modal" id="addCategoryModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h2 id="categoryModalTitle">Add Category</h2>
-                <button class="modal-close" onclick="closeModal('addCategoryModal')">
-                    <i class="fas fa-times"></i>
+<!-- ============ ADD/EDIT STORY MODAL ============ -->
+<div class="modal" id="storyModal">
+    <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="storyModalTitle">Add New Story</h2>
+            <button class="modal-close" onclick="closeModal('storyModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="storyForm" onsubmit="event.preventDefault(); saveStory();">
+                <input type="hidden" id="storyId">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Title *</label>
+                        <input type="text" id="storyTitle" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
+                        <small style="color: #64748b;">Auto-generates slug</small>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Slug</label>
+                        <input type="text" id="storySlug" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" placeholder="auto-generated">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Category *</label>
+                        <select id="storyCategory" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Status</label>
+                        <select id="storyStatus" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Business Name *</label>
+                        <input type="text" id="storyBusinessName" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Business Owner</label>
+                        <input type="text" id="storyBusinessOwner" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Author Name *</label>
+                        <input type="text" id="storyAuthorName" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Author Bio</label>
+                        <input type="text" id="storyAuthorBio" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Excerpt *</label>
+                    <textarea id="storyExcerpt" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="Short summary (150-200 characters)"></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Full Content *</label>
+                    <textarea id="storyContent" rows="6" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="Write the full story here..."></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Featured Image URL</label>
+                    <input type="text" id="storyImage" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" placeholder="/images/featured/your-image.jpg">
+                    <div id="imagePreviewContainer" style="margin-top: 10px; display: none;">
+                        <img id="imagePreview" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Published Date</label>
+                        <input type="datetime-local" id="storyPublishedDate" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Feature Flags</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; padding: 10px 0;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="storyFeatured"> <span>⭐ Featured</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="storyBreaking"> <span>🚨 Breaking News</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="storyInterview"> <span>🎤 Interview</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 15px;">
+            <button class="sheet-btn warning" onclick="closeModal('storyModal')" style="padding: 12px 25px;">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="sheet-btn" onclick="saveStory()" style="background: linear-gradient(135deg, #10B981, #059669); padding: 12px 25px;">
+                <i class="fas fa-save"></i> Save Story
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ CATEGORY MANAGER MODAL ============ -->
+<div class="modal" id="categoryManagerModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-tags"></i> Manage Categories</h2>
+            <button class="modal-close" onclick="closeModal('categoryManagerModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px;">
+                <button class="sheet-btn" onclick="openAddCategoryModal()" style="width: 100%;">
+                    <i class="fas fa-plus"></i> Add New Category
                 </button>
             </div>
-            <div class="modal-body">
-                <form id="categoryForm">
-                    <input type="hidden" id="categoryId">
-                    
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>Category Name *</label>
-                        <input type="text" id="categoryName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>Slug *</label>
-                        <input type="text" id="categorySlug" class="sheet-btn secondary" style="width: 100%; padding: 10px;" required>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>Description</label>
-                        <textarea id="categoryDescription" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;"></textarea>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div class="form-group">
-                            <label>Icon</label>
-                            <input type="text" id="categoryIcon" class="sheet-btn secondary" style="width: 100%; padding: 10px;" placeholder="fa-rocket">
-                        </div>
-                        <div class="form-group">
-                            <label>Color</label>
-                            <input type="color" id="categoryColor" class="sheet-btn secondary" style="width: 100%; height: 42px;" value="#FF0000">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Display Order</label>
-                        <input type="number" id="categoryOrder" class="sheet-btn secondary" style="width: 100%; padding: 10px;" value="1" min="1">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="sheet-btn warning" onclick="closeModal('addCategoryModal')">Cancel</button>
-                <button class="sheet-btn" onclick="saveCategory()">Save Category</button>
-            </div>
+            <div id="categoryList" style="max-height: 400px; overflow-y: auto;"></div>
+        </div>
+        <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e2e8f0;">
+            <button class="sheet-btn" onclick="closeModal('categoryManagerModal')" style="width: 100%;">Close</button>
         </div>
     </div>
+</div>
 
+<!-- ============ ADD/EDIT CATEGORY MODAL ============ -->
+<div class="modal" id="addCategoryModal">
+    <div class="modal-content" style="max-width: 550px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="categoryModalTitle">Add Category</h2>
+            <button class="modal-close" onclick="closeModal('addCategoryModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="categoryForm" onsubmit="event.preventDefault(); saveCategory();">
+                <input type="hidden" id="categoryId">
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Category Name *</label>
+                    <input type="text" id="categoryName" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Slug *</label>
+                    <input type="text" id="categorySlug" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Description</label>
+                    <textarea id="categoryDescription" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;"></textarea>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Icon</label>
+                        <input type="text" id="categoryIcon" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" placeholder="fa-star">
+                        <small>FontAwesome icon class</small>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Color</label>
+                        <input type="color" id="categoryColor" class="sheet-btn secondary" style="width: 100%; height: 46px; border: 2px solid #e2e8f0; border-radius: 8px;" value="#FF0000">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Display Order</label>
+                    <input type="number" id="categoryOrder" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" value="1" min="1">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 15px;">
+            <button class="sheet-btn warning" onclick="closeModal('addCategoryModal')" style="padding: 12px 25px;">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="sheet-btn" onclick="saveCategory()" style="background: linear-gradient(135deg, #10B981, #059669); padding: 12px 25px;">
+                <i class="fas fa-save"></i> Save Category
+            </button>
+        </div>
+    </div>
+</div>
     <!-- ============ BUSINESS APPROVAL MODAL ============ -->
 <div class="modal" id="businessApprovalModal">
     <div class="modal-content" style="max-width: 1200px;">
