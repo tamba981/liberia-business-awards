@@ -3309,6 +3309,100 @@ app.delete('/api/admin/spotlight/stories/:id', authenticate, authorize('admin'),
 
 console.log('✅ Spotlight Management System Ready');
 
+// ============================================
+// SPOTLIGHT STATIC ROUTES - ADD THIS SECTION
+// ============================================
+// Serve spotlight page - FIXES 404 ERROR
+const spotlightPath = path.join(__dirname, 'spotlight');
+
+// Check if spotlight directory exists, create if not
+if (!fs.existsSync(spotlightPath)) {
+    fs.mkdirSync(spotlightPath, { recursive: true });
+    console.log('📁 Created spotlight directory at:', spotlightPath);
+}
+
+// Serve static files from spotlight folder (images, css, etc)
+app.use('/spotlight', express.static(spotlightPath));
+
+// Route for /spotlight (without trailing slash)
+app.get('/spotlight', (req, res) => {
+    // Try to find index.html first, then spotlight.index.html
+    const indexFile = path.join(spotlightPath, 'index.html');
+    const spotlightIndexFile = path.join(spotlightPath, 'spotlight.index.html');
+    
+    if (fs.existsSync(indexFile)) {
+        res.sendFile(indexFile);
+    } else if (fs.existsSync(spotlightIndexFile)) {
+        res.sendFile(spotlightIndexFile);
+    } else {
+        res.status(404).send(`
+            <!DOCTYPE html>
+            <html>
+            <head><title>Spotlight Not Found</title></head>
+            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+                <h1 style="color: #FF0000;">⚠️ Spotlight Page Not Found</h1>
+                <p>Please upload your spotlight.index.html file to: <strong>/spotlight/</strong></p>
+                <p>Expected location: <code>${spotlightPath}/spotlight.index.html</code></p>
+                <hr>
+                <p>Contact administrator to fix this issue.</p>
+            </body>
+            </html>
+        `);
+    }
+});
+
+// Route for /spotlight/ (with trailing slash)
+app.get('/spotlight/', (req, res) => {
+    const indexFile = path.join(spotlightPath, 'index.html');
+    const spotlightIndexFile = path.join(spotlightPath, 'spotlight.index.html');
+    
+    if (fs.existsSync(indexFile)) {
+        res.sendFile(indexFile);
+    } else if (fs.existsSync(spotlightIndexFile)) {
+        res.sendFile(spotlightIndexFile);
+    } else {
+        res.status(404).send('Spotlight page not found. Please upload spotlight.index.html to /spotlight/ folder.');
+    }
+});
+
+// Also handle any sub-paths (for individual story pages if needed)
+app.get('/spotlight/*', (req, res) => {
+    // Check if it's a story slug (like /spotlight/my-story-slug)
+    const storySlug = req.params[0];
+    if (storySlug && !storySlug.includes('.')) {
+        // This might be a story detail page - send the main spotlight page
+        const indexFile = path.join(spotlightPath, 'index.html');
+        const spotlightIndexFile = path.join(spotlightPath, 'spotlight.index.html');
+        
+        if (fs.existsSync(indexFile)) {
+            res.sendFile(indexFile);
+        } else if (fs.existsSync(spotlightIndexFile)) {
+            res.sendFile(spotlightIndexFile);
+        } else {
+            res.status(404).send('Spotlight page not found');
+        }
+    } else {
+        // Serve static files
+        const filePath = path.join(spotlightPath, storySlug);
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+            res.sendFile(filePath);
+        } else {
+            const indexFile = path.join(spotlightPath, 'index.html');
+            const spotlightIndexFile = path.join(spotlightPath, 'spotlight.index.html');
+            
+            if (fs.existsSync(indexFile)) {
+                res.sendFile(indexFile);
+            } else if (fs.existsSync(spotlightIndexFile)) {
+                res.sendFile(spotlightIndexFile);
+            } else {
+                res.status(404).send('Spotlight page not found');
+            }
+        }
+    }
+});
+
+console.log('✅ Spotlight static routes configured');
+
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
