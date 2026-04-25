@@ -756,15 +756,17 @@ function closeSpotlightStoryModal() {
     const modal = document.getElementById('spotlightStoryModal');
     if (modal) {
         modal.classList.remove('active');
-        modal.style.display = 'none';
+        // REMOVE THIS LINE - don't set inline display
+        // modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
 }
+        
 
 // Close modal when clicking outside
 document.addEventListener('click', function(event) {
     const modal = document.getElementById('spotlightStoryModal');
-    if (modal && modal.style.display === 'flex') {
+    if (modal && modal.classList.contains('active')) {
         const modalContent = modal.querySelector('div > div');
         if (modalContent && !modalContent.contains(event.target)) {
             closeSpotlightStoryModal();
