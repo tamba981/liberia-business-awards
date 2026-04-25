@@ -7836,6 +7836,355 @@ window.deleteBusinessDocument = deleteBusinessDocument;
 window.uploadBusinessDocument = uploadBusinessDocument;
 window.refreshBusinessDocuments = refreshBusinessDocuments;
 
+
+  // ============================================
+// MISSING SPOTLIGHT FUNCTIONS - ADD THESE
+// ============================================
+
+// Display Categories Grid
+function displaySpotlightCategories() {
+    const grid = document.getElementById('categoriesGrid');
+    if (!grid) return;
+    
+    if (spotlightCategories.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">No categories yet</p>';
+        return;
+    }
+    
+    grid.innerHTML = spotlightCategories.map(cat => `
+        <div style="background: white; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${cat.color || '#FF0000'}; display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fas ${cat.icon || 'fa-tag'}"></i> ${escapeHtml(cat.name)}</span>
+            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 12px;">${spotlightStories.filter(s => s.category_id === cat._id).length}</span>
+        </div>
+    `).join('');
+}
+
+// Update Category Dropdown Filter
+function updateCategoryFilter() {
+    const filter = document.getElementById('categoryFilter');
+    if (!filter) return;
+    
+    filter.innerHTML = '<option value="all">All Categories</option>' + 
+        spotlightCategories.map(c => `<option value="${c._id}">${escapeHtml(c.name)}</option>`).join('');
+    
+    const select = document.getElementById('storyCategory');
+    if (select) {
+        select.innerHTML = '<option value="">-- Select Category --</option>' + 
+            spotlightCategories.map(c => `<option value="${c._id}">${escapeHtml(c.name)}</option>`).join('');
+    }
+}
+
+// Update Stats Display
+function updateSpotlightStats() {
+    const total = spotlightStories.length;
+    const published = spotlightStories.filter(s => s.status === 'published').length;
+    const drafts = spotlightStories.filter(s => s.status === 'draft').length;
+    
+    const totalEl = document.getElementById('totalStories');
+    const publishedEl = document.getElementById('publishedStories');
+    const draftEl = document.getElementById('draftStories');
+    const spotlightCountEl = document.getElementById('spotlightCount');
+    
+    if (totalEl) totalEl.textContent = total;
+    if (publishedEl) publishedEl.textContent = published;
+    if (draftEl) draftEl.textContent = drafts;
+    if (spotlightCountEl) spotlightCountEl.textContent = total;
+}
+
+// Display Stories
+function displaySpotlightStories() {
+    const container = document.getElementById('storiesList');
+    if (!container) return;
+    
+    let filtered = [...spotlightStories];
+    
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (categoryFilter && categoryFilter.value !== 'all') {
+        filtered = filtered.filter(s => s.category_id === categoryFilter.value);
+    }
+    
+    const searchTerm = document.getElementById('spotlightSearch');
+    if (searchTerm && searchTerm.value) {
+        const term = searchTerm.value.toLowerCase();
+        filtered = filtered.filter(s => 
+            (s.title && s.title.toLowerCase().includes(term)) || 
+            (s.business_name && s.business_name.toLowerCase().includes(term))
+        );
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #64748b;">
+                <i class="fas fa-newspaper" style="font-size: 48px; margin-bottom: 20px;"></i>
+                <p>No stories found</p>
+                <button class="sheet-btn" onclick="openAddStoryModal()" style="margin-top: 15px;">
+                    <i class="fas fa-plus"></i> Create Your First Story
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = filtered.map(story => {
+        const category = spotlightCategories.find(c => c._id === story.category_id) || { name: 'General', color: '#64748b' };
+        const date = story.published_at ? new Date(story.published_at).toLocaleDateString() : (story.created_at ? new Date(story.created_at).toLocaleDateString() : 'N/A');
+        
+        return `
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; padding: 18px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
+                    <img src="${story.featured_image || '/images/placeholder.jpg'}" style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/70x50?text=No+Image'">
+                    <div>
+                        <h4 style="font-weight: 600; margin-bottom: 5px; font-size: 16px;">${escapeHtml(story.title)}</h4>
+                        <div style="display: flex; gap: 15px; font-size: 12px; color: #64748b; flex-wrap: wrap;">
+                            <span><i class="fas fa-building"></i> ${escapeHtml(story.business_name)}</span>
+                            <span><i class="fas fa-tag" style="color: ${category.color}"></i> ${escapeHtml(category.name)}</span>
+                            <span><i class="fas fa-calendar"></i> ${date}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <span class="status-badge status-${story.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${story.status}</span>
+                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editStory('${story._id}')"><i class="fas fa-edit"></i></button>
+                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteStory('${story._id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Filter Stories
+function filterStoriesByCategory() {
+    displaySpotlightStories();
+}
+
+function searchSpotlight() {
+    displaySpotlightStories();
+}
+
+// Open Add Story Modal
+function openAddStoryModal() {
+    const modal = document.getElementById('storyModal');
+    if (!modal) {
+        console.error('Story modal not found');
+        return;
+    }
+    
+    document.getElementById('storyModalTitle').textContent = 'Add New Story';
+    const form = document.getElementById('storyForm');
+    if (form) form.reset();
+    document.getElementById('storyId').value = '';
+    
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const dateField = document.getElementById('storyPublishedDate');
+    if (dateField) dateField.value = now.toISOString().slice(0, 16);
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Edit Story
+async function editStory(id) {
+    const story = spotlightStories.find(s => s._id === id);
+    if (!story) {
+        showNotification('Story not found', 'error');
+        return;
+    }
+    
+    document.getElementById('storyModalTitle').textContent = 'Edit Story';
+    document.getElementById('storyId').value = story._id;
+    document.getElementById('storyTitle').value = story.title || '';
+    document.getElementById('storySlug').value = story.slug || '';
+    document.getElementById('storyCategory').value = story.category_id || '';
+    document.getElementById('storyStatus').value = story.status || 'draft';
+    document.getElementById('storyBusinessName').value = story.business_name || '';
+    document.getElementById('storyBusinessOwner').value = story.business_owner || '';
+    document.getElementById('storyAuthorName').value = story.author_name || '';
+    document.getElementById('storyAuthorBio').value = story.author_bio || '';
+    document.getElementById('storyExcerpt').value = story.excerpt || '';
+    document.getElementById('storyContent').value = story.content || '';
+    document.getElementById('storyImage').value = story.featured_image || '';
+    document.getElementById('storyFeatured').checked = story.is_featured || false;
+    document.getElementById('storyBreaking').checked = story.is_breaking || false;
+    document.getElementById('storyInterview').checked = story.is_interview || false;
+    
+    if (story.published_at) {
+        const date = new Date(story.published_at);
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        document.getElementById('storyPublishedDate').value = date.toISOString().slice(0, 16);
+    }
+    
+    if (story.featured_image) {
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const preview = document.getElementById('imagePreview');
+        if (previewContainer && preview) {
+            preview.src = story.featured_image;
+            previewContainer.style.display = 'block';
+        }
+    }
+    
+    document.getElementById('storyModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Delete Story
+async function deleteStory(id) {
+    if (!confirm('⚠️ Are you sure you want to delete this story? This action cannot be undone.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/spotlight/stories/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Story deleted successfully!', 'success');
+            await loadSpotlightStories();
+        } else {
+            showNotification(result.message || 'Error deleting story', 'error');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        showNotification('Error deleting story', 'error');
+    }
+}
+
+// Category Management Functions
+function openCategoryManager() {
+    closeModal('spotlightModal');
+    displayCategoryList();
+    openModal('categoryManagerModal');
+}
+
+function displayCategoryList() {
+    const container = document.getElementById('categoryList');
+    if (!container) return;
+    
+    if (spotlightCategories.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #64748b;">No categories yet</p>';
+        return;
+    }
+    
+    container.innerHTML = spotlightCategories.map(cat => `
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h4 style="font-weight: 600;"><i class="fas ${cat.icon || 'fa-tag'}" style="color: ${cat.color || '#FF0000'};"></i> ${escapeHtml(cat.name)}</h4>
+                <small style="color: #64748b;">${cat.description || ''}</small>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="sheet-btn secondary" style="padding: 5px 10px;" onclick="editCategory('${cat._id}')"><i class="fas fa-edit"></i></button>
+                <button class="sheet-btn danger" style="padding: 5px 10px;" onclick="deleteCategory('${cat._id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openAddCategoryModal() {
+    document.getElementById('categoryModalTitle').textContent = 'Add Category';
+    const form = document.getElementById('categoryForm');
+    if (form) form.reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryColor').value = '#FF0000';
+    openModal('addCategoryModal');
+}
+
+function editCategory(id) {
+    const category = spotlightCategories.find(c => c._id === id);
+    if (!category) return;
+    
+    document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+    document.getElementById('categoryId').value = category._id;
+    document.getElementById('categoryName').value = category.name || '';
+    document.getElementById('categorySlug').value = category.slug || '';
+    document.getElementById('categoryDescription').value = category.description || '';
+    document.getElementById('categoryIcon').value = category.icon || '';
+    document.getElementById('categoryColor').value = category.color || '#FF0000';
+    document.getElementById('categoryOrder').value = category.display_order || 1;
+    openModal('addCategoryModal');
+}
+
+async function deleteCategory(id) {
+    if (!confirm(`Delete this category? Stories will remain but become uncategorized.`)) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/spotlight/categories/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Category deleted!', 'success');
+            closeModal('categoryManagerModal');
+            await loadSpotlightCategories();
+            await loadSpotlightStories();
+        } else {
+            showNotification(result.message || 'Error deleting category', 'error');
+        }
+    } catch (error) {
+        console.error('Delete category error:', error);
+        showNotification('Error deleting category', 'error');
+    }
+}
+
+// Auto-generate slug from title
+function setupAutoSlug() {
+    const titleInput = document.getElementById('storyTitle');
+    if (titleInput) {
+        titleInput.addEventListener('input', function(e) {
+            const storyId = document.getElementById('storyId');
+            if (storyId && !storyId.value) {
+                const slug = e.target.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+                const slugField = document.getElementById('storySlug');
+                if (slugField) slugField.value = slug;
+            }
+        });
+    }
+    
+    const imageInput = document.getElementById('storyImage');
+    if (imageInput) {
+        imageInput.addEventListener('input', function(e) {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const preview = document.getElementById('imagePreview');
+            if (e.target.value && previewContainer && preview) {
+                preview.src = e.target.value;
+                previewContainer.style.display = 'block';
+            } else if (previewContainer) {
+                previewContainer.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Call setup after DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupAutoSlug);
+} else {
+    setupAutoSlug();
+}
+
+// Export functions to global scope
+window.filterStoriesByCategory = filterStoriesByCategory;
+window.searchSpotlight = searchSpotlight;
+window.openAddStoryModal = openAddStoryModal;
+window.editStory = editStory;
+window.deleteStory = deleteStory;
+window.openCategoryManager = openCategoryManager;
+window.openAddCategoryModal = openAddCategoryModal;
+window.editCategory = editCategory;
+window.deleteCategory = deleteCategory;      
+
 // ============================================
 // SPOTLIGHT DIAGNOSTIC FUNCTION
 // ============================================
