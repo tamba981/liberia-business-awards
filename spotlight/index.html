@@ -550,19 +550,31 @@
                 <p>&copy; 2026 Liberia Business Awards. All rights reserved.</p>
             </div>
         </div>
-    </footer>
+        </footer>
 
-      <script>
+    <!-- Story Detail Modal - HTML SECTION (NOT inside script) -->
+    <div id="storyModal" class="story-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: white; max-width: 800px; width: 100%; max-height: 90vh; border-radius: 16px; overflow-y: auto; position: relative;">
+            <button onclick="closeStoryModal()" style="position: sticky; top: 10px; right: 10px; float: right; background: #FF0000; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; margin: 10px; z-index: 10;">&times;</button>
+            <div id="storyModalContent" style="padding: 30px;">
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading story...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-          // Unregister any existing service workers (fixes the error)
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-            registration.unregister();
-            console.log('Service Worker unregistered');
+    <script>
+        // Unregister any existing service workers (fixes the error)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                    console.log('Service Worker unregistered');
+                }
+            });
         }
-    });
-}
           
         // ============================================
         // SPOTLIGHT PUBLIC PAGE - USING BACKEND API
@@ -607,146 +619,146 @@ if ('serviceWorker' in navigator) {
             `;
         }
 
-          // ============================================
-// STORY DETAIL MODAL FUNCTIONS
-// ============================================
+        // ============================================
+        // STORY DETAIL MODAL FUNCTIONS
+        // ============================================
 
-// Open modal and load story details
-async function openStoryModal(slug) {
-    const modal = document.getElementById('storyModal');
-    const content = document.getElementById('storyModalContent');
-    
-    if (!modal || !content) {
-        console.error('Modal elements not found');
-        return;
-    }
-    
-    // Show loading state
-    content.innerHTML = `
-        <div style="text-align: center; padding: 50px;">
-            <i class="fas fa-spinner fa-spin fa-2x"></i>
-            <p>Loading story...</p>
-        </div>
-    `;
-    
-    // Show modal
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    try {
-        // Fetch the full story by slug
-        const response = await fetch(`${API_BASE}/spotlight/stories/${slug}`);
-        const data = await response.json();
-        
-        if (data.success && data.story) {
-            displayStoryModalContent(data.story);
-        } else {
+        // Open modal and load story details
+        async function openStoryModal(slug) {
+            const modal = document.getElementById('storyModal');
+            const content = document.getElementById('storyModalContent');
+            
+            if (!modal || !content) {
+                console.error('Modal elements not found');
+                return;
+            }
+            
+            // Show loading state
             content.innerHTML = `
-                <div style="text-align: center; padding: 50px; color: #EF4444;">
-                    <i class="fas fa-exclamation-circle fa-2x"></i>
-                    <p>Story not found</p>
-                    <button onclick="closeStoryModal()" class="btn btn-primary" style="margin-top: 20px;">Close</button>
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading story...</p>
+                </div>
+            `;
+            
+            // Show modal
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            try {
+                // Fetch the full story by slug
+                const response = await fetch(`${API_BASE}/spotlight/stories/${slug}`);
+                const data = await response.json();
+                
+                if (data.success && data.story) {
+                    displayStoryModalContent(data.story);
+                } else {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 50px; color: #EF4444;">
+                            <i class="fas fa-exclamation-circle fa-2x"></i>
+                            <p>Story not found</p>
+                            <button onclick="closeStoryModal()" class="btn btn-primary" style="margin-top: 20px;">Close</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading story:', error);
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: #EF4444;">
+                        <i class="fas fa-exclamation-circle fa-2x"></i>
+                        <p>Error loading story</p>
+                        <p style="font-size: 14px;">${error.message}</p>
+                        <button onclick="closeStoryModal()" class="btn btn-primary" style="margin-top: 20px;">Close</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Display story content in modal
+        function displayStoryModalContent(story) {
+            const category = story.category_id || { name: 'General', color: '#FF0000' };
+            const date = story.published_at ? new Date(story.published_at).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            }) : (story.created_at ? new Date(story.created_at).toLocaleDateString() : 'Recent');
+            
+            const content = document.getElementById('storyModalContent');
+            
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    ${story.featured_image ? `
+                        <img src="${story.featured_image}" alt="${story.title}" style="width: 100%; border-radius: 12px; margin-bottom: 20px;">
+                    ` : ''}
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                        <span class="card-category" style="background: ${category.color || '#FF0000'}">${category.name}</span>
+                        <span style="color: #64748b; font-size: 14px;"><i class="fas fa-calendar-alt"></i> ${date}</span>
+                    </div>
+                    
+                    <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 15px; color: #1a202c;">${escapeHtml(story.title)}</h1>
+                    
+                    <div style="display: flex; gap: 20px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                        <div>
+                            <i class="fas fa-building" style="color: #FF0000;"></i>
+                            <strong>Business:</strong> ${escapeHtml(story.business_name)}
+                        </div>
+                        ${story.business_owner ? `
+                            <div>
+                                <i class="fas fa-user" style="color: #FF0000;"></i>
+                                <strong>Owner:</strong> ${escapeHtml(story.business_owner)}
+                            </div>
+                        ` : ''}
+                        <div>
+                            <i class="fas fa-pen" style="color: #FF0000;"></i>
+                            <strong>Author:</strong> ${escapeHtml(story.author_name)}
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 16px; line-height: 1.8; color: #2d3748;">
+                        ${story.content.split('\n').map(para => `<p style="margin-bottom: 15px;">${escapeHtml(para)}</p>`).join('')}
+                    </div>
+                    
+                    ${story.author_bio ? `
+                        <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #FF0000;">
+                            <strong><i class="fas fa-user-circle"></i> About the Author</strong>
+                            <p style="margin-top: 8px; font-size: 14px;">${escapeHtml(story.author_bio)}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="closeStoryModal()" class="btn btn-primary" style="background: #FF0000;">Close</button>
+                        </div>
+                    </div>
                 </div>
             `;
         }
-    } catch (error) {
-        console.error('Error loading story:', error);
-        content.innerHTML = `
-            <div style="text-align: center; padding: 50px; color: #EF4444;">
-                <i class="fas fa-exclamation-circle fa-2x"></i>
-                <p>Error loading story</p>
-                <p style="font-size: 14px;">${error.message}</p>
-                <button onclick="closeStoryModal()" class="btn btn-primary" style="margin-top: 20px;">Close</button>
-            </div>
-        `;
-    }
-}
 
-// Display story content in modal
-function displayStoryModalContent(story) {
-    const category = story.category_id || { name: 'General', color: '#FF0000' };
-    const date = story.published_at ? new Date(story.published_at).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-    }) : (story.created_at ? new Date(story.created_at).toLocaleDateString() : 'Recent');
-    
-    const content = document.getElementById('storyModalContent');
-    
-    content.innerHTML = `
-        <div style="margin-bottom: 20px;">
-            ${story.featured_image ? `
-                <img src="${story.featured_image}" alt="${story.title}" style="width: 100%; border-radius: 12px; margin-bottom: 20px;">
-            ` : ''}
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-                <span class="card-category" style="background: ${category.color || '#FF0000'}">${category.name}</span>
-                <span style="color: #64748b; font-size: 14px;"><i class="fas fa-calendar-alt"></i> ${date}</span>
-            </div>
-            
-            <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 15px; color: #1a202c;">${escapeHtml(story.title)}</h1>
-            
-            <div style="display: flex; gap: 20px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
-                <div>
-                    <i class="fas fa-building" style="color: #FF0000;"></i>
-                    <strong>Business:</strong> ${escapeHtml(story.business_name)}
-                </div>
-                ${story.business_owner ? `
-                    <div>
-                        <i class="fas fa-user" style="color: #FF0000;"></i>
-                        <strong>Owner:</strong> ${escapeHtml(story.business_owner)}
-                    </div>
-                ` : ''}
-                <div>
-                    <i class="fas fa-pen" style="color: #FF0000;"></i>
-                    <strong>Author:</strong> ${escapeHtml(story.author_name)}
-                </div>
-            </div>
-            
-            <div style="font-size: 16px; line-height: 1.8; color: #2d3748;">
-                ${story.content.split('\n').map(para => `<p style="margin-bottom: 15px;">${escapeHtml(para)}</p>`).join('')}
-            </div>
-            
-            ${story.author_bio ? `
-                <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #FF0000;">
-                    <strong><i class="fas fa-user-circle"></i> About the Author</strong>
-                    <p style="margin-top: 8px; font-size: 14px;">${escapeHtml(story.author_bio)}</p>
-                </div>
-            ` : ''}
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button onclick="closeStoryModal()" class="btn btn-primary" style="background: #FF0000;">Close</button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Close modal
-function closeStoryModal() {
-    const modal = document.getElementById('storyModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('storyModal');
-    if (modal && modal.style.display === 'flex') {
-        const modalContent = modal.querySelector('div > div');
-        if (modalContent && !modalContent.contains(event.target)) {
-            closeStoryModal();
+        // Close modal
+        function closeStoryModal() {
+            const modal = document.getElementById('storyModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
         }
-    }
-});
 
-// Close on ESC key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeStoryModal();
-    }
-});
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('storyModal');
+            if (modal && modal.style.display === 'flex') {
+                const modalContent = modal.querySelector('div > div');
+                if (modalContent && !modalContent.contains(event.target)) {
+                    closeStoryModal();
+                }
+            }
+        });
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeStoryModal();
+            }
+        });
         
         // Load stories from backend
         async function loadStories(category = currentCategory, page = 1) {
@@ -794,35 +806,35 @@ document.addEventListener('keydown', function(event) {
             }
         }
         
-       function displayStories(stories) {
-    const grid = document.getElementById('articlesGrid');
-    
-    grid.innerHTML = stories.map(story => {
-        const category = story.category_id || { name: 'General', color: '#FF0000' };
-        return `
-            <div class="article-card">
-                <div class="card-image">
-                    <img src="${story.featured_image || '/images/placeholder.jpg'}" 
-                         alt="${story.business_name}"
-                         onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/FF0000/ffffff?text=${story.business_name.replace(/ /g, '+')}';">
-                </div>
-                <div class="card-content">
-                    <span class="card-category" style="background: ${category.color || '#FF0000'}">${category.name}</span>
-                    <h3 class="card-title">${escapeHtml(story.title)}</h3>
-                    <p class="card-excerpt">${escapeHtml(story.excerpt.substring(0, 120))}${story.excerpt.length > 120 ? '...' : ''}</p>
-                    <div class="card-footer">
-                        <span class="card-business">
-                            <i class="fas fa-building"></i> ${escapeHtml(story.business_name)}
-                        </span>
-                        <button onclick="openStoryModal('${story.slug}')" class="read-more" style="background: none; border: none; cursor: pointer; color: var(--lba-blue); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 5px;">
-                            Read Story <i class="fas fa-arrow-right"></i>
-                        </button>
+        function displayStories(stories) {
+            const grid = document.getElementById('articlesGrid');
+            
+            grid.innerHTML = stories.map(story => {
+                const category = story.category_id || { name: 'General', color: '#FF0000' };
+                return `
+                    <div class="article-card">
+                        <div class="card-image">
+                            <img src="${story.featured_image || '/images/placeholder.jpg'}" 
+                                 alt="${story.business_name}"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/FF0000/ffffff?text=${story.business_name.replace(/ /g, '+')}';">
+                        </div>
+                        <div class="card-content">
+                            <span class="card-category" style="background: ${category.color || '#FF0000'}">${category.name}</span>
+                            <h3 class="card-title">${escapeHtml(story.title)}</h3>
+                            <p class="card-excerpt">${escapeHtml(story.excerpt.substring(0, 120))}${story.excerpt.length > 120 ? '...' : ''}</p>
+                            <div class="card-footer">
+                                <span class="card-business">
+                                    <i class="fas fa-building"></i> ${escapeHtml(story.business_name)}
+                                </span>
+                                <button onclick="openStoryModal('${story.slug}')" class="read-more" style="background: none; border: none; cursor: pointer; color: var(--lba-blue); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                                    Read Story <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+                `;
+            }).join('');
+        }
         
         function updatePagination() {
             const pagination = document.getElementById('pagination');
@@ -848,12 +860,10 @@ document.addEventListener('keydown', function(event) {
         }
         
         function updateCategoryCounts(data) {
-            // Update category counts from the response
             const categorySpans = document.querySelectorAll('.category-item');
             categorySpans.forEach(span => {
                 const countSpan = span.querySelector('.category-count');
                 if (countSpan) {
-                    // This would need the backend to return counts per category
                     countSpan.textContent = '0';
                 }
             });
@@ -879,7 +889,6 @@ document.addEventListener('keydown', function(event) {
             loadCategories();
             loadStories('all', 1);
             
-            // Newsletter form
             const newsletterForm = document.getElementById('newsletterForm');
             if (newsletterForm) {
                 newsletterForm.addEventListener('submit', function(e) {
@@ -896,20 +905,7 @@ document.addEventListener('keydown', function(event) {
         paginationDiv.id = 'pagination';
         paginationDiv.className = 'pagination';
         articlesSection.appendChild(paginationDiv);
-    </script>  
+    </script>
 
-    <!-- Story Detail Modal -->
-<div id="storyModal" class="story-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px;">
-    <div style="background: white; max-width: 800px; width: 100%; max-height: 90vh; border-radius: 16px; overflow-y: auto; position: relative;">
-        <button onclick="closeStoryModal()" style="position: sticky; top: 10px; right: 10px; float: right; background: #FF0000; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; margin: 10px; z-index: 10;">&times;</button>
-        <div id="storyModalContent" style="padding: 30px;">
-            <div style="text-align: center; padding: 50px;">
-                <i class="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading story...</p>
-            </div>
-        </div>
-    </div>
-</div>
-   
 </body>
 </html>
