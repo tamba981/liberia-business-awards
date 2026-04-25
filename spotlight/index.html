@@ -442,25 +442,23 @@
     cursor: not-allowed;
 }    
 
-     /* Add to your <style> section */
-#spotlightStoryModal {
-    display: none !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    background: rgba(0,0,0,0.8) !important;
-    z-index: 10000 !important;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 20px !important;
+     #spotlightStoryModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
-#spotlightStoryModal.active, 
-#spotlightStoryModal[style*="display: flex"] {
-    display: flex !important;
-}   
+#spotlightStoryModal.active {
+    display: flex;
+}
         
     </style>
 </head>
@@ -573,8 +571,8 @@
         </div>
         </footer>
 
-    <!-- Change from id="storyModal" to id="spotlightStoryModal" -->
-<div id="spotlightStoryModal" class="story-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px;">
+    <!-- Story Detail Modal -->
+    <div id="spotlightStoryModal" class="story-modal">
     <div style="background: white; max-width: 800px; width: 100%; max-height: 90vh; border-radius: 16px; overflow-y: auto; position: relative;">
         <button onclick="closeSpotlightStoryModal()" style="position: sticky; top: 10px; right: 10px; float: right; background: #FF0000; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; margin: 10px; z-index: 10;">&times;</button>
         <div id="spotlightStoryModalContent" style="padding: 30px;">
@@ -655,8 +653,6 @@ async function openSpotlightStoryModal(slug) {
     
     // Add active class instead of inline style
     modal.classList.add('active');
-    // Also set inline style as backup
-    modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
     // Show loading state
@@ -666,10 +662,6 @@ async function openSpotlightStoryModal(slug) {
             <p>Loading story...</p>
         </div>
     `;
-    
-    // Show modal
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
     
     try {
         // Fetch the full story by slug
