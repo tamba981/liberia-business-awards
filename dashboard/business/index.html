@@ -1482,8 +1482,15 @@
         };
 
          // ADD THESE RIGHT AFTER appState (around line 1165):
-let opportunitiesCurrentPage = 1;
-let opportunitiesTotalPages = 1;              
+        let opportunitiesCurrentPage = 1;
+        let opportunitiesTotalPages = 1; 
+
+        // ADD THESE SPOTLIGHT VARIABLES HERE (BEFORE they are used)
+        let businessSpotlightStories = [];
+        let businessSpotlightPage = 1;
+        let businessSpotlightTotalPages = 1;
+
+        
 
         // ============================================
         // INITIALIZATION
@@ -2061,6 +2068,54 @@ function displayDocuments() {
     }).join('');
 }
 
+async function downloadDocument(id) {
+    if (!id) {
+        showToast('Invalid document ID', 'error');
+        return;
+    }
+    
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        showToast('Please login again', 'error');
+        logout();
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/business/documents/${id}/download?token=${encodeURIComponent(token)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Download failed');
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Try to get filename from Content-Disposition header
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'document';
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showToast('Download started', 'success');
+    } catch (error) {
+        console.error('Download error:', error);
+        showToast('Failed to download document', 'error');
+    }
+}        
+        
 function formatFileSize(bytes) {
     if (!bytes) return '';
     if (bytes < 1024) return bytes + ' B';
@@ -2751,42 +2806,66 @@ async function submitApplication() {
 // BUSINESS SPOTLIGHT STORY FUNCTIONS
 // ============================================
 
-let businessSpotlightStories = [];
-let businessSpotlightPage = 1;
-let businessSpotlightTotalPages = 1;
-
-// Load business spotlight stories
+// Load business spotlight stories - FIXED VERSION
 async function loadBusinessSpotlightStories(page = 1) {
+    // Make sure variables are initialized
+    if (typeof businessSpotlightPage === 'undefined') {
+        businessSpotlightPage = 1;
+        businessSpotlightTotalPages = 1;
+        businessSpotlightStories = [];
+    }
+    
     businessSpotlightPage = page;
     const tbody = document.getElementById('businessSpotlightTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading your stories...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading your stories...<\/td><\/tr>';
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${BACKEND_URL}/business/spotlight/stories?page=${page}&limit=10`, {
+        if (!token) {
+            tbody.innerHTML = '<td><td colspan="6" style="text-align: center; color: #EF4444;">Please login again<\/td><\/tr>';
+            return;
+        }
+        
+        const url = `${BACKEND_URL}/business/spotlight/stories?page=${page}&limit=10`;
+        console.log('📡 Fetching spotlight stories:', url);
+        
+        const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        console.log('📡 Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('📡 Spotlight stories response:', data);
         
         if (data.success && data.stories) {
             businessSpotlightStories = data.stories;
             businessSpotlightTotalPages = data.pagination?.pages || 1;
             displayBusinessSpotlightStories();
             updateBusinessSpotlightPagination();
-            document.getElementById('spotlightStoriesCount').textContent = data.stories.length;
+            const countEl = document.getElementById('spotlightStoriesCount');
+            if (countEl) countEl.textContent = data.stories.length;
         } else {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No spotlight stories submitted yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No spotlight stories submitted yet<\/td><\/tr>';
         }
     } catch (error) {
         console.error('Error loading spotlight stories:', error);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading stories</td></tr>';
+        const tbody = document.getElementById('businessSpotlightTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading stories: ${error.message}<\/td><\/tr>`;
+        }
     }
 }
 
 function displayBusinessSpotlightStories() {
     const tbody = document.getElementById('businessSpotlightTableBody');
+    if (!tbody) return;
     
     if (!businessSpotlightStories || businessSpotlightStories.length === 0) {
         tbody.innerHTML = `
@@ -2796,14 +2875,13 @@ function displayBusinessSpotlightStories() {
                 <button class="btn btn-primary btn-sm" onclick="openSubmitSpotlightModal()" style="margin-top: 10px;">
                     <i class="fas fa-plus"></i> Submit Your First Story
                 </button>
-            </td></tr>
+            <\/td><\/tr>
         `;
         return;
     }
     
     tbody.innerHTML = businessSpotlightStories.map(story => {
         let statusClass = '';
-        let statusText = story.status || 'draft';
         switch(story.status) {
             case 'published': statusClass = 'status-approved'; break;
             case 'draft': statusClass = 'status-draft'; break;
@@ -2811,24 +2889,25 @@ function displayBusinessSpotlightStories() {
         }
         
         const date = story.created_at ? new Date(story.created_at).toLocaleDateString() : 'N/A';
+        const displayStatus = story.status || 'draft';
         
         return `
             <tr>
-                <td><strong>${escapeHtml(story.title)}</strong></td>
-                <td>${escapeHtml(story.business_name)}</td>
-                <td><span class="status-badge ${statusClass}">${story.status || 'draft'}</span></td>
-                <td>${date}</td>
-                <td>${story.views || 0}</td>
+                <td><strong>${escapeHtml(story.title)}<\/strong><\/td>
+                <td>${escapeHtml(story.business_name)}<\/td>
+                <td><span class="status-badge ${statusClass}">${displayStatus}<\/span><\/td>
+                <td>${date}<\/td>
+                <td>${story.views || 0}<\/td>
                 <td>
                     <div class="action-buttons">
                         ${story.status === 'published' ? 
-                            `<button class="action-btn view" onclick="viewPublishedStory('${story.slug}')"><i class="fas fa-eye"></i> View</button>` : 
-                            `<button class="action-btn edit" onclick="editSpotlightStory('${story._id}')"><i class="fas fa-edit"></i> Edit</button>
-                             <button class="action-btn delete" onclick="deleteSpotlightStory('${story._id}', '${escapeHtml(story.title)}')"><i class="fas fa-trash"></i></button>`
+                            `<button class="action-btn view" onclick="viewPublishedStory('${story.slug}')"><i class="fas fa-eye"></i> View<\/button>` : 
+                            `<button class="action-btn edit" onclick="editSpotlightStory('${story._id}')"><i class="fas fa-edit"></i> Edit<\/button>
+                             <button class="action-btn delete" onclick="deleteSpotlightStory('${story._id}', '${escapeHtml(story.title)}')"><i class="fas fa-trash"></i> Delete<\/button>`
                         }
                     </div>
-                </td>
-            </tr>
+                <\/td>
+            <\/tr>
         `;
     }).join('');
 }
@@ -2996,6 +3075,10 @@ function openSubmitSpotlightModal() {
 }
 
 function viewPublishedStory(slug) {
+    if (!slug) {
+        showToast('Invalid story link', 'error');
+        return;
+    }
     window.open(`/spotlight/${slug}`, '_blank');
 }
 
