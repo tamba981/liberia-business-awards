@@ -2499,7 +2499,30 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         window.refreshActivities = function() { loadAllData(); showToast('Dashboard refreshed', 'success'); };
         console.log('✅ Business Dashboard fully functional');
 
-      // ============================================
+        async function createNotification(title, message, type = 'info') {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${BACKEND_URL}/api/business/notifications`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title, message, type })
+        });
+        const data = await response.json();
+        if (data.success) {
+            console.log('✅ Notification created:', title);
+            // Reload notifications to update the count
+            await loadNotifications();
+        }
+        return data;
+    } catch (error) {
+        console.error('Failed to create notification:', error);
+    }
+}
+
+// ============================================
 // OPPORTUNITIES FUNCTIONS
 // ============================================
 
