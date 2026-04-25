@@ -1022,6 +1022,120 @@
                     </div>
                 </div>
             </div>
+
+                            <!-- SPOTLIGHT SECTION - CORRECTLY PLACED INSIDE DASHBOARDPAGE -->
+                <div id="spotlightSection" class="spotlight-section" style="display: none;">
+                    <div class="spotlight-header">
+                        <h2>
+                            <i class="fas fa-newspaper" style="color: #FF0000;"></i>
+                            My Spotlight Stories
+                        </h2>
+                        <button class="btn-spotlight" onclick="openSubmitSpotlightModal()">
+                            <i class="fas fa-plus"></i> Share Your Story
+                        </button>
+                    </div>
+                    <div id="businessStoriesList" class="stories-list">
+                        <div class="empty-stories">
+                            <i class="fas fa-newspaper" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
+                            <p>You haven't submitted any spotlight stories yet.</p>
+                            <button class="btn-spotlight" onclick="openSubmitSpotlightModal()" style="margin-top: 15px;">
+                                <i class="fas fa-plus"></i> Submit Your First Story
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>  <!-- THIS CLOSES dashboardPage -->
+
+                       <!-- Submit Spotlight Modal -->
+            <div class="modal" id="submitSpotlightModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-pen-fancy"></i> Share Your Business Story</h2>
+                        <button class="modal-close" onclick="closeSpotlightModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="spotlightSubmitForm">
+                            <div class="form-group">
+                                <label>Story Title *</label>
+                                <input type="text" id="submitStoryTitle" placeholder="E.g., How We Grew from a Small Shop to a National Brand" required maxlength="200">
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="submitStoryCategory" required>
+                                    <option value="">Select a category</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Short Excerpt *</label>
+                                <textarea id="submitStoryExcerpt" rows="3" placeholder="A brief summary of your story (150-200 characters)" required maxlength="250"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Full Story *</label>
+                                <textarea id="submitStoryContent" rows="8" placeholder="Share your inspiring business journey in detail..." required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Featured Image URL (optional)</label>
+                                <input type="url" id="submitStoryImage" placeholder="https://yourdomain.com/image.jpg">
+                                <small style="color: #64748b;">Upload an image to your profile first, then paste the URL here</small>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="submitAgreeTerms" required>
+                                    I confirm that this story is accurate and I have the right to share it.
+                                </label>
+                            </div>
+                            <div id="submitSpotlightError" style="display: none; background: #FEE2E2; color: #DC2626; padding: 10px; border-radius: 8px; margin-bottom: 15px;"></div>
+                            <div id="submitSpotlightSuccess" style="display: none; background: #D1FAE5; color: #059669; padding: 10px; border-radius: 8px; margin-bottom: 15px;"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeSpotlightModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="submitBusinessStory()">Submit for Review</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Spotlight Modal -->
+            <div class="modal" id="editSpotlightModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-edit"></i> Edit Your Story</h2>
+                        <button class="modal-close" onclick="closeEditSpotlightModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="spotlightEditForm">
+                            <input type="hidden" id="editStoryId">
+                            <div class="form-group">
+                                <label>Story Title *</label>
+                                <input type="text" id="editStoryTitle" required maxlength="200">
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="editStoryCategory" required>
+                                    <option value="">Select a category</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Short Excerpt *</label>
+                                <textarea id="editStoryExcerpt" rows="3" required maxlength="250"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Full Story *</label>
+                                <textarea id="editStoryContent" rows="8" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Featured Image URL (optional)</label>
+                                <input type="url" id="editStoryImage" placeholder="https://yourdomain.com/image.jpg">
+                            </div>
+                            <div id="editSpotlightError" style="display: none; background: #FEE2E2; color: #DC2626; padding: 10px; border-radius: 8px; margin-bottom: 15px;"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeEditSpotlightModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="updateBusinessStory()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
             
             <div id="profilePage" class="page" style="display: none;">
                 <div class="content-section">
@@ -2314,21 +2428,6 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         }
 
 
-        function showSpotlightSection() {
-    // Hide other sections, show spotlight section
-    document.querySelectorAll('.dashboard-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    let spotlightSection = document.getElementById('businessSpotlightSection');
-    if (!spotlightSection) {
-        // Create or show the spotlight section
-        const mainContent = document.querySelector('.main-content');
-        // Add the spotlight HTML from above
-    }
-    spotlightSection.style.display = 'block';
-}
-
         // ============================================
         // SETTINGS FUNCTIONS
         // ============================================
@@ -2942,357 +3041,60 @@ app.post('/api/business/spotlight/stories', authenticate, authorize('business'),
     }
 });
     </script>
-<!-- ============================================ -->
-<!-- BUSINESS SPOTLIGHT STORIES SECTION -->
-<!-- ============================================ -->
 
-<style>
-    .spotlight-section {
-        background: white;
-        border-radius: 16px;
-        padding: 25px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    
-    .spotlight-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    
-    .spotlight-header h2 {
-        font-size: 20px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .btn-spotlight {
-        background: linear-gradient(135deg, #FF0000, #cc0000);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s;
-    }
-    
-    .btn-spotlight:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(255,0,0,0.2);
-    }
-    
-    .btn-outline {
-        background: transparent;
-        border: 2px solid #e2e8f0;
-        color: #1a202c;
-    }
-    
-    .btn-outline:hover {
-        border-color: #FF0000;
-        color: #FF0000;
-    }
-    
-    .stories-list {
-        display: grid;
-        gap: 15px;
-    }
-    
-    .story-item {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 18px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.2s;
-    }
-    
-    .story-item:hover {
-        border-color: #87CEEB;
-        box-shadow: 0 2px 8px rgba(135,206,235,0.1);
-    }
-    
-    .story-info {
-        flex: 1;
-    }
-    
-    .story-title {
-        font-weight: 700;
-        font-size: 16px;
-        margin-bottom: 8px;
-        color: #1a202c;
-    }
-    
-    .story-meta {
-        display: flex;
-        gap: 20px;
-        font-size: 12px;
-        color: #64748b;
-        flex-wrap: wrap;
-    }
-    
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    
-    .status-published, .status-approved {
-        background: #D1FAE5;
-        color: #059669;
-    }
-    
-    .status-draft, .status-pending {
-        background: #FEF3C7;
-        color: #D97706;
-    }
-    
-    .status-rejected {
-        background: #FEE2E2;
-        color: #DC2626;
-    }
-    
-    .story-actions {
-        display: flex;
-        gap: 8px;
-    }
-    
-    .story-actions button {
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 12px;
-        border: none;
-    }
-    
-    .empty-stories {
-        text-align: center;
-        padding: 50px;
-        color: #64748b;
-    }
-    
-    /* Modal Styles */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.7);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .modal.active {
-        display: flex;
-    }
-    
-    .modal-content {
-        background: white;
-        border-radius: 20px;
-        max-width: 700px;
-        width: 90%;
-        max-height: 85vh;
-        overflow-y: auto;
-    }
-    
-    .modal-header {
-        padding: 20px;
-        background: linear-gradient(135deg, #FF0000, #87CEEB);
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 20px 20px 0 0;
-    }
-    
-    .modal-body {
-        padding: 25px;
-    }
-    
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-group label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 8px;
-        font-size: 14px;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 12px;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-    
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-        outline: none;
-        border-color: #FF0000;
-    }
-    
-    .modal-footer {
-        padding: 20px;
-        border-top: 1px solid #e2e8f0;
-        display: flex;
-        justify-content: flex-end;
-        gap: 15px;
-    }
-</style>
-
-<!-- Spotlight Stories Section -->
-<div class="spotlight-section">
-    <div class="spotlight-header">
-        <h2>
-            <i class="fas fa-newspaper" style="color: #FF0000;"></i>
-            My Spotlight Stories
-        </h2>
-        <button class="btn-spotlight" onclick="openSubmitSpotlightModal()">
-            <i class="fas fa-plus"></i> Share Your Story
-        </button>
-    </div>
-    
-    <div id="businessStoriesList" class="stories-list">
-        <div class="empty-stories">
-            <i class="fas fa-newspaper" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
-            <p>You haven't submitted any spotlight stories yet.</p>
-            <button class="btn-spotlight" onclick="openSubmitSpotlightModal()" style="margin-top: 15px;">
-                <i class="fas fa-plus"></i> Submit Your First Story
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Submit Spotlight Modal -->
-<div class="modal" id="submitSpotlightModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-pen-fancy"></i> Share Your Business Story</h2>
-            <button class="modal-close" onclick="closeSpotlightModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="spotlightSubmitForm">
-                <div class="form-group">
-                    <label>Story Title *</label>
-                    <input type="text" id="submitStoryTitle" placeholder="E.g., How We Grew from a Small Shop to a National Brand" required maxlength="200">
-                </div>
-                
-                <div class="form-group">
-                    <label>Category *</label>
-                    <select id="submitStoryCategory" required>
-                        <option value="">Select a category</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Short Excerpt *</label>
-                    <textarea id="submitStoryExcerpt" rows="3" placeholder="A brief summary of your story (150-200 characters)" required maxlength="250"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Full Story *</label>
-                    <textarea id="submitStoryContent" rows="8" placeholder="Share your inspiring business journey in detail..." required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Featured Image URL (optional)</label>
-                    <input type="url" id="submitStoryImage" placeholder="https://yourdomain.com/image.jpg">
-                    <small style="color: #64748b;">Upload an image to your profile first, then paste the URL here</small>
-                </div>
-                
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="submitAgreeTerms" required>
-                        I confirm that this story is accurate and I have the right to share it.
-                    </label>
-                </div>
-                
-                <div id="submitSpotlightError" style="display: none; background: #FEE2E2; color: #DC2626; padding: 10px; border-radius: 8px; margin-bottom: 15px;"></div>
-                <div id="submitSpotlightSuccess" style="display: none; background: #D1FAE5; color: #059669; padding: 10px; border-radius: 8px; margin-bottom: 15px;"></div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-outline" onclick="closeSpotlightModal()" style="padding: 10px 20px; border-radius: 8px;">Cancel</button>
-            <button class="btn-spotlight" onclick="submitBusinessStory()">Submit for Review</button>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Spotlight Modal -->
-<div class="modal" id="editSpotlightModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-edit"></i> Edit Your Story</h2>
-            <button class="modal-close" onclick="closeEditSpotlightModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="spotlightEditForm">
-                <input type="hidden" id="editStoryId">
-                
-                <div class="form-group">
-                    <label>Story Title *</label>
-                    <input type="text" id="editStoryTitle" required maxlength="200">
-                </div>
-                
-                <div class="form-group">
-                    <label>Category *</label>
-                    <select id="editStoryCategory" required>
-                        <option value="">Select a category</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Short Excerpt *</label>
-                    <textarea id="editStoryExcerpt" rows="3" required maxlength="250"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Full Story *</label>
-                    <textarea id="editStoryContent" rows="8" required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Featured Image URL (optional)</label>
-                    <input type="url" id="editStoryImage" placeholder="https://yourdomain.com/image.jpg">
-                </div>
-                
-                <div id="editSpotlightError" style="display: none; background: #FEE2E2; color: #DC2626; padding: 10px; border-radius: 8px; margin-bottom: 15px;"></div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-outline" onclick="closeEditSpotlightModal()" style="padding: 10px 20px; border-radius: 8px;">Cancel</button>
-            <button class="btn-spotlight" onclick="updateBusinessStory()">Save Changes</button>
-        </div>
-    </div>
-</div>
 
 <script>
 // ============================================
-// BUSINESS SPOTLIGHT FUNCTIONS
+// BUSINESS SPOTLIGHT FUNCTIONS - FIXED
 // ============================================
 
-const API_BASE_URL = 'https://liberia-business-awards-production.up.railway.app/api';
+// Global function to show spotlight section
+function showSpotlightSection() {
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(p => {
+        p.style.display = 'none';
+    });
+    
+    // Show the spotlight section within dashboard page
+    document.getElementById('dashboardPage').style.display = 'block';
+    
+    // Hide regular dashboard content, show spotlight section
+    const dashboardContent = document.querySelector('#dashboardPage .business-profile-card, #dashboardPage .stats-grid, #dashboardPage .quick-actions, #dashboardPage > div:not(#spotlightSection)');
+    document.querySelectorAll('#dashboardPage > .business-profile-card, #dashboardPage > .stats-grid, #dashboardPage > .quick-actions, #dashboardPage > div:not(#spotlightSection)').forEach(el => {
+        if (el.id !== 'spotlightSection') {
+            el.style.display = 'none';
+        }
+    });
+    
+    // Show spotlight section
+    const spotlightSection = document.getElementById('spotlightSection');
+    if (spotlightSection) {
+        spotlightSection.style.display = 'block';
+    }
+    
+    // Update active menu item
+    document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+    document.querySelector('.menu-item[data-page="dashboard"]').classList.add('active');
+    
+    document.getElementById('pageTitle').textContent = 'My Spotlight Stories';
+    
+    // Load stories
+    loadBusinessStories();
+}
+
+// Reset function to show normal dashboard
+function showDashboardHome() {
+    document.querySelectorAll('#dashboardPage > .business-profile-card, #dashboardPage > .stats-grid, #dashboardPage > .quick-actions, #dashboardPage > div:not(#spotlightSection)').forEach(el => {
+        if (el.id !== 'spotlightSection') {
+            el.style.display = '';
+        }
+    });
+    const spotlightSection = document.getElementById('spotlightSection');
+    if (spotlightSection) {
+        spotlightSection.style.display = 'none';
+    }
+    document.getElementById('pageTitle').textContent = 'Dashboard';
+}
 
 // Load business stories
 async function loadBusinessStories() {
@@ -3303,7 +3105,7 @@ async function loadBusinessStories() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE_URL}/business/spotlight/stories`, {
+        const response = await fetch(`${BACKEND_URL}/business/spotlight/stories`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -3311,6 +3113,7 @@ async function loadBusinessStories() {
         
         if (data.success && data.stories && data.stories.length > 0) {
             displayBusinessStories(data.stories);
+            document.getElementById('spotlightStoriesCount').textContent = data.stories.length;
         } else {
             container.innerHTML = `
                 <div class="empty-stories">
@@ -3321,6 +3124,7 @@ async function loadBusinessStories() {
                     </button>
                 </div>
             `;
+            document.getElementById('spotlightStoriesCount').textContent = '0';
         }
     } catch (error) {
         console.error('Error loading stories:', error);
@@ -3342,13 +3146,14 @@ function displayBusinessStories(stories) {
                 const statusClass = story.status === 'published' ? 'status-published' : (story.status === 'draft' ? 'status-draft' : 'status-pending');
                 const statusText = story.status === 'published' ? '✅ Published' : (story.status === 'draft' ? '📝 Draft' : '⏳ Pending Review');
                 const canEdit = story.status === 'draft';
+                const categoryName = story.category?.name || 'General';
                 
                 return `
                     <div class="story-item">
                         <div class="story-info">
                             <div class="story-title">${escapeHtml(story.title)}</div>
                             <div class="story-meta">
-                                <span><i class="fas fa-tag"></i> ${escapeHtml(story.category?.name || 'General')}</span>
+                                <span><i class="fas fa-tag"></i> ${escapeHtml(categoryName)}</span>
                                 <span><i class="fas fa-calendar"></i> ${new Date(story.created_at).toLocaleDateString()}</span>
                                 <span class="status-badge ${statusClass}">${statusText}</span>
                             </div>
@@ -3358,16 +3163,16 @@ function displayBusinessStories(stories) {
                         </div>
                         <div class="story-actions">
                             ${canEdit ? `
-                                <button onclick="editBusinessStory('${story._id}')" title="Edit">
-                                    <i class="fas fa-edit"></i>
+                                <button onclick="editBusinessStory('${story._id}')" title="Edit" style="background: #DBEAFE; color: #2563EB;">
+                                    <i class="fas fa-edit"></i> Edit
                                 </button>
                                 <button onclick="deleteBusinessStory('${story._id}', '${escapeHtml(story.title)}')" title="Delete" style="background: #FEE2E2; color: #DC2626;">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="fas fa-trash"></i> Delete
                                 </button>
                             ` : ''}
                             ${story.status === 'published' ? `
                                 <button onclick="viewPublishedStory('${story.slug}')" title="View" style="background: #D1FAE5; color: #059669;">
-                                    <i class="fas fa-eye"></i>
+                                    <i class="fas fa-eye"></i> View
                                 </button>
                             ` : ''}
                         </div>
@@ -3381,7 +3186,7 @@ function displayBusinessStories(stories) {
 // Load categories for dropdown
 async function loadSpotlightCategoriesForBusiness() {
     try {
-        const response = await fetch(`${API_BASE_URL}/spotlight/categories`);
+        const response = await fetch(`${BACKEND_URL}/spotlight/categories`);
         const data = await response.json();
         
         if (data.success && data.categories) {
@@ -3400,67 +3205,82 @@ async function loadSpotlightCategoriesForBusiness() {
 
 // Open submit modal
 function openSubmitSpotlightModal() {
-    document.getElementById('submitSpotlightForm').reset();
-    document.getElementById('submitSpotlightError').style.display = 'none';
-    document.getElementById('submitSpotlightSuccess').style.display = 'none';
-    document.getElementById('submitSpotlightModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
+    // Make sure form elements exist
+    const form = document.getElementById('spotlightSubmitForm');
+    if (form) form.reset();
+    
+    const errorDiv = document.getElementById('submitSpotlightError');
+    const successDiv = document.getElementById('submitSpotlightSuccess');
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (successDiv) successDiv.style.display = 'none';
+    
+    const modal = document.getElementById('submitSpotlightModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
     loadSpotlightCategoriesForBusiness();
 }
 
 // Close modals
 function closeSpotlightModal() {
-    document.getElementById('submitSpotlightModal').classList.remove('active');
-    document.body.style.overflow = 'auto';
+    const modal = document.getElementById('submitSpotlightModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
 }
 
 function closeEditSpotlightModal() {
-    document.getElementById('editSpotlightModal').classList.remove('active');
-    document.body.style.overflow = 'auto';
+    const modal = document.getElementById('editSpotlightModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
 }
 
 // Submit business story
 async function submitBusinessStory() {
-    const title = document.getElementById('submitStoryTitle').value.trim();
-    const category_id = document.getElementById('submitStoryCategory').value;
-    const excerpt = document.getElementById('submitStoryExcerpt').value.trim();
-    const content = document.getElementById('submitStoryContent').value.trim();
-    const featured_image = document.getElementById('submitStoryImage').value.trim();
-    const agreeTerms = document.getElementById('submitAgreeTerms').checked;
+    const title = document.getElementById('submitStoryTitle')?.value.trim();
+    const category_id = document.getElementById('submitStoryCategory')?.value;
+    const excerpt = document.getElementById('submitStoryExcerpt')?.value.trim();
+    const content = document.getElementById('submitStoryContent')?.value.trim();
+    const featured_image = document.getElementById('submitStoryImage')?.value.trim();
+    const agreeTerms = document.getElementById('submitAgreeTerms')?.checked;
     
     const errorDiv = document.getElementById('submitSpotlightError');
     const successDiv = document.getElementById('submitSpotlightSuccess');
     
-    errorDiv.style.display = 'none';
-    successDiv.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (successDiv) successDiv.style.display = 'none';
     
     if (!title) {
-        errorDiv.textContent = 'Please enter a story title';
-        errorDiv.style.display = 'block';
+        if (errorDiv) errorDiv.textContent = 'Please enter a story title';
+        if (errorDiv) errorDiv.style.display = 'block';
         return;
     }
     
     if (!category_id) {
-        errorDiv.textContent = 'Please select a category';
-        errorDiv.style.display = 'block';
+        if (errorDiv) errorDiv.textContent = 'Please select a category';
+        if (errorDiv) errorDiv.style.display = 'block';
         return;
     }
     
     if (!excerpt) {
-        errorDiv.textContent = 'Please enter a short excerpt';
-        errorDiv.style.display = 'block';
+        if (errorDiv) errorDiv.textContent = 'Please enter a short excerpt';
+        if (errorDiv) errorDiv.style.display = 'block';
         return;
     }
     
     if (!content) {
-        errorDiv.textContent = 'Please enter the full story';
-        errorDiv.style.display = 'block';
+        if (errorDiv) errorDiv.textContent = 'Please enter the full story';
+        if (errorDiv) errorDiv.style.display = 'block';
         return;
     }
     
     if (!agreeTerms) {
-        errorDiv.textContent = 'Please confirm that your story is accurate';
-        errorDiv.style.display = 'block';
+        if (errorDiv) errorDiv.textContent = 'Please confirm that your story is accurate';
+        if (errorDiv) errorDiv.style.display = 'block';
         return;
     }
     
@@ -3471,7 +3291,7 @@ async function submitBusinessStory() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE_URL}/business/spotlight/stories`, {
+        const response = await fetch(`${BACKEND_URL}/business/spotlight/stories`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -3483,24 +3303,32 @@ async function submitBusinessStory() {
         const data = await response.json();
         
         if (data.success) {
-            successDiv.textContent = '✅ Your story has been submitted for review! You will be notified once approved.';
-            successDiv.style.display = 'block';
+            if (successDiv) {
+                successDiv.textContent = '✅ Your story has been submitted for review! You will be notified once approved.';
+                successDiv.style.display = 'block';
+            }
             
             // Reset form
-            document.getElementById('submitSpotlightForm').reset();
+            const form = document.getElementById('spotlightSubmitForm');
+            if (form) form.reset();
             
             // Close modal after 2 seconds and reload stories
             setTimeout(() => {
                 closeSpotlightModal();
                 loadBusinessStories();
+                showToast('Story submitted successfully!', 'success');
             }, 2000);
         } else {
-            errorDiv.textContent = data.message || 'Failed to submit story';
-            errorDiv.style.display = 'block';
+            if (errorDiv) {
+                errorDiv.textContent = data.message || 'Failed to submit story';
+                errorDiv.style.display = 'block';
+            }
         }
     } catch (error) {
-        errorDiv.textContent = 'Error submitting story. Please try again.';
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+            errorDiv.textContent = 'Error submitting story. Please try again.';
+            errorDiv.style.display = 'block';
+        }
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
@@ -3511,7 +3339,7 @@ async function submitBusinessStory() {
 async function editBusinessStory(storyId) {
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE_URL}/business/spotlight/stories`, {
+        const response = await fetch(`${BACKEND_URL}/business/spotlight/stories`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -3532,48 +3360,61 @@ async function editBusinessStory(storyId) {
                 categorySelect.value = story.category_id._id || story.category_id;
             }
             
-            document.getElementById('editSpotlightError').style.display = 'none';
-            document.getElementById('editSpotlightModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
+            const errorDiv = document.getElementById('editSpotlightError');
+            if (errorDiv) errorDiv.style.display = 'none';
+            
+            const modal = document.getElementById('editSpotlightModal');
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
         }
     } catch (error) {
-        showNotification('Error loading story for editing', 'error');
+        showToast('Error loading story for editing', 'error');
     }
 }
 
 // Update business story
 async function updateBusinessStory() {
-    const storyId = document.getElementById('editStoryId').value;
-    const title = document.getElementById('editStoryTitle').value.trim();
-    const category_id = document.getElementById('editStoryCategory').value;
-    const excerpt = document.getElementById('editStoryExcerpt').value.trim();
-    const content = document.getElementById('editStoryContent').value.trim();
-    const featured_image = document.getElementById('editStoryImage').value.trim();
+    const storyId = document.getElementById('editStoryId')?.value;
+    const title = document.getElementById('editStoryTitle')?.value.trim();
+    const category_id = document.getElementById('editStoryCategory')?.value;
+    const excerpt = document.getElementById('editStoryExcerpt')?.value.trim();
+    const content = document.getElementById('editStoryContent')?.value.trim();
+    const featured_image = document.getElementById('editStoryImage')?.value.trim();
     
     const errorDiv = document.getElementById('editSpotlightError');
-    errorDiv.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'none';
     
     if (!title) {
-        errorDiv.textContent = 'Please enter a story title';
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+            errorDiv.textContent = 'Please enter a story title';
+            errorDiv.style.display = 'block';
+        }
         return;
     }
     
     if (!category_id) {
-        errorDiv.textContent = 'Please select a category';
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+            errorDiv.textContent = 'Please select a category';
+            errorDiv.style.display = 'block';
+        }
         return;
     }
     
     if (!excerpt) {
-        errorDiv.textContent = 'Please enter a short excerpt';
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+            errorDiv.textContent = 'Please enter a short excerpt';
+            errorDiv.style.display = 'block';
+        }
         return;
     }
     
     if (!content) {
-        errorDiv.textContent = 'Please enter the full story';
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+            errorDiv.textContent = 'Please enter the full story';
+            errorDiv.style.display = 'block';
+        }
         return;
     }
     
@@ -3584,7 +3425,7 @@ async function updateBusinessStory() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE_URL}/business/spotlight/stories/${storyId}`, {
+        const response = await fetch(`${BACKEND_URL}/business/spotlight/stories/${storyId}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -3598,14 +3439,18 @@ async function updateBusinessStory() {
         if (data.success) {
             closeEditSpotlightModal();
             loadBusinessStories();
-            showNotification('Story updated successfully!', 'success');
+            showToast('Story updated successfully!', 'success');
         } else {
-            errorDiv.textContent = data.message || 'Failed to update story';
-            errorDiv.style.display = 'block';
+            if (errorDiv) {
+                errorDiv.textContent = data.message || 'Failed to update story';
+                errorDiv.style.display = 'block';
+            }
         }
     } catch (error) {
-        errorDiv.textContent = 'Error updating story. Please try again.';
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+            errorDiv.textContent = 'Error updating story. Please try again.';
+            errorDiv.style.display = 'block';
+        }
     } finally {
         updateBtn.innerHTML = originalText;
         updateBtn.disabled = false;
@@ -3618,7 +3463,7 @@ async function deleteBusinessStory(storyId, storyTitle) {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE_URL}/business/spotlight/stories/${storyId}`, {
+        const response = await fetch(`${BACKEND_URL}/business/spotlight/stories/${storyId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -3626,13 +3471,13 @@ async function deleteBusinessStory(storyId, storyTitle) {
         const data = await response.json();
         
         if (data.success) {
-            showNotification('Story deleted successfully', 'success');
+            showToast('Story deleted successfully', 'success');
             loadBusinessStories();
         } else {
-            showNotification(data.message || 'Failed to delete story', 'error');
+            showToast(data.message || 'Failed to delete story', 'error');
         }
     } catch (error) {
-        showNotification('Error deleting story', 'error');
+        showToast('Error deleting story', 'error');
     }
 }
 
@@ -3640,89 +3485,67 @@ function viewPublishedStory(slug) {
     window.open(`/spotlight/${slug}`, '_blank');
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#10B981' : '#EF4444'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    notification.innerHTML = message;
-    document.body.appendChild(notification);
+function showToast(message, type) {
+    const toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i><span>${message}</span>`;
+    toastContainer.appendChild(toast);
     
     setTimeout(() => {
-        notification.remove();
-    }, 3000);
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }
 
-// Add CSS animation
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+// Add downloadDocument function if missing
+function downloadDocument(id) {
+    if (!id) {
+        showToast('Invalid document ID', 'error');
+        return;
     }
-`;
-document.head.appendChild(styleSheet);
+    
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        showToast('Please login again', 'error');
+        logout();
+        return;
+    }
+    
+    window.open(`${BACKEND_URL}/business/documents/${id}/download?token=${encodeURIComponent(token)}`, '_blank');
+}
 
-// Initialize
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    loadBusinessStories();
+    // Add spotlight section to dashboard page
+    const dashboardPage = document.getElementById('dashboardPage');
+    const spotlightSectionHtml = document.getElementById('spotlightSection');
+    
+    if (dashboardPage && !dashboardPage.querySelector('#spotlightSection')) {
+        // The spotlight section should already be in the HTML
+        console.log('Spotlight section ready');
+    }
+    
+    // Override switchPage to handle dashboard properly
+    const originalSwitchPage = window.switchPage;
+    window.switchPage = function(page) {
+        if (page === 'dashboard') {
+            // Show normal dashboard content
+            document.querySelectorAll('#dashboardPage > .business-profile-card, #dashboardPage > .stats-grid, #dashboardPage > .quick-actions, #dashboardPage > div:not(#spotlightSection)').forEach(el => {
+                if (el && el.id !== 'spotlightSection') {
+                    el.style.display = '';
+                }
+            });
+            const spotlightSection = document.getElementById('spotlightSection');
+            if (spotlightSection) spotlightSection.style.display = 'none';
+            document.getElementById('pageTitle').textContent = 'Dashboard';
+        } else if (originalSwitchPage) {
+            originalSwitchPage(page);
+        }
+    };
 });
-
-// Make sure the spotlight section is visible when clicking the menu
-function showSpotlightSection() {
-    // Scroll to the spotlight section if it exists
-    const spotlightSection = document.querySelector('.spotlight-section');
-    if (spotlightSection) {
-        spotlightSection.scrollIntoView({ behavior: 'smooth' });
-        // Also highlight it briefly
-        spotlightSection.style.transition = 'background 0.3s';
-        spotlightSection.style.background = '#f0f9ff';
-        setTimeout(() => {
-            spotlightSection.style.background = '';
-        }, 1000);
-    }
-    // Also switch to dashboard page to ensure it's visible
-    switchPage('dashboard');
-}
-
-// Also need to add createNotification if not defined
-async function createNotification(title, message, type = 'info') {
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${BACKEND_URL}/api/business/notifications`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ title, message, type })
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Failed to create notification:', error);
-    }
-}    
 </script>
     
 </body>
