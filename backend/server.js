@@ -633,6 +633,35 @@ app.post('/api/auth/business/login', authLimiter, async (req, res) => {
     }
 });
 
+// Add this to server.js - Business create notification endpoint
+app.post('/api/business/notifications', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { title, message, type } = req.body;
+        
+        if (!title || !message) {
+            return res.status(400).json({ success: false, message: 'Title and message are required' });
+        }
+        
+        const notification = new Notification({
+            business_id: req.user._id,
+            title,
+            message,
+            type: type || 'info',
+            read: false
+        });
+        
+        await notification.save();
+        
+        res.json({
+            success: true,
+            message: 'Notification created',
+            notification
+        });
+    } catch (error) {
+        console.error('Create notification error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 // Business Registration
 app.post('/api/business/register', [
     body('email').isEmail().normalizeEmail(),
