@@ -914,6 +914,22 @@ function testModal() {
         paginationDiv.id = 'pagination';
         paginationDiv.className = 'pagination';
         articlesSection.appendChild(paginationDiv);
+
+        // Debug: Log when modal functions are called
+const originalOpen = openSpotlightStoryModal;
+window.openSpotlightStoryModal = async function(slug) {
+    console.log('🔍 Modal opening requested for slug:', slug);
+    console.log('📦 Modal element:', document.getElementById('spotlightStoryModal'));
+    console.log('🎨 Modal display before:', document.getElementById('spotlightStoryModal')?.style.display);
+    
+    await originalOpen(slug);
+    
+    console.log('🎨 Modal display after:', document.getElementById('spotlightStoryModal')?.style.display);
+};
+
+console.log('✅ Spotlight page fully loaded');
+console.log('📊 Number of Read Story buttons:', document.querySelectorAll('.read-more').length);
+        
     </script>
 
 </body>
