@@ -12408,6 +12408,284 @@ function addCustomerPopupAd(businessName, imageUrl, ctaLink, ctaText, descriptio
 
 // Example: addCustomerPopupAd("ABC Store", "images/abc-ad.jpg", "https://abcstore.com", "Shop Now", "Get 20% off!");
 </script>
+
+// ============================================
+// DYNAMIC ADS SYSTEM - REPLACE HARDCODED ADS
+// ============================================
+
+const AdManager = {
+    API_URL: 'https://liberia-business-awards-production.up.railway.app/api',
+    
+    // Cache ads to reduce API calls
+    adsCache: {
+        topBanner: [],
+        sidebar: [],
+        inline: [],
+        floating: [],
+        lastFetch: null
+    },
+    
+    // Initialize ad system
+    async init() {
+        console.log('📢 Initializing Dynamic Ad System...');
+        await this.fetchAllAds();
+        this.renderAllAds();
+        this.startAutoRefresh();
+    },
+    
+    // Fetch ads from backend
+    async fetchAds(type, placement = null) {
+        try {
+            let url = `${this.API_URL}/ads?type=${type}&limit=10`;
+            if (placement) url += `&placement=${placement}`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.success) {
+                return data.ads;
+            }
+            return [];
+        } catch (error) {
+            console.error('Error fetching ads:', error);
+            return [];
+        }
+    },
+    
+    // Fetch all ad types
+    async fetchAllAds() {
+        try {
+            const [topBanner, sidebar, inline, floating] = await Promise.all([
+                this.fetchAds('top-banner', 'top-banner'),
+                this.fetchAds('sidebar', 'sidebar'),
+                this.fetchAds('inline', 'inline'),
+                this.fetchAds('floating', 'floating')
+            ]);
+            
+            this.adsCache = {
+                topBanner,
+                sidebar,
+                inline,
+                floating,
+                lastFetch: new Date()
+            };
+            
+            console.log(`📢 Ads loaded: ${topBanner.length} top, ${sidebar.length} sidebar, ${inline.length} inline, ${floating.length} floating`);
+        } catch (error) {
+            console.error('Error fetching all ads:', error);
+        }
+    },
+    
+    // Render all ads on page
+    renderAllAds() {
+        this.renderTopBanner();
+        this.renderSidebarAds();
+        this.renderInlineAds();
+        this.renderFloatingAd();
+    },
+    
+    // Render top banner ad
+    renderTopBanner() {
+        const ads = this.adsCache.topBanner;
+        if (!ads.length) return;
+        
+        // Find or create top banner container
+        let bannerContainer = document.getElementById('dynamicTopBanner');
+        if (!bannerContainer) {
+            const heroSection = document.querySelector('.hero');
+            if (heroSection) {
+                bannerContainer = document.createElement('div');
+                bannerContainer.id = 'dynamicTopBanner';
+                bannerContainer.className = 'top-banner-ad';
+                heroSection.insertAdjacentElement('afterend', bannerContainer);
+            }
+        }
+        
+        if (bannerContainer) {
+            const ad = ads[0]; // Show first top banner ad
+            bannerContainer.innerHTML = `
+                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="display: block; text-decoration: none;">
+                    <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 12px;">
+                    ${ad.description ? `<p style="margin-top: 5px; font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
+                </a>
+            `;
+            this.trackView(ad._id);
+        }
+    },
+    
+    // Render sidebar ads (replaces static ad container)
+    renderSidebarAds() {
+        const ads = this.adsCache.sidebar;
+        if (!ads.length) return;
+        
+        let sidebarContainer = document.getElementById('dynamicSidebarAds');
+        if (!sidebarContainer) {
+            // Find where sidebar ads should go - look for existing ad container
+            const existing = document.querySelector('.sidebar-ad-container, [class*="sidebar-ad"]');
+            if (existing) {
+                existing.id = 'dynamicSidebarAds';
+                sidebarContainer = existing;
+            } else {
+                // Create new container
+                const sidebar = document.querySelector('.sidebar, aside, [class*="sidebar"]');
+                if (sidebar) {
+                    sidebarContainer = document.createElement('div');
+                    sidebarContainer.id = 'dynamicSidebarAds';
+                    sidebarContainer.className = 'sidebar-ad-container';
+                    sidebar.appendChild(sidebarContainer);
+                }
+            }
+        }
+        
+        if (sidebarContainer) {
+            sidebarContainer.innerHTML = ads.map(ad => `
+                <div class="sidebar-ad-item" style="margin-bottom: 20px;">
+                    <div class="sidebar-ad-label">Advertisement</div>
+                    <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')">
+                        <img src="${ad.image_url}" alt="${ad.title}" style="width: 100%; border-radius: 8px;">
+                        <h4 style="margin-top: 8px; font-size: 14px;">${ad.title}</h4>
+                        ${ad.description ? `<p style="font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
+                    </a>
+                </div>
+            `).join('');
+            
+            // Track views for each ad
+            ads.forEach(ad => this.trackView(ad._id));
+        }
+    },
+    
+    // Render inline ads within content
+    renderInlineAds() {
+        const ads = this.adsCache.inline;
+        if (!ads.length) return;
+        
+        // Find content containers to inject ads
+        const contentContainers = document.querySelectorAll('.content-article, .blog-post, .section-content, .main-content > div');
+        
+        contentContainers.forEach((container, index) => {
+            if (index % 3 === 1 && ads.length > 0) { // Insert every 3rd container
+                const adIndex = Math.floor(index / 3) % ads.length;
+                const ad = ads[adIndex];
+                
+                const inlineAdDiv = document.createElement('div');
+                inlineAdDiv.className = 'in-content-ad-container';
+                inlineAdDiv.style.cssText = 'background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 16px; padding: 20px; margin: 30px 0; text-align: center; border: 1px dashed #FF0000;';
+                inlineAdDiv.innerHTML = `
+                    <div class="sidebar-ad-label" style="font-size: 10px; color: #9ca3af;">Sponsored</div>
+                    <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="text-decoration: none;">
+                        <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 12px; margin-bottom: 10px;">
+                        <h4 style="font-size: 16px; color: #1a202c;">${ad.title}</h4>
+                        ${ad.description ? `<p style="font-size: 13px; color: #6c757d;">${ad.description}</p>` : ''}
+                        <button class="ad-cta-btn" style="background: #FF0000; color: white; border: none; padding: 8px 20px; border-radius: 30px; margin-top: 10px; cursor: pointer;">Learn More</button>
+                    </a>
+                `;
+                
+                if (container.parentNode) {
+                    container.parentNode.insertBefore(inlineAdDiv, container.nextSibling);
+                }
+            }
+        });
+    },
+    
+    // Render floating/popup ad
+    renderFloatingAd() {
+        const ads = this.adsCache.floating;
+        if (!ads.length) return;
+        
+        // Check if user closed floating ad recently
+        const lastClosed = localStorage.getItem('floatingAdClosed');
+        if (lastClosed && (Date.now() - parseInt(lastClosed)) < 30 * 60 * 1000) {
+            return; // Don't show for 30 minutes after closing
+        }
+        
+        let floatingContainer = document.getElementById('dynamicFloatingAd');
+        if (!floatingContainer) {
+            floatingContainer = document.createElement('div');
+            floatingContainer.id = 'dynamicFloatingAd';
+            floatingContainer.className = 'floating-ad';
+            document.body.appendChild(floatingContainer);
+        }
+        
+        const ad = ads[0];
+        floatingContainer.innerHTML = `
+            <div class="ad-header" onclick="AdManager.toggleMinimize()">
+                <span><i class="fas fa-ad"></i> Advertisement</span>
+                <button class="ad-close" onclick="AdManager.closeFloatingAd(event)">✕</button>
+            </div>
+            <div class="ad-content" id="floatingAdContent">
+                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')">
+                    <img src="${ad.image_url}" alt="${ad.title}">
+                    <h4>${ad.title}</h4>
+                    ${ad.description ? `<p>${ad.description}</p>` : ''}
+                    <button class="ad-btn">Learn More →</button>
+                </a>
+            </div>
+        `;
+        
+        floatingContainer.classList.add('active');
+        this.trackView(ad._id);
+        
+        // Auto-hide after 15 seconds
+        setTimeout(() => {
+            if (floatingContainer.classList.contains('active')) {
+                floatingContainer.classList.remove('active');
+            }
+        }, 15000);
+    },
+    
+    // Track ad click
+    async trackClick(adId) {
+        try {
+            await fetch(`${this.API_URL}/ads/${adId}/click`, { method: 'POST' });
+        } catch (error) {
+            console.error('Error tracking click:', error);
+        }
+    },
+    
+    // Track ad view
+    async trackView(adId) {
+        try {
+            await fetch(`${this.API_URL}/ads/${adId}/view`, { method: 'POST' });
+        } catch (error) {
+            console.error('Error tracking view:', error);
+        }
+    },
+    
+    // Toggle floating ad minimize
+    toggleMinimize() {
+        const container = document.getElementById('dynamicFloatingAd');
+        if (container) {
+            container.classList.toggle('minimized');
+        }
+    },
+    
+    // Close floating ad
+    closeFloatingAd(event) {
+        event.stopPropagation();
+        const container = document.getElementById('dynamicFloatingAd');
+        if (container) {
+            container.classList.remove('active');
+            localStorage.setItem('floatingAdClosed', Date.now().toString());
+        }
+    },
+    
+    // Auto-refresh ads every 5 minutes
+    startAutoRefresh() {
+        setInterval(async () => {
+            await this.fetchAllAds();
+            this.renderAllAds();
+        }, 5 * 60 * 1000);
+    }
+};
+
+// Initialize Ad Manager when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    AdManager.init();
+});
+
+// Expose to window
+window.AdManager = AdManager;
+    
     
 </body>
 
