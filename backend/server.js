@@ -477,6 +477,25 @@ const notificationSchema = new mongoose.Schema({
     related_id: { type: mongoose.Schema.Types.ObjectId }
 }, { timestamps: true });
 
+// ============ ADD AD SCHEMA HERE (BEFORE creating models) ============
+const adSchema = new mongoose.Schema({
+    title: { type: String, required: true, maxlength: 200 },
+    description: { type: String, maxlength: 500 },
+    image_url: { type: String, required: true },
+    link_url: { type: String },
+    type: { type: String, enum: ['top-banner', 'sidebar', 'inline', 'floating', 'bottom-popup'], default: 'sidebar' },
+    placement: { type: String, default: 'sidebar' },
+    status: { type: String, enum: ['pending', 'approved', 'rejected', 'expired'], default: 'pending' },
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser' },
+    business_name: { type: String },
+    start_date: { type: Date, default: Date.now },
+    end_date: { type: Date, required: true },
+    display_order: { type: Number, default: 0 },
+    views: { type: Number, default: 0 },
+    clicks: { type: Number, default: 0 },
+    rejection_reason: { type: String }
+}, { timestamps: true });
+
 // Create Models
 const Admin = mongoose.model('Admin', adminSchema);
 const BusinessUser = mongoose.model('BusinessUser', businessUserSchema);
@@ -484,6 +503,7 @@ const RefreshToken = mongoose.model('RefreshToken', refreshTokenSchema);
 const Nomination = mongoose.model('Nomination', nominationSchema);
 const BusinessDocument = mongoose.model('BusinessDocument', businessDocumentSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
+const Ad = mongoose.model('Ad', adSchema);
 
 // ============ AUTH ROUTES ============
 
@@ -3402,6 +3422,309 @@ app.get('/spotlight/*', (req, res) => {
 });
 
 console.log('✅ Spotlight static routes configured');
+
+// ============================================
+// ADS MANAGEMENT SYSTEM - ADD THIS ENTIRE SECTION
+// ============================================
+
+// ============ FRONTEND FETCH ADS ============
+app.get('/api/ads', async (req, res) => {
+    try {
+        const { type, placement, limit = 10 } = req.query;
+        
+        let query = { 
+            status: 'approved',
+            end_date: { $gt: new Date() }
+        };
+        
+        if (type && type !== 'all') {
+            query.type = type;
+        }
+        
+        if (placement && placement !== 'all') {
+            query.placement = placement;
+        }
+        
+        const ads = await Ad.find(query)
+            .sort({ display_order: 1, created_at: -1 })
+            .limit(parseInt(limit));
+        
+        res.json({
+            success: true,
+            ads,
+            count: ads.length
+        });
+    } catch (error) {
+        console.error('Error fetching ads:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ BUSINESS SUBMIT AD ============
+app.post('/api/business/ads', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { title, description, image_url, link_url, placement, type, end_date } = req.body;
+        
+        if (!title || !image_url) {
+            return res.status(400).json({ success: false, message: 'Title and image are required' });
+        }
+        
+        // Validate end_date (must be at least 1 day from now, max 90 days)
+        let endDate = end_date ? new Date(end_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        if (endDate < new Date()) {
+            endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        }
+        
+        const ad = new Ad({
+            title,
+            description: description || '',
+            image_url,
+            link_url: link_url || '',
+            type: type || placement || 'sidebar',
+            placement: placement || 'sidebar',
+            status: 'pending',
+            business_id: req.user._id,
+            business_name: req.user.business_name,
+            start_date: new Date(),
+            end_date: endDate,
+            display_order: 0
+        });
+        
+        await ad.save();
+        
+        // Create notification for admin
+        console.log(`📢 New ad submitted: "${title}" by ${req.user.business_name}`);
+        
+        // Create notification for business
+        const notification = new Notification({
+            business_id: req.user._id,
+            title: 'Ad Submitted',
+            message: `Your ad "${title}" has been submitted for review. You'll be notified once approved.`,
+            type: 'info',
+            read: false
+        });
+        await notification.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Ad submitted for review!',
+            ad: { _id: ad._id, title: ad.title, status: ad.status }
+        });
+        
+    } catch (error) {
+        console.error('Submit ad error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ BUSINESS GET MY ADS ============
+app.get('/api/business/ads', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const ads = await Ad.find({ business_id: req.user._id })
+            .sort({ created_at: -1 });
+        
+        res.json({
+            success: true,
+            ads
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN GET ALL ADS ============
+app.get('/api/admin/ads', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status, page = 1, limit = 20 } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const ads = await Ad.find(query)
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await Ad.countDocuments(query);
+        
+        res.json({
+            success: true,
+            ads,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN APPROVE AD ============
+app.post('/api/admin/ads/:id/approve', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const ad = await Ad.findById(req.params.id);
+        if (!ad) {
+            return res.status(404).json({ success: false, message: 'Ad not found' });
+        }
+        
+        ad.status = 'approved';
+        ad.updated_at = new Date();
+        await ad.save();
+        
+        // Notify business if they submitted it
+        if (ad.business_id) {
+            const notification = new Notification({
+                business_id: ad.business_id,
+                title: 'Ad Approved',
+                message: `Your ad "${ad.title}" has been approved and is now live!`,
+                type: 'success',
+                read: false
+            });
+            await notification.save();
+            
+            console.log(`📧 Ad approved notification sent to ${ad.business_name}`);
+        }
+        
+        res.json({ success: true, message: 'Ad approved successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN REJECT AD ============
+app.post('/api/admin/ads/:id/reject', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { reason } = req.body;
+        const ad = await Ad.findById(req.params.id);
+        
+        if (!ad) {
+            return res.status(404).json({ success: false, message: 'Ad not found' });
+        }
+        
+        ad.status = 'rejected';
+        ad.rejection_reason = reason || 'Does not meet our guidelines';
+        ad.updated_at = new Date();
+        await ad.save();
+        
+        // Notify business
+        if (ad.business_id) {
+            const notification = new Notification({
+                business_id: ad.business_id,
+                title: 'Ad Rejected',
+                message: `Your ad "${ad.title}" was rejected. Reason: ${ad.rejection_reason}`,
+                type: 'error',
+                read: false
+            });
+            await notification.save();
+        }
+        
+        res.json({ success: true, message: 'Ad rejected' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN CREATE AD (DIRECT) ============
+app.post('/api/admin/ads', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { title, description, image_url, link_url, type, placement, end_date, display_order } = req.body;
+        
+        if (!title || !image_url) {
+            return res.status(400).json({ success: false, message: 'Title and image are required' });
+        }
+        
+        const ad = new Ad({
+            title,
+            description: description || '',
+            image_url,
+            link_url: link_url || '',
+            type: type || 'sidebar',
+            placement: placement || 'sidebar',
+            status: 'approved',  // Admin-created ads are auto-approved
+            business_name: 'Admin',
+            start_date: new Date(),
+            end_date: end_date ? new Date(end_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            display_order: display_order || 0
+        });
+        
+        await ad.save();
+        
+        res.status(201).json({ success: true, ad });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN UPDATE AD ============
+app.put('/api/admin/ads/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const ad = await Ad.findById(req.params.id);
+        if (!ad) {
+            return res.status(404).json({ success: false, message: 'Ad not found' });
+        }
+        
+        const { title, description, image_url, link_url, type, placement, end_date, display_order } = req.body;
+        
+        if (title) ad.title = title;
+        if (description !== undefined) ad.description = description;
+        if (image_url) ad.image_url = image_url;
+        if (link_url !== undefined) ad.link_url = link_url;
+        if (type) ad.type = type;
+        if (placement) ad.placement = placement;
+        if (end_date) ad.end_date = new Date(end_date);
+        if (display_order !== undefined) ad.display_order = display_order;
+        ad.updated_at = new Date();
+        
+        await ad.save();
+        
+        res.json({ success: true, message: 'Ad updated', ad });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN DELETE AD ============
+app.delete('/api/admin/ads/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const ad = await Ad.findByIdAndDelete(req.params.id);
+        if (!ad) {
+            return res.status(404).json({ success: false, message: 'Ad not found' });
+        }
+        
+        res.json({ success: true, message: 'Ad deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ TRACK AD CLICK ============
+app.post('/api/ads/:id/click', async (req, res) => {
+    try {
+        await Ad.findByIdAndUpdate(req.params.id, { $inc: { clicks: 1 } });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// ============ TRACK AD VIEW ============
+app.post('/api/ads/:id/view', async (req, res) => {
+    try {
+        await Ad.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
+console.log('✅ Ad Management System Ready');
 
 // ============ START SERVER ============
 async function startServer() {
