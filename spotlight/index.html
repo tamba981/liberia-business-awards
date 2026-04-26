@@ -895,37 +895,125 @@
     // ============================================
     // STORY DISPLAY FUNCTIONS
     // ============================================
-    
-    /** Display stories with data-slug attribute for delegation */
     function displayStories(stories) {
-        const grid = document.getElementById('articlesGrid');
-        if (!grid) return;
+    const grid = document.getElementById('articlesGrid');
+    if (!grid) return;
+    
+    if (!stories || stories.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                <i class="fas fa-newspaper" style="font-size: 48px; color: #cbd5e0;"></i>
+                <p style="margin-top: 15px;">No stories found in this category</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = stories.map(story => {
+        // FIXED: Handle category as object (from backend fix)
+        const category = story.category_id || { name: 'General', color: '#FF0000' };
         
-        grid.innerHTML = stories.map(story => {
-            const category = story.category_id || { name: 'General', color: '#FF0000' };
-            return `
-                <div class="article-card">
-                    <div class="card-image">
-                        <img src="${story.featured_image || '/images/placeholder.jpg'}" 
-                             alt="${escapeHtml(story.business_name)}"
-                             onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/FF0000/ffffff?text=${story.business_name.replace(/ /g, '+')}';">
-                    </div>
-                    <div class="card-content">
-                        <span class="card-category" style="background: ${category.color || '#FF0000'}">${escapeHtml(category.name)}</span>
-                        <h3 class="card-title">${escapeHtml(story.title)}</h3>
-                        <p class="card-excerpt">${escapeHtml(story.excerpt.substring(0, 120))}${story.excerpt.length > 120 ? '...' : ''}</p>
-                        <div class="card-footer">
-                            <span class="card-business">
-                                <i class="fas fa-building"></i> ${escapeHtml(story.business_name)}
-                            </span>
-                            <button class="read-more" data-slug="${story.slug}" style="background: none; border: none; cursor: pointer; color: var(--lba-blue); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 5px;">
-                                Read Story <i class="fas fa-arrow-right"></i>
-                            </button>
-                        </div>
+        // Handle category as object or string
+        let categoryName = 'General';
+        let categoryColor = '#FF0000';
+        
+        if (typeof category === 'object' && category !== null) {
+            categoryName = category.name || 'General';
+            categoryColor = category.color || '#FF0000';
+        } else if (typeof category === 'string') {
+            categoryName = category;
+        }
+        
+        // Safe excerpt
+        let excerpt = story.excerpt || '';
+        if (excerpt.length > 120) {
+            excerpt = excerpt.substring(0, 120) + '...';
+        }
+        
+        return `
+            <div class="article-card">
+                <div class="card-image">
+                    <img src="${story.featured_image || '/images/placeholder.jpg'}" 
+                         alt="${escapeHtml(story.business_name)}"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/FF0000/ffffff?text='+encodeURIComponent('${story.business_name}');">
+                </div>
+                <div class="card-content">
+                    <span class="card-category" style="background: ${categoryColor}">${escapeHtml(categoryName)}</span>
+                    <h3 class="card-title">${escapeHtml(story.title)}</h3>
+                    <p class="card-excerpt">${escapeHtml(excerpt)}</p>
+                    <div class="card-footer">
+                        <span class="card-business">
+                            <i class="fas fa-building"></i> ${escapeHtml(story.business_name)}
+                        </span>
+                        <button class="read-more" data-slug="${story.slug}" style="background: none; border: none; cursor: pointer; color: var(--lba-blue); font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                            Read Story <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
-            `;
-        }).join('');
+            </div>
+        `;
+    }).join('');
+    
+    // Update event delegation
+    setupEventDelegation();
+}
+
+// Update category counts display
+function updateCategoryCounts(categories, totalStories) {
+    const categoriesList = document.getElementById('categoriesList');
+    if (!categoriesList) return;
+    
+    // Update "All Stories" count
+    const allCountSpan = document.querySelector('.category-item.active .category-count');
+    if (allCountSpan) allCountSpan.textContent = totalStories || '0';
+    
+    // Update individual category counts
+    categories.forEach(category => {
+        const categorySpan = document.querySelector(`.category-item[data-category-id="${category._id}"] .category-count`);
+        if (categorySpan) {
+            categorySpan.textContent = category.story_count || '0';
+        }
+    });
+}
+
+// Update loadCategories function
+async function loadCategories() {
+    try {
+        const response = await fetch(`${API_BASE}/spotlight/categories`);
+        const data = await response.json();
+        
+        if (data.success && data.categories) {
+            allCategories = data.categories;
+            displayCategoriesWithCounts(data.categories, data.total_stories);
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+function displayCategoriesWithCounts(categories, totalStories) {
+    const container = document.getElementById('categoriesList');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <span class="category-item ${currentCategory === 'all' ? 'active' : ''}" 
+              data-category-id="all" 
+              onclick="loadStories('all', 1)">
+            All Stories 
+            <span class="category-count" id="totalCount">${totalStories || 0}</span>
+        </span>
+        ${categories.map(cat => `
+            <span class="category-item ${currentCategory === cat._id ? 'active' : ''}" 
+                  data-category-id="${cat._id}" 
+                  onclick="loadStories('${cat._id}', 1)">
+                ${escapeHtml(cat.name)} 
+                <span class="category-count">${cat.story_count || 0}</span>
+            </span>
+        `).join('')}
+    `;
+}
+    
         
         // Update button count for debugging
         console.log('📊 Read Story buttons rendered:', grid.querySelectorAll('.read-more').length);
