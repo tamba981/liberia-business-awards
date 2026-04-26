@@ -3267,8 +3267,202 @@ function closeModal(modalId) {
             showNotification('Refreshing dashboard data...', 'info');
         }
 
+        
+// ============================================
+// ADS MANAGEMENT FUNCTIONS
+// ============================================
 
-        // ============================================
+let adsData = [];
+let adsCurrentPage = 1;
+let adsTotalPages = 1;
+
+async function showAdsManagementModal() {
+    hideAllModals();
+    const modal = document.getElementById('adsManagementModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        await loadAds();
+    }
+}
+
+async function loadAds(page = 1) {
+    const status = document.getElementById('adStatusFilter')?.value || 'all';
+    adsCurrentPage = page;
+    
+    const tbody = document.getElementById('adsTableBody');
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...<\/td><\/tr>';
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/ads?status=${status}&page=${page}&limit=20`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            adsData = data.ads;
+            adsTotalPages = data.pagination?.pages || 1;
+            displayAds();
+            updateAdsPagination();
+        }
+    } catch (error) {
+        console.error('Error loading ads:', error);
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error loading ads<\/td><\/tr>';
+        }
+    }
+}
+
+function displayAds() {
+    const tbody = document.getElementById('adsTableBody');
+    if (!tbody) return;
+    
+    if (adsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No ads found<\/td><\/tr>';
+        return;
+    }
+    
+    tbody.innerHTML = adsData.map(ad => {
+        const expires = new Date(ad.end_date);
+        const isExpired = expires < new Date();
+        
+        let statusClass = '';
+        let statusText = ad.status;
+        
+        switch(ad.status) {
+            case 'pending': statusClass = 'status-warning'; break;
+            case 'approved': statusClass = 'status-active'; break;
+            case 'rejected': statusClass = 'status-danger'; break;
+            case 'expired': statusClass = 'status-info'; break;
+            default: statusClass = 'status-info';
+        }
+        
+        if (isExpired && ad.status === 'approved') {
+            statusClass = 'status-info';
+            statusText = 'expired';
+        }
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(ad.title)}</strong><br><small>${escapeHtml(ad.type || 'sidebar')}</small></td>
+                <td>${ad.business_name || 'Admin Created'}</td>
+                <td>${ad.type || 'sidebar'}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>${ad.views || 0} / ${ad.clicks || 0}</td>
+                <td>${expires.toLocaleDateString()}</td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        ${ad.status === 'pending' ? `
+                            <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approveAd('${ad._id}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="sheet-btn" style="background: #EF4444; padding: 6px 12px;" onclick="rejectAd('${ad._id}')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        ` : ''}
+                        <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editAd('${ad._id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteAd('${ad._id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updateAdsPagination() {
+    const pagination = document.getElementById('adsPagination');
+    if (!pagination) return;
+    
+    if (adsTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${adsCurrentPage === 1 ? 'disabled' : ''} onclick="loadAds(${adsCurrentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= adsTotalPages; i++) {
+        if (i === 1 || i === adsTotalPages || (i >= adsCurrentPage - 2 && i <= adsCurrentPage + 2)) {
+            html += `<button class="page-btn ${i === adsCurrentPage ? 'active' : ''}" onclick="loadAds(${i})">${i}</button>`;
+        } else if (i === adsCurrentPage - 3 || i === adsCurrentPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${adsCurrentPage === adsTotalPages ? 'disabled' : ''} onclick="loadAds(${adsCurrentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+async function approveAd(id) {
+    if (!confirm('Approve this ad? It will appear on the frontend immediately.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/ads/${id}/approve`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Ad approved successfully!', 'success');
+            loadAds(adsCurrentPage);
+        } else {
+            showNotification(result.message || 'Approval failed', 'error');
+        }
+    } catch (error) {
+        showNotification('Error approving ad', 'error');
+    }
+}
+
+async function rejectAd(id) {
+    const reason = prompt('Enter rejection reason:');
+    if (reason === null) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/ads/${id}/reject`, {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Ad rejected', 'warning');
+            loadAds(adsCurrentPage);
+        } else {
+            showNotification(result.message || 'Rejection failed', 'error');
+        }
+    } catch (error) {
+        showNotification('Error rejecting ad', 'error');
+    }
+}
+
+// Add to menu item in admin dashboard
+// Add this to sidebar menu section:
+// <a href="#" class="menu-item" onclick="showAdsManagementModal()">
+//     <i class="fas fa-ad"></i>
+//     <span>Ads Management</span>
+// </a>
+
+window.showAdsManagementModal = showAdsManagementModal;
+window.approveAd = approveAd;
+window.rejectAd = rejectAd;
+        
+// ============================================
 // OPPORTUNITIES MANAGEMENT FUNCTIONS
 // ============================================
 
@@ -8610,6 +8804,65 @@ window.diagnoseSpotlight = diagnoseSpotlight;
         </div>
     </div>
 </div>
+
+    <!-- Ads Management Modal -->
+<div class="modal" id="adsManagementModal">
+    <div class="modal-content" style="max-width: 1200px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-ad"></i> Ads Management</h2>
+            <button class="modal-close" onclick="hideModal('adsManagementModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px; text-align: right;">
+                <button class="sheet-btn" onclick="showCreateAdModal()">
+                    <i class="fas fa-plus"></i> Create Ad
+                </button>
+            </div>
+            
+            <div class="filter-controls">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Filter by Status</label>
+                        <select id="adStatusFilter" onchange="loadAds()">
+                            <option value="all">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="adSearch" placeholder="Search ads..." onkeyup="filterAds()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Business</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Views/Clicks</th>
+                            <th>Expires</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adsTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Loading...<\/td><\/tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="adsPagination"></div>
+        </div>
+    </div>
+</div>
+    
     <!-- ============ BUSINESS APPROVAL MODAL ============ -->
 <div class="modal" id="businessApprovalModal">
     <div class="modal-content" style="max-width: 1200px;">
