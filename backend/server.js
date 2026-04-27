@@ -3460,6 +3460,165 @@ app.get('/api/ads', async (req, res) => {
     }
 });
 
+// ============ BUSINESS SUBMIT AD WITH FILE UPLOAD ============
+app.post('/api/business/ads/upload', authenticate, authorize('business'), upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No image uploaded' });
+        }
+        
+        const { title, description, placement, duration, link_url } = req.body;
+        
+        if (!title) {
+            return res.status(400).json({ success: false, message: 'Title is required' });
+        }
+        
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        
+        const endDate = new Date(Date.now() + parseInt(duration) * 24 * 60 * 60 * 1000);
+        
+        const ad = new Ad({
+            title,
+            description: description || '',
+            image_url: imageUrl,
+            link_url: link_url || '',
+            type: placement || 'sidebar',
+            placement: placement || 'sidebar',
+            status: 'pending',
+            business_id: req.user._id,
+            business_name: req.user.business_name,
+            start_date: new Date(),
+            end_date: endDate,
+            display_order: 0
+        });
+        
+        await ad.save();
+        
+        // Create notification for business
+        const notification = new Notification({
+            business_id: req.user._id,
+            title: 'Ad Submitted',
+            message: `Your ad "${title}" has been submitted for review. You'll be notified once approved.`,
+            type: 'info',
+            read: false
+        });
+        await notification.save();
+        
+        console.log(`📢 New ad submitted: "${title}" by ${req.user.business_name}`);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Ad submitted for review!',
+            ad: { _id: ad._id, title: ad.title, status: ad.status }
+        });
+        
+    } catch (error) {
+        console.error('Business ad upload error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN CREATE AD WITH FILE UPLOAD ============
+app.post('/api/admin/ads/upload', authenticate, authorize('admin'), upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No image uploaded' });
+        }
+        
+        const { title, description, placement, type, end_date, display_order, link_url, start_date, business_id } = req.body;
+        
+        if (!title) {
+            return res.status(400).json({ success: false, message: 'Title is required' });
+        }
+        
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        
+        const ad = new Ad({
+            title,
+            description: description || '',
+            image_url: imageUrl,
+            link_url: link_url || '',
+            type: type || placement || 'sidebar',
+            placement: placement || 'sidebar',
+            status: 'approved',
+            business_id: business_id || null,
+            business_name: business_id ? null : 'Admin',
+            start_date: start_date ? new Date(start_date) : new Date(),
+            end_date: end_date ? new Date(end_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            display_order: display_order || 0
+        });
+        
+        await ad.save();
+        
+        // If associated with a business, notify them
+        if (business_id) {
+            const business = await BusinessUser.findById(business_id);
+            if (business) {
+                const notification = new Notification({
+                    business_id: business_id,
+                    title: 'New Ad Created',
+                    message: `Admin has created an ad "${title}" for your business.`,
+                    type: 'info',
+                    read: false
+                });
+                await notification.save();
+            }
+        }
+        
+        console.log(`📢 Admin created ad: "${title}"`);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Ad created successfully',
+            ad
+        });
+        
+    } catch (error) {
+        console.error('Admin ad upload error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN UPDATE AD WITH FILE UPLOAD ============
+app.put('/api/admin/ads/upload/:id', authenticate, authorize('admin'), upload.single('image'), async (req, res) => {
+    try {
+        const ad = await Ad.findById(req.params.id);
+        if (!ad) {
+            return res.status(404).json({ success: false, message: 'Ad not found' });
+        }
+        
+        const { title, description, placement, type, end_date, display_order, link_url, start_date, business_id } = req.body;
+        
+        if (title) ad.title = title;
+        if (description !== undefined) ad.description = description;
+        if (link_url !== undefined) ad.link_url = link_url;
+        if (type) ad.type = type;
+        if (placement) ad.placement = placement;
+        if (start_date) ad.start_date = new Date(start_date);
+        if (end_date) ad.end_date = new Date(end_date);
+        if (display_order !== undefined) ad.display_order = display_order;
+        if (business_id !== undefined) ad.business_id = business_id;
+        
+        // If new image uploaded, update it
+        if (req.file) {
+            ad.image_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        }
+        
+        ad.updated_at = new Date();
+        await ad.save();
+        
+        res.json({
+            success: true,
+            message: 'Ad updated successfully',
+            ad
+        });
+        
+    } catch (error) {
+        console.error('Admin ad update error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============ BUSINESS SUBMIT AD ============
 app.post('/api/business/ads', authenticate, authorize('business'), async (req, res) => {
     try {
