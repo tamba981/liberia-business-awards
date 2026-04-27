@@ -2485,6 +2485,40 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
             document.body.style.overflow = 'hidden';
         }
 
+         function showProfileModal() {
+    const profile = appState.profile || {};
+    
+    // Populate form fields with existing profile data
+    document.getElementById('editBusinessName').value = profile.business_name || profile.name || '';
+    document.getElementById('editBusinessCategory').value = profile.business_category || '';
+    document.getElementById('editIndustry').value = profile.industry || profile.business_type || '';
+    document.getElementById('editContactName').value = profile.contact_name || '';
+    document.getElementById('editPhone').value = profile.phone || '';
+    document.getElementById('editEmail').value = appState.user?.email || profile.email || '';
+    document.getElementById('editLocation').value = profile.location || '';
+    document.getElementById('editWebsite').value = profile.website || '';
+    document.getElementById('editAddress').value = profile.address || profile.business_address || '';
+    document.getElementById('editDescription').value = profile.description || profile.business_description || '';
+    
+    // Set logo preview
+    if (profile.logo && profile.logo !== '') {
+        document.getElementById('logoPreviewImg').src = profile.logo;
+        document.getElementById('logoPreviewImg').style.display = 'block';
+        document.getElementById('logoPreviewIcon').style.display = 'none';
+    } else {
+        document.getElementById('logoPreviewImg').style.display = 'none';
+        document.getElementById('logoPreviewIcon').style.display = 'block';
+    }
+    
+    // Clear file input
+    document.getElementById('logoUpload').value = '';
+    
+    // Show the modal
+    document.getElementById('profileEditModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+         
+       
         document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const submitBtn = document.getElementById('profileSaveBtn');
