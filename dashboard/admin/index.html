@@ -5353,7 +5353,7 @@ async function createBusinessAccount() {
         console.log('📤 Creating business account:', { businessName, email, contactName, phone, businessType });
         
         // Register the business - FIXED URL
-        const response = await fetch(`${BACKEND_URL}/business/register`, {
+        const response = await fetch(`${API_BASE}/business/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -5382,7 +5382,7 @@ async function createBusinessAccount() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Get the business ID
-            const businessesResponse = await fetch(`${BACKEND_URL}/admin/businesses?email=${encodeURIComponent(email)}`, {
+            const businessesResponse = await fetch(`${API_BASE}/admin/businesses?email=${encodeURIComponent(email)}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -5393,7 +5393,7 @@ async function createBusinessAccount() {
                 const businessId = businessesData.businesses[0]._id;
                 
                 // Approve the business
-                const approveResponse = await fetch(`${BACKEND_URL}/admin/businesses/${businessId}/approve`, {
+                const approveResponse = await fetch(`${API_BASE}/admin/businesses/${businessId}/approve`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
