@@ -5446,11 +5446,16 @@ async function createBusinessAccount() {
 }
 
         // Add this diagnostic function
+
+        // Add this diagnostic function
 async function testBusinessRegistration() {
     console.log('🔧 Testing business registration API...');
     
     const token = localStorage.getItem('lba_auth_token');
     console.log('Token present:', !!token);
+    
+    // FIXED: Use API_BASE instead of BACKEND_URL
+    const API_URL = API_BASE || 'https://liberia-business-awards-production.up.railway.app/api';
     
     const testData = {
         business_name: 'Test Business ' + Date.now(),
@@ -5462,9 +5467,10 @@ async function testBusinessRegistration() {
     };
     
     console.log('Test data:', testData);
+    console.log('API URL:', `${API_URL}/business/register`);
     
     try {
-        const response = await fetch(`${BACKEND_URL}/business/register`, {
+        const response = await fetch(`${API_URL}/business/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -5492,7 +5498,6 @@ async function testBusinessRegistration() {
 
 // Make it available in console
 window.testBusinessRegistration = testBusinessRegistration;
-        
 // ============================================
 // BUSINESS DOCUMENTS MANAGEMENT
 // ============================================
