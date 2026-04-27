@@ -6799,7 +6799,7 @@ window.editAd = editAd;
 window.deleteAd = deleteAd;
         
 // ============================================
-// USERS MANAGEMENT
+// USERS MANAGEMENT - FIXED (Shows Business Users)
 // ============================================
 function showUsersModal() {
     hideAllModals();
@@ -6809,161 +6809,123 @@ function showUsersModal() {
 }
 
 async function loadUsers() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...<\/td><\/tr>';
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users`, {
+        // Fetch business users from the correct endpoint
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?limit=100`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await response.json();
         
-        if (data.success) {
-            displayUsers(data.users);
+        const data = await response.json();
+        console.log('Business users response:', data);
+        
+        if (data.success && data.businesses) {
+            displayUsers(data.businesses);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No users found<\/td><\/tr>';
         }
     } catch (error) {
         console.error('Error loading users:', error);
+        tbody.innerHTML = `<td><td colspan="6" style="text-align: center; color: #EF4444;">Error loading users: ${error.message}<\/td><\/tr>`;
     }
 }
 
 function displayUsers(users) {
     const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    
     if (!users || users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No users found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No business users found<\/td><\/tr>';
         return;
     }
     
     tbody.innerHTML = users.map(u => `
         <tr>
-            <td><strong>${escapeHtml(u.fullName)}</strong></td>
-            <td>${escapeHtml(u.email)}</td>
-            <td><span class="status-badge" style="background: ${u.role === 'admin' ? '#8B5CF6' : '#3B82F6'}20; color: ${u.role === 'admin' ? '#8B5CF6' : '#3B82F6'}">${u.role}</span></td>
-            <td><span class="status-badge status-${u.status === 'active' ? 'active' : 'pending'}">${u.status}</span></td>
-            <td>${new Date(u.created_at).toLocaleDateString()}</td>
+            <td><strong>${escapeHtml(u.business_name || u.name || 'N/A')}</strong></td>
+            <td>${escapeHtml(u.email || 'N/A')}</td>
+            <td><span class="status-badge" style="background: #3B82F620; color: #3B82F6;">business</span></td>
+            <td><span class="status-badge status-${u.status === 'approved' ? 'active' : 'pending'}">${u.status || 'pending'}</span></td>
+            <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A'}</td>
             <td>
-                <button class="sheet-btn secondary" onclick="editUser('${u._id}')"><i class="fas fa-edit"></i></button>
-                <button class="sheet-btn ${u.status === 'active' ? 'warning' : 'success'}" onclick="toggleUserStatus('${u._id}')">
-                    ${u.status === 'active' ? 'Deactivate' : 'Activate'}
-                </button>
-                <button class="sheet-btn danger" onclick="deleteUser('${u._id}')"><i class="fas fa-trash"></i></button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="sheet-btn secondary" onclick="viewUserDetails('${u._id}')"><i class="fas fa-eye"></i></button>
+                    <button class="sheet-btn ${u.status === 'approved' ? 'warning' : 'success'}" onclick="toggleUserStatus('${u._id}', '${u.status}')">
+                        ${u.status === 'approved' ? 'Deactivate' : 'Activate'}
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
 }
 
-function showAddUserModal() {
-    document.getElementById('userModalTitle').textContent = 'Add User';
-    document.getElementById('userForm').reset();
-    document.getElementById('userId').value = '';
-    document.getElementById('passwordField').style.display = 'block';
-    document.getElementById('userPassword').required = true;
-    document.getElementById('addUserModal').classList.add('active');
+function viewUserDetails(userId) {
+    // Reuse the business details modal
+    viewBusinessDetails(userId);
 }
 
-async function editUser(id) {
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        const user = data.users.find(u => u._id === id);
-        
-        if (user) {
-            document.getElementById('userModalTitle').textContent = 'Edit User';
-            document.getElementById('userId').value = user._id;
-            document.getElementById('userFullName').value = user.fullName;
-            document.getElementById('userEmail').value = user.email;
-            document.getElementById('userRole').value = user.role;
-            document.getElementById('userStatus').value = user.status;
-            document.getElementById('passwordField').style.display = 'none';
-            document.getElementById('userPassword').required = false;
-            document.getElementById('addUserModal').classList.add('active');
-        }
-    } catch (error) {
-        console.error('Error editing user:', error);
-    }
-}
-
-async function saveUser() {
-    const id = document.getElementById('userId').value;
-    const data = {
-        fullName: document.getElementById('userFullName').value,
-        email: document.getElementById('userEmail').value,
-        role: document.getElementById('userRole').value,
-        status: document.getElementById('userStatus').value
-    };
+async function toggleUserStatus(userId, currentStatus) {
+    const newStatus = currentStatus === 'approved' ? 'suspended' : 'approved';
+    const action = newStatus === 'approved' ? 'activate' : 'deactivate';
     
-    const password = document.getElementById('userPassword').value;
-    if (password) data.password = password;
+    if (!confirm(`Are you sure you want to ${action} this business account?`)) return;
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const url = id 
-            ? `${API_BASE.replace('/api', '')}/api/admin/system-users/${id}`
-            : `${API_BASE.replace('/api', '')}/api/admin/system-users`;
-        const method = id ? 'PUT' : 'POST';
         
-        const response = await fetch(url, {
-            method,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showNotification(id ? 'User updated!' : 'User created!', 'success');
-            hideModal('addUserModal');
-            loadUsers();
+        if (newStatus === 'approved') {
+            // Approve the business
+            const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${userId}/approve`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            if (result.success) showNotification('Business activated!', 'success');
         } else {
-            showNotification(result.error || 'Error saving user', 'error');
+            // Suspend - call reject endpoint with suspension reason
+            const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${userId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ reason: 'Account suspended by administrator' })
+            });
+            const result = await response.json();
+            if (result.success) showNotification('Business suspended!', 'warning');
         }
-    } catch (error) {
-        showNotification('Error saving user', 'error');
-    }
-}
-
-async function toggleUserStatus(id) {
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users/${id}/toggle-status`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
         
-        if (response.ok) {
-            showNotification('User status updated', 'success');
-            loadUsers();
-        }
+        await loadUsers();
     } catch (error) {
+        console.error('Error toggling user status:', error);
         showNotification('Error updating user status', 'error');
     }
 }
 
-async function deleteUser(id) {
-    if (!confirm('Delete this user? This cannot be undone.')) return;
-    
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/system-users/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-            showNotification('User deleted', 'success');
-            loadUsers();
-        } else {
-            const data = await response.json();
-            showNotification(data.error || 'Error deleting user', 'error');
-        }
-    } catch (error) {
-        showNotification('Error deleting user', 'error');
-    }
+function showAddUserModal() {
+    // Create business account instead of system user
+    showCreateBusinessModal();
 }
 
+function saveUser() {
+    // Use create business account function
+    createBusinessAccount();
+}
+
+async function editUser(id) {
+    // View business details
+    viewBusinessDetails(id);
+}
+
+async function deleteUser(id) {
+    // Delete business account
+    deleteBusinessAccount(id, '');
+}
+        
 // ============================================
 // ANALYTICS
 // ============================================
