@@ -1384,12 +1384,13 @@ async function updateCategoryCounts() {
     `;
     document.head.appendChild(styleSheet);
 
-     // ============================================
-// SHARE INDIVIDUAL STORY FUNCTIONS
+   // ============================================
+// SHARE INDIVIDUAL STORY FUNCTIONS - FIXED
 // ============================================
 
 function shareStory(slug, title, businessName) {
-    const storyUrl = `${window.location.origin}/spotlight/${slug}`;
+    // Create URL that redirects to spotlight page with story parameter
+    const storyUrl = `${window.location.origin}/spotlight/?story=${slug}`;
     const shareText = `📖 Check out this inspiring story: "${title}" - ${businessName} on Liberia Business Awards Spotlight! 🇱🇷`;
     
     // Create floating share menu
@@ -1437,7 +1438,6 @@ function shareStory(slug, title, businessName) {
     
     document.body.appendChild(shareMenu);
     
-    // Close when clicking outside
     setTimeout(() => {
         document.addEventListener('click', function closeMenu(e) {
             if (!shareMenu.contains(e.target)) {
@@ -1509,6 +1509,31 @@ function showToast(message, type) {
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 2000);
 }
+
+// ============================================
+// AUTO-OPEN MODAL FROM URL PARAMETER
+// ============================================
+function checkUrlForStory() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const storySlug = urlParams.get('story');
+    
+    if (storySlug) {
+        console.log('🔍 Found story parameter:', storySlug);
+        // Small delay to ensure page is fully loaded
+        setTimeout(() => {
+            openSpotlightStoryModal(storySlug);
+            // Remove the parameter from URL without reloading
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }, 500);
+    }
+}
+
+// Call this when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing initialization code ...
+    checkUrlForStory();
+});
     
     // ============================================
     // INITIALIZATION
