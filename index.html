@@ -12409,6 +12409,12 @@ document.addEventListener('DOMContentLoaded', () => {
     AdManager.init();
 });
 
+// Debug - check what's in the cache
+setTimeout(() => {
+    console.log('📢 Ad Cache after init:', AdManager.adsCache);
+    console.log('📢 Top banner ads:', AdManager.adsCache.topBanner);
+    console.log('📢 Sidebar ads:', AdManager.adsCache.sidebar);
+}, 3000);
 // Expose to window
 window.AdManager = AdManager;
 </script>
