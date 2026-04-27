@@ -3,6 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ============================================ -->
+<!-- ANTI-CONSOLE SECURITY FOR SPOTLIGHT PAGE -->
+<!-- ============================================ -->
+<script>
+(function() {
+    'use strict';
+    
+    // ============================================
+    // DISABLE CONSOLE METHODS (for normal users)
+    // ============================================
+    // Check if admin debug mode is enabled
+    const isAdminDebug = (window.location.hostname === 'liberiabusinessawardslr.com' || window.location.hostname === 'localhost') && 
+        (localStorage.getItem('admin_debug') === 'true' || 
+         sessionStorage.getItem('admin_debug') === 'true' ||
+         document.cookie.includes('admin_debug=true') ||
+         window.location.search.includes('debug=true'));
+    
+    if (!isAdminDebug) {
+        // Disable console for normal users
+        const noop = function() {};
+        const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table', 'group', 'groupEnd'];
+        methods.forEach(m => { 
+            if (window.console && window.console[m]) {
+                window.console[m] = noop;
+            }
+        });
+        console.log = noop;
+        console.info = noop;
+        console.warn = noop;
+        console.error = noop;
+    } else {
+        // Keep console for admin debug but log that it's enabled
+        console.log('🔓 Admin debug mode enabled - Console active');
+    }
+    
+    // ============================================
+    // BLOCK RIGHT-CLICK (Prevents inspect element)
+    // ============================================
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // ============================================
+    // BLOCK DEV TOOLS SHORTCUTS
+    // ============================================
+    document.addEventListener('keydown', function(e) {
+        // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U, Ctrl+S
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+            (e.ctrlKey && (e.key === 'u' || e.key === 's')) ||
+            (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'J'))) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // ============================================
+    // DETECT DEV TOOLS OPEN (Simple detection)
+    // ============================================
+    let devToolsOpen = false;
+    
+    // Method 1: Check via element inspection
+    Object.defineProperty(window, 'outerWidth', { 
+        get: function() { 
+            devToolsOpen = true; 
+            return window.innerWidth; 
+        }, 
+        set: function() {} 
+    });
+    
+    // Method 2: Check via debugger trap
+    function detectDevTools() {
+        const start = performance.now();
+        debugger;
+        const end = performance.now();
+        if (end - start > 100) {
+            devToolsOpen = true;
+        }
+    }
+    
+    // Run detection periodically
+    setInterval(function() { 
+        detectDevTools();
+        
+        if (devToolsOpen) {
+            // Clear localStorage and redirect to home (not login)
+            localStorage.clear();
+            sessionStorage.clear();
+            // Show warning instead of auto-redirect
+            const warningDiv = document.createElement('div');
+            warningDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: #FF0000;
+                color: white;
+                text-align: center;
+                padding: 10px;
+                z-index: 99999;
+                font-family: 'Poppins', sans-serif;
+                font-size: 14px;
+            `;
+            warningDiv.innerHTML = '⚠️ Developer tools detected. For security reasons, please close the developer tools to continue.';
+            document.body.appendChild(warningDiv);
+            
+            // Redirect after 5 seconds if dev tools remain open
+            setTimeout(function() {
+                if (devToolsOpen) {
+                    window.location.href = '/';
+                }
+            }, 5000);
+        }
+        devToolsOpen = false;
+    }, 1000);
+    
+    // ============================================
+    // PREVENT CODE INJECTION (Block external scripts)
+    // ============================================
+    const originalCreateElement = document.createElement;
+    document.createElement = function(tagName) {
+        const element = originalCreateElement.call(document, tagName);
+        if (tagName.toLowerCase() === 'script') {
+            const originalSetAttribute = element.setAttribute;
+            element.setAttribute = function(name, value) {
+                if (name.toLowerCase() === 'src') {
+                    const allowedDomains = [
+                        window.location.origin,
+                        'https://cdnjs.cloudflare.com',
+                        'https://unpkg.com',
+                        'https://fonts.googleapis.com',
+                        'https://www.googletagmanager.com',
+                        'https://translate.google.com'
+                    ];
+                    if (!allowedDomains.some(d => value.startsWith(d))) {
+                        console.warn('Blocked script from:', value);
+                        return;
+                    }
+                }
+                originalSetAttribute.call(this, name, value);
+            };
+        }
+        return element;
+    };
+    
+    // ============================================
+    // ANTI-CLICKJACKING (Prevent embedding in iframes)
+    // ============================================
+    if (window.self !== window.top) {
+        window.top.location = window.self.location;
+    }
+    
+    console.log('🛡️ Security features active for Spotlight page');
+})();
+</script>
     
     <!-- Primary Meta Tags -->
     <title>Business Spotlight - Liberia Business Awards</title>
