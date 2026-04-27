@@ -931,50 +931,52 @@
     // LOAD STORIES FUNCTION
     // ============================================
     async function loadStories(category = currentCategory, page = 1) {
-        currentCategory = category;
-        currentPage = page;
+    currentCategory = category;
+    currentPage = page;
+    
+    const grid = document.getElementById('articlesGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading stories...</p>
+        </div>
+    `;
+    
+    try {
+        let url = `${API_BASE}/spotlight/stories?page=${page}&limit=9`;
+        if (category !== 'all') {
+            url += `&category=${category}`;
+        }
         
-        const grid = document.getElementById('articlesGrid');
-        if (!grid) return;
+        const response = await fetch(url);
+        const data = await response.json();
         
-        grid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                <i class="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading stories...</p>
-            </div>
-        `;
-        
-        try {
-            let url = `${API_BASE}/spotlight/stories?page=${page}&limit=9`;
-            if (category !== 'all') {
-                url += `&category=${category}`;
-            }
-            
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.success && data.stories) {
-                displayStories(data.stories);
-                totalPages = data.pagination?.pages || 1;
-                updatePagination();
-            } else {
-                grid.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                        <i class="fas fa-newspaper" style="font-size: 48px; color: #cbd5e0;"></i>
-                        <p style="margin-top: 20px;">No stories found</p>
-                    </div>
-                `;
-            }
-        } catch (error) {
-            console.error('Error loading stories:', error);
+        if (data.success && data.stories) {
+            displayStories(data.stories);
+            totalPages = data.pagination?.pages || 1;
+            updatePagination();
+            // Update category counts after stories load
+            updateCategoryCounts();
+        } else {
             grid.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
-                    <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
-                    <p style="margin-top: 20px;">Error loading stories</p>
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                    <i class="fas fa-newspaper" style="font-size: 48px; color: #cbd5e0;"></i>
+                    <p style="margin-top: 20px;">No stories found</p>
                 </div>
             `;
         }
+    } catch (error) {
+        console.error('Error loading stories:', error);
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p style="margin-top: 20px;">Error loading stories</p>
+            </div>
+        `;
     }
+}
     
     // ============================================
     // CATEGORY FUNCTIONS
@@ -994,20 +996,27 @@
     }
     
     function displayCategories() {
-        const container = document.getElementById('categoriesList');
-        if (!container) return;
-        
-        container.innerHTML = `
-            <span class="category-item ${currentCategory === 'all' ? 'active' : ''}" onclick="loadStories('all', 1)">
-                All Stories <span class="category-count" id="totalCount">0</span>
+    const container = document.getElementById('categoriesList');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <span class="category-item ${currentCategory === 'all' ? 'active' : ''}" 
+              data-category-id="all" 
+              onclick="loadStories('all', 1)">
+            All Stories <span class="category-count" id="totalCount">0</span>
+        </span>
+        ${allCategories.map(cat => `
+            <span class="category-item ${currentCategory === cat._id ? 'active' : ''}" 
+                  data-category-id="${cat._id}" 
+                  onclick="loadStories('${cat._id}', 1)">
+                ${escapeHtml(cat.name)} <span class="category-count">0</span>
             </span>
-            ${allCategories.map(cat => `
-                <span class="category-item ${currentCategory === cat._id ? 'active' : ''}" onclick="loadStories('${cat._id}', 1)">
-                    ${escapeHtml(cat.name)} <span class="category-count">0</span>
-                </span>
-            `).join('')}
-        `;
-    }
+        `).join('')}
+    `;
+    
+    // Update counts after displaying categories
+    updateCategoryCounts();
+}
     
     // ============================================
     // PAGINATION FUNCTIONS
@@ -1043,6 +1052,46 @@
             loadStories('all', 1);
         }
     }
+
+     // ============================================
+// UPDATE CATEGORY COUNTS
+// ============================================
+async function updateCategoryCounts() {
+    try {
+        // Fetch stories to get counts per category
+        const response = await fetch(`${API_BASE}/spotlight/stories?limit=100`);
+        const data = await response.json();
+        
+        if (data.success && data.stories) {
+            // Count stories per category
+            const categoryCounts = {};
+            data.stories.forEach(story => {
+                const categoryId = story.category_id?._id || story.category_id;
+                if (categoryId) {
+                    categoryCounts[categoryId] = (categoryCounts[categoryId] || 0) + 1;
+                }
+            });
+            
+            // Update the category elements with counts
+            const categoryItems = document.querySelectorAll('.category-item');
+            categoryItems.forEach(item => {
+                const categoryId = item.getAttribute('data-category-id');
+                const countSpan = item.querySelector('.category-count');
+                
+                if (categoryId === 'all') {
+                    // Total stories count
+                    if (countSpan) countSpan.textContent = data.stories.length;
+                } else if (categoryId && categoryCounts[categoryId]) {
+                    if (countSpan) countSpan.textContent = categoryCounts[categoryId];
+                } else if (categoryId) {
+                    if (countSpan) countSpan.textContent = '0';
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error updating category counts:', error);
+    }
+}
     
     // ============================================
     // SOCIAL SHARE FUNCTIONS
