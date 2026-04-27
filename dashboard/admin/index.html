@@ -5445,6 +5445,53 @@ async function createBusinessAccount() {
     }
 }
 
+        // Add this diagnostic function
+async function testBusinessRegistration() {
+    console.log('🔧 Testing business registration API...');
+    
+    const token = localStorage.getItem('lba_auth_token');
+    console.log('Token present:', !!token);
+    
+    const testData = {
+        business_name: 'Test Business ' + Date.now(),
+        email: `test${Date.now()}@example.com`,
+        password: 'test123',
+        contact_name: 'Test Contact',
+        phone: '+231123456789',
+        business_type: 'Startup'
+    };
+    
+    console.log('Test data:', testData);
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/business/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(testData)
+        });
+        
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            console.log('✅ Test registration successful!');
+            showNotification('Test successful! You can now create real businesses.', 'success');
+        } else {
+            console.log('❌ Test failed:', data.message);
+            showNotification('API Error: ' + (data.message || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('❌ Network error:', error);
+        showNotification('Network error: ' + error.message, 'error');
+    }
+}
+
+// Make it available in console
+window.testBusinessRegistration = testBusinessRegistration;
         
 // ============================================
 // BUSINESS DOCUMENTS MANAGEMENT
