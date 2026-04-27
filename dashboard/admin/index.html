@@ -6524,13 +6524,14 @@ function createAdModal() {
                         <textarea id="adDescription" rows="3" class="sheet-btn secondary" style="width: 100%;"></textarea>
                     </div>
                     
-                    <div class="form-group">
-                        <label>Image URL *</label>
-                        <input type="url" id="adImageUrl" class="sheet-btn secondary" style="width: 100%;" placeholder="https://your-image-url.jpg" required>
-                        <div id="adImagePreview" style="margin-top: 10px; display: none;">
-                            <img id="adPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
-                        </div>
-                    </div>
+                   <div class="form-group">
+    <label>Ad Image *</label>
+    <input type="file" id="adImageFile" accept="image/jpeg,image/png,image/gif,image/webp" required>
+    <small style="color: #64748b; display: block; margin-top: 5px;">Upload JPG, PNG, GIF, or WEBP (Max 5MB)</small>
+    <div id="adImagePreview" style="margin-top: 10px; display: none;">
+        <img id="adPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
+    </div>
+</div>
                     
                     <div class="form-group">
                         <label>Link URL</label>
@@ -6605,20 +6606,16 @@ async function saveAd() {
     const adId = document.getElementById('adId').value;
     const token = localStorage.getItem('lba_auth_token');
     
-    const adData = {
-        title: document.getElementById('adTitle').value,
-        description: document.getElementById('adDescription').value,
-        image_url: document.getElementById('adImageUrl').value,
-        link_url: document.getElementById('adLinkUrl').value,
-        type: document.getElementById('adType').value,
-        placement: document.getElementById('adPlacement').value,
-        business_id: document.getElementById('adBusinessId').value || null,
-        start_date: document.getElementById('adStartDate').value,
-        end_date: document.getElementById('adEndDate').value,
-        status: 'pending'
-    };
+    const title = document.getElementById('adTitle').value;
+    const description = document.getElementById('adDescription').value;
+    const link_url = document.getElementById('adLinkUrl').value;
+    const type = document.getElementById('adType').value;
+    const placement = document.getElementById('adPlacement').value;
+    const start_date = document.getElementById('adStartDate').value;
+    const end_date = document.getElementById('adEndDate').value;
+    const business_id = document.getElementById('adBusinessId').value;
     
-    if (!adData.title || !adData.image_url || !adData.start_date || !adData.end_date) {
+    if (!title || !start_date || !end_date) {
         showNotification('Please fill all required fields', 'error');
         return;
     }
@@ -6629,19 +6626,64 @@ async function saveAd() {
     saveBtn.disabled = true;
     
     try {
-        const url = adId 
-            ? `${API_BASE.replace('/api', '')}/api/admin/ads/${adId}`
-            : `${API_BASE.replace('/api', '')}/api/admin/ads`;
-        const method = adId ? 'PUT' : 'POST';
+        let response;
         
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(adData)
-        });
+        // Check if we have a file to upload
+        const fileInput = document.getElementById('adImageFile');
+        const file = fileInput?.files[0];
+        
+        if (file) {
+            // Upload file
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('link_url', link_url);
+            formData.append('type', type);
+            formData.append('placement', placement);
+            formData.append('start_date', start_date);
+            formData.append('end_date', end_date);
+            formData.append('business_id', business_id);
+            formData.append('image', file);
+            
+            const url = adId 
+                ? `${API_BASE.replace('/api', '')}/api/admin/ads/upload/${adId}`
+                : `${API_BASE.replace('/api', '')}/api/admin/ads/upload`;
+            const method = adId ? 'PUT' : 'POST';
+            
+            response = await fetch(url, {
+                method: method,
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+        } else {
+            // No file - use existing image URL
+            const image_url = document.getElementById('adImageUrl')?.value;
+            if (!image_url) {
+                showNotification('Please provide an image', 'error');
+                return;
+            }
+            
+            const adData = {
+                title, description, link_url, type, placement,
+                start_date, end_date, business_id,
+                image_url: image_url,
+                status: 'pending'
+            };
+            
+            const url = adId 
+                ? `${API_BASE.replace('/api', '')}/api/admin/ads/${adId}`
+                : `${API_BASE.replace('/api', '')}/api/admin/ads`;
+            const method = adId ? 'PUT' : 'POST';
+            
+            response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(adData)
+            });
+        }
         
         const result = await response.json();
         
