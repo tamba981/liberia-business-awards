@@ -1007,6 +1007,12 @@
                         <h3>Submit Nomination</h3>
                         <p>Submit your business for awards consideration</p>
                     </div>
+
+                    <div class="action-card" onclick="showSubmitAdModal()">
+                    <div class="action-icon"><i class="fas fa-ad"></i></div>
+                    <h3>Advertise</h3>
+                    <p>Submit your ad for review</p>
+                    </div>
                     
                     <div class="action-card" onclick="switchPage('profile')">
                         <div class="action-icon"><i class="fas fa-edit"></i></div>
@@ -1186,6 +1192,7 @@
     </div>
 </div>
 
+
 <!-- Opportunity Details Modal -->
 <div class="modal" id="opportunityModal">
     <div class="modal-content" style="max-width: 700px;">
@@ -1267,6 +1274,57 @@
     </div>
     
     <div class="toast-container" id="toastContainer"></div>
+
+    <div class="modal" id="submitAdModal">
+    <div class="modal-content" style="max-width: 550px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-ad"></i> Submit Advertisement</h2>
+            <button class="modal-close" onclick="hideModal('submitAdModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="submitAdForm">
+                <div class="form-group">
+                    <label>Ad Title *</label>
+                    <input type="text" id="adTitle" required placeholder="e.g., Special Offer - 20% Off">
+                </div>
+                <div class="form-group">
+                    <label>Description (optional)</label>
+                    <textarea id="adDescription" rows="2" placeholder="Brief description of your ad..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Image URL *</label>
+                    <input type="url" id="adImage" required placeholder="https://yourwebsite.com/ad-image.jpg">
+                </div>
+                <div class="form-group">
+                    <label>Link URL (optional)</label>
+                    <input type="url" id="adLink" placeholder="https://yourwebsite.com/offer">
+                </div>
+                <div class="form-group">
+                    <label>Ad Placement *</label>
+                    <select id="adPlacement" required>
+                        <option value="sidebar">Sidebar Ad</option>
+                        <option value="top-banner">Top Banner</option>
+                        <option value="inline">In-Content Ad</option>
+                        <option value="floating">Floating Ad</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duration (days) *</label>
+                    <select id="adDuration">
+                        <option value="30">30 days</option>
+                        <option value="60">60 days</option>
+                        <option value="90">90 days</option>
+                    </select>
+                </div>
+                <div class="error-message" id="adSubmitError" style="display: none; color: #EF4444;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('submitAdModal')" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">Submit for Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
     
     <!-- Profile Edit Modal -->
     <div class="modal" id="profileEditModal">
@@ -1705,6 +1763,8 @@
             requiredFields.forEach(field => { if (profile[field]) completed++; });
             return Math.min(100, Math.round((completed / requiredFields.length) * 100));
         }
+
+        
 
         function showProfileModal() {
             const profile = appState.profile || {};
@@ -3232,7 +3292,66 @@ window.switchPage = function(page) {
         loadBusinessSpotlightStories();
     }
 };  
+        function showSubmitAdModal() {
+    document.getElementById('submitAdForm').reset();
+    document.getElementById('adSubmitError').style.display = 'none';
+    document.getElementById('submitAdModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+document.getElementById('submitAdForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const adData = {
+        title: document.getElementById('adTitle').value,
+        description: document.getElementById('adDescription').value,
+        image_url: document.getElementById('adImage').value,
+        link_url: document.getElementById('adLink').value,
+        placement: document.getElementById('adPlacement').value,
+        end_date: new Date(Date.now() + parseInt(document.getElementById('adDuration').value) * 24 * 60 * 60 * 1000)
+    };
+    
+    if (!adData.title || !adData.image_url) {
+        document.getElementById('adSubmitError').textContent = 'Title and image URL are required';
+        document.getElementById('adSubmitError').style.display = 'block';
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    submitBtn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/business/ads`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(adData)
+        });
         
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('✅ Ad submitted for review! Admin will approve shortly.', 'success');
+            hideModal('submitAdModal');
+            document.getElementById('submitAdForm').reset();
+        } else {
+            throw new Error(result.message || 'Submission failed');
+        }
+    } catch (error) {
+        document.getElementById('adSubmitError').textContent = error.message;
+        document.getElementById('adSubmitError').style.display = 'block';
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+window.showSubmitAdModal = showSubmitAdModal;
     </script>
 </body>
 </html>
