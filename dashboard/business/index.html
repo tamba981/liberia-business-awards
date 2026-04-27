@@ -1826,6 +1826,14 @@ function updateProfileDisplay() {
     }
 }
 
+     function calculateProfileCompletion(profile) {
+    const requiredFields = ['business_name', 'name', 'contact_name', 'phone', 'industry', 'business_type', 'location', 'description', 'business_description', 'address', 'business_address'];
+    let completed = 0;
+    requiredFields.forEach(field => { 
+        if (profile[field] && profile[field] !== '') completed++; 
+    });
+    return Math.min(100, Math.round((completed / requiredFields.length) * 100));
+}  
         // ============================================
         // NOMINATION FUNCTIONS - FRONTEND STYLE
         // ============================================
