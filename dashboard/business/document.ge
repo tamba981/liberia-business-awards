@@ -1712,157 +1712,119 @@
         // PROFILE FUNCTIONS
         // ============================================
         async function loadProfile() {
-            try {
-                const data = await apiRequest('/api/business/profile');
-                if (data.success) {
-                    appState.profile = data.profile || data.business || {};
-                    updateProfileDisplay();
-                }
-            } catch (error) { console.error('Profile load error:', error); }
-        }
-
-        function updateProfileDisplay() {
-            const profile = appState.profile || {};
-            document.getElementById('companyName').textContent = profile.business_name || profile.name || 'Your Company';
-            document.getElementById('businessIndustry').textContent = `${profile.industry || profile.business_type || 'Industry'} • ${profile.location || 'Location'}`;
-            document.getElementById('businessContact').textContent = `Contact: ${profile.contact_name || profile.phone || 'Not provided'}`;
-            
-            const verificationEl = document.getElementById('verificationStatus');
-            if (profile.verified) { verificationEl.textContent = '✓ Verified'; verificationEl.style.background = '#10B981'; }
-            else if (profile.status === 'approved') { verificationEl.textContent = '✓ Approved'; verificationEl.style.background = '#10B981'; }
-            else if (profile.status === 'pending') { verificationEl.textContent = '⏳ Pending Verification'; verificationEl.style.background = '#F59E0B'; }
-            else { verificationEl.textContent = '✗ Not Verified'; verificationEl.style.background = '#EF4444'; }
-            
-            document.getElementById('profileBusinessName').textContent = profile.business_name || profile.name || '-';
-            document.getElementById('profileEmail').textContent = appState.user?.email || profile.email || '-';
-            document.getElementById('profileContactName').textContent = profile.contact_name || '-';
-            document.getElementById('profilePhone').textContent = profile.phone || '-';
-            document.getElementById('profileIndustry').textContent = profile.industry || profile.business_type || '-';
-            document.getElementById('profileCategory').textContent = profile.business_category || '-';
-            document.getElementById('profileLocation').textContent = profile.location || '-';
-            document.getElementById('profileWebsite').textContent = profile.website || '-';
-            document.getElementById('profileDescription').textContent = profile.description || profile.business_description || '-';
-            document.getElementById('profileAddress').textContent = profile.address || profile.business_address || '-';
-            
-            if (profile.logo) {
-                document.getElementById('profileLogoImg').src = profile.logo;
-                document.getElementById('profileLogoImg').style.display = 'block';
-                document.getElementById('profileLogoIcon').style.display = 'none';
-                document.getElementById('profilePageLogo').src = profile.logo;
-                document.getElementById('profilePageLogo').style.display = 'block';
-                document.getElementById('profilePageLogoIcon').style.display = 'none';
-            }
-            
-            const completion = calculateProfileCompletion(profile);
-            document.getElementById('profileCompletion').textContent = completion + '%';
-            document.getElementById('profileCompletionBar').style.width = completion + '%';
-            document.getElementById('profileCompletionPercent').textContent = completion + '%';
-            if (profile.created_at) document.getElementById('memberSince').textContent = new Date(profile.created_at).getFullYear();
-            
-            const statusBadge = document.getElementById('profileStatusBadge');
-            if (profile.verified) { statusBadge.textContent = '✓ Verified'; statusBadge.style.background = '#10B981'; }
-            else if (profile.status === 'approved') { statusBadge.textContent = '✓ Approved'; statusBadge.style.background = '#10B981'; }
-            else if (profile.status === 'pending') { statusBadge.textContent = '⏳ Pending Verification'; statusBadge.style.background = '#F59E0B'; }
-            else { statusBadge.textContent = '✗ Not Verified'; statusBadge.style.background = '#EF4444'; }
-        }
-
-        function calculateProfileCompletion(profile) {
-            const requiredFields = ['business_name', 'name', 'contact_name', 'phone', 'industry', 'business_type', 'location', 'description', 'business_description', 'address', 'business_address'];
-            let completed = 0;
-            requiredFields.forEach(field => { if (profile[field]) completed++; });
-            return Math.min(100, Math.round((completed / requiredFields.length) * 100));
-        }
-
-        
-
-        function showProfileModal() {
-            const profile = appState.profile || {};
-            document.getElementById('editBusinessName').value = profile.business_name || profile.name || '';
-            document.getElementById('editBusinessCategory').value = profile.business_category || '';
-            document.getElementById('editIndustry').value = profile.industry || profile.business_type || '';
-            document.getElementById('editContactName').value = profile.contact_name || '';
-            document.getElementById('editPhone').value = profile.phone || '';
-            document.getElementById('editEmail').value = appState.user?.email || profile.email || '';
-            document.getElementById('editLocation').value = profile.location || '';
-            document.getElementById('editWebsite').value = profile.website || '';
-            document.getElementById('editAddress').value = profile.address || profile.business_address || '';
-            document.getElementById('editDescription').value = profile.description || profile.business_description || '';
-            
-            if (profile.logo) {
-                document.getElementById('logoPreviewImg').src = profile.logo;
-                document.getElementById('logoPreviewImg').style.display = 'block';
-                document.getElementById('logoPreviewIcon').style.display = 'none';
-            } else {
-                document.getElementById('logoPreviewImg').style.display = 'none';
-                document.getElementById('logoPreviewIcon').style.display = 'block';
-            }
-            document.getElementById('profileEditModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        // Update the profile update response handling
-document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const submitBtn = document.getElementById('profileSaveBtn');
-    const originalText = submitBtn.innerHTML;
     try {
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        submitBtn.disabled = true;
-        const businessName = document.getElementById('editBusinessName').value.trim();
-        if (!businessName) { showToast('Business name is required', 'error'); return; }
-        const formData = new FormData();
-        formData.append('business_name', businessName);
-        formData.append('business_category', document.getElementById('editBusinessCategory').value);
-        formData.append('industry', document.getElementById('editIndustry').value);
-        formData.append('contact_name', document.getElementById('editContactName').value);
-        formData.append('phone', document.getElementById('editPhone').value);
-        formData.append('location', document.getElementById('editLocation').value);
-        formData.append('website', document.getElementById('editWebsite').value);
-        formData.append('address', document.getElementById('editAddress').value);
-        formData.append('description', document.getElementById('editDescription').value);
-        const logoFile = document.getElementById('logoUpload').files[0];
-        if (logoFile) formData.append('logo', logoFile);
-        
-        const response = await apiRequest('/api/business/profile', { method: 'PUT', body: formData });
-        if (response.success) {
-            showToast('Profile updated successfully!', 'success');
-            hideModal('profileEditModal');
-            await loadProfile();
-            
-            // FIX: Also update the user data in localStorage
-            if (response.profile && response.profile.logo) {
-                const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
-                userData.logo = response.profile.logo;
-                userData.name = businessName;
-                localStorage.setItem('lba_user_data', JSON.stringify(userData));
-            }
-            
-            // Force refresh of profile display
+        const data = await apiRequest('/api/business/profile');
+        if (data.success) {
+            appState.profile = data.profile || data.business || {};
             updateProfileDisplay();
         }
     } catch (error) { 
-        showToast(error.message || 'Failed to update profile', 'error'); 
+        console.error('Profile load error:', error);
     }
-    finally { 
-        submitBtn.innerHTML = originalText; 
-        submitBtn.disabled = false; 
-    }
-});
+}
 
-        document.getElementById('logoUpload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); this.value = ''; return; }
-                if (file.size > 5 * 1024 * 1024) { showToast('Image must be less than 5MB', 'error'); this.value = ''; return; }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('logoPreviewImg').src = e.target.result;
-                    document.getElementById('logoPreviewImg').style.display = 'block';
-                    document.getElementById('logoPreviewIcon').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+function updateProfileDisplay() {
+    const profile = appState.profile || {};
+    
+    // Update text fields
+    document.getElementById('companyName').textContent = profile.business_name || profile.name || 'Your Company';
+    document.getElementById('businessIndustry').textContent = `${profile.industry || profile.business_type || 'Industry'} • ${profile.location || 'Location'}`;
+    document.getElementById('businessContact').textContent = `Contact: ${profile.contact_name || profile.phone || 'Not provided'}`;
+    
+    // Update verification status
+    const verificationEl = document.getElementById('verificationStatus');
+    if (profile.verified) { 
+        verificationEl.textContent = '✓ Verified'; 
+        verificationEl.style.background = '#10B981'; 
+    } else if (profile.status === 'approved') { 
+        verificationEl.textContent = '✓ Approved'; 
+        verificationEl.style.background = '#10B981'; 
+    } else if (profile.status === 'pending') { 
+        verificationEl.textContent = '⏳ Pending Verification'; 
+        verificationEl.style.background = '#F59E0B'; 
+    } else { 
+        verificationEl.textContent = '✗ Not Verified'; 
+        verificationEl.style.background = '#EF4444'; 
+    }
+    
+    // FIX: Update profile page fields
+    document.getElementById('profileBusinessName').textContent = profile.business_name || profile.name || '-';
+    document.getElementById('profileEmail').textContent = appState.user?.email || profile.email || '-';
+    document.getElementById('profileContactName').textContent = profile.contact_name || '-';
+    document.getElementById('profilePhone').textContent = profile.phone || '-';
+    document.getElementById('profileIndustry').textContent = profile.industry || profile.business_type || '-';
+    document.getElementById('profileCategory').textContent = profile.business_category || '-';
+    document.getElementById('profileLocation').textContent = profile.location || '-';
+    document.getElementById('profileWebsite').textContent = profile.website || '-';
+    document.getElementById('profileDescription').textContent = profile.description || profile.business_description || '-';
+    document.getElementById('profileAddress').textContent = profile.address || profile.business_address || '-';
+    
+    // FIX: Update logo in dashboard header (profile avatar)
+    const userAvatar = document.getElementById('userAvatar');
+    if (profile.logo && profile.logo !== '') {
+        // Show logo image in avatar
+        userAvatar.style.backgroundImage = `url(${profile.logo})`;
+        userAvatar.style.backgroundSize = 'cover';
+        userAvatar.style.backgroundPosition = 'center';
+        userAvatar.textContent = '';
+        userAvatar.style.display = 'flex';
+        userAvatar.style.alignItems = 'center';
+        userAvatar.style.justifyContent = 'center';
+    } else {
+        userAvatar.style.backgroundImage = '';
+        userAvatar.style.background = 'linear-gradient(135deg, var(--lba-red), var(--lba-blue))';
+        userAvatar.textContent = (profile.business_name || appState.user?.name || 'B').charAt(0);
+    }
+    
+    // FIX: Update logo in dashboard profile card (top section)
+    const profileLogoImg = document.getElementById('profileLogoImg');
+    const profileLogoIcon = document.getElementById('profileLogoIcon');
+    if (profile.logo && profile.logo !== '') {
+        profileLogoImg.src = profile.logo;
+        profileLogoImg.style.display = 'block';
+        profileLogoIcon.style.display = 'none';
+    } else {
+        profileLogoImg.style.display = 'none';
+        profileLogoIcon.style.display = 'block';
+    }
+    
+    // FIX: Update logo in profile page (left column)
+    const profilePageLogo = document.getElementById('profilePageLogo');
+    const profilePageLogoIcon = document.getElementById('profilePageLogoIcon');
+    if (profile.logo && profile.logo !== '') {
+        profilePageLogo.src = profile.logo;
+        profilePageLogo.style.display = 'block';
+        profilePageLogoIcon.style.display = 'none';
+    } else {
+        profilePageLogo.style.display = 'none';
+        profilePageLogoIcon.style.display = 'block';
+    }
+    
+    // Update completion percentage
+    const completion = calculateProfileCompletion(profile);
+    document.getElementById('profileCompletion').textContent = completion + '%';
+    document.getElementById('profileCompletionBar').style.width = completion + '%';
+    document.getElementById('profileCompletionPercent').textContent = completion + '%';
+    
+    if (profile.created_at) {
+        document.getElementById('memberSince').textContent = new Date(profile.created_at).getFullYear();
+    }
+    
+    const statusBadge = document.getElementById('profileStatusBadge');
+    if (profile.verified) { 
+        statusBadge.textContent = '✓ Verified'; 
+        statusBadge.style.background = '#10B981'; 
+    } else if (profile.status === 'approved') { 
+        statusBadge.textContent = '✓ Approved'; 
+        statusBadge.style.background = '#10B981'; 
+    } else if (profile.status === 'pending') { 
+        statusBadge.textContent = '⏳ Pending Verification'; 
+        statusBadge.style.background = '#F59E0B'; 
+    } else { 
+        statusBadge.textContent = '✗ Not Verified'; 
+        statusBadge.style.background = '#EF4444'; 
+    }
+}
 
         // ============================================
         // NOMINATION FUNCTIONS - FRONTEND STYLE
@@ -2523,36 +2485,85 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
             document.body.style.overflow = 'hidden';
         }
 
-        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            if (newPassword !== confirmPassword) {
-                document.getElementById('passwordError').textContent = 'New passwords do not match';
-                document.getElementById('passwordError').style.display = 'block';
-                return;
-            }
-            if (newPassword.length < 6) {
-                document.getElementById('passwordError').textContent = 'Password must be at least 6 characters';
-                document.getElementById('passwordError').style.display = 'block';
-                return;
-            }
-            const saveBtn = document.getElementById('passwordSaveBtn');
-            const originalText = saveBtn.innerHTML;
-            try {
-                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-                saveBtn.disabled = true;
-                const response = await apiRequest('/api/auth/change-password', {
-                    method: 'POST',
-                    body: JSON.stringify({ currentPassword, newPassword })
-                });
-                if (response.success) { showToast('Password changed successfully', 'success'); hideModal('passwordModal'); }
-            } catch (error) {
-                document.getElementById('passwordError').textContent = error.message || 'Failed to change password';
-                document.getElementById('passwordError').style.display = 'block';
-            } finally { saveBtn.innerHTML = originalText; saveBtn.disabled = false; }
+        document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const submitBtn = document.getElementById('profileSaveBtn');
+    const originalText = submitBtn.innerHTML;
+    try {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
+        
+        const businessName = document.getElementById('editBusinessName').value.trim();
+        if (!businessName) { 
+            showToast('Business name is required', 'error'); 
+            return; 
+        }
+        
+        const formData = new FormData();
+        formData.append('business_name', businessName);
+        formData.append('business_category', document.getElementById('editBusinessCategory').value);
+        formData.append('industry', document.getElementById('editIndustry').value);
+        formData.append('contact_name', document.getElementById('editContactName').value);
+        formData.append('phone', document.getElementById('editPhone').value);
+        formData.append('location', document.getElementById('editLocation').value);
+        formData.append('website', document.getElementById('editWebsite').value);
+        formData.append('address', document.getElementById('editAddress').value);
+        formData.append('description', document.getElementById('editDescription').value);
+        
+        const logoFile = document.getElementById('logoUpload').files[0];
+        if (logoFile) {
+            formData.append('logo', logoFile);
+        }
+        
+        const response = await apiRequest('/api/business/profile', { 
+            method: 'PUT', 
+            body: formData 
         });
+        
+        if (response.success) {
+            // CRITICAL FIX: Update the profile data with the returned data
+            if (response.profile) {
+                // Merge the updated data into existing profile
+                appState.profile = { ...appState.profile, ...response.profile };
+            }
+            
+            // Force refresh all displays
+            updateProfileDisplay();
+            
+            // Also update user data in localStorage
+            const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+            userData.name = businessName;
+            if (response.profile && response.profile.logo) {
+                userData.logo = response.profile.logo;
+            }
+            localStorage.setItem('lba_user_data', JSON.stringify(userData));
+            
+            // Update the business name in header
+            document.getElementById('businessName').textContent = businessName;
+            
+            showToast('Profile updated successfully!', 'success');
+            hideModal('profileEditModal');
+            
+            // Clear file input
+            document.getElementById('logoUpload').value = '';
+            
+            // Also clear the logo preview in the modal
+            document.getElementById('logoPreviewImg').style.display = 'none';
+            document.getElementById('logoPreviewIcon').style.display = 'block';
+            
+        } else {
+            showToast(response.message || 'Failed to update profile', 'error');
+        }
+    } catch (error) { 
+        console.error('Profile update error:', error);
+        showToast(error.message || 'Failed to update profile', 'error'); 
+    } finally { 
+        submitBtn.innerHTML = originalText; 
+        submitBtn.disabled = false; 
+    }
+});
+
+         
 
         function showTwoFactorSetup() { showToast('Two-factor authentication will be available soon', 'info'); }
 
