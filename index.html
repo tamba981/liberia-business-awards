@@ -12064,68 +12064,92 @@ const AdManager = {
         });
     },
     
-    // Render floating/popup ad - COMPLETELY REWRITTEN
-    renderFloatingAd() {
-        const ads = this.adsCache.floating;
-        console.log(`📢 Floating ads available: ${ads.length}`);
-        
-        if (!ads.length) return;
-        
-        // Check localStorage block - FIXED: More reliable check
-        const lastClosed = localStorage.getItem('floatingAdClosed');
-        if (!this.forceShowAds && lastClosed && (Date.now() - parseInt(lastClosed)) < 30 * 60 * 1000) {
-            console.log('⚠️ Floating ad blocked by localStorage (closed within 30 min)');
-            console.log(`   Time remaining: ${Math.ceil((30 * 60 * 1000 - (Date.now() - parseInt(lastClosed))) / 1000)}s`);
-            return;
-        }
-        
-        // Ensure container exists
-        const floatingContainer = this.ensureFloatingContainerCreated();
-        if (!floatingContainer) return;
-        
-        // Show first floating ad
-        const ad = ads[0];
-        console.log(`📢 Rendering floating ad: "${ad.title}"`);
-        
-        floatingContainer.innerHTML = `
-            <div class="ad-header" onclick="AdManager.toggleMinimize()" style="background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                <span style="font-size: 14px; font-weight: 600;"><i class="fas fa-ad"></i> Advertisement</span>
-                <button class="ad-close" onclick="event.stopPropagation(); AdManager.closeFloatingAd(event)" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;">✕</button>
-            </div>
-            <div class="ad-content" style="padding: 20px; text-align: center;">
-                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="text-decoration: none;">
-                    <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 150px;">
-                    <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${ad.title}</h4>
-                    ${ad.description ? `<p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">${ad.description}</p>` : ''}
-                    <button class="ad-btn" style="background: #FF0000; color: white; border: none; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: 600;">Learn More →</button>
-                </a>
-            </div>
-        `;
-        
-        floatingContainer.classList.add('active');
-        floatingContainer.style.display = 'block';
-        floatingContainer.style.zIndex = '9998';
-        floatingContainer.style.position = 'fixed';
-        floatingContainer.style.bottom = '100px';
-        floatingContainer.style.right = '20px';
-        floatingContainer.style.width = '300px';
-        floatingContainer.style.backgroundColor = 'white';
-        floatingContainer.style.borderRadius = '16px';
-        floatingContainer.style.boxShadow = '0 10px 40px rgba(0,0,0,0.2)';
-        floatingContainer.style.overflow = 'hidden';
-        
-        this.trackView(ad._id);
-        console.log('✅ Floating ad rendered and visible');
-        
-        // Auto-hide after 15 seconds
-        setTimeout(() => {
-            if (floatingContainer && floatingContainer.classList && floatingContainer.classList.contains('active')) {
-                floatingContainer.classList.remove('active');
-                floatingContainer.style.display = 'none';
-                console.log('⏰ Floating ad auto-hidden after 15 seconds');
+    // ADD THIS NEW PROPERTY TO TRACK CURRENT AD INDEX
+currentFloatingAdIndex: 0,
+floatingAdTimer: null,
+
+// Render floating/popup ad - ROTATIONAL VERSION
+renderFloatingAd() {
+    const ads = this.adsCache.floating;
+    console.log(`📢 Floating ads available: ${ads.length}`);
+    
+    if (!ads.length) return;
+    
+    // Check if we should show any ad (skip if recently closed by user)
+    const lastClosed = localStorage.getItem('floatingAdClosed');
+    if (!this.forceShowAds && lastClosed && (Date.now() - parseInt(lastClosed)) < 30 * 60 * 1000) {
+        console.log('⚠️ Floating ad blocked by localStorage (closed within 30 min)');
+        console.log(`   Time remaining: ${Math.ceil((30 * 60 * 1000 - (Date.now() - parseInt(lastClosed))) / 1000)}s`);
+        return;
+    }
+    
+    // Ensure container exists
+    const floatingContainer = this.ensureFloatingContainerCreated();
+    if (!floatingContainer) return;
+    
+    // Get current ad based on rotation index
+    const ad = ads[this.currentFloatingAdIndex];
+    console.log(`📢 Rendering floating ad ${this.currentFloatingAdIndex + 1}/${ads.length}: "${ad.title}"`);
+    
+    floatingContainer.innerHTML = `
+        <div class="ad-header" onclick="AdManager.toggleMinimize()" style="background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <span style="font-size: 14px; font-weight: 600;"><i class="fas fa-ad"></i> Advertisement ${this.currentFloatingAdIndex + 1}/${ads.length}</span>
+            <button class="ad-close" onclick="event.stopPropagation(); AdManager.closeFloatingAd(event)" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;">✕</button>
+        </div>
+        <div class="ad-content" style="padding: 20px; text-align: center;">
+            <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="text-decoration: none;">
+                <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 150px;">
+                <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${ad.title}</h4>
+                ${ad.description ? `<p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">${ad.description}</p>` : ''}
+                <button class="ad-btn" style="background: #FF0000; color: white; border: none; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: 600;">Learn More →</button>
+            </a>
+        </div>
+    `;
+    
+    floatingContainer.classList.add('active');
+    floatingContainer.style.display = 'block';
+    floatingContainer.style.zIndex = '9998';
+    floatingContainer.style.position = 'fixed';
+    floatingContainer.style.bottom = '100px';
+    floatingContainer.style.right = '20px';
+    floatingContainer.style.width = '300px';
+    floatingContainer.style.backgroundColor = 'white';
+    floatingContainer.style.borderRadius = '16px';
+    floatingContainer.style.boxShadow = '0 10px 40px rgba(0,0,0,0.2)';
+    floatingContainer.style.overflow = 'hidden';
+    
+    this.trackView(ad._id);
+    console.log('✅ Floating ad rendered and visible');
+    
+    // Clear any existing timer
+    if (this.floatingAdTimer) {
+        clearTimeout(this.floatingAdTimer);
+    }
+    
+    // Auto-hide after 15 seconds and show next ad
+    this.floatingAdTimer = setTimeout(() => {
+        if (floatingContainer && floatingContainer.classList && floatingContainer.classList.contains('active')) {
+            floatingContainer.classList.remove('active');
+            floatingContainer.style.display = 'none';
+            console.log('⏰ Floating ad auto-hidden after 15 seconds');
+            
+            // Move to next ad index (rotation)
+            this.currentFloatingAdIndex++;
+            
+            // If we've shown all ads, start over from beginning
+            if (this.currentFloatingAdIndex >= ads.length) {
+                this.currentFloatingAdIndex = 0;
+                console.log('🔄 All ads shown, restarting rotation from first ad');
             }
-        }, 15000);
-    },
+            
+            // Show next ad after a 2-second delay (or immediately if you prefer)
+            setTimeout(() => {
+                console.log('🔄 Showing next floating ad...');
+                this.renderFloatingAd();
+            }, 2000);  // 2 second gap between ads (adjust as needed)
+        }
+    }, 15000);
+},
     
     // Track ad click
     async trackClick(adId) {
@@ -12167,17 +12191,37 @@ const AdManager = {
         }
     },
     
-    // Close floating ad
-    closeFloatingAd(event) {
-        event.stopPropagation();
-        const container = document.getElementById('dynamicFloatingAd');
-        if (container) {
-            container.classList.remove('active');
-            container.style.display = 'none';
-            localStorage.setItem('floatingAdClosed', Date.now().toString());
-            console.log('❌ Floating ad closed, will not show for 30 minutes');
+   // Close floating ad - NO BLOCK (keeps rotating)
+closeFloatingAd(event) {
+    event.stopPropagation();
+    const container = document.getElementById('dynamicFloatingAd');
+    if (container) {
+        container.classList.remove('active');
+        container.style.display = 'none';
+        
+        // Clear the auto-hide timer
+        if (this.floatingAdTimer) {
+            clearTimeout(this.floatingAdTimer);
         }
-    },
+        
+        // Move to next ad immediately
+        const ads = this.adsCache.floating;
+        if (ads && ads.length > 0) {
+            this.currentFloatingAdIndex++;
+            if (this.currentFloatingAdIndex >= ads.length) {
+                this.currentFloatingAdIndex = 0;
+            }
+            
+            // Show next ad after 1 second
+            setTimeout(() => {
+                console.log('🔄 Showing next ad after user closed...');
+                this.renderFloatingAd();
+            }, 1000);
+        }
+        
+        console.log('❌ Floating ad closed, showing next ad');
+    }
+},
     
     // Force show ads (debug)
     forceShowAllAds() {
