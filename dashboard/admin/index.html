@@ -5417,6 +5417,7 @@ async function createBusinessAccount() {
     }
 }
 
+        
 // ============================================
 // BUSINESS DOCUMENTS MANAGEMENT
 // ============================================
@@ -6474,6 +6475,281 @@ async function deleteJudge(id) {
     }
 }
 
+// ============================================
+// ADD THESE MISSING FUNCTIONS TO ADMIN DASHBOARD
+// ============================================
+
+// Show Create Ad Modal
+function showCreateAdModal() {
+    hideAllModals();
+    
+    // Create modal if doesn't exist
+    let modal = document.getElementById('createAdModal');
+    if (!modal) {
+        createAdModal();
+        modal = document.getElementById('createAdModal');
+    }
+    
+    // Reset form
+    document.getElementById('adForm').reset();
+    document.getElementById('adId').value = '';
+    document.getElementById('adModalTitle').textContent = 'Create New Ad';
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Create Ad Modal HTML
+function createAdModal() {
+    const modalHTML = `
+    <div class="modal" id="createAdModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2 id="adModalTitle">Create New Ad</h2>
+                <button class="modal-close" onclick="hideModal('createAdModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="adForm">
+                    <input type="hidden" id="adId">
+                    
+                    <div class="form-group">
+                        <label>Ad Title *</label>
+                        <input type="text" id="adTitle" class="sheet-btn secondary" style="width: 100%;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="adDescription" rows="3" class="sheet-btn secondary" style="width: 100%;"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Image URL *</label>
+                        <input type="url" id="adImageUrl" class="sheet-btn secondary" style="width: 100%;" placeholder="https://your-image-url.jpg" required>
+                        <div id="adImagePreview" style="margin-top: 10px; display: none;">
+                            <img id="adPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Link URL</label>
+                        <input type="url" id="adLinkUrl" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Ad Type *</label>
+                        <select id="adType" class="sheet-btn secondary" style="width: 100%;" required>
+                            <option value="top-banner">Top Banner</option>
+                            <option value="sidebar">Sidebar</option>
+                            <option value="inline">Inline</option>
+                            <option value="floating">Floating</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Placement</label>
+                        <select id="adPlacement" class="sheet-btn secondary" style="width: 100%;">
+                            <option value="top-banner">Top Banner</option>
+                            <option value="sidebar">Sidebar</option>
+                            <option value="inline">Inline</option>
+                            <option value="floating">Floating</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Business ID (optional)</label>
+                        <input type="text" id="adBusinessId" class="sheet-btn secondary" style="width: 100%;" placeholder="For business ads">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Start Date *</label>
+                            <input type="date" id="adStartDate" class="sheet-btn secondary" style="width: 100%;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Date *</label>
+                            <input type="date" id="adEndDate" class="sheet-btn secondary" style="width: 100%;" required>
+                        </div>
+                    </div>
+                    
+                    <div class="error-message" id="adError" style="display: none; color: #EF4444;"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('createAdModal')" style="flex: 1;">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveAd()" style="flex: 2;">Save Ad</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add image preview
+    document.getElementById('adImageUrl')?.addEventListener('input', function() {
+        const preview = document.getElementById('adImagePreview');
+        const img = document.getElementById('adPreviewImg');
+        if (this.value && preview && img) {
+            img.src = this.value;
+            preview.style.display = 'block';
+        } else if (preview) {
+            preview.style.display = 'none';
+        }
+    });
+}
+
+// Save Ad (Create/Update)
+async function saveAd() {
+    const adId = document.getElementById('adId').value;
+    const token = localStorage.getItem('lba_auth_token');
+    
+    const adData = {
+        title: document.getElementById('adTitle').value,
+        description: document.getElementById('adDescription').value,
+        image_url: document.getElementById('adImageUrl').value,
+        link_url: document.getElementById('adLinkUrl').value,
+        type: document.getElementById('adType').value,
+        placement: document.getElementById('adPlacement').value,
+        business_id: document.getElementById('adBusinessId').value || null,
+        start_date: document.getElementById('adStartDate').value,
+        end_date: document.getElementById('adEndDate').value,
+        status: 'pending'
+    };
+    
+    if (!adData.title || !adData.image_url || !adData.start_date || !adData.end_date) {
+        showNotification('Please fill all required fields', 'error');
+        return;
+    }
+    
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
+    
+    try {
+        const url = adId 
+            ? `${API_BASE.replace('/api', '')}/api/admin/ads/${adId}`
+            : `${API_BASE.replace('/api', '')}/api/admin/ads`;
+        const method = adId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(adData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(adId ? 'Ad updated!' : 'Ad created!', 'success');
+            hideModal('createAdModal');
+            loadAds();
+        } else {
+            showNotification(result.message || 'Error saving ad', 'error');
+        }
+    } catch (error) {
+        console.error('Save ad error:', error);
+        showNotification('Error saving ad', 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+// Edit Ad
+async function editAd(adId) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/ads/${adId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.ad) {
+            const ad = result.ad;
+            
+            let modal = document.getElementById('createAdModal');
+            if (!modal) {
+                createAdModal();
+                modal = document.getElementById('createAdModal');
+            }
+            
+            document.getElementById('adModalTitle').textContent = 'Edit Ad';
+            document.getElementById('adId').value = ad._id;
+            document.getElementById('adTitle').value = ad.title || '';
+            document.getElementById('adDescription').value = ad.description || '';
+            document.getElementById('adImageUrl').value = ad.image_url || '';
+            document.getElementById('adLinkUrl').value = ad.link_url || '';
+            document.getElementById('adType').value = ad.type || 'sidebar';
+            document.getElementById('adPlacement').value = ad.placement || 'sidebar';
+            document.getElementById('adBusinessId').value = ad.business_id || '';
+            
+            if (ad.start_date) {
+                const startDate = new Date(ad.start_date);
+                document.getElementById('adStartDate').value = startDate.toISOString().split('T')[0];
+            }
+            if (ad.end_date) {
+                const endDate = new Date(ad.end_date);
+                document.getElementById('adEndDate').value = endDate.toISOString().split('T')[0];
+            }
+            
+            // Show image preview
+            if (ad.image_url) {
+                const preview = document.getElementById('adImagePreview');
+                const img = document.getElementById('adPreviewImg');
+                if (preview && img) {
+                    img.src = ad.image_url;
+                    preview.style.display = 'block';
+                }
+            }
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    } catch (error) {
+        console.error('Edit ad error:', error);
+        showNotification('Error loading ad details', 'error');
+    }
+}
+
+// Delete Ad
+async function deleteAd(adId) {
+    if (!confirm('⚠️ Are you sure you want to delete this ad? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/ads/${adId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Ad deleted successfully!', 'success');
+            loadAds();
+        } else {
+            showNotification(result.message || 'Error deleting ad', 'error');
+        }
+    } catch (error) {
+        console.error('Delete ad error:', error);
+        showNotification('Error deleting ad', 'error');
+    }
+}
+
+// Make functions global
+window.showCreateAdModal = showCreateAdModal;
+window.editAd = editAd;
+window.deleteAd = deleteAd;
+        
 // ============================================
 // USERS MANAGEMENT
 // ============================================
