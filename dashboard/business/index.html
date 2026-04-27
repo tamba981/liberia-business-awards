@@ -1261,7 +1261,7 @@
             <button class="modal-close" onclick="hideModal('submitAdModal')"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
-            <form id="submitAdForm">
+            <form id="submitAdForm" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>Ad Title *</label>
                     <input type="text" id="adTitle" required placeholder="e.g., Special Offer - 20% Off">
@@ -1271,8 +1271,12 @@
                     <textarea id="adDescription" rows="2" placeholder="Brief description of your ad..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Image URL *</label>
-                    <input type="url" id="adImage" required placeholder="https://yourwebsite.com/ad-image.jpg">
+                    <label>Ad Image *</label>
+                    <input type="file" id="adImageFile" accept="image/jpeg,image/png,image/gif,image/webp" required>
+                    <small style="color: #64748b; display: block; margin-top: 5px;">Upload JPG, PNG, GIF, or WEBP (Max 5MB)</small>
+                    <div id="adImagePreview" style="display: none; margin-top: 10px;">
+                        <img id="adPreviewImg" style="max-width: 100%; max-height: 100px; border-radius: 8px;">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Link URL (optional)</label>
@@ -3271,6 +3275,27 @@ window.switchPage = function(page) {
         loadBusinessSpotlightStories();
     }
 };  
+
+        function setupAdImagePreview() {
+    const fileInput = document.getElementById('adImageFile');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const previewDiv = document.getElementById('adImagePreview');
+            const previewImg = document.getElementById('adPreviewImg');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewImg.src = evt.target.result;
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        });
+    }
+}
+        
         function showSubmitAdModal() {
     document.getElementById('submitAdForm').reset();
     document.getElementById('adSubmitError').style.display = 'none';
@@ -3281,20 +3306,36 @@ window.switchPage = function(page) {
 document.getElementById('submitAdForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const adData = {
-        title: document.getElementById('adTitle').value,
-        description: document.getElementById('adDescription').value,
-        image_url: document.getElementById('adImage').value,
-        link_url: document.getElementById('adLink').value,
-        placement: document.getElementById('adPlacement').value,
-        end_date: new Date(Date.now() + parseInt(document.getElementById('adDuration').value) * 24 * 60 * 60 * 1000)
-    };
+    const fileInput = document.getElementById('adImageFile');
+    const file = fileInput?.files[0];
     
-    if (!adData.title || !adData.image_url) {
-        document.getElementById('adSubmitError').textContent = 'Title and image URL are required';
+    if (!file) {
+        document.getElementById('adSubmitError').textContent = 'Please select an image file';
         document.getElementById('adSubmitError').style.display = 'block';
         return;
     }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        document.getElementById('adSubmitError').textContent = 'Image must be less than 5MB';
+        document.getElementById('adSubmitError').style.display = 'block';
+        return;
+    }
+    
+    const title = document.getElementById('adTitle').value;
+    if (!title) {
+        document.getElementById('adSubmitError').textContent = 'Title is required';
+        document.getElementById('adSubmitError').style.display = 'block';
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', document.getElementById('adDescription').value);
+    formData.append('placement', document.getElementById('adPlacement').value);
+    formData.append('duration', document.getElementById('adDuration').value);
+    formData.append('link_url', document.getElementById('adLink').value);
+    formData.append('image', file);
     
     const submitBtn = e.target.querySelector('[type="submit"]');
     const originalText = submitBtn.innerHTML;
@@ -3303,13 +3344,13 @@ document.getElementById('submitAdForm')?.addEventListener('submit', async functi
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/business/ads`, {
+        const response = await fetch(`${API_BASE}/business/ads/upload`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${token}`
+                // Do NOT set Content-Type - browser sets it automatically with boundary for FormData
             },
-            body: JSON.stringify(adData)
+            body: formData
         });
         
         const result = await response.json();
@@ -3318,6 +3359,7 @@ document.getElementById('submitAdForm')?.addEventListener('submit', async functi
             showToast('✅ Ad submitted for review! Admin will approve shortly.', 'success');
             hideModal('submitAdModal');
             document.getElementById('submitAdForm').reset();
+            document.getElementById('adImagePreview').style.display = 'none';
         } else {
             throw new Error(result.message || 'Submission failed');
         }
@@ -3329,6 +3371,9 @@ document.getElementById('submitAdForm')?.addEventListener('submit', async functi
         submitBtn.disabled = false;
     }
 });
+
+// Initialize image preview
+setupAdImagePreview();
 
 window.showSubmitAdModal = showSubmitAdModal;
     </script>
