@@ -12038,7 +12038,7 @@ console.log('✅ Voting system frontend fixes applied');
 
 <script>
 // ============================================
-// DYNAMIC ADS SYSTEM - REPLACE HARDCODED ADS
+// DYNAMIC ADS SYSTEM - COMPLETE FIXED VERSION
 // ============================================
 
 const AdManager = {
@@ -12053,12 +12053,88 @@ const AdManager = {
         lastFetch: null
     },
     
-    // Initialize ad system
+    // Debug override - set to true to bypass localStorage block
+    forceShowAds: false,
+    
+    // Initialize ad system - FIXED ASYNC FLOW
     async init() {
         console.log('📢 Initializing Dynamic Ad System...');
+        
+        // FIX 1: Ensure container elements exist before fetching
+        this.ensureTopBannerContainer();
+        this.ensureSidebarContainer();
+        this.ensureFloatingContainerCreated();
+        
+        // FIX 2: Wait for data to load before rendering
         await this.fetchAllAds();
+        
+        // FIX 3: Now render with actual data
         this.renderAllAds();
+        
+        // Start auto-refresh
         this.startAutoRefresh();
+        
+        console.log('✅ Ad System Initialized - Ads loaded:', 
+            this.adsCache.topBanner.length + 
+            this.adsCache.sidebar.length + 
+            this.adsCache.inline.length + 
+            this.adsCache.floating.length
+        );
+    },
+    
+    // Ensure top banner container exists
+    ensureTopBannerContainer() {
+        let bannerContainer = document.getElementById('dynamicTopBanner');
+        if (!bannerContainer) {
+            bannerContainer = document.createElement('div');
+            bannerContainer.id = 'dynamicTopBanner';
+            bannerContainer.className = 'top-banner-ad';
+            bannerContainer.style.cssText = 'max-width: 1200px; margin: 20px auto; padding: 0 20px; text-align: center;';
+            
+            const heroSection = document.querySelector('.hero-bg, .hero');
+            if (heroSection && heroSection.parentNode) {
+                heroSection.insertAdjacentElement('afterend', bannerContainer);
+            } else {
+                document.body.insertBefore(bannerContainer, document.body.firstChild);
+            }
+            console.log('✅ Created top banner container');
+        }
+    },
+    
+    // Ensure sidebar container exists
+    ensureSidebarContainer() {
+        let sidebarContainer = document.getElementById('dynamicSidebarAds');
+        if (!sidebarContainer) {
+            sidebarContainer = document.createElement('div');
+            sidebarContainer.id = 'dynamicSidebarAds';
+            sidebarContainer.className = 'sidebar-ad-container';
+            sidebarContainer.style.cssText = 'margin-bottom: 30px;';
+            
+            // Find suitable location
+            const businessDirectory = document.getElementById('businessDirectory');
+            if (businessDirectory) {
+                businessDirectory.insertBefore(sidebarContainer, businessDirectory.firstChild);
+            } else {
+                const targetContainer = document.querySelector('.main-content, main, .container');
+                if (targetContainer) {
+                    targetContainer.insertBefore(sidebarContainer, targetContainer.firstChild);
+                }
+            }
+            console.log('✅ Created sidebar container');
+        }
+    },
+    
+    // Ensure floating container is created AND visible
+    ensureFloatingContainerCreated() {
+        let floatingContainer = document.getElementById('dynamicFloatingAd');
+        if (!floatingContainer) {
+            floatingContainer = document.createElement('div');
+            floatingContainer.id = 'dynamicFloatingAd';
+            floatingContainer.className = 'floating-ad';
+            document.body.appendChild(floatingContainer);
+            console.log('✅ Created floating container');
+        }
+        return floatingContainer;
     },
     
     // Fetch ads from backend
@@ -12067,21 +12143,25 @@ const AdManager = {
             let url = `${this.API_URL}/ads?type=${type}&limit=10`;
             if (placement) url += `&placement=${placement}`;
             
+            console.log(`📡 Fetching ads: ${url}`);
             const response = await fetch(url);
             const data = await response.json();
             
-            if (data.success) {
+            if (data.success && data.ads) {
+                console.log(`📢 Found ${data.ads.length} ads for type: ${type}`);
                 return data.ads;
             }
             return [];
         } catch (error) {
-            console.error('Error fetching ads:', error);
+            console.error(`Error fetching ${type} ads:`, error);
             return [];
         }
     },
     
     // Fetch all ad types
     async fetchAllAds() {
+        console.log('📢 Fetching all ads...');
+        
         try {
             const [topBanner, sidebar, inline, floating] = await Promise.all([
                 this.fetchAds('top-banner', 'top-banner'),
@@ -12091,21 +12171,24 @@ const AdManager = {
             ]);
             
             this.adsCache = {
-                topBanner,
-                sidebar,
-                inline,
-                floating,
+                topBanner: topBanner || [],
+                sidebar: sidebar || [],
+                inline: inline || [],
+                floating: floating || [],
                 lastFetch: new Date()
             };
             
-            console.log(`📢 Ads loaded: ${topBanner.length} top, ${sidebar.length} sidebar, ${inline.length} inline, ${floating.length} floating`);
+            console.log(`✅ Ads loaded: ${this.adsCache.topBanner.length} top, ${this.adsCache.sidebar.length} sidebar, ${this.adsCache.inline.length} inline, ${this.adsCache.floating.length} floating`);
+            
         } catch (error) {
             console.error('Error fetching all ads:', error);
+            this.adsCache.lastFetch = new Date();
         }
     },
     
     // Render all ads on page
     renderAllAds() {
+        console.log('📢 Rendering all ads...');
         this.renderTopBanner();
         this.renderSidebarAds();
         this.renderInlineAds();
@@ -12115,94 +12198,77 @@ const AdManager = {
     // Render top banner ad
     renderTopBanner() {
         const ads = this.adsCache.topBanner;
+        console.log(`📢 Top banner ads available: ${ads.length}`);
+        
         if (!ads.length) return;
         
-        // Find or create top banner container
-        let bannerContainer = document.getElementById('dynamicTopBanner');
-        if (!bannerContainer) {
-            const heroSection = document.querySelector('.hero');
-            if (heroSection) {
-                bannerContainer = document.createElement('div');
-                bannerContainer.id = 'dynamicTopBanner';
-                bannerContainer.className = 'top-banner-ad';
-                heroSection.insertAdjacentElement('afterend', bannerContainer);
-            }
-        }
+        const bannerContainer = document.getElementById('dynamicTopBanner');
+        if (!bannerContainer) return;
         
-        if (bannerContainer) {
-            const ad = ads[0]; // Show first top banner ad
-            bannerContainer.innerHTML = `
-                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="display: block; text-decoration: none;">
-                    <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 12px;">
-                    ${ad.description ? `<p style="margin-top: 5px; font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
-                </a>
-            `;
-            this.trackView(ad._id);
-        }
+        const ad = ads[0];
+        bannerContainer.innerHTML = `
+            <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="display: block; text-decoration: none;">
+                <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 12px; max-height: 120px; object-fit: contain;">
+                ${ad.description ? `<p style="margin-top: 5px; font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
+            </a>
+        `;
+        this.trackView(ad._id);
+        console.log('✅ Top banner ad rendered');
     },
     
-    // Render sidebar ads (replaces static ad container)
+    // Render sidebar ads
     renderSidebarAds() {
         const ads = this.adsCache.sidebar;
+        console.log(`📢 Sidebar ads available: ${ads.length}`);
+        
         if (!ads.length) return;
         
-        let sidebarContainer = document.getElementById('dynamicSidebarAds');
-        if (!sidebarContainer) {
-            // Find where sidebar ads should go - look for existing ad container
-            const existing = document.querySelector('.sidebar-ad-container, [class*="sidebar-ad"]');
-            if (existing) {
-                existing.id = 'dynamicSidebarAds';
-                sidebarContainer = existing;
-            } else {
-                // Create new container
-                const sidebar = document.querySelector('.sidebar, aside, [class*="sidebar"]');
-                if (sidebar) {
-                    sidebarContainer = document.createElement('div');
-                    sidebarContainer.id = 'dynamicSidebarAds';
-                    sidebarContainer.className = 'sidebar-ad-container';
-                    sidebar.appendChild(sidebarContainer);
-                }
-            }
-        }
+        const sidebarContainer = document.getElementById('dynamicSidebarAds');
+        if (!sidebarContainer) return;
         
-        if (sidebarContainer) {
-            sidebarContainer.innerHTML = ads.map(ad => `
-                <div class="sidebar-ad-item" style="margin-bottom: 20px;">
-                    <div class="sidebar-ad-label">Advertisement</div>
-                    <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')">
-                        <img src="${ad.image_url}" alt="${ad.title}" style="width: 100%; border-radius: 8px;">
-                        <h4 style="margin-top: 8px; font-size: 14px;">${ad.title}</h4>
-                        ${ad.description ? `<p style="font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
-                    </a>
-                </div>
-            `).join('');
-            
-            // Track views for each ad
-            ads.forEach(ad => this.trackView(ad._id));
-        }
+        sidebarContainer.innerHTML = ads.map(ad => `
+            <div class="sidebar-ad-item" style="margin-bottom: 20px; text-align: center;">
+                <div class="sidebar-ad-label" style="font-size: 10px; color: #9ca3af; margin-bottom: 5px;">Advertisement</div>
+                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')">
+                    <img src="${ad.image_url}" alt="${ad.title}" style="width: 100%; border-radius: 8px;">
+                    <h4 style="margin-top: 8px; font-size: 14px; font-weight: 600;">${ad.title}</h4>
+                    ${ad.description ? `<p style="font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
+                </a>
+            </div>
+        `).join('');
+        
+        ads.forEach(ad => this.trackView(ad._id));
+        console.log(`✅ ${ads.length} sidebar ad(s) rendered`);
     },
     
-    // Render inline ads within content
+    // Render inline ads
     renderInlineAds() {
         const ads = this.adsCache.inline;
+        console.log(`📢 Inline ads available: ${ads.length}`);
+        
         if (!ads.length) return;
         
-        // Find content containers to inject ads
-        const contentContainers = document.querySelectorAll('.content-article, .blog-post, .section-content, .main-content > div');
+        // Find suitable content containers
+        const contentContainers = document.querySelectorAll('.category-card, .blog-card, .featured-card, .team-member');
+        
+        if (contentContainers.length === 0) {
+            console.log('No content containers found for inline ads');
+            return;
+        }
         
         contentContainers.forEach((container, index) => {
-            if (index % 3 === 1 && ads.length > 0) { // Insert every 3rd container
-                const adIndex = Math.floor(index / 3) % ads.length;
+            if (index === 2 && ads.length > 0) {
+                const adIndex = 0;
                 const ad = ads[adIndex];
                 
                 const inlineAdDiv = document.createElement('div');
                 inlineAdDiv.className = 'in-content-ad-container';
                 inlineAdDiv.style.cssText = 'background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 16px; padding: 20px; margin: 30px 0; text-align: center; border: 1px dashed #FF0000;';
                 inlineAdDiv.innerHTML = `
-                    <div class="sidebar-ad-label" style="font-size: 10px; color: #9ca3af;">Sponsored</div>
+                    <div class="ad-label" style="font-size: 10px; color: #9ca3af; margin-bottom: 8px;">Sponsored</div>
                     <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="text-decoration: none;">
-                        <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 12px; margin-bottom: 10px;">
-                        <h4 style="font-size: 16px; color: #1a202c;">${ad.title}</h4>
+                        <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 12px; margin-bottom: 10px; max-height: 150px;">
+                        <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${ad.title}</h4>
                         ${ad.description ? `<p style="font-size: 13px; color: #6c757d;">${ad.description}</p>` : ''}
                         <button class="ad-cta-btn" style="background: #FF0000; color: white; border: none; padding: 8px 20px; border-radius: 30px; margin-top: 10px; cursor: pointer;">Learn More</button>
                     </a>
@@ -12215,48 +12281,65 @@ const AdManager = {
         });
     },
     
-    // Render floating/popup ad
+    // Render floating/popup ad - COMPLETELY REWRITTEN
     renderFloatingAd() {
         const ads = this.adsCache.floating;
+        console.log(`📢 Floating ads available: ${ads.length}`);
+        
         if (!ads.length) return;
         
-        // Check if user closed floating ad recently
+        // Check localStorage block - FIXED: More reliable check
         const lastClosed = localStorage.getItem('floatingAdClosed');
-        if (lastClosed && (Date.now() - parseInt(lastClosed)) < 30 * 60 * 1000) {
-            return; // Don't show for 30 minutes after closing
+        if (!this.forceShowAds && lastClosed && (Date.now() - parseInt(lastClosed)) < 30 * 60 * 1000) {
+            console.log('⚠️ Floating ad blocked by localStorage (closed within 30 min)');
+            console.log(`   Time remaining: ${Math.ceil((30 * 60 * 1000 - (Date.now() - parseInt(lastClosed))) / 1000)}s`);
+            return;
         }
         
-        let floatingContainer = document.getElementById('dynamicFloatingAd');
-        if (!floatingContainer) {
-            floatingContainer = document.createElement('div');
-            floatingContainer.id = 'dynamicFloatingAd';
-            floatingContainer.className = 'floating-ad';
-            document.body.appendChild(floatingContainer);
-        }
+        // Ensure container exists
+        const floatingContainer = this.ensureFloatingContainerCreated();
+        if (!floatingContainer) return;
         
+        // Show first floating ad
         const ad = ads[0];
+        console.log(`📢 Rendering floating ad: "${ad.title}"`);
+        
         floatingContainer.innerHTML = `
-            <div class="ad-header" onclick="AdManager.toggleMinimize()">
-                <span><i class="fas fa-ad"></i> Advertisement</span>
-                <button class="ad-close" onclick="AdManager.closeFloatingAd(event)">✕</button>
+            <div class="ad-header" onclick="AdManager.toggleMinimize()" style="background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <span style="font-size: 14px; font-weight: 600;"><i class="fas fa-ad"></i> Advertisement</span>
+                <button class="ad-close" onclick="event.stopPropagation(); AdManager.closeFloatingAd(event)" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;">✕</button>
             </div>
-            <div class="ad-content" id="floatingAdContent">
-                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')">
-                    <img src="${ad.image_url}" alt="${ad.title}">
-                    <h4>${ad.title}</h4>
-                    ${ad.description ? `<p>${ad.description}</p>` : ''}
-                    <button class="ad-btn">Learn More →</button>
+            <div class="ad-content" style="padding: 20px; text-align: center;">
+                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="text-decoration: none;">
+                    <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 150px;">
+                    <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${ad.title}</h4>
+                    ${ad.description ? `<p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">${ad.description}</p>` : ''}
+                    <button class="ad-btn" style="background: #FF0000; color: white; border: none; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: 600;">Learn More →</button>
                 </a>
             </div>
         `;
         
         floatingContainer.classList.add('active');
+        floatingContainer.style.display = 'block';
+        floatingContainer.style.zIndex = '9998';
+        floatingContainer.style.position = 'fixed';
+        floatingContainer.style.bottom = '100px';
+        floatingContainer.style.right = '20px';
+        floatingContainer.style.width = '300px';
+        floatingContainer.style.backgroundColor = 'white';
+        floatingContainer.style.borderRadius = '16px';
+        floatingContainer.style.boxShadow = '0 10px 40px rgba(0,0,0,0.2)';
+        floatingContainer.style.overflow = 'hidden';
+        
         this.trackView(ad._id);
+        console.log('✅ Floating ad rendered and visible');
         
         // Auto-hide after 15 seconds
         setTimeout(() => {
-            if (floatingContainer.classList.contains('active')) {
+            if (floatingContainer && floatingContainer.classList && floatingContainer.classList.contains('active')) {
                 floatingContainer.classList.remove('active');
+                floatingContainer.style.display = 'none';
+                console.log('⏰ Floating ad auto-hidden after 15 seconds');
             }
         }, 15000);
     },
@@ -12265,6 +12348,7 @@ const AdManager = {
     async trackClick(adId) {
         try {
             await fetch(`${this.API_URL}/ads/${adId}/click`, { method: 'POST' });
+            console.log(`📊 Tracked click for ad: ${adId}`);
         } catch (error) {
             console.error('Error tracking click:', error);
         }
@@ -12275,7 +12359,7 @@ const AdManager = {
         try {
             await fetch(`${this.API_URL}/ads/${adId}/view`, { method: 'POST' });
         } catch (error) {
-            console.error('Error tracking view:', error);
+            // Silently fail - view tracking is not critical
         }
     },
     
@@ -12284,6 +12368,19 @@ const AdManager = {
         const container = document.getElementById('dynamicFloatingAd');
         if (container) {
             container.classList.toggle('minimized');
+            if (container.classList.contains('minimized')) {
+                container.style.width = '50px';
+                container.style.height = '50px';
+                container.style.borderRadius = '50%';
+                const content = container.querySelector('.ad-content');
+                if (content) content.style.display = 'none';
+            } else {
+                container.style.width = '300px';
+                container.style.height = 'auto';
+                container.style.borderRadius = '16px';
+                const content = container.querySelector('.ad-content');
+                if (content) content.style.display = 'block';
+            }
         }
     },
     
@@ -12293,32 +12390,69 @@ const AdManager = {
         const container = document.getElementById('dynamicFloatingAd');
         if (container) {
             container.classList.remove('active');
+            container.style.display = 'none';
             localStorage.setItem('floatingAdClosed', Date.now().toString());
+            console.log('❌ Floating ad closed, will not show for 30 minutes');
         }
+    },
+    
+    // Force show ads (debug)
+    forceShowAllAds() {
+        this.forceShowAds = true;
+        localStorage.removeItem('floatingAdClosed');
+        this.renderAllAds();
+        console.log('🔧 Force showing all ads');
+    },
+    
+    // Reset ad state (clear localStorage)
+    resetAdState() {
+        localStorage.removeItem('floatingAdClosed');
+        this.forceShowAds = false;
+        console.log('🔄 Ad state reset');
+        this.renderFloatingAd();
     },
     
     // Auto-refresh ads every 5 minutes
     startAutoRefresh() {
         setInterval(async () => {
+            console.log('🔄 Auto-refreshing ads...');
             await this.fetchAllAds();
             this.renderAllAds();
         }, 5 * 60 * 1000);
     }
 };
 
-// Initialize Ad Manager when page loads
+// Initialize Ad Manager when page loads - WITH TIMING FIX
 document.addEventListener('DOMContentLoaded', () => {
-    AdManager.init();
+    // Small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        AdManager.init();
+    }, 100);
 });
 
-// Debug - check what's in the cache
-setTimeout(() => {
-    console.log('📢 Ad Cache after init:', AdManager.adsCache);
-    console.log('📢 Top banner ads:', AdManager.adsCache.topBanner);
-    console.log('📢 Sidebar ads:', AdManager.adsCache.sidebar);
-}, 3000);
+// Also run on load for safety
+window.addEventListener('load', () => {
+    // Ensure containers exist and ads are rendered
+    setTimeout(() => {
+        if (AdManager.adsCache.lastFetch === null) {
+            console.log('🔄 Re-initializing ads on load...');
+            AdManager.init();
+        }
+    }, 500);
+});
+
+// Debug helpers
+window.forceShowAds = () => AdManager.forceShowAllAds();
+window.resetAdState = () => AdManager.resetAdState();
+window.checkAdCache = () => console.log('Ad Cache:', AdManager.adsCache);
+
 // Expose to window
 window.AdManager = AdManager;
+
+console.log('✅ AdManager loaded - Debug commands available:');
+console.log('   - forceShowAds() - Force show all ads');
+console.log('   - resetAdState() - Reset localStorage blocking');
+console.log('   - checkAdCache() - Check loaded ads');
 </script>
 
         
