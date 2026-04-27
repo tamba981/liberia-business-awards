@@ -6587,6 +6587,22 @@ function createAdModal() {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Add after modal creation
+document.getElementById('adImageFile')?.addEventListener('change', function(e) {
+    const previewDiv = document.getElementById('adImagePreview');
+    const previewImg = document.getElementById('adPreviewImg');
+    if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            previewImg.src = evt.target.result;
+            previewDiv.style.display = 'block';
+        };
+        reader.readAsDataURL(this.files[0]);
+    } else {
+        previewDiv.style.display = 'none';
+    }
+});
     
     // Add image preview
     document.getElementById('adImageUrl')?.addEventListener('input', function() {
@@ -6601,7 +6617,6 @@ function createAdModal() {
     });
 }
 
-// Save Ad (Create/Update)
 async function saveAd() {
     const adId = document.getElementById('adId').value;
     const token = localStorage.getItem('lba_auth_token');
@@ -6633,7 +6648,7 @@ async function saveAd() {
         const file = fileInput?.files[0];
         
         if (file) {
-            // Upload file
+            // Upload file (NEW)
             const formData = new FormData();
             formData.append('title', title);
             formData.append('description', description);
@@ -6656,18 +6671,16 @@ async function saveAd() {
                 body: formData
             });
         } else {
-            // No file - use existing image URL
+            // No file - use existing or show error
             const image_url = document.getElementById('adImageUrl')?.value;
             if (!image_url) {
-                showNotification('Please provide an image', 'error');
-                return;
+                throw new Error('Please select an image file');
             }
             
             const adData = {
                 title, description, link_url, type, placement,
                 start_date, end_date, business_id,
-                image_url: image_url,
-                status: 'pending'
+                image_url: image_url
             };
             
             const url = adId 
@@ -6696,7 +6709,7 @@ async function saveAd() {
         }
     } catch (error) {
         console.error('Save ad error:', error);
-        showNotification('Error saving ad', 'error');
+        showNotification(error.message || 'Error saving ad', 'error');
     } finally {
         saveBtn.innerHTML = originalText;
         saveBtn.disabled = false;
