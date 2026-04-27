@@ -5299,6 +5299,7 @@ async function createBusinessAccount() {
     // Reset messages
     errorEl.style.display = 'none';
     successEl.style.display = 'none';
+    errorEl.textContent = '';
     
     // Validation
     if (!businessName || !email || !password) {
@@ -5328,16 +5329,31 @@ async function createBusinessAccount() {
     }
     
     // Show loading state
-    const submitBtn = document.querySelector('#createBusinessModal .sheet-btn[onclick="createBusinessAccount()"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-    submitBtn.disabled = true;
+    const submitBtn = document.querySelector('#createBusinessModal .sheet-btn[style*="background: linear-gradient"]');
+    if (!submitBtn) {
+        // Try alternative selector
+        const btns = document.querySelectorAll('#createBusinessModal .sheet-btn');
+        for (let btn of btns) {
+            if (btn.textContent.includes('Create Business Account')) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+                btn.disabled = true;
+                break;
+            }
+        }
+    } else {
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        submitBtn.disabled = true;
+    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
         
-        // Register the business
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/business/register`, {
+        console.log('📤 Creating business account:', { businessName, email, contactName, phone, businessType });
+        
+        // Register the business - FIXED URL
+        const response = await fetch(`${BACKEND_URL}/business/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -5354,6 +5370,7 @@ async function createBusinessAccount() {
         });
         
         const data = await response.json();
+        console.log('📥 Registration response:', data);
         
         if (!data.success) {
             throw new Error(data.message || 'Failed to create business account');
@@ -5361,42 +5378,53 @@ async function createBusinessAccount() {
         
         // If auto-approve is yes, approve the business
         if (autoApprove === 'yes') {
-            // First get the business ID (we need to fetch the list)
-            const businessesResponse = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?email=${encodeURIComponent(email)}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            // Wait a moment for the business to be created
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Get the business ID
+            const businessesResponse = await fetch(`${BACKEND_URL}/admin/businesses?email=${encodeURIComponent(email)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             
             const businessesData = await businessesResponse.json();
+            console.log('📥 Businesses list after creation:', businessesData);
             
-            if (businessesData.success && businessesData.businesses.length > 0) {
+            if (businessesData.success && businessesData.businesses && businessesData.businesses.length > 0) {
                 const businessId = businessesData.businesses[0]._id;
                 
                 // Approve the business
-                await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses/${businessId}/approve`, {
+                const approveResponse = await fetch(`${BACKEND_URL}/admin/businesses/${businessId}/approve`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
+                
+                const approveData = await approveResponse.json();
+                if (approveData.success) {
+                    console.log('✅ Business auto-approved');
+                }
             }
         }
         
         // Show success message
-        successEl.textContent = `Business account created successfully! ${autoApprove === 'yes' ? 'Business is now approved and can login.' : 'Business is pending approval.'}`;
+        successEl.textContent = `✅ Business account created successfully! ${autoApprove === 'yes' ? 'Business is now approved and can login.' : 'Business is pending approval.'}`;
         successEl.style.display = 'block';
         
         // Clear form
         document.getElementById('createBusinessForm').reset();
+        document.getElementById('createBusinessError').style.display = 'none';
         
-        // Close modal after 2 seconds and refresh the business list
+        // Close modal after 2 seconds and refresh
         setTimeout(() => {
             hideModal('createBusinessModal');
             if (document.getElementById('businessApprovalModal').classList.contains('active')) {
                 loadBusinesses();
                 updateBusinessStats();
+            }
+            if (document.getElementById('usersModal').classList.contains('active')) {
+                loadUsers();
             }
         }, 2000);
         
@@ -5405,8 +5433,15 @@ async function createBusinessAccount() {
         errorEl.textContent = error.message || 'Failed to create business account';
         errorEl.style.display = 'block';
     } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
+        // Reset button
+        const btns = document.querySelectorAll('#createBusinessModal .sheet-btn');
+        for (let btn of btns) {
+            if (btn.innerHTML.includes('Creating...')) {
+                btn.innerHTML = '<i class="fas fa-save"></i> Create Business Account';
+                btn.disabled = false;
+                break;
+            }
+        }
     }
 }
 
