@@ -1073,6 +1073,41 @@
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
+
+        /* Fix for story modal buttons */
+#storyModal .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 10;
+    border-top: 1px solid #e2e8f0;
+    padding: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+#storyModal .modal-body {
+    max-height: calc(70vh - 80px);
+    overflow-y: auto;
+}
+
+/* Ensure modal content doesn't overflow */
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-height: 90vh;
+}
+
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    flex-shrink: 0;
+}
         
         /* Responsive */
         @media (max-width: 1200px) {
@@ -8557,6 +8592,12 @@ function openAddStoryModal() {
     
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    // Ensure the modal body scrolls to top
+    const modalBody = modal.querySelector('.modal-body');
+    if (modalBody) {
+        modalBody.scrollTop = 0;
+    }
 }
 
 // Edit Story
