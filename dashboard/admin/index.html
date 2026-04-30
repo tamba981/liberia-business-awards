@@ -6877,22 +6877,49 @@ async function editJudge(id) {
 }
 
 async function saveJudge() {
-    const id = document.getElementById('judgeId').value;
+    // Get the judge ID if editing
+    const judgeIdEl = document.getElementById('judgeId');
+    const id = judgeIdEl ? judgeIdEl.value : '';
+    
+    // Get error element
     const errorEl = document.getElementById('judgeError');
     if (errorEl) errorEl.style.display = 'none';
     
+    // Get form values with safety checks
+    const nameEl = document.getElementById('judgeName');
+    const emailEl = document.getElementById('judgeEmail');
+    const professionEl = document.getElementById('judgeProfession');
+    const organizationEl = document.getElementById('judgeOrganization');
+    const expertiseEl = document.getElementById('judgeExpertise');
+    const phoneEl = document.getElementById('judgePhone');
+    const photoEl = document.getElementById('judgePhoto');
+    const bioEl = document.getElementById('judgeBio');
+    const statusEl = document.getElementById('judgeStatus');
+    const passwordEl = document.getElementById('judgePassword');
+    
+    // Validate required elements exist
+    if (!nameEl || !emailEl || !professionEl) {
+        if (errorEl) {
+            errorEl.textContent = 'Form elements not found. Please refresh the page.';
+            errorEl.style.display = 'block';
+        }
+        console.error('Required form elements not found');
+        return;
+    }
+    
     const judgeData = {
-        name: document.getElementById('judgeName').value,
-        email: document.getElementById('judgeEmail').value,
-        profession: document.getElementById('judgeProfession').value,
-        organization: document.getElementById('judgeOrganization').value,
-        expertise: document.getElementById('judgeExpertise').value,
-        phone: document.getElementById('judgePhone').value,
-        photo: document.getElementById('judgePhoto').value,
-        bio: document.getElementById('judgeBio').value,
-        status: document.getElementById('judgeStatus').value
+        name: nameEl.value,
+        email: emailEl.value,
+        profession: professionEl.value,
+        organization: organizationEl ? organizationEl.value : '',
+        expertise: expertiseEl ? expertiseEl.value : '',
+        phone: phoneEl ? phoneEl.value : '',
+        photo: photoEl ? photoEl.value : '',
+        bio: bioEl ? bioEl.value : '',
+        status: statusEl ? statusEl.value : 'pending'
     };
     
+    // Validation
     if (!judgeData.name || !judgeData.email || !judgeData.profession) {
         if (errorEl) {
             errorEl.textContent = 'Name, Email, and Profession are required';
@@ -6901,7 +6928,18 @@ async function saveJudge() {
         return;
     }
     
-    const password = document.getElementById('judgePassword').value;
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(judgeData.email)) {
+        if (errorEl) {
+            errorEl.textContent = 'Please enter a valid email address';
+            errorEl.style.display = 'block';
+        }
+        return;
+    }
+    
+    // Handle password for new judge
+    const password = passwordEl ? passwordEl.value : '';
     if (!id && (!password || password.length < 6)) {
         if (errorEl) {
             errorEl.textContent = 'Password must be at least 6 characters';
@@ -6912,9 +6950,9 @@ async function saveJudge() {
     
     if (password) judgeData.password = password;
     
-    // Find the button that triggered the save
+    // Find the save button
     const saveBtn = document.querySelector('#addJudgeModal .sheet-btn[onclick*="saveJudge"]') || 
-                    document.querySelector('#addJudgeModal button[onclick*="saveJudge"]');
+                    document.querySelector('#addJudgeModal button:last-child');
     let originalText = '';
     if (saveBtn) {
         originalText = saveBtn.innerHTML;
@@ -6924,8 +6962,14 @@ async function saveJudge() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            throw new Error('Authentication required. Please login again.');
+        }
+        
         const url = id ? `${API_BASE}/admin/judges/${id}` : `${API_BASE}/admin/judges`;
         const method = id ? 'PUT' : 'POST';
+        
+        console.log('Saving judge:', { url, method, judgeData });
         
         const response = await fetch(url, {
             method: method,
@@ -6942,11 +6986,6 @@ async function saveJudge() {
             showNotification(id ? 'Judge updated successfully!' : 'Judge added successfully! A login link will be sent to their email.', 'success');
             hideModal('addJudgeModal');
             loadJudges();
-            
-            // If new judge, send welcome email with login credentials
-            if (!id && judgeData.email) {
-                await sendJudgeWelcomeEmail(judgeData.email, judgeData.name, password);
-            }
         } else {
             if (errorEl) {
                 errorEl.textContent = result.message || 'Error saving judge';
@@ -6954,6 +6993,7 @@ async function saveJudge() {
             }
         }
     } catch (error) {
+        console.error('Save judge error:', error);
         if (errorEl) {
             errorEl.textContent = error.message || 'Error saving judge';
             errorEl.style.display = 'block';
