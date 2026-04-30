@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judge Dashboard - Liberia Business Awards</title>
+    
+    <!-- ============ ANTI-CONSOLE SECURITY ============ -->
+    <script>
+    (function() {
+        const noop = function() {};
+        const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace'];
+        methods.forEach(m => { if (window.console && window.console[m]) window.console[m] = noop; });
+        
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        let devToolsOpen = false;
+        Object.defineProperty(window, 'outerWidth', { get: function() { devToolsOpen = true; return window.innerWidth; }, set: function() {} });
+        setInterval(() => { if (devToolsOpen) { localStorage.clear(); window.location.href = '../login.html'; } devToolsOpen = false; }, 1000);
+    })();
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --lba-red: #FF0000;
+            --lba-blue: #87CEEB;
+            --lba-dark: #1a202c;
+            --lba-light: #f8f9fa;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --info-color: #3B82F6;
+            --purple: #8B5CF6;
+            --sidebar-width: 280px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f5f7fb;
+            color: var(--lba-dark);
+            min-height: 100vh;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--lba-dark);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 30px 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header h3 {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            color: var(--lba-blue);
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        .sidebar-menu {
+            padding: 25px 0;
+        }
+        
+        .menu-item {
+            padding: 14px 25px;
+            display: flex;
+            align-items: center;
+            color: #cbd5e0;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+        }
+        
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-left-color: var(--lba-red);
+        }
+        
+        .menu-item i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .menu-item span {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .menu-item .badge {
+            background: var(--lba-red);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: var(--lba-dark);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--lba-light);
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        
+        .user-info:hover {
+            background: #e2e8f0;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--lba-red), var(--lba-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+        }
+        
+        .stat-card:nth-child(1) .stat-icon { background: linear-gradient(135deg, var(--lba-red), #ff4444); }
+        .stat-card:nth-child(2) .stat-icon { background: linear-gradient(135deg, var(--lba-blue), #99d6f0); }
+        .stat-card:nth-child(3) .stat-icon { background: linear-gradient(135deg, var(--success-color), #5cd85c); }
+        .stat-card:nth-child(4) .stat-icon { background: linear-gradient(135deg, var(--warning-color), #ffdb4d); }
+        
+        .stat-content h3 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--lba-dark);
+            margin-bottom: 5px;
+        }
+        
+        .stat-content p {
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        /* Welcome Card */
+        .welcome-card {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        
+        .welcome-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--lba-red), var(--lba-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .welcome-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .welcome-info p {
+            color: var(--lba-blue);
+            font-size: 14px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending { background: #dbeafe; color: #1d4ed8; }
+        .status-reviewed { background: #dcfce7; color: #15803d; }
+        .status-approved { background: #dcfce7; color: #15803d; }
+        
+        /* Nominations Table */
+        .content-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+            margin-top: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-header h2 {
+            font-size: 22px;
+            color: var(--lba-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .data-table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .data-table th {
+            padding: 15px 20px;
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--lba-dark);
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .data-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .rating-select {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 80px;
+        }
+        
+        .rating-select:focus {
+            outline: none;
+            border-color: var(--lba-red);
+        }
+        
+        .vote-btn {
+            background: linear-gradient(135deg, var(--lba-red), #ff4444);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .vote-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
+        }
+        
+        .vote-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        .vote-btn.voted {
+            background: #10B981;
+        }
+        
+        .comment-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--lba-blue);
+        }
+        
+        .comment-btn:hover {
+            color: var(--lba-red);
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: var(--lba-dark);
+            font-size: 22px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+        
+        .modal-close:hover {
+            color: var(--lba-red);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--lba-red), #ff4444);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 9999;
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid;
+            max-width: 400px;
+        }
+        
+        .toast.success { border-left-color: var(--success-color); }
+        .toast.error { border-left-color: var(--danger-color); }
+        .toast.warning { border-left-color: var(--warning-color); }
+        .toast.info { border-left-color: var(--info-color); }
+        
+        .menu-toggle {
+            display: none;
+            background: var(--lba-red);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .menu-toggle { display: flex; }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .welcome-card { flex-direction: column; text-align: center; }
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .page-btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .page-btn:hover, .page-btn.active {
+            background: var(--lba-red);
+            color: white;
+            border-color: var(--lba-red);
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Judge Portal</h3>
+                <p>Liberia Business Awards</p>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </div>
+                
+                <div class="menu-item" data-page="nominations">
+                    <i class="fas fa-award"></i>
+                    <span>Nominations to Review</span>
+                    <span class="badge" id="pendingCount">0</span>
+                </div>
+                
+                <div class="menu-item" data-page="history">
+                    <i class="fas fa-history"></i>
+                    <span>My Votes</span>
+                </div>
+                
+                <div class="menu-item" data-page="profile">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </div>
+                
+                <div style="padding: 25px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
+                    <div class="menu-item" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1 id="pageTitle">Dashboard</h1>
+                        <p>Judge Portal</p>
+                    </div>
+                </div>
+                
+                <div class="user-info" onclick="toggleUserMenu()">
+                    <div class="user-avatar" id="userAvatar">J</div>
+                    <div>
+                        <div id="judgeName">Judge Name</div>
+                        <div style="font-size: 12px; color: #64748b;">Judge Account</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="page active">
+                <div class="welcome-card">
+                    <div class="welcome-avatar" id="welcomeAvatar">J</div>
+                    <div class="welcome-info">
+                        <h2>Welcome, <span id="welcomeJudgeName">Judge</span>!</h2>
+                        <p><i class="fas fa-gavel"></i> You are logged in as an authorized judge for the Liberia Business Awards</p>
+                        <p style="margin-top: 10px; font-size: 13px;">Please review the nominations below and cast your votes based on the judging criteria.</p>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-content">
+                            <h3 id="pendingNominations">0</h3>
+                            <p>Pending Review</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <h3 id="reviewedNominations">0</h3>
+                            <p>Already Reviewed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-content">
+                            <h3 id="avgScore">0</h3>
+                            <p>Your Avg Score</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                        <div class="stat-content">
+                            <h3 id="totalVotes">0</h3>
+                            <p>Total Votes Cast</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nominations Page -->
+            <div id="nominationsPage" class="page" style="display: none;">
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-award"></i> Nominations to Review</h2>
+                        <div class="filter-controls">
+                            <select id="categoryFilter" onchange="loadNominations()" style="padding: 8px 15px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <option value="all">All Categories</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Business Name</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Your Rating</th>
+                                    <th>Comment</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nominationsTableBody">
+                                <tr><td colspan="6" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                    <p>Loading nominations...</p>
+                                <\/td><\/tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="nominationsPagination"></div>
+                </div>
+            </div>
+            
+            <!-- History Page -->
+            <div id="historyPage" class="page" style="display: none;">
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-history"></i> My Voting History</h2>
+                    </div>
+                    
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Business Name</th>
+                                    <th>Category</th>
+                                    <th>My Score</th>
+                                    <th>Comment</th>
+                                    <th>Voted On</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr><td colspan="5" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                    <p>Loading your voting history...</p>
+                                <\/td><\/tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="historyPagination"></div>
+                </div>
+            </div>
+            
+            <!-- Profile Page -->
+            <div id="profilePage" class="page" style="display: none;">
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user"></i> My Profile</h2>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
+                        <div style="text-align: center;">
+                            <div class="welcome-avatar" style="width: 150px; height: 150px; font-size: 64px; margin: 0 auto 20px;" id="profileAvatar">J</div>
+                            <div id="profileStatusBadge" class="status-badge status-approved" style="margin: 10px 0;">Active</div>
+                            <p><small>Judge since <span id="memberSince">2025</span></small></p>
+                        </div>
+                        
+                        <div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                                <div><p style="color: #64748b; font-size: 12px;">Full Name</p><p style="font-weight: 600;" id="profileName">-</p></div>
+                                <div><p style="color: #64748b; font-size: 12px;">Email</p><p style="font-weight: 600;" id="profileEmail">-</p></div>
+                                <div><p style="color: #64748b; font-size: 12px;">Profession</p><p style="font-weight: 600;" id="profileProfession">-</p></div>
+                                <div><p style="color: #64748b; font-size: 12px;">Organization</p><p style="font-weight: 600;" id="profileOrganization">-</p></div>
+                                <div><p style="color: #64748b; font-size: 12px;">Expertise</p><p style="font-weight: 600;" id="profileExpertise">-</p></div>
+                                <div><p style="color: #64748b; font-size: 12px;">Phone</p><p style="font-weight: 600;" id="profilePhone">-</p></div>
+                                <div style="grid-column: span 2;"><p style="color: #64748b; font-size: 12px;">Bio</p><p style="font-weight: 400;" id="profileBio">-</p></div>
+                            </div>
+                            
+                            <div style="margin-top: 30px;">
+                                <button class="btn-primary" onclick="showChangePasswordModal()">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Comment Modal -->
+    <div class="modal" id="commentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Comment</h2>
+                <button class="modal-close" onclick="hideModal('commentModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Your Comment</label>
+                    <textarea id="commentText" rows="4" placeholder="Provide your feedback on this nomination..."></textarea>
+                </div>
+                <button class="btn-primary" onclick="saveComment()">Save Comment</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Change Password Modal -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Change Password</h2>
+                <button class="modal-close" onclick="hideModal('passwordModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;" required>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="form-control" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;" required>
+                </div>
+                <div class="error-message" id="passwordError" style="display: none; color: #EF4444;"></div>
+                <button class="btn-primary" onclick="changePassword()" style="margin-top: 10px;">Update Password</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const BACKEND_URL = 'https://liberia-business-awards-production.up.railway.app';
+        const API_BASE = `${BACKEND_URL}/api`;
+        
+        let judgeData = null;
+        let nominations = [];
+        let currentNominationPage = 1;
+        let totalNominationPages = 1;
+        let currentHistoryPage = 1;
+        let totalHistoryPages = 1;
+        let currentNominationId = null;
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Judge Dashboard Initializing...');
+            
+            const authenticated = await checkAuth();
+            if (!authenticated) {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            setupUI();
+            setupNavigation();
+            await loadDashboardData();
+            await loadNominations();
+            
+            console.log('✅ Judge Dashboard Ready');
+        });
+        
+        // ============================================
+        // AUTHENTICATION
+        // ============================================
+        async function checkAuth() {
+            const token = localStorage.getItem('lba_auth_token');
+            const userRole = localStorage.getItem('lba_user_role');
+            
+            if (!token || userRole !== 'judge') {
+                return false;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/judge/verify`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) throw new Error('Invalid token');
+                
+                const data = await response.json();
+                if (data.success) {
+                    judgeData = data.judge;
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                return false;
+            }
+        }
+        
+        // ============================================
+        // UI SETUP
+        // ============================================
+        function setupUI() {
+            if (judgeData) {
+                const initials = judgeData.name.charAt(0).toUpperCase();
+                document.getElementById('userAvatar').textContent = initials;
+                document.getElementById('welcomeAvatar').textContent = initials;
+                document.getElementById('profileAvatar').textContent = initials;
+                document.getElementById('judgeName').textContent = judgeData.name;
+                document.getElementById('welcomeJudgeName').textContent = judgeData.name;
+                document.getElementById('profileName').textContent = judgeData.name;
+                document.getElementById('profileEmail').textContent = judgeData.email;
+                document.getElementById('profileProfession').textContent = judgeData.profession || '-';
+                document.getElementById('profileOrganization').textContent = judgeData.organization || '-';
+                document.getElementById('profileExpertise').textContent = judgeData.expertise || '-';
+                document.getElementById('profilePhone').textContent = judgeData.phone || '-';
+                document.getElementById('profileBio').textContent = judgeData.bio || '-';
+                if (judgeData.created_at) {
+                    document.getElementById('memberSince').textContent = new Date(judgeData.created_at).getFullYear();
+                }
+            }
+            
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !menuToggle.contains(e.target) && sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            });
+            
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+        
+        function setupNavigation() {
+            document.querySelectorAll('.menu-item[data-page]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    switchPage(e.currentTarget.dataset.page);
+                });
+            });
+        }
+        
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            document.getElementById(page + 'Page').style.display = 'block';
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
+            
+            const titles = {
+                dashboard: 'Judge Dashboard',
+                nominations: 'Nominations to Review',
+                history: 'My Voting History',
+                profile: 'My Profile'
+            };
+            document.getElementById('pageTitle').textContent = titles[page] || 'Judge Dashboard';
+        }
+        
+        // ============================================
+        // DATA LOADING
+        // ============================================
+        async function loadDashboardData() {
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/judge/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('pendingNominations').textContent = data.stats.pending || 0;
+                    document.getElementById('reviewedNominations').textContent = data.stats.reviewed || 0;
+                    document.getElementById('avgScore').textContent = data.stats.avgScore || 0;
+                    document.getElementById('totalVotes').textContent = data.stats.totalVotes || 0;
+                    document.getElementById('pendingCount').textContent = data.stats.pending || 0;
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+        
+        async function loadNominations(page = 1) {
+            currentNominationPage = page;
+            const tbody = document.getElementById('nominationsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading nominations...<\/td><\/tr>';
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const category = document.getElementById('categoryFilter').value;
+                let url = `${API_BASE}/judge/nominations?page=${page}&limit=10`;
+                if (category && category !== 'all') {
+                    url += `&category=${category}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    nominations = data.nominations;
+                    totalNominationPages = data.pagination?.pages || 1;
+                    displayNominations();
+                    updateNominationPagination();
+                    loadCategories();
+                }
+            } catch (error) {
+                console.error('Error loading nominations:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading nominations<\/td><\/tr>';
+            }
+        }
+        
+        async function loadCategories() {
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/judge/categories`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.categories) {
+                    const filter = document.getElementById('categoryFilter');
+                    const currentValue = filter.value;
+                    filter.innerHTML = '<option value="all">All Categories</option>';
+                    data.categories.forEach(cat => {
+                        filter.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    });
+                    filter.value = currentValue;
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+        
+        function displayNominations() {
+            const tbody = document.getElementById('nominationsTableBody');
+            
+            if (!nominations || nominations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No nominations to review at this time.<\/td><\/tr>';
+                return;
+            }
+            
+            tbody.innerHTML = nominations.map(nom => `
+                <tr>
+                    <td><strong>${escapeHtml(nom.business_name)}</strong><br>
+                        <small style="color: #64748b;">${escapeHtml(nom.business_type || 'Business')}</small>
+                    <\/td>
+                    <td>${escapeHtml(nom.category)}<\/td>
+                    <td>${escapeHtml(nom.description.substring(0, 100))}...<\/td>
+                    <td>
+                        <select id="rating_${nom._id}" class="rating-select">
+                            <option value="">Select Rating</option>
+                            ${[1,2,3,4,5,6,7,8,9,10].map(i => `
+                                <option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>
+                            `).join('')}
+                        </select>
+                    <\/td>
+                    <td>
+                        <button class="comment-btn" onclick="openCommentModal('${nom._id}')" title="Add Comment">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                    <\/td>
+                    <td>
+                        <button class="vote-btn ${nom.my_score ? 'voted' : ''}" 
+                                onclick="submitVote('${nom._id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')"
+                                ${nom.my_score ? 'disabled' : ''}>
+                            ${nom.my_score ? '✓ Voted' : 'Submit Vote'}
+                        </button>
+                    <\/td>
+                 \\
+            `).join('');
+        }
+        
+        function updateNominationPagination() {
+            const pagination = document.getElementById('nominationsPagination');
+            if (totalNominationPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = `<button class="page-btn" ${currentNominationPage === 1 ? 'disabled' : ''} onclick="loadNominations(${currentNominationPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+            
+            for (let i = 1; i <= totalNominationPages; i++) {
+                if (i === 1 || i === totalNominationPages || (i >= currentNominationPage - 2 && i <= currentNominationPage + 2)) {
+                    html += `<button class="page-btn ${i === currentNominationPage ? 'active' : ''}" onclick="loadNominations(${i})">${i}</button>`;
+                } else if (i === currentNominationPage - 3 || i === currentNominationPage + 3) {
+                    html += `<span class="page-btn" disabled>...</span>`;
+                }
+            }
+            
+            html += `<button class="page-btn" ${currentNominationPage === totalNominationPages ? 'disabled' : ''} onclick="loadNominations(${currentNominationPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+            pagination.innerHTML = html;
+        }
+        
+        // ============================================
+        // VOTING FUNCTIONS
+        // ============================================
+        async function submitVote(nominationId, businessName, category) {
+            const rating = document.getElementById(`rating_${nominationId}`).value;
+            
+            if (!rating) {
+                showToast('Please select a rating before submitting', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Submit rating of ${rating}/10 for "${businessName}"?`)) {
+                return;
+            }
+            
+            const voteBtn = event.target;
+            const originalText = voteBtn.innerHTML;
+            voteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            voteBtn.disabled = true;
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/judge/vote`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nomination_id: nominationId,
+                        score: parseInt(rating),
+                        category: category
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`✓ Vote submitted successfully for "${businessName}"`, 'success');
+                    await loadDashboardData();
+                    await loadNominations(currentNominationPage);
+                } else {
+                    throw new Error(data.message || 'Vote submission failed');
+                }
+            } catch (error) {
+                console.error('Vote error:', error);
+                showToast(error.message || 'Failed to submit vote', 'error');
+                voteBtn.innerHTML = originalText;
+                voteBtn.disabled = false;
+            }
+        }
+        
+        function openCommentModal(nominationId) {
+            currentNominationId = nominationId;
+            const nomination = nominations.find(n => n._id === nominationId);
+            if (nomination && nomination.my_comment) {
+                document.getElementById('commentText').value = nomination.my_comment;
+            } else {
+                document.getElementById('commentText').value = '';
+            }
+            document.getElementById('commentModal').classList.add('active');
+        }
+        
+        async function saveComment() {
+            const comment = document.getElementById('commentText').value;
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/judge/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nomination_id: currentNominationId,
+                        comment: comment
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Comment saved successfully', 'success');
+                    hideModal('commentModal');
+                    await loadNominations(currentNominationPage);
+                } else {
+                    throw new Error(data.message || 'Failed to save comment');
+                }
+            } catch (error) {
+                console.error('Save comment error:', error);
+                showToast(error.message || 'Failed to save comment', 'error');
+            }
+        }
+        
+        // ============================================
+        // HISTORY FUNCTIONS
+        // ============================================
+        async function loadHistory(page = 1) {
+            currentHistoryPage = page;
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading history...<\/td><\/tr>';
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/judge/history?page=${page}&limit=10`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayHistory(data.votes);
+                    totalHistoryPages = data.pagination?.pages || 1;
+                    updateHistoryPagination();
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #EF4444;">Error loading history<\/td><\/tr>';
+            }
+        }
+        
+        function displayHistory(votes) {
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (!votes || votes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No voting history found.<\/td><\/tr>';
+                return;
+            }
+            
+            tbody.innerHTML = votes.map(vote => `
+                <tr>
+                    <td><strong>${escapeHtml(vote.business_name)}</strong><\/td>
+                    <td>${escapeHtml(vote.category)}<\/td>
+                    <td><span style="font-weight: 800; color: #FF0000;">${vote.score}<\/span> / 10<\/td>
+                    <td>${vote.comment ? escapeHtml(vote.comment.substring(0, 50)) : '-'}<\/td>
+                    <td>${new Date(vote.created_at).toLocaleDateString()}<\/td>
+                 \\
+            `).join('');
+        }
+        
+        function updateHistoryPagination() {
+            const pagination = document.getElementById('historyPagination');
+            if (totalHistoryPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = `<button class="page-btn" ${currentHistoryPage === 1 ? 'disabled' : ''} onclick="loadHistory(${currentHistoryPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+            
+            for (let i = 1; i <= totalHistoryPages; i++) {
+                if (i === 1 || i === totalHistoryPages || (i >= currentHistoryPage - 2 && i <= currentHistoryPage + 2)) {
+                    html += `<button class="page-btn ${i === currentHistoryPage ? 'active' : ''}" onclick="loadHistory(${i})">${i}</button>`;
+                } else if (i === currentHistoryPage - 3 || i === currentHistoryPage + 3) {
+                    html += `<span class="page-btn" disabled>...</span>`;
+                }
+            }
+            
+            html += `<button class="page-btn" ${currentHistoryPage === totalHistoryPages ? 'disabled' : ''} onclick="loadHistory(${currentHistoryPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+            pagination.innerHTML = html;
+        }
+        
+        // ============================================
+        // PASSWORD CHANGE
+        // ============================================
+        function showChangePasswordModal() {
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('passwordError').style.display = 'none';
+        }
+        
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorEl = document.getElementById('passwordError');
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                errorEl.textContent = 'Please fill in all fields';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                errorEl.textContent = 'New passwords do not match';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                errorEl.textContent = 'Password must be at least 6 characters';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE}/judge/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Password changed successfully!', 'success');
+                    hideModal('passwordModal');
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    errorEl.textContent = data.message || 'Failed to change password';
+                    errorEl.style.display = 'block';
+                }
+            } catch (error) {
+                errorEl.textContent = error.message || 'Error changing password';
+                errorEl.style.display = 'block';
+            }
+        }
+        
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = { success: 'check-circle', error: 'exclamation-circle', warning: 'exclamation-triangle', info: 'info-circle' };
+            toast.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+        
+        function toggleUserMenu() {
+            // Simple profile redirect
+            switchPage('profile');
+        }
+        
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.clear();
+                window.location.href = '../login.html';
+            }
+        }
+        
+        // Override switchPage to load data when needed
+        const originalSwitchPage = switchPage;
+        window.switchPage = function(page) {
+            originalSwitchPage(page);
+            if (page === 'history') {
+                loadHistory(1);
+            } else if (page === 'nominations') {
+                loadNominations(1);
+            }
+        };
+        
+        // Export functions to global scope
+        window.loadNominations = loadNominations;
+        window.loadHistory = loadHistory;
+        window.submitVote = submitVote;
+        window.openCommentModal = openCommentModal;
+        window.saveComment = saveComment;
+        window.hideModal = hideModal;
+        window.showChangePasswordModal = showChangePasswordModal;
+        window.changePassword = changePassword;
+        window.toggleUserMenu = toggleUserMenu;
+        window.logout = logout;
+        window.switchPage = switchPage;
+        
+        console.log('✅ Judge Dashboard Ready');
+    </script>
+</body>
+</html>
