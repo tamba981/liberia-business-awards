@@ -6878,6 +6878,19 @@ async function editJudge(id) {
 
 
 async function saveJudge() {
+    // First, ensure the modal exists
+    let modal = document.getElementById('addJudgeModal');
+    if (!modal) {
+        console.log('Modal not found, creating judges modal first...');
+        createJudgesModal();
+        modal = document.getElementById('addJudgeModal');
+        if (!modal) {
+            console.error('Failed to create judges modal');
+            showNotification('Error: Could not open judge form', 'error');
+            return;
+        }
+    }
+    
     // Get the judge ID if editing
     const judgeIdEl = document.getElementById('judgeId');
     const id = judgeIdEl ? judgeIdEl.value : '';
@@ -6898,13 +6911,14 @@ async function saveJudge() {
     const statusEl = document.getElementById('judgeStatus');
     const passwordEl = document.getElementById('judgePassword');
     
-    // Validate required elements exist
+    // If elements still not found, show error
     if (!nameEl || !emailEl || !professionEl) {
-        if (errorEl) {
-            errorEl.textContent = 'Form elements not found. Please refresh the page.';
-            errorEl.style.display = 'block';
-        }
-        console.error('Required form elements not found');
+        console.error('Form elements not found. Available elements:', {
+            judgeName: !!document.getElementById('judgeName'),
+            judgeEmail: !!document.getElementById('judgeEmail'),
+            judgeProfession: !!document.getElementById('judgeProfession')
+        });
+        showNotification('Form not ready. Please close and reopen the Add Judge form.', 'error');
         return;
     }
     
@@ -6925,6 +6939,8 @@ async function saveJudge() {
         if (errorEl) {
             errorEl.textContent = 'Name, Email, and Profession are required';
             errorEl.style.display = 'block';
+        } else {
+            showNotification('Name, Email, and Profession are required', 'error');
         }
         return;
     }
@@ -6935,6 +6951,8 @@ async function saveJudge() {
         if (errorEl) {
             errorEl.textContent = 'Please enter a valid email address';
             errorEl.style.display = 'block';
+        } else {
+            showNotification('Please enter a valid email address', 'error');
         }
         return;
     }
@@ -6945,6 +6963,8 @@ async function saveJudge() {
         if (errorEl) {
             errorEl.textContent = 'Password must be at least 6 characters';
             errorEl.style.display = 'block';
+        } else {
+            showNotification('Password must be at least 6 characters', 'error');
         }
         return;
     }
@@ -6952,8 +6972,8 @@ async function saveJudge() {
     if (password) judgeData.password = password;
     
     // Find the save button
-    const saveBtn = document.querySelector('#addJudgeModal .sheet-btn[onclick*="saveJudge"]') || 
-                    document.querySelector('#addJudgeModal button:last-child');
+    const saveBtn = document.querySelector('#addJudgeModal .sheet-btn:last-child') || 
+                    document.querySelector('#addJudgeModal button[onclick*="saveJudge"]');
     let originalText = '';
     if (saveBtn) {
         originalText = saveBtn.innerHTML;
@@ -6988,16 +7008,22 @@ async function saveJudge() {
             hideModal('addJudgeModal');
             loadJudges();
         } else {
+            const errorMsg = result.message || 'Error saving judge';
             if (errorEl) {
-                errorEl.textContent = result.message || 'Error saving judge';
+                errorEl.textContent = errorMsg;
                 errorEl.style.display = 'block';
+            } else {
+                showNotification(errorMsg, 'error');
             }
         }
     } catch (error) {
         console.error('Save judge error:', error);
+        const errorMsg = error.message || 'Error saving judge';
         if (errorEl) {
-            errorEl.textContent = error.message || 'Error saving judge';
+            errorEl.textContent = errorMsg;
             errorEl.style.display = 'block';
+        } else {
+            showNotification(errorMsg, 'error');
         }
     } finally {
         if (saveBtn) {
