@@ -444,9 +444,10 @@
             
             <!-- Tabs -->
             <div class="login-tabs">
-                <button class="tab-btn active" data-tab="admin">Admin Login</button>
-                <button class="tab-btn" data-tab="business">Business Portal</button>
-            </div>
+    <button class="tab-btn active" data-tab="admin">Admin Login</button>
+    <button class="tab-btn" data-tab="business">Business Portal</button>
+    <button class="tab-btn" data-tab="judge">Judge Portal</button>
+</div>
             
             <!-- Admin Login Form -->
             <form class="login-form active" id="adminForm">
@@ -604,6 +605,48 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Judge Portal Form -->
+<div class="login-form" id="judgeForm">
+    <div class="info-box">
+        <h4><i class="fas fa-gavel"></i> Judge Portal Access</h4>
+        <p>Authorized judges can login here to review nominations and cast their votes.</p>
+    </div>
+    
+    <div class="form-group">
+        <label for="judgeEmail">Judge Email</label>
+        <input type="email" id="judgeEmail" required 
+               placeholder="Enter your judge email">
+    </div>
+    
+    <div class="form-group">
+        <label for="judgePassword">Password</label>
+        <input type="password" id="judgePassword" required 
+               placeholder="Enter your password">
+        <div class="password-checkbox">
+            <input type="checkbox" id="showJudgePassword" onchange="toggleJudgePasswordVisibility()">
+            <label for="showJudgePassword">Show password</label>
+        </div>
+        <div style="text-align: right; margin-top: 5px;">
+            <a href="#" onclick="showJudgeForgotPassword()" style="color: var(--lba-red); font-size: 13px; text-decoration: none;">
+                Forgot Password?
+            </a>
+        </div>
+    </div>
+    
+    <div class="error-message" id="judgeError"></div>
+    <div class="success-message" id="judgeSuccess"></div>
+    
+    <button type="button" class="login-btn" onclick="handleJudgeLogin()" id="judgeBtn">
+        <i class="fas fa-gavel"></i>
+        <span>Login as Judge</span>
+    </button>
+    
+    <div class="info-box" style="margin-top: 20px;">
+        <h4><i class="fas fa-question-circle"></i> About Judge Portal</h4>
+        <p>Judges are appointed by the Liberia Business Awards committee. If you are a judge, you should have received your login credentials via email. For assistance, contact the awards committee.</p>
+    </div>
+</div>
             
             <!-- Footer Links -->
             <div class="footer-links">
@@ -630,30 +673,32 @@
             console.log('🚀 LBA Dashboard Login Initialized');
             
             // Check if already logged in
-            const token = localStorage.getItem('lba_auth_token');
-            const userRole = localStorage.getItem('lba_user_role');
-            
-            if (token && userRole) {
-                // Verify token validity
-                try {
-                    const response = await fetch(`${BACKEND_URL}/api/health`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    
-                    if (response.ok) {
-                        // Redirect based on role
-                        if (userRole === 'admin') {
-                            window.location.href = 'admin/index.html';
-                        } else if (userRole === 'business') {
-                            window.location.href = 'business/index.html';
-                        }
-                        return;
-                    }
-                } catch (error) {
-                    console.log('Token expired, staying on login page');
-                    localStorage.clear();
-                }
+const token = localStorage.getItem('lba_auth_token');
+const userRole = localStorage.getItem('lba_user_role');
+
+if (token && userRole) {
+    // Verify token validity
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/health`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            // Redirect based on role
+            if (userRole === 'admin') {
+                window.location.href = 'admin/index.html';
+            } else if (userRole === 'business') {
+                window.location.href = 'business/index.html';
+            } else if (userRole === 'judge') {
+                window.location.href = 'judge/index.html';
             }
+            return;
+        }
+    } catch (error) {
+        console.log('Token expired, staying on login page');
+        localStorage.clear();
+    }
+}
             
             // Setup UI
             setupTabs();
@@ -672,31 +717,36 @@
 
         // ==================== UI FUNCTIONS ====================
         function setupTabs() {
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            const forms = document.querySelectorAll('.login-form');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const forms = document.querySelectorAll('.login-form');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tab = this.dataset.tab;
             
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tab = this.dataset.tab;
-                    
-                    tabBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    forms.forEach(form => {
-                        form.classList.remove('active');
-                        if (form.id === tab + 'Form') {
-                            form.classList.add('active');
-                            clearAllMessages();
-                        }
-                    });
-                });
-            });
+            tabBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
             
-            document.getElementById('adminForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await handleAdminLogin();
+            forms.forEach(form => {
+                form.classList.remove('active');
+                let formId = '';
+                if (tab === 'admin') formId = 'adminForm';
+                else if (tab === 'business') formId = 'businessForm';
+                else if (tab === 'judge') formId = 'judgeForm';
+                
+                if (form.id === formId) {
+                    form.classList.add('active');
+                    clearAllMessages();
+                }
             });
-        }
+        });
+    });
+    
+    document.getElementById('adminForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await handleAdminLogin();
+    });
+}
 
         function showBusinessOptions() {
             document.getElementById('businessOptions').style.display = 'grid';
@@ -965,6 +1015,109 @@
                 }, 1000);
             }
         }
+
+        // ==================== JUDGE LOGIN ====================
+async function handleJudgeLogin() {
+    const email = document.getElementById('judgeEmail').value.trim();
+    const password = document.getElementById('judgePassword').value;
+    const errorEl = document.getElementById('judgeError');
+    const successEl = document.getElementById('judgeSuccess');
+    const btn = document.getElementById('judgeBtn');
+    
+    clearAllMessages();
+    
+    if (!email || !password) {
+        showError(errorEl, 'Please fill in all fields');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/judge/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('csrf_token')
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            localStorage.setItem('lba_auth_token', result.token);
+            if (result.refreshToken) localStorage.setItem('lba_refresh_token', result.refreshToken);
+            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+            localStorage.setItem('lba_user_role', 'judge');
+            if (result.csrfToken) localStorage.setItem('csrf_token', result.csrfToken);
+            
+            showSuccess(successEl, '✓ Login successful! Redirecting to Judge Dashboard...');
+            console.log('✅ Judge login successful');
+            
+            setTimeout(() => {
+                window.location.href = 'judge/index.html';
+            }, 1500);
+        } else {
+            if (result.message && result.message.includes('pending')) {
+                showError(errorEl, 'Your judge account is pending approval by the admin.');
+            } else if (result.message && result.message.includes('inactive')) {
+                showError(errorEl, 'Your judge account has been deactivated. Contact the awards committee.');
+            } else {
+                showError(errorEl, result.message || 'Invalid judge credentials');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Judge login error:', error);
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to server. Please try again later.';
+        }
+        showError(errorEl, errorMessage);
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
+
+function toggleJudgePasswordVisibility() {
+    const field = document.getElementById('judgePassword');
+    const checkbox = document.getElementById('showJudgePassword');
+    if (field && checkbox) {
+        field.type = checkbox.checked ? 'text' : 'password';
+    }
+}
+
+async function showJudgeForgotPassword() {
+    const email = prompt('Please enter your judge email to reset your password:');
+    if (email && email.includes('@')) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/judge/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message || 'Password reset link has been sent to your email.', 'success');
+            } else {
+                showToast(result.message || 'Failed to send reset link.', 'error');
+            }
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            showToast('Cannot connect to server.', 'error');
+        }
+    } else if (email) {
+        showToast('Please enter a valid email address.', 'error');
+    }
+}
 
         // ==================== UTILITY FUNCTIONS ====================
         function showError(element, message) {
