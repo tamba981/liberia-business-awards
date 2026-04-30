@@ -256,6 +256,7 @@ async function connectToMongoDB() {
 
 // ============ VOTE SCHEMAS ============
 const voteSchema = new mongoose.Schema({
+    nomination_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Nomination' },
     business_id: { type: String, required: true },
     business_name: { type: String, required: true },
     category: { type: String, required: true },
@@ -264,7 +265,8 @@ const voteSchema = new mongoose.Schema({
     vote_value: { type: Number, required: true, min: 1, max: 10 },
     vote_weight: { type: Number, default: 1 },
     is_jury: { type: Boolean, default: false },
-    is_verified: { type: Boolean, default: true }
+    is_verified: { type: Boolean, default: true },
+    comment: { type: String, default: '' }
 }, { timestamps: true });
 
 const voteTotalSchema = new mongoose.Schema({
@@ -339,7 +341,7 @@ const businessUserSchema = new mongoose.Schema({
 const refreshTokenSchema = new mongoose.Schema({
     token: { type: String, required: true, unique: true },
     user_id: { type: mongoose.Schema.Types.ObjectId, required: true },
-    user_type: { type: String, enum: ['admin', 'business'], required: true },
+    user_type: { type: String, enum: ['admin', 'business', 'judge'], required: true }, 
     expires_at: { type: Date, required: true },
     created_at: { type: Date, default: Date.now },
     revoked: { type: Boolean, default: false }
@@ -3884,6 +3886,777 @@ app.post('/api/ads/:id/view', async (req, res) => {
 });
 
 console.log('✅ Ad Management System Ready');
+
+// ============================================
+// JUDGE MANAGEMENT SYSTEM - COMPLETE
+// ============================================
+
+// Get Judge model (make sure it's imported)
+const Judge = require('./models/Judge');
+
+// ============ JUDGE AUTH ROUTES ============
+
+// Judge Login
+app.post('/api/judge/login', authLimiter, async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        console.log('Judge login attempt:', email);
+        
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: 'Email and password are required' });
+        }
+        
+        const judge = await Judge.findOne({ email: email.toLowerCase() });
+        if (!judge) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+        
+        if (judge.isLocked()) {
+            const lockTime = Math.ceil((judge.lock_until - Date.now()) / (60 * 1000));
+            return res.status(403).json({ success: false, message: `Account locked. Try again in ${lockTime} minutes` });
+        }
+        
+        if (judge.status === 'pending') {
+            return res.status(403).json({ success: false, message: 'Your account is awaiting admin approval' });
+        }
+        
+        if (judge.status === 'inactive') {
+            return res.status(403).json({ success: false, message: 'Your account has been deactivated. Contact the awards committee.' });
+        }
+        
+        const isMatch = await judge.comparePassword(password);
+        if (!isMatch) {
+            await judge.incrementLoginAttempts();
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+        
+        await judge.resetLoginAttempts();
+        
+        const token = jwt.sign(
+            { userId: judge._id, role: 'judge' }, 
+            JWT_SECRET, 
+            { expiresIn: JWT_EXPIRES_IN }
+        );
+        
+        const refreshToken = jwt.sign(
+            { userId: judge._id, role: 'judge', type: 'refresh' },
+            JWT_REFRESH_SECRET,
+            { expiresIn: JWT_REFRESH_EXPIRES_IN }
+        );
+        
+        await RefreshToken.create({
+            token: refreshToken,
+            user_id: judge._id,
+            user_type: 'judge',
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        });
+        
+        judge.last_login = new Date();
+        await judge.save();
+        
+        res.json({
+            success: true,
+            token,
+            refreshToken,
+            user: {
+                id: judge._id,
+                email: judge.email,
+                name: judge.name,
+                role: 'judge',
+                status: judge.status
+            }
+        });
+    } catch (error) {
+        console.error('Judge login error:', error);
+        res.status(500).json({ success: false, message: 'Server error during login' });
+    }
+});
+
+// Judge Token Verification
+app.post('/api/judge/verify', async (req, res) => {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'judge') {
+            return res.status(401).json({ success: false, message: 'Invalid token type' });
+        }
+        
+        const judge = await Judge.findById(decoded.userId).select('-password');
+        if (!judge) {
+            return res.status(401).json({ success: false, message: 'Judge not found' });
+        }
+        
+        if (judge.status !== 'active') {
+            return res.status(403).json({ success: false, message: 'Account not active' });
+        }
+        
+        res.json({
+            success: true,
+            judge: {
+                id: judge._id,
+                name: judge.name,
+                email: judge.email,
+                profession: judge.profession,
+                organization: judge.organization,
+                expertise: judge.expertise,
+                phone: judge.phone,
+                photo: judge.photo,
+                bio: judge.bio,
+                status: judge.status,
+                created_at: judge.created_at
+            }
+        });
+    } catch (error) {
+        return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+});
+
+// Judge Change Password
+app.post('/api/judge/change-password', authenticate, async (req, res) => {
+    try {
+        if (req.userRole !== 'judge') {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+        
+        const { current_password, new_password } = req.body;
+        
+        if (!current_password || !new_password) {
+            return res.status(400).json({ success: false, message: 'Current and new password are required' });
+        }
+        
+        if (new_password.length < 6) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+        }
+        
+        const judge = await Judge.findById(req.user._id);
+        if (!judge) {
+            return res.status(404).json({ success: false, message: 'Judge not found' });
+        }
+        
+        const isValid = await judge.comparePassword(current_password);
+        if (!isValid) {
+            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        }
+        
+        judge.password = new_password;
+        await judge.save();
+        
+        res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Judge change password error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Judge Forgot Password
+app.post('/api/judge/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+        
+        const judge = await Judge.findOne({ email: email.toLowerCase() });
+        if (!judge) {
+            return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
+        }
+        
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = Date.now() + 3600000;
+        
+        judge.reset_password_token = resetToken;
+        judge.reset_password_expires = resetTokenExpiry;
+        await judge.save();
+        
+        const frontendUrl = process.env.FRONTEND_URL || 'https://liberiabusinessawardslr.com';
+        const resetUrl = `${frontendUrl}/reset-password.html?token=${resetToken}&type=judge`;
+        
+        await sendJudgePasswordResetEmail(judge.email, judge.name, resetUrl);
+        
+        res.json({ success: true, message: 'Password reset link has been sent to your email.' });
+    } catch (error) {
+        console.error('Judge forgot password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Helper function for judge password reset email
+async function sendJudgePasswordResetEmail(email, name, resetUrl) {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'liberiabusinessawards@gmail.com',
+                pass: process.env.GMAIL_APP_PASSWORD
+            }
+        });
+        
+        const htmlBody = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Password Reset - Judge Portal</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 20px; text-align: center; }
+                    .btn { display: inline-block; background: #FF0000; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+                    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Judge Portal - Liberia Business Awards</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear Judge ${name},</p>
+                        <p>We received a request to reset your password for the Judge Portal.</p>
+                        <div style="text-align: center;">
+                            <a href="${resetUrl}" class="btn">Reset Your Password</a>
+                        </div>
+                        <p>This link will expire in 1 hour.</p>
+                        <p>If you did not request this, please ignore this email.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; ${new Date().getFullYear()} Liberia Business Awards</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        await transporter.sendMail({
+            from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
+            to: email,
+            subject: 'Judge Portal - Password Reset Request',
+            html: htmlBody
+        });
+        
+        console.log('✅ Judge password reset email sent to:', email);
+    } catch (error) {
+        console.error('Email send error:', error);
+    }
+}
+
+// ============ JUDGE DASHBOARD ROUTES ============
+
+// Judge Stats
+app.get('/api/judge/stats', authenticate, async (req, res) => {
+    try {
+        if (req.userRole !== 'judge') {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+        
+        const judgeId = req.user._id;
+        
+        // Get pending nominations (not voted by this judge)
+        const pending = await Nomination.countDocuments({
+            status: { $in: ['submitted', 'under_review'] },
+            _id: { $nin: await Vote.find({ voter_email: judgeId.toString(), is_jury: true }).distinct('nomination_id') }
+        });
+        
+        // Get reviewed nominations
+        const reviewed = await Vote.countDocuments({ voter_email: judgeId.toString(), is_jury: true });
+        
+        // Get average score
+        const votes = await Vote.find({ voter_email: judgeId.toString(), is_jury: true });
+        const avgScore = votes.length > 0 
+            ? (votes.reduce((sum, v) => sum + v.vote_value, 0) / votes.length).toFixed(1)
+            : 0;
+        
+        res.json({
+            success: true,
+            stats: {
+                pending,
+                reviewed,
+                avgScore,
+                totalVotes: votes.length
+            }
+        });
+    } catch (error) {
+        console.error('Judge stats error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get nominations for judge to review
+app.get('/api/judge/nominations', authenticate, async (req, res) => {
+    try {
+        if (req.userRole !== 'judge') {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+        
+        const { page = 1, limit = 10, category } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const judge = await Judge.findById(req.user._id);
+        let query = { status: { $in: ['submitted', 'under_review'] } };
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        // Get all votes this judge has already cast
+        const existingVotes = await Vote.find({ 
+            voter_email: judge.email,
+            is_jury: true 
+        }).select('nomination_id vote_value comment');
+        
+        const votedNominationIds = existingVotes.map(v => v.nomination_id);
+        
+        const nominations = await Nomination.find(query)
+            .populate('business_id', 'business_name business_type logo')
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await Nomination.countDocuments(query);
+        
+        // Add judge's existing vote info
+        const nominationsWithVote = nominations.map(n => {
+            const existingVote = existingVotes.find(v => v.nomination_id?.toString() === n._id.toString());
+            return {
+                _id: n._id,
+                business_name: n.business_id?.business_name || 'Unknown',
+                business_type: n.business_id?.business_type || '',
+                category: n.category,
+                description: n.description,
+                my_score: existingVote?.vote_value || null,
+                my_comment: existingVote?.comment || null,
+                has_voted: !!existingVote
+            };
+        });
+        
+        res.json({
+            success: true,
+            nominations: nominationsWithVote.filter(n => !n.has_voted),
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get judge nominations error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get categories for filter
+app.get('/api/judge/categories', authenticate, async (req, res) => {
+    try {
+        if (req.userRole !== 'judge') {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+        
+        const categories = await Nomination.distinct('category');
+        res.json({ success: true, categories });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Submit judge vote
+app.post('/api/judge/vote', authenticate, async (req, res) => {
+    try {
+        if (req.userRole !== 'judge') {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+        
+        const { nomination_id, score, comment } = req.body;
+        
+        if (!nomination_id || !score || score < 1 || score > 10) {
+            return res.status(400).json({ success: false, message: 'Valid nomination ID and score (1-10) are required' });
+        }
+        
+        const judge = await Judge.findById(req.user._id);
+        const nomination = await Nomination.findById(nomination_id).populate('business_id');
+        
+        if (!nomination) {
+            return res.status(404).json({ success: false, message: 'Nomination not found' });
+        }
+        
+        // Check if already voted
+        const existingVote = await Vote.findOne({
+            nomination_id: nomination_id,
+            voter_email: judge.email,
+            is_jury: true
+        });
+        
+        if (existingVote) {
+            return res.status(400).json({ success: false, message: 'You have already voted for this nomination' });
+        }
+        
+        // Create vote (jury vote has weight 3)
+        const vote = new Vote({
+            nomination_id: nomination_id,
+            business_id: nomination.business_id?._id,
+            business_name: nomination.business_id?.business_name,
+            category: nomination.category,
+            voter_email: judge.email,
+            voter_ip: req.ip,
+            vote_value: score,
+            vote_weight: 3,  // Jury votes weigh more
+            is_jury: true,
+            is_verified: true,
+            comment: comment || ''
+        });
+        
+        await vote.save();
+        
+        // Update judge's vote count
+        judge.votes_cast = (judge.votes_cast || 0) + 1;
+        await judge.save();
+        
+        // Update nomination score
+        const allVotes = await Vote.find({ nomination_id: nomination_id });
+        const totalScore = allVotes.reduce((sum, v) => sum + (v.vote_value * v.vote_weight), 0);
+        const totalWeight = allVotes.reduce((sum, v) => sum + v.vote_weight, 0);
+        nomination.score = totalWeight > 0 ? (totalScore / totalWeight) * 10 : 0;
+        await nomination.save();
+        
+        res.json({
+            success: true,
+            message: 'Vote submitted successfully!'
+        });
+    } catch (error) {
+        console.error('Judge vote error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Save judge comment
+app.post('/api/judge/comment', authenticate, async (req, res) => {
+    try {
+        if (req.userRole !== 'judge') {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+        
+        const { nomination_id, comment } = req.body;
+        
+        if (!nomination_id) {
+            return res.status(400).json({ success: false, message: 'Nomination ID is required' });
+        }
+        
+        const judge = await Judge.findById(req.user._id);
+        
+        // Update or create comment
+        await Vote.findOneAndUpdate(
+            { nomination_id: nomination_id, voter_email: judge.email, is_jury: true },
+            { comment: comment || '' },
+            { upsert: true, new: true }
+        );
+        
+        res.json({
+            success: true,
+            message: 'Comment saved successfully'
+        });
+    } catch (error) {
+        console.error('Save comment error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get judge voting history
+app.get('/api/judge/history', authenticate, async (req, res) => {
+    try {
+        if (req.userRole !== 'judge') {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+        
+        const { page = 1, limit = 10 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const judge = await Judge.findById(req.user._id);
+        
+        const votes = await Vote.find({ 
+            voter_email: judge.email, 
+            is_jury: true 
+        })
+        .sort({ created_at: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+        
+        const total = await Vote.countDocuments({ voter_email: judge.email, is_jury: true });
+        
+        res.json({
+            success: true,
+            votes: votes.map(v => ({
+                _id: v._id,
+                business_name: v.business_name,
+                category: v.category,
+                score: v.vote_value,
+                comment: v.comment,
+                created_at: v.created_at
+            })),
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Judge history error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN JUDGE MANAGEMENT ROUTES ============
+
+// Get all judges (admin)
+app.get('/api/admin/judges', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status, page = 1, limit = 20 } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const judges = await Judge.find(query)
+            .select('-password')
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await Judge.countDocuments(query);
+        
+        res.json({
+            success: true,
+            judges,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single judge (admin)
+app.get('/api/admin/judges/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const judge = await Judge.findById(req.params.id).select('-password');
+        if (!judge) {
+            return res.status(404).json({ success: false, message: 'Judge not found' });
+        }
+        res.json({ success: true, judge });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create judge (admin)
+app.post('/api/admin/judges', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { name, email, password, profession, organization, expertise, phone, photo, bio, status } = req.body;
+        
+        if (!name || !email || !password || !profession) {
+            return res.status(400).json({ success: false, message: 'Name, email, password, and profession are required' });
+        }
+        
+        const existing = await Judge.findOne({ email: email.toLowerCase() });
+        if (existing) {
+            return res.status(400).json({ success: false, message: 'Judge with this email already exists' });
+        }
+        
+        const judge = new Judge({
+            name,
+            email: email.toLowerCase(),
+            password,
+            profession,
+            organization: organization || '',
+            expertise: expertise || '',
+            phone: phone || '',
+            photo: photo || '',
+            bio: bio || '',
+            status: status || 'pending',
+            created_by: req.user._id
+        });
+        
+        await judge.save();
+        
+        // Send welcome email to judge
+        await sendJudgeWelcomeEmail(judge.email, judge.name, password);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Judge created successfully. Login credentials sent to their email.',
+            judge: { _id: judge._id, name: judge.name, email: judge.email, status: judge.status }
+        });
+    } catch (error) {
+        console.error('Create judge error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update judge (admin)
+app.put('/api/admin/judges/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const judge = await Judge.findById(req.params.id);
+        if (!judge) {
+            return res.status(404).json({ success: false, message: 'Judge not found' });
+        }
+        
+        const { name, profession, organization, expertise, phone, photo, bio, status } = req.body;
+        
+        if (name) judge.name = name;
+        if (profession) judge.profession = profession;
+        if (organization !== undefined) judge.organization = organization;
+        if (expertise !== undefined) judge.expertise = expertise;
+        if (phone !== undefined) judge.phone = phone;
+        if (photo !== undefined) judge.photo = photo;
+        if (bio !== undefined) judge.bio = bio;
+        if (status) judge.status = status;
+        
+        await judge.save();
+        
+        res.json({
+            success: true,
+            message: 'Judge updated successfully',
+            judge: { _id: judge._id, name: judge.name, email: judge.email, status: judge.status }
+        });
+    } catch (error) {
+        console.error('Update judge error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Reset judge password (admin)
+app.post('/api/admin/judges/:id/reset-password', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { password } = req.body;
+        
+        if (!password || password.length < 6) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+        }
+        
+        const judge = await Judge.findById(req.params.id);
+        if (!judge) {
+            return res.status(404).json({ success: false, message: 'Judge not found' });
+        }
+        
+        judge.password = password;
+        await judge.save();
+        
+        // Send email with new password
+        await sendJudgePasswordResetEmail(judge.email, judge.name, null);
+        
+        res.json({
+            success: true,
+            message: 'Password reset successfully. New credentials sent to judge email.'
+        });
+    } catch (error) {
+        console.error('Reset judge password error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete judge (admin)
+app.delete('/api/admin/judges/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const judge = await Judge.findByIdAndDelete(req.params.id);
+        if (!judge) {
+            return res.status(404).json({ success: false, message: 'Judge not found' });
+        }
+        
+        res.json({ success: true, message: 'Judge deleted successfully' });
+    } catch (error) {
+        console.error('Delete judge error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Helper function for judge welcome email
+async function sendJudgeWelcomeEmail(email, name, tempPassword) {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'liberiabusinessawards@gmail.com',
+                pass: process.env.GMAIL_APP_PASSWORD
+            }
+        });
+        
+        const loginUrl = 'https://liberiabusinessawardslr.com/login.html';
+        
+        const htmlBody = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Welcome to the Judge Portal</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 20px; text-align: center; }
+                    .credentials { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                    .btn { display: inline-block; background: #FF0000; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; }
+                    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Welcome to the Judge Portal!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear Judge ${name},</p>
+                        <p>You have been appointed as a judge for the Liberia Business Awards.</p>
+                        
+                        <div class="credentials">
+                            <h3>Your Login Credentials:</h3>
+                            <p><strong>Email:</strong> ${email}</p>
+                            <p><strong>Temporary Password:</strong> ${tempPassword}</p>
+                            <p><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
+                        </div>
+                        
+                        <p>Please log in using the credentials above. You will be prompted to change your password after your first login.</p>
+                        
+                        <div style="text-align: center;">
+                            <a href="${loginUrl}" class="btn">Login to Judge Portal</a>
+                        </div>
+                        
+                        <p>As a judge, you will be reviewing nominations and casting votes. Your expertise and honest evaluation are crucial to the success of the awards.</p>
+                        
+                        <p>If you have any questions, please contact the awards committee.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; ${new Date().getFullYear()} Liberia Business Awards</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        await transporter.sendMail({
+            from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
+            to: email,
+            subject: 'Welcome to the Judge Portal - Liberia Business Awards',
+            html: htmlBody
+        });
+        
+        console.log('✅ Welcome email sent to judge:', email);
+    } catch (error) {
+        console.error('Welcome email error:', error);
+    }
+}
+
+console.log('✅ Judge Management System Ready');
 
 // ============ START SERVER ============
 async function startServer() {
