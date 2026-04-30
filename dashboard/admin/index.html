@@ -3702,6 +3702,21 @@ window.viewOpportunityApplications = viewOpportunityApplications;
             showNotification();
 }
 
+        function showJudgesModal() {
+            showNotification();
+}
+
+        function showUsersModal() {
+            showNotification();
+}
+
+        function showReportsModal() {
+            showNotification();
+}
+
+        function showSettingsModal() {
+            showNotification();
+}
 
         function showTroubleshootingGuide() {
             showNotification('See console for troubleshooting information', 'info');
@@ -4124,7 +4139,7 @@ window.exportVoteData = exportVoteData;
 window.resetVoteCache = resetVoteCache;
 window.viewVoteDetails = viewVoteDetails;
 
-// ============================================
+     // ============================================
 // MANAGE VOTING BUSINESSES (ADD/REMOVE)
 // ============================================
 
@@ -6635,8 +6650,6 @@ async function loadJudges(page = 1) {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        
-        // Fetch judges from your backend
         let url = `${API_BASE}/admin/judges?page=${page}&limit=20`;
         if (status !== 'all') {
             url += `&status=${status}`;
@@ -6655,12 +6668,10 @@ async function loadJudges(page = 1) {
             updateJudgesPagination();
             updateJudgeStats(judgesData);
         } else {
-            // If endpoint doesn't exist, use Google Sheets as fallback
             await loadJudgesFromSheets();
         }
     } catch (error) {
         console.error('Error loading judges:', error);
-        // Fallback to Google Sheets
         await loadJudgesFromSheets();
     }
 }
@@ -6740,15 +6751,32 @@ function displayJudges(judges) {
 }
 
 function updateJudgeStats(judges) {
-    const total = judges.length;
-    const active = judges.filter(j => j.status === 'active').length;
-    const inactive = judges.filter(j => j.status === 'inactive').length;
-    const totalVotes = judges.reduce((sum, j) => sum + (j.votes_cast || 0), 0);
+    // Make sure elements exist before trying to update them
+    const totalEl = document.getElementById('totalJudgesCount');
+    const activeEl = document.getElementById('activeJudgesCount');
+    const inactiveEl = document.getElementById('inactiveJudgesCount');
+    const votesEl = document.getElementById('judgesVotesCount');
     
-    document.getElementById('totalJudgesCount').textContent = total;
-    document.getElementById('activeJudgesCount').textContent = active;
-    document.getElementById('inactiveJudgesCount').textContent = inactive;
-    document.getElementById('judgesVotesCount').textContent = totalVotes;
+    // Only update if elements exist
+    if (totalEl) {
+        const total = judges.length;
+        totalEl.textContent = total;
+    }
+    
+    if (activeEl) {
+        const active = judges.filter(j => j.status === 'active').length;
+        activeEl.textContent = active;
+    }
+    
+    if (inactiveEl) {
+        const inactive = judges.filter(j => j.status === 'inactive').length;
+        inactiveEl.textContent = inactive;
+    }
+    
+    if (votesEl) {
+        const totalVotes = judges.reduce((sum, j) => sum + (j.votes_cast || 0), 0);
+        votesEl.textContent = totalVotes;
+    }
 }
 
 function updateJudgesPagination() {
@@ -6785,15 +6813,36 @@ function filterJudges() {
 }
 
 function showAddJudgeModal() {
-    document.getElementById('judgeModalTitle').textContent = 'Add Judge';
-    document.getElementById('judgeForm').reset();
-    document.getElementById('judgeId').value = '';
-    document.getElementById('judgePasswordField').style.display = 'block';
-    document.getElementById('judgePassword').required = true;
-    document.getElementById('judgeError').style.display = 'none';
-    document.getElementById('addJudgeModal').classList.add('active');
+    const modal = document.getElementById('addJudgeModal');
+    if (!modal) {
+        console.error('Add Judge Modal not found');
+        // Try to recreate the modal
+        createJudgesModal();
+    }
+    
+    const titleEl = document.getElementById('judgeModalTitle');
+    const form = document.getElementById('judgeForm');
+    const idField = document.getElementById('judgeId');
+    const passwordField = document.getElementById('judgePasswordField');
+    const passwordInput = document.getElementById('judgePassword');
+    const errorEl = document.getElementById('judgeError');
+    
+    if (titleEl) titleEl.textContent = 'Add Judge';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (passwordField) passwordField.style.display = 'block';
+    if (passwordInput) passwordInput.required = true;
+    if (errorEl) errorEl.style.display = 'none';
+    
+    const modalEl = document.getElementById('addJudgeModal');
+    if (modalEl) {
+        modalEl.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    } else {
+        console.error('Could not find addJudgeModal');
+        showNotification('Error opening add judge form', 'error');
+    }
 }
-
 async function editJudge(id) {
     try {
         const token = localStorage.getItem('lba_auth_token');
