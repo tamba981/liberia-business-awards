@@ -6879,7 +6879,7 @@ async function editJudge(id) {
 async function saveJudge() {
     const id = document.getElementById('judgeId').value;
     const errorEl = document.getElementById('judgeError');
-    errorEl.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
     
     const judgeData = {
         name: document.getElementById('judgeName').value,
@@ -6894,24 +6894,33 @@ async function saveJudge() {
     };
     
     if (!judgeData.name || !judgeData.email || !judgeData.profession) {
-        errorEl.textContent = 'Name, Email, and Profession are required';
-        errorEl.style.display = 'block';
+        if (errorEl) {
+            errorEl.textContent = 'Name, Email, and Profession are required';
+            errorEl.style.display = 'block';
+        }
         return;
     }
     
     const password = document.getElementById('judgePassword').value;
     if (!id && (!password || password.length < 6)) {
-        errorEl.textContent = 'Password must be at least 6 characters';
-        errorEl.style.display = 'block';
+        if (errorEl) {
+            errorEl.textContent = 'Password must be at least 6 characters';
+            errorEl.style.display = 'block';
+        }
         return;
     }
     
     if (password) judgeData.password = password;
     
-    const saveBtn = event.target;
-    const originalText = saveBtn.innerHTML;
-    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    saveBtn.disabled = true;
+    // Find the button that triggered the save
+    const saveBtn = document.querySelector('#addJudgeModal .sheet-btn[onclick*="saveJudge"]') || 
+                    document.querySelector('#addJudgeModal button[onclick*="saveJudge"]');
+    let originalText = '';
+    if (saveBtn) {
+        originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
@@ -6939,15 +6948,21 @@ async function saveJudge() {
                 await sendJudgeWelcomeEmail(judgeData.email, judgeData.name, password);
             }
         } else {
-            errorEl.textContent = result.message || 'Error saving judge';
-            errorEl.style.display = 'block';
+            if (errorEl) {
+                errorEl.textContent = result.message || 'Error saving judge';
+                errorEl.style.display = 'block';
+            }
         }
     } catch (error) {
-        errorEl.textContent = error.message || 'Error saving judge';
-        errorEl.style.display = 'block';
+        if (errorEl) {
+            errorEl.textContent = error.message || 'Error saving judge';
+            errorEl.style.display = 'block';
+        }
     } finally {
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
+        if (saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
     }
 }
 
