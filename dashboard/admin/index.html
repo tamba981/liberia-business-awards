@@ -6876,6 +6876,7 @@ async function editJudge(id) {
     }
 }
 
+
 async function saveJudge() {
     // Get the judge ID if editing
     const judgeIdEl = document.getElementById('judgeId');
@@ -6885,7 +6886,7 @@ async function saveJudge() {
     const errorEl = document.getElementById('judgeError');
     if (errorEl) errorEl.style.display = 'none';
     
-    // Get form values with safety checks
+    // Get all form values with safety checks
     const nameEl = document.getElementById('judgeName');
     const emailEl = document.getElementById('judgeEmail');
     const professionEl = document.getElementById('judgeProfession');
@@ -6908,9 +6909,9 @@ async function saveJudge() {
     }
     
     const judgeData = {
-        name: nameEl.value,
-        email: emailEl.value,
-        profession: professionEl.value,
+        name: nameEl.value.trim(),
+        email: emailEl.value.trim(),
+        profession: professionEl.value.trim(),
         organization: organizationEl ? organizationEl.value : '',
         expertise: expertiseEl ? expertiseEl.value : '',
         phone: phoneEl ? phoneEl.value : '',
@@ -6983,7 +6984,7 @@ async function saveJudge() {
         const result = await response.json();
         
         if (result.success) {
-            showNotification(id ? 'Judge updated successfully!' : 'Judge added successfully! A login link will be sent to their email.', 'success');
+            showNotification(id ? 'Judge updated successfully!' : 'Judge added successfully!', 'success');
             hideModal('addJudgeModal');
             loadJudges();
         } else {
