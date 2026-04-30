@@ -6454,142 +6454,553 @@ async function updateAnnouncementCount() {
 }
 
 // ============================================
-// JUDGES MANAGEMENT
+// JUDGES MANAGEMENT - COMPLETE FIX
 // ============================================
+
+// Global state for judges
+let judgesData = [];
+let judgesCurrentPage = 1;
+let judgesTotalPages = 1;
+
 function showJudgesModal() {
     hideAllModals();
-    document.getElementById('judgesModal').classList.add('active');
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('judgesModal');
+    if (!modal) {
+        createJudgesModal();
+        modal = document.getElementById('judgesModal');
+    }
+    
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     loadJudges();
 }
 
-async function loadJudges() {
+function createJudgesModal() {
+    const modalHTML = `
+    <div class="modal" id="judgesModal">
+        <div class="modal-content" style="max-width: 1200px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-gavel"></i> Judges Panel</h2>
+                <button class="modal-close" onclick="hideModal('judgesModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="totalJudgesCount">0</h3>
+                        <p>Total Judges</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="activeJudgesCount">0</h3>
+                        <p>Active Judges</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="inactiveJudgesCount">0</h3>
+                        <p>Inactive</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="judgesVotesCount">0</h3>
+                        <p>Votes Cast</p>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px; text-align: right;">
+                    <button class="sheet-btn" onclick="showAddJudgeModal()">
+                        <i class="fas fa-plus"></i> Add Judge
+                    </button>
+                </div>
+                
+                <div class="filter-controls">
+                    <div class="filter-grid">
+                        <div class="filter-group">
+                            <label>Filter by Status</label>
+                            <select id="judgeStatusFilter" onchange="loadJudges()">
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Search</label>
+                            <input type="text" id="judgeSearch" placeholder="Search judges..." onkeyup="filterJudges()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Profession</th>
+                                <th>Organization</th>
+                                <th>Status</th>
+                                <th>Votes Cast</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="judgesTableBody">
+                            <tr><td colspan="7" style="text-align: center;">Loading...<\/td><\/tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="judgesPagination"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Judge Modal -->
+    <div class="modal" id="addJudgeModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2 id="judgeModalTitle">Add Judge</h2>
+                <button class="modal-close" onclick="hideModal('addJudgeModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="judgeForm">
+                    <input type="hidden" id="judgeId">
+                    
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="judgeName" class="sheet-btn secondary" style="width: 100%;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="judgeEmail" class="sheet-btn secondary" style="width: 100%;" required>
+                        <small>This will be their login username</small>
+                    </div>
+                    
+                    <div class="form-group" id="judgePasswordField">
+                        <label>Password *</label>
+                        <input type="password" id="judgePassword" class="sheet-btn secondary" style="width: 100%;" minlength="6">
+                        <small>Minimum 6 characters. They can change this after login.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Profession *</label>
+                        <input type="text" id="judgeProfession" class="sheet-btn secondary" style="width: 100%;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Organization</label>
+                        <input type="text" id="judgeOrganization" class="sheet-btn secondary" style="width: 100%;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Expertise Areas</label>
+                        <input type="text" id="judgeExpertise" class="sheet-btn secondary" style="width: 100%;" placeholder="e.g., Finance, Technology, Agriculture">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="judgePhone" class="sheet-btn secondary" style="width: 100%;" placeholder="+231 XXX XXX XXX">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Photo URL</label>
+                        <input type="url" id="judgePhoto" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Bio</label>
+                        <textarea id="judgeBio" rows="3" class="sheet-btn secondary" style="width: 100%;" placeholder="Professional background..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="judgeStatus" class="sheet-btn secondary" style="width: 100%;">
+                            <option value="active">Active - Can vote</option>
+                            <option value="inactive">Inactive - Cannot vote</option>
+                            <option value="pending">Pending - Awaiting approval</option>
+                        </select>
+                    </div>
+                    
+                    <div class="error-message" id="judgeError" style="display: none; color: #EF4444;"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addJudgeModal')" style="flex: 1;">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveJudge()" style="flex: 2;">Save Judge</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+async function loadJudges(page = 1) {
+    const tbody = document.getElementById('judgesTableBody');
+    if (!tbody) return;
+    
+    judgesCurrentPage = page;
+    const status = document.getElementById('judgeStatusFilter')?.value || 'all';
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading judges...<\/td><\/tr>';
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/judges`, {
+        
+        // Fetch judges from your backend
+        let url = `${API_BASE}/admin/judges?page=${page}&limit=20`;
+        if (status !== 'all') {
+            url += `&status=${status}`;
+        }
+        
+        const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
         const data = await response.json();
         
         if (data.success) {
-            displayJudges(data.judges);
+            judgesData = data.judges || [];
+            judgesTotalPages = data.pagination?.pages || 1;
+            displayJudges(judgesData);
+            updateJudgesPagination();
+            updateJudgeStats(judgesData);
+        } else {
+            // If endpoint doesn't exist, use Google Sheets as fallback
+            await loadJudgesFromSheets();
         }
     } catch (error) {
         console.error('Error loading judges:', error);
+        // Fallback to Google Sheets
+        await loadJudgesFromSheets();
+    }
+}
+
+// Fallback: Load judges from Google Sheets
+async function loadJudgesFromSheets() {
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getJudges`);
+        const data = await response.json();
+        
+        if (data.success && data.judges) {
+            judgesData = data.judges;
+            displayJudges(judgesData);
+            updateJudgeStats(judgesData);
+        } else {
+            document.getElementById('judgesTableBody').innerHTML = '<tr><td colspan="7" style="text-align: center;">No judges found. Click "Add Judge" to get started.<\/td><\/tr>';
+        }
+    } catch (error) {
+        document.getElementById('judgesTableBody').innerHTML = `<td><td colspan="7" style="text-align: center; color: #EF4444;">Error loading judges. Please try again.<\/td><\/tr>`;
     }
 }
 
 function displayJudges(judges) {
     const tbody = document.getElementById('judgesTableBody');
+    if (!tbody) return;
+    
     if (!judges || judges.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No judges found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No judges found. Click "Add Judge" to get started.<\/td><\/tr>';
         return;
     }
     
-    tbody.innerHTML = judges.map(j => `
-        <tr>
-            <td><strong>${escapeHtml(j.name)}</strong></td>
-            <td>${escapeHtml(j.profession)}</td>
-            <td>${escapeHtml(j.organization || '-')}</td>
-            <td><span class="status-badge status-${j.status === 'active' ? 'active' : 'pending'}">${j.status}</span></td>
-            <td>
-                <button class="sheet-btn secondary" onclick="editJudge('${j._id}')"><i class="fas fa-edit"></i></button>
-                <button class="sheet-btn danger" onclick="deleteJudge('${j._id}')"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = judges.map(judge => {
+        let statusClass = '';
+        let statusText = judge.status || 'pending';
+        
+        switch(judge.status) {
+            case 'active':
+                statusClass = 'status-active';
+                statusText = 'Active';
+                break;
+            case 'inactive':
+                statusClass = 'status-pending';
+                statusText = 'Inactive';
+                break;
+            case 'pending':
+                statusClass = 'status-pending';
+                statusText = 'Pending';
+                break;
+            default:
+                statusClass = 'status-pending';
+        }
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(judge.name)}</strong></td>
+                <td>${escapeHtml(judge.email || '-')}</td>
+                <td>${escapeHtml(judge.profession || '-')}</td>
+                <td>${escapeHtml(judge.organization || '-')}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>${judge.votes_cast || 0}</td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editJudge('${judge._id || judge.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteJudge('${judge._id || judge.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="sheet-btn" style="padding: 6px 12px;" onclick="resetJudgePassword('${judge._id || judge.id}')">
+                            <i class="fas fa-key"></i> Reset Pwd
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updateJudgeStats(judges) {
+    const total = judges.length;
+    const active = judges.filter(j => j.status === 'active').length;
+    const inactive = judges.filter(j => j.status === 'inactive').length;
+    const totalVotes = judges.reduce((sum, j) => sum + (j.votes_cast || 0), 0);
+    
+    document.getElementById('totalJudgesCount').textContent = total;
+    document.getElementById('activeJudgesCount').textContent = active;
+    document.getElementById('inactiveJudgesCount').textContent = inactive;
+    document.getElementById('judgesVotesCount').textContent = totalVotes;
+}
+
+function updateJudgesPagination() {
+    const pagination = document.getElementById('judgesPagination');
+    if (!pagination) return;
+    
+    if (judgesTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${judgesCurrentPage === 1 ? 'disabled' : ''} onclick="loadJudges(${judgesCurrentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= judgesTotalPages; i++) {
+        if (i === 1 || i === judgesTotalPages || (i >= judgesCurrentPage - 2 && i <= judgesCurrentPage + 2)) {
+            html += `<button class="page-btn ${i === judgesCurrentPage ? 'active' : ''}" onclick="loadJudges(${i})">${i}</button>`;
+        } else if (i === judgesCurrentPage - 3 || i === judgesCurrentPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${judgesCurrentPage === judgesTotalPages ? 'disabled' : ''} onclick="loadJudges(${judgesCurrentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+function filterJudges() {
+    const search = document.getElementById('judgeSearch')?.value.toLowerCase() || '';
+    const filtered = judgesData.filter(judge => 
+        (judge.name && judge.name.toLowerCase().includes(search)) ||
+        (judge.email && judge.email.toLowerCase().includes(search)) ||
+        (judge.profession && judge.profession.toLowerCase().includes(search))
+    );
+    displayJudges(filtered);
 }
 
 function showAddJudgeModal() {
     document.getElementById('judgeModalTitle').textContent = 'Add Judge';
     document.getElementById('judgeForm').reset();
     document.getElementById('judgeId').value = '';
+    document.getElementById('judgePasswordField').style.display = 'block';
+    document.getElementById('judgePassword').required = true;
+    document.getElementById('judgeError').style.display = 'none';
     document.getElementById('addJudgeModal').classList.add('active');
 }
 
 async function editJudge(id) {
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/judges`, {
+        const response = await fetch(`${API_BASE}/admin/judges/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await response.json();
-        const judge = data.judges.find(j => j._id === id);
         
-        if (judge) {
+        const data = await response.json();
+        
+        if (data.success && data.judge) {
+            const judge = data.judge;
+            
             document.getElementById('judgeModalTitle').textContent = 'Edit Judge';
-            document.getElementById('judgeId').value = judge._id;
-            document.getElementById('judgeName').value = judge.name;
-            document.getElementById('judgeProfession').value = judge.profession;
+            document.getElementById('judgeId').value = judge._id || judge.id;
+            document.getElementById('judgeName').value = judge.name || '';
+            document.getElementById('judgeEmail').value = judge.email || '';
+            document.getElementById('judgeProfession').value = judge.profession || '';
             document.getElementById('judgeOrganization').value = judge.organization || '';
+            document.getElementById('judgeExpertise').value = judge.expertise || '';
+            document.getElementById('judgePhone').value = judge.phone || '';
             document.getElementById('judgePhoto').value = judge.photo || '';
             document.getElementById('judgeBio').value = judge.bio || '';
-            document.getElementById('judgeStatus').value = judge.status;
+            document.getElementById('judgeStatus').value = judge.status || 'pending';
+            document.getElementById('judgePasswordField').style.display = 'none';
+            document.getElementById('judgePassword').required = false;
             document.getElementById('addJudgeModal').classList.add('active');
         }
     } catch (error) {
         console.error('Error editing judge:', error);
+        showNotification('Error loading judge details', 'error');
     }
 }
 
 async function saveJudge() {
     const id = document.getElementById('judgeId').value;
-    const data = {
+    const errorEl = document.getElementById('judgeError');
+    errorEl.style.display = 'none';
+    
+    const judgeData = {
         name: document.getElementById('judgeName').value,
+        email: document.getElementById('judgeEmail').value,
         profession: document.getElementById('judgeProfession').value,
         organization: document.getElementById('judgeOrganization').value,
+        expertise: document.getElementById('judgeExpertise').value,
+        phone: document.getElementById('judgePhone').value,
         photo: document.getElementById('judgePhoto').value,
         bio: document.getElementById('judgeBio').value,
         status: document.getElementById('judgeStatus').value
     };
     
+    if (!judgeData.name || !judgeData.email || !judgeData.profession) {
+        errorEl.textContent = 'Name, Email, and Profession are required';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    const password = document.getElementById('judgePassword').value;
+    if (!id && (!password || password.length < 6)) {
+        errorEl.textContent = 'Password must be at least 6 characters';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    if (password) judgeData.password = password;
+    
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const url = id 
-            ? `${API_BASE.replace('/api', '')}/api/admin/judges/${id}`
-            : `${API_BASE.replace('/api', '')}/api/admin/judges`;
+        const url = id ? `${API_BASE}/admin/judges/${id}` : `${API_BASE}/admin/judges`;
         const method = id ? 'PUT' : 'POST';
         
         const response = await fetch(url, {
-            method,
+            method: method,
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(judgeData)
         });
         
         const result = await response.json();
         
         if (result.success) {
-            showNotification(id ? 'Judge updated!' : 'Judge added!', 'success');
+            showNotification(id ? 'Judge updated successfully!' : 'Judge added successfully! A login link will be sent to their email.', 'success');
             hideModal('addJudgeModal');
             loadJudges();
+            
+            // If new judge, send welcome email with login credentials
+            if (!id && judgeData.email) {
+                await sendJudgeWelcomeEmail(judgeData.email, judgeData.name, password);
+            }
+        } else {
+            errorEl.textContent = result.message || 'Error saving judge';
+            errorEl.style.display = 'block';
         }
     } catch (error) {
-        showNotification('Error saving judge', 'error');
+        errorEl.textContent = error.message || 'Error saving judge';
+        errorEl.style.display = 'block';
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
     }
 }
 
 async function deleteJudge(id) {
-    if (!confirm('Delete this judge?')) return;
+    if (!confirm('⚠️ Delete this judge? This will remove their access and voting records.')) return;
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/judges/${id}`, {
+        const response = await fetch(`${API_BASE}/admin/judges/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (response.ok) {
-            showNotification('Judge deleted', 'success');
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Judge deleted successfully', 'success');
             loadJudges();
+        } else {
+            showNotification(result.message || 'Error deleting judge', 'error');
         }
     } catch (error) {
         showNotification('Error deleting judge', 'error');
     }
 }
 
+async function resetJudgePassword(judgeId) {
+    const newPassword = prompt('Enter new password for this judge (minimum 6 characters):');
+    if (!newPassword || newPassword.length < 6) {
+        showNotification('Password must be at least 6 characters', 'warning');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/judges/${judgeId}/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: newPassword })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Password reset successfully! The judge can now login with the new password.', 'success');
+        } else {
+            showNotification(result.message || 'Error resetting password', 'error');
+        }
+    } catch (error) {
+        showNotification('Error resetting password', 'error');
+    }
+}
+
+async function sendJudgeWelcomeEmail(email, name, tempPassword) {
+    try {
+        await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                formType: 'judge_welcome',
+                email: email,
+                name: name,
+                password: tempPassword,
+                loginUrl: 'https://liberiabusinessawardslr.com/judge/login.html',
+                timestamp: new Date().toISOString()
+            })
+        });
+        console.log('Welcome email sent to judge:', email);
+    } catch (error) {
+        console.error('Failed to send welcome email:', error);
+    }
+}
+
+// Make functions global
+window.showJudgesModal = showJudgesModal;
+window.loadJudges = loadJudges;
+window.showAddJudgeModal = showAddJudgeModal;
+window.editJudge = editJudge;
+window.saveJudge = saveJudge;
+window.deleteJudge = deleteJudge;
+window.resetJudgePassword = resetJudgePassword;
+window.filterJudges = filterJudges;
+
+        
 // ============================================
 // ADD THESE MISSING FUNCTIONS TO ADMIN DASHBOARD
 // ============================================
