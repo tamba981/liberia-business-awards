@@ -4658,6 +4658,689 @@ async function sendJudgeWelcomeEmail(email, name, tempPassword) {
 
 console.log('✅ Judge Management System Ready');
 
+// ============================================
+// AI BUSINESS ASSISTANT - BACKEND IMPLEMENTATION
+// ============================================
+
+// AI Usage Tracking Schema
+const aiUsageSchema = new mongoose.Schema({
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
+    feature: { type: String, enum: ['chat', 'business_plan', 'proposal', 'idea_analyzer', 'marketing', 'grant_support'], required: true },
+    tokens_used: { type: Number, default: 0 },
+    cost: { type: Number, default: 0 },
+    timestamp: { type: Date, default: Date.now }
+});
+
+// Saved AI Documents Schema
+const aiDocumentSchema = new mongoose.Schema({
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
+    title: { type: String, required: true },
+    type: { type: String, enum: ['business_plan', 'proposal', 'marketing', 'analysis', 'chat'], required: true },
+    content: { type: String, required: true },
+    metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
+    is_favorite: { type: Boolean, default: false },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+});
+
+// Business AI Settings Schema
+const businessAISettingsSchema = new mongoose.Schema({
+    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true, unique: true },
+    plan: { type: String, enum: ['free', 'premium'], default: 'free' },
+    daily_limit: { type: Number, default: 10 },
+    monthly_limit: { type: Number, default: 100 },
+    current_month_usage: { type: Number, default: 0 },
+    current_day_usage: { type: Number, default: 0 },
+    last_reset_day: { type: String }, // YYYY-MM-DD
+    last_reset_month: { type: String }, // YYYY-MM
+    upgraded_at: { type: Date },
+    upgraded_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' }
+});
+
+const AIUsage = mongoose.model('AIUsage', aiUsageSchema);
+const AIDocument = mongoose.model('AIDocument', aiDocumentSchema);
+const BusinessAISettings = mongoose.model('BusinessAISettings', businessAISettingsSchema);
+
+// ============ AI SYSTEM PROMPT ============
+const AI_SYSTEM_PROMPT = `You are the Liberia Business Awards AI Business Assistant.
+
+Your role is to help Liberian businesses, startups, entrepreneurs, SMEs, and founders improve their businesses through strategic guidance, proposal writing, branding support, business planning, funding preparation, growth strategy, and entrepreneurial education.
+
+Your tone should be professional, practical, growth-oriented, and supportive.
+
+Focus on:
+• African business environments
+• Liberian entrepreneurship
+• SME development
+• Startup growth
+• Funding readiness
+• Branding and visibility
+
+Always provide structured and actionable responses. Use clear headings, bullet points, and practical advice.`;
+
+// ============ AI HELPER FUNCTIONS ============
+async function checkAIAccess(businessId, feature) {
+    const settings = await BusinessAISettings.findOne({ business_id: businessId });
+    
+    if (!settings || settings.plan === 'free') {
+        const today = new Date().toISOString().split('T')[0];
+        const thisMonth = new Date().toISOString().slice(0, 7);
+        
+        let usage = await AIUsage.countDocuments({
+            business_id: businessId,
+            timestamp: {
+                $gte: new Date(new Date().setHours(0, 0, 0, 0))
+            }
+        });
+        
+        if (usage >= 10) {
+            return { allowed: false, reason: 'Daily limit reached. Upgrade to premium for unlimited access.' };
+        }
+        
+        const monthlyUsage = await AIUsage.countDocuments({
+            business_id: businessId,
+            timestamp: {
+                $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+            }
+        });
+        
+        if (monthlyUsage >= 100) {
+            return { allowed: false, reason: 'Monthly limit reached. Upgrade to premium for unlimited access.' };
+        }
+    }
+    
+    return { allowed: true };
+}
+
+async function trackAIUsage(businessId, feature, tokensUsed = 0) {
+    const usage = new AIUsage({
+        business_id: businessId,
+        feature,
+        tokens_used: tokensUsed,
+        cost: tokensUsed * 0.000001 // Approximate cost per token
+    });
+    await usage.save();
+    
+    // Update daily/monthly counts
+    const settings = await BusinessAISettings.findOne({ business_id: businessId });
+    if (settings) {
+        const today = new Date().toISOString().split('T')[0];
+        const thisMonth = new Date().toISOString().slice(0, 7);
+        
+        if (settings.last_reset_day !== today) {
+            settings.current_day_usage = 0;
+            settings.last_reset_day = today;
+        }
+        if (settings.last_reset_month !== thisMonth) {
+            settings.current_month_usage = 0;
+            settings.last_reset_month = thisMonth;
+        }
+        
+        settings.current_day_usage++;
+        settings.current_month_usage++;
+        await settings.save();
+    }
+}
+
+async function callAIAssistant(messages, feature) {
+    const openai = require('openai');
+    
+    if (!process.env.OPENAI_API_KEY) {
+        // Fallback to Gemini
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+        
+        const prompt = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    }
+    
+    // Use OpenAI
+    const OpenAI = require('openai');
+    const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    
+    const completion = await openaiClient.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+            { role: 'system', content: AI_SYSTEM_PROMPT },
+            ...messages
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+    });
+    
+    return completion.choices[0].message.content;
+}
+
+// ============ AI ROUTES ============
+
+// Get AI Settings & Usage
+app.get('/api/ai/settings', authenticate, authorize('business'), async (req, res) => {
+    try {
+        let settings = await BusinessAISettings.findOne({ business_id: req.user._id });
+        
+        if (!settings) {
+            settings = new BusinessAISettings({
+                business_id: req.user._id,
+                plan: 'free',
+                daily_limit: 10,
+                monthly_limit: 100
+            });
+            await settings.save();
+        }
+        
+        const today = new Date().toISOString().split('T')[0];
+        const thisMonth = new Date().toISOString().slice(0, 7);
+        
+        if (settings.last_reset_day !== today) {
+            settings.current_day_usage = 0;
+            settings.last_reset_day = today;
+            await settings.save();
+        }
+        if (settings.last_reset_month !== thisMonth) {
+            settings.current_month_usage = 0;
+            settings.last_reset_month = thisMonth;
+            await settings.save();
+        }
+        
+        res.json({
+            success: true,
+            settings: {
+                plan: settings.plan,
+                daily_limit: settings.daily_limit,
+                monthly_limit: settings.monthly_limit,
+                used_today: settings.current_day_usage,
+                used_this_month: settings.current_month_usage,
+                remaining_today: Math.max(0, settings.daily_limit - settings.current_day_usage),
+                remaining_this_month: Math.max(0, settings.monthly_limit - settings.current_month_usage)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Business Plan Generator
+app.post('/api/ai/business-plan', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const access = await checkAIAccess(req.user._id, 'business_plan');
+        if (!access.allowed) {
+            return res.status(403).json({ success: false, message: access.reason });
+        }
+        
+        const { business_name, industry, target_market, description, revenue_model, goals } = req.body;
+        
+        if (!business_name || !industry || !target_market || !description) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const prompt = `Generate a professional business plan for:
+        
+Business Name: ${business_name}
+Industry: ${industry}
+Target Market: ${target_market}
+Description: ${description}
+Revenue Model: ${revenue_model || 'Not specified'}
+Goals: ${goals || 'Not specified'}
+
+Provide the following sections:
+1. Executive Summary
+2. Market Analysis
+3. Revenue Strategy
+4. Operations Plan
+5. Growth Strategy
+
+Make it practical for a Liberian business context.`;
+        
+        const messages = [{ role: 'user', content: prompt }];
+        const response = await callAIAssistant(messages, 'business_plan');
+        
+        await trackAIUsage(req.user._id, 'business_plan');
+        
+        res.json({
+            success: true,
+            content: response
+        });
+    } catch (error) {
+        console.error('Business plan error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Proposal & Letter Writer
+app.post('/api/ai/proposal', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const access = await checkAIAccess(req.user._id, 'proposal');
+        if (!access.allowed) {
+            return res.status(403).json({ success: false, message: access.reason });
+        }
+        
+        const { type, target, business_name, purpose, details } = req.body;
+        
+        if (!type || !target || !business_name || !purpose) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const typeMap = {
+            sponsorship: 'Sponsorship Proposal',
+            partnership: 'Partnership Letter',
+            funding: 'Funding Request',
+            email: 'Business Email',
+            investor: 'Investor Introduction'
+        };
+        
+        const prompt = `Write a professional ${typeMap[type] || 'Business Proposal'} from ${business_name}.
+        
+Target Audience: ${target}
+Purpose: ${purpose}
+Additional Details: ${details || 'Not provided'}
+
+Requirements:
+- Professional tone
+- Clear value proposition
+- Call to action
+- Follow LBA branding style for Liberian businesses`;
+
+        const messages = [{ role: 'user', content: prompt }];
+        const response = await callAIAssistant(messages, 'proposal');
+        
+        await trackAIUsage(req.user._id, 'proposal');
+        
+        res.json({
+            success: true,
+            content: response
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Business Idea Analyzer
+app.post('/api/ai/analyze-idea', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const access = await checkAIAccess(req.user._id, 'idea_analyzer');
+        if (!access.allowed) {
+            return res.status(403).json({ success: false, message: access.reason });
+        }
+        
+        const { idea, industry, market } = req.body;
+        
+        if (!idea) {
+            return res.status(400).json({ success: false, message: 'Business idea is required' });
+        }
+        
+        const prompt = `Analyze this business idea for the Liberian/African market:
+
+Idea: ${idea}
+Industry: ${industry || 'Not specified'}
+Target Market: ${market || 'Liberian market'}
+
+Provide a structured analysis with:
+1. Strengths (SWOT - Strengths)
+2. Weaknesses (SWOT - Weaknesses)
+3. Opportunities
+4. Threats/Risks
+5. Practical Improvement Suggestions
+
+Keep it actionable and relevant to the Liberian business environment.`;
+
+        const messages = [{ role: 'user', content: prompt }];
+        const response = await callAIAssistant(messages, 'idea_analyzer');
+        
+        await trackAIUsage(req.user._id, 'idea_analyzer');
+        
+        res.json({
+            success: true,
+            content: response
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Marketing Assistant
+app.post('/api/ai/marketing', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const access = await checkAIAccess(req.user._id, 'marketing');
+        if (!access.allowed) {
+            return res.status(403).json({ success: false, message: access.reason });
+        }
+        
+        const { type, business_name, product, target_audience, tone } = req.body;
+        
+        if (!type || !business_name || !product) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const typeMap = {
+            captions: 'Social Media Captions',
+            ad_copy: 'Ad Copy',
+            campaign: 'Campaign Ideas',
+            slogan: 'Brand Slogans',
+            strategy: 'Marketing Strategy'
+        };
+        
+        const prompt = `Generate ${typeMap[type]} for ${business_name}.
+
+Product/Service: ${product}
+Target Audience: ${target_audience || 'Liberian consumers'}
+Tone: ${tone || 'Professional yet engaging'}
+
+Provide 3-5 high-quality options that would resonate with the Liberian market.`;
+
+        const messages = [{ role: 'user', content: prompt }];
+        const response = await callAIAssistant(messages, 'marketing');
+        
+        await trackAIUsage(req.user._id, 'marketing');
+        
+        res.json({
+            success: true,
+            content: response
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Grant & Opportunity Support
+app.post('/api/ai/grant-support', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const access = await checkAIAccess(req.user._id, 'grant_support');
+        if (!access.allowed) {
+            return res.status(403).json({ success: false, message: access.reason });
+        }
+        
+        const { type, business_name, project, impact, details } = req.body;
+        
+        if (!type || !business_name || !project) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const typeMap = {
+            grant_response: 'Grant Application Response',
+            project_summary: 'Project Summary',
+            impact_statement: 'Impact Statement',
+            proposal: 'Grant Proposal Section'
+        };
+        
+        const prompt = `Help draft a ${typeMap[type]} for a grant application.
+
+Organization: ${business_name}
+Project: ${project}
+Expected Impact: ${impact || 'Not specified'}
+Additional Details: ${details || 'Not provided'}
+
+Focus on:
+- Clear articulation of need
+- Measurable outcomes
+- Sustainability
+- Alignment with development goals in Liberia`;
+
+        const messages = [{ role: 'user', content: prompt }];
+        const response = await callAIAssistant(messages, 'grant_support');
+        
+        await trackAIUsage(req.user._id, 'grant_support');
+        
+        res.json({
+            success: true,
+            content: response
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Open Chat
+app.post('/api/ai/chat', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const access = await checkAIAccess(req.user._id, 'chat');
+        if (!access.allowed) {
+            return res.status(403).json({ success: false, message: access.reason });
+        }
+        
+        const { message, history = [] } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({ success: false, message: 'Message is required' });
+        }
+        
+        const messages = [
+            ...history,
+            { role: 'user', content: message }
+        ];
+        
+        const response = await callAIAssistant(messages, 'chat');
+        
+        await trackAIUsage(req.user._id, 'chat');
+        
+        res.json({
+            success: true,
+            content: response
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Save AI Document
+app.post('/api/ai/documents', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { title, type, content, metadata } = req.body;
+        
+        if (!title || !type || !content) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const document = new AIDocument({
+            business_id: req.user._id,
+            title,
+            type,
+            content,
+            metadata: metadata || {}
+        });
+        
+        await document.save();
+        
+        res.json({
+            success: true,
+            document: {
+                _id: document._id,
+                title: document.title,
+                type: document.type,
+                created_at: document.created_at
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get AI Documents
+app.get('/api/ai/documents', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { type, limit = 50 } = req.query;
+        let query = { business_id: req.user._id };
+        
+        if (type && type !== 'all') {
+            query.type = type;
+        }
+        
+        const documents = await AIDocument.find(query)
+            .sort({ updated_at: -1 })
+            .limit(parseInt(limit));
+        
+        res.json({
+            success: true,
+            documents: documents.map(d => ({
+                _id: d._id,
+                title: d.title,
+                type: d.type,
+                content: d.content.substring(0, 200),
+                is_favorite: d.is_favorite,
+                created_at: d.created_at,
+                updated_at: d.updated_at
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get Single Document
+app.get('/api/ai/documents/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const document = await AIDocument.findOne({
+            _id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        res.json({
+            success: true,
+            document
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update Document
+app.put('/api/ai/documents/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { title, content, is_favorite } = req.body;
+        
+        const document = await AIDocument.findOne({
+            _id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        if (title) document.title = title;
+        if (content) document.content = content;
+        if (is_favorite !== undefined) document.is_favorite = is_favorite;
+        document.updated_at = new Date();
+        
+        await document.save();
+        
+        res.json({
+            success: true,
+            message: 'Document updated'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete Document
+app.delete('/api/ai/documents/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        await AIDocument.findOneAndDelete({
+            _id: req.params.id,
+            business_id: req.user._id
+        });
+        
+        res.json({ success: true, message: 'Document deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN AI MANAGEMENT ROUTES ============
+
+// Get AI Usage Statistics (Admin)
+app.get('/api/admin/ai/stats', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const totalUsers = await BusinessAISettings.countDocuments();
+        const premiumUsers = await BusinessAISettings.countDocuments({ plan: 'premium' });
+        const freeUsers = totalUsers - premiumUsers;
+        
+        const totalUsage = await AIUsage.countDocuments();
+        const usageByFeature = await AIUsage.aggregate([
+            { $group: { _id: '$feature', count: { $sum: 1 } } }
+        ]);
+        
+        const recentUsage = await AIUsage.find()
+            .sort({ timestamp: -1 })
+            .limit(50)
+            .populate('business_id', 'business_name email');
+        
+        res.json({
+            success: true,
+            stats: {
+                total_users: totalUsers,
+                premium_users: premiumUsers,
+                free_users: freeUsers,
+                total_requests: totalUsage,
+                usage_by_feature: usageByFeature,
+                recent_usage: recentUsage
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Upgrade Business to Premium (Admin)
+app.post('/api/admin/ai/upgrade/:businessId', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        let settings = await BusinessAISettings.findOne({ business_id: req.params.businessId });
+        
+        if (!settings) {
+            settings = new BusinessAISettings({
+                business_id: req.params.businessId,
+                plan: 'premium',
+                daily_limit: 1000,
+                monthly_limit: 10000,
+                upgraded_at: new Date(),
+                upgraded_by: req.user._id
+            });
+        } else {
+            settings.plan = 'premium';
+            settings.daily_limit = 1000;
+            settings.monthly_limit = 10000;
+            settings.upgraded_at = new Date();
+            settings.upgraded_by = req.user._id;
+        }
+        
+        await settings.save();
+        
+        res.json({
+            success: true,
+            message: 'Business upgraded to premium AI access'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Set Usage Limits (Admin)
+app.put('/api/admin/ai/limits', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { plan, daily_limit, monthly_limit } = req.body;
+        
+        await BusinessAISettings.updateMany(
+            { plan },
+            { daily_limit, monthly_limit }
+        );
+        
+        res.json({
+            success: true,
+            message: 'Usage limits updated'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+console.log('✅ AI Business Assistant System Ready');
+
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
