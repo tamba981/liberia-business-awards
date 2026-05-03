@@ -854,6 +854,8 @@
     transform: translateY(-2px);
 }
 
+         
+         
 /* Pagination Styles */
 .pagination {
     display: flex;
@@ -890,6 +892,115 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+ /* AI Assistant Styles */
+.ai-workspace {
+    transition: all 0.3s ease;
+}
+
+.ai-form {
+    transition: all 0.3s ease;
+}
+
+.chat-messages {
+    scroll-behavior: smooth;
+}
+
+.chat-message {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-message.user {
+    text-align: right;
+}
+
+.chat-message.user div {
+    background: #FF0000 !important;
+    color: white !important;
+    display: inline-block;
+}
+
+.chat-message.ai div {
+    background: #e2e8f0;
+    display: inline-block;
+}
+
+.ai-status {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.ai-status .status-badge {
+    padding: 8px 15px;
+    font-size: 13px;
+}
+
+#aiResponseContent h1, #aiResponseContent h2, #aiResponseContent h3 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #1a202c;
+}
+
+#aiResponseContent ul, #aiResponseContent ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+#aiResponseContent p {
+    margin-bottom: 12px;
+}
+
+#aiResponseContent table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+#aiResponseContent th, #aiResponseContent td {
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+#aiResponseContent th {
+    background: #f8fafc;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #FF0000;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.ai-usage-bar {
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.ai-usage-fill {
+    height: 100%;
+    background: #FF0000;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}        
+         
 </style>
 </head>
 <body>
@@ -934,13 +1045,20 @@
     <span>Opportunity Center</span>
     <span class="badge" id="opportunitiesCount">0</span>
 </div>
-                
+
+          
                 <div class="menu-item" data-page="notifications">
                     <i class="fas fa-bell"></i>
                     <span>Notifications</span>
                     <span class="badge" id="notificationsCount">0</span>
                 </div>
-                
+
+                 <!-- Add this BEFORE the Settings section -->
+<div class="menu-item" data-page="ai-assistant">
+    <i class="fas fa-robot"></i>
+    <span>AI Business Assistant</span>
+    <span class="badge" id="aiNewBadge" style="background: #FF0000;">NEW</span>
+</div>
                 <div style="padding: 25px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
                     <div class="menu-item" data-page="settings">
                         <i class="fas fa-cog"></i>
@@ -1219,7 +1337,315 @@
         </div>
     </div>
 </div>
+
+             <!-- AI Business Assistant Page -->
+<div id="aiAssistantPage" class="page" style="display: none;">
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-robot"></i> AI Business Assistant</h2>
+            <div class="ai-status">
+                <span class="status-badge status-approved">
+                    <i class="fas fa-circle" style="font-size: 10px; color: #10B981;"></i> AI System Online
+                </span>
+                <span id="aiUsageBadge" class="status-badge status-pending">
+                    <i class="fas fa-chart-line"></i> Loading...
+                </span>
+            </div>
+        </div>
+        
+        <div class="ai-welcome-banner" style="background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%); border-radius: 20px; padding: 30px; margin-bottom: 30px; color: white;">
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <div>
+                    <i class="fas fa-brain" style="font-size: 48px; color: #87CEEB;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="margin-bottom: 10px;">LBA AI Business Assistant (Beta)</h3>
+                    <p style="opacity: 0.9;">Helping Liberian businesses grow smarter with AI-powered business tools.</p>
+                </div>
+                <div id="aiUsageInfo" style="background: rgba(255,255,255,0.1); padding: 15px 20px; border-radius: 15px; text-align: center;">
+                    <div id="aiRemainingCount">Loading...</div>
+                    <div style="font-size: 12px; opacity: 0.8;">Requests remaining today</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Access Tools -->
+        <div style="margin-bottom: 30px;">
+            <h3 style="margin-bottom: 20px;"><i class="fas fa-bolt" style="color: #FF0000;"></i> Quick Tools</h3>
+            <div class="stats-grid">
+                <div class="stat-card" onclick="showAITool('business_plan')" style="cursor: pointer;">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #FF0000, #ff4444);"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-content">
+                        <h3>Business Plan</h3>
+                        <p>Generate professional business plans</p>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="showAITool('proposal')" style="cursor: pointer;">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #87CEEB, #5bc0de);"><i class="fas fa-file-alt"></i></div>
+                    <div class="stat-content">
+                        <h3>Proposal Writer</h3>
+                        <p>Create sponsorship & partnership letters</p>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="showAITool('idea_analyzer')" style="cursor: pointer;">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10B981, #34d399);"><i class="fas fa-lightbulb"></i></div>
+                    <div class="stat-content">
+                        <h3>Idea Analyzer</h3>
+                        <p>Get feedback on your business ideas</p>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="showAITool('marketing')" style="cursor: pointer;">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #F59E0B, #fbbf24);"><i class="fas fa-bullhorn"></i></div>
+                    <div class="stat-content">
+                        <h3>Marketing Assistant</h3>
+                        <p>Generate social media & ad copy</p>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="showAITool('grant_support')" style="cursor: pointer;">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6, #60a5fa);"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="stat-content">
+                        <h3>Grant Support</h3>
+                        <p>Prepare funding applications</p>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="showAITool('chat')" style="cursor: pointer;">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #8B5CF6, #a78bfa);"><i class="fas fa-comments"></i></div>
+                    <div class="stat-content">
+                        <h3>Open Chat</h3>
+                        <p>Ask any business question</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Workspace -->
+        <div class="ai-workspace" style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+            <div id="aiToolSelector" class="tabs" style="margin-bottom: 25px;">
+    <div class="tab active" data-ai-tool="business_plan">Business Plan</div>
+    <div class="tab" data-ai-tool="proposal">Proposal Writer</div>
+    <div class="tab" data-ai-tool="idea_analyzer">Idea Analyzer</div>
+    <div class="tab" data-ai-tool="marketing">Marketing</div>
+    <div class="tab" data-ai-tool="grant_support">Grant Support</div>
+    <div class="tab" data-ai-tool="chat">Open Chat</div>
+    <div class="tab" data-ai-tool="saved">My Saved</div>
+</div>
             
+            <!-- Business Plan Form -->
+            <div id="businessPlanForm" class="ai-form">
+                <h3><i class="fas fa-chart-line"></i> Generate Business Plan</h3>
+                <div class="form-group">
+                    <label>Business Name *</label>
+                    <input type="text" id="bpBusinessName" placeholder="Your company name">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Industry *</label>
+                        <select id="bpIndustry">
+                            <option value="">Select Industry</option>
+                            <option value="Agriculture">Agriculture</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Retail">Retail</option>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Services">Services</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Market *</label>
+                        <input type="text" id="bpTargetMarket" placeholder="Who are your customers?">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Business Description *</label>
+                    <textarea id="bpDescription" rows="3" placeholder="Describe what your business does..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Revenue Model</label>
+                        <input type="text" id="bpRevenueModel" placeholder="How do you make money?">
+                    </div>
+                    <div class="form-group">
+                        <label>Goals</label>
+                        <input type="text" id="bpGoals" placeholder="Your business goals">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="generateBusinessPlan()">
+                    <i class="fas fa-magic"></i> Generate Business Plan
+                </button>
+            </div>
+            
+            <!-- Proposal Writer Form -->
+            <div id="proposalForm" class="ai-form" style="display: none;">
+                <h3><i class="fas fa-file-alt"></i> Proposal & Letter Writer</h3>
+                <div class="form-group">
+                    <label>Proposal Type *</label>
+                    <select id="proposalType">
+                        <option value="sponsorship">Sponsorship Proposal</option>
+                        <option value="partnership">Partnership Letter</option>
+                        <option value="funding">Funding Request</option>
+                        <option value="email">Business Email</option>
+                        <option value="investor">Investor Introduction</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Target Audience/Organization *</label>
+                    <input type="text" id="proposalTarget" placeholder="e.g., UNDP Liberia, Ministry of Commerce">
+                </div>
+                <div class="form-group">
+                    <label>Your Business Name *</label>
+                    <input type="text" id="proposalBusinessName" placeholder="Your company name">
+                </div>
+                <div class="form-group">
+                    <label>Purpose/Purpose of Letter *</label>
+                    <textarea id="proposalPurpose" rows="3" placeholder="What do you want to achieve?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Additional Details</label>
+                    <textarea id="proposalDetails" rows="2" placeholder="Any specific requirements or context..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="generateProposal()">
+                    <i class="fas fa-magic"></i> Generate Proposal
+                </button>
+            </div>
+            
+            <!-- Idea Analyzer Form -->
+            <div id="ideaAnalyzerForm" class="ai-form" style="display: none;">
+                <h3><i class="fas fa-lightbulb"></i> Business Idea Analyzer</h3>
+                <div class="form-group">
+                    <label>Describe Your Business Idea *</label>
+                    <textarea id="ideaDescription" rows="4" placeholder="Describe your business idea in detail..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Industry</label>
+                        <input type="text" id="ideaIndustry" placeholder="e.g., E-commerce, Agriculture, Tech">
+                    </div>
+                    <div class="form-group">
+                        <label>Target Market</label>
+                        <input type="text" id="ideaMarket" placeholder="e.g., Liberian youth, Women entrepreneurs">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="analyzeBusinessIdea()">
+                    <i class="fas fa-chart-simple"></i> Analyze Idea
+                </button>
+            </div>
+            
+            <!-- Marketing Assistant Form -->
+            <div id="marketingForm" class="ai-form" style="display: none;">
+                <h3><i class="fas fa-bullhorn"></i> Marketing Assistant</h3>
+                <div class="form-group">
+                    <label>Content Type *</label>
+                    <select id="marketingType">
+                        <option value="captions">Social Media Captions</option>
+                        <option value="ad_copy">Ad Copy</option>
+                        <option value="campaign">Campaign Ideas</option>
+                        <option value="slogan">Brand Slogans</option>
+                        <option value="strategy">Marketing Strategy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Business Name *</label>
+                    <input type="text" id="marketingBusinessName" placeholder="Your company name">
+                </div>
+                <div class="form-group">
+                    <label>Product/Service *</label>
+                    <textarea id="marketingProduct" rows="2" placeholder="Describe what you're promoting..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Target Audience</label>
+                        <input type="text" id="marketingAudience" placeholder="Who are you targeting?">
+                    </div>
+                    <div class="form-group">
+                        <label>Tone</label>
+                        <select id="marketingTone">
+                            <option value="Professional">Professional</option>
+                            <option value="Casual">Casual & Friendly</option>
+                            <option value="Inspirational">Inspirational</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="generateMarketing()">
+                    <i class="fas fa-magic"></i> Generate Content
+                </button>
+            </div>
+            
+            <!-- Grant Support Form -->
+            <div id="grantForm" class="ai-form" style="display: none;">
+                <h3><i class="fas fa-hand-holding-usd"></i> Grant & Opportunity Support</h3>
+                <div class="form-group">
+                    <label>Content Type *</label>
+                    <select id="grantType">
+                        <option value="grant_response">Grant Application Response</option>
+                        <option value="project_summary">Project Summary</option>
+                        <option value="impact_statement">Impact Statement</option>
+                        <option value="proposal">Grant Proposal Section</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Organization/Business Name *</label>
+                    <input type="text" id="grantBusinessName" placeholder="Your organization name">
+                </div>
+                <div class="form-group">
+                    <label>Project/Initiative *</label>
+                    <textarea id="grantProject" rows="3" placeholder="Describe your project..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Expected Impact</label>
+                    <textarea id="grantImpact" rows="2" placeholder="What impact will this create?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Additional Details</label>
+                    <textarea id="grantDetails" rows="2"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="generateGrantSupport()">
+                    <i class="fas fa-magic"></i> Generate Content
+                </button>
+            </div>
+            
+            <!-- Open Chat -->
+            <div id="chatForm" class="ai-form" style="display: none;">
+                <h3><i class="fas fa-comments"></i> Open Chat - Ask Anything</h3>
+                <div class="chat-messages" id="chatMessages" style="height: 400px; overflow-y: auto; background: #f8fafc; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+                    <div class="chat-message" style="margin-bottom: 15px;">
+                        <div style="display: inline-block; background: #e2e8f0; padding: 10px 15px; border-radius: 15px; max-width: 80%;">
+                            <i class="fas fa-robot" style="color: #FF0000;"></i> Hello! I'm your LBA AI Business Assistant. Ask me anything about business growth, funding, strategy, or entrepreneurship!
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <textarea id="chatInput" rows="2" style="flex: 1;" placeholder="Ask your business question..."></textarea>
+                    <button class="btn btn-primary" onclick="sendChatMessage()" style="align-self: flex-end;">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Saved Documents -->
+            <div id="savedForm" class="ai-form" style="display: none;">
+                <h3><i class="fas fa-folder-open"></i> My Saved AI Files</h3>
+                <div id="savedDocumentsList" class="documents-grid" style="margin-top: 20px;">
+                    <div style="text-align: center; padding: 50px;">Loading your saved documents...</div>
+                </div>
+            </div>
+            
+            <!-- AI Response Area -->
+            <div id="aiResponse" style="display: none; margin-top: 30px; padding-top: 30px; border-top: 2px solid #e2e8f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4><i class="fas fa-robot" style="color: #FF0000;"></i> AI Response</h4>
+                    <div>
+                        <button class="action-btn" onclick="copyAIResponse()"><i class="fas fa-copy"></i> Copy</button>
+                        <button class="action-btn" onclick="downloadAIResponse('txt')"><i class="fas fa-file-alt"></i> TXT</button>
+                        <button class="action-btn" onclick="downloadAIResponse('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button class="action-btn" onclick="saveAIResponse()"><i class="fas fa-save"></i> Save</button>
+                    </div>
+                </div>
+                <div id="aiResponseContent" style="background: #f8fafc; border-radius: 15px; padding: 25px; line-height: 1.6; white-space: pre-wrap;"></div>
+            </div>
+        </div>
+    </div>
+</div>
             <div id="notificationsPage" class="page" style="display: none;">
                 <div class="content-section">
                     <div class="section-header">
@@ -1675,13 +2101,24 @@
             document.getElementById(page + 'Page').style.display = 'block';
             document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
             document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
-            const titles = { dashboard: 'Dashboard', profile: 'Business Profile', nominations: 'My Nominations', spotlight: 'My Spotlight Stories', documents: 'Documents', opportunities: 'Opportunity Center', notifications: 'Notifications', settings: 'Settings' };
+            const titles = { 
+    dashboard: 'Dashboard', 
+    profile: 'Business Profile', 
+    nominations: 'My Nominations', 
+    spotlight: 'My Spotlight Stories', 
+    documents: 'Documents', 
+    opportunities: 'Opportunity Center', 
+    notifications: 'Notifications', 
+    settings: 'Settings',
+    'ai-assistant': 'AI Business Assistant' 
+};
             document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
             appState.currentPage = page;
             if (page === 'nominations' && appState.nominations.data.length === 0) loadNominations();
             else if (page === 'documents' && appState.documents.data.length === 0) loadDocuments();
             else if (page === 'notifications') loadNotifications();
              else if (page === 'opportunities') loadOpportunities(1);
+             else if (page === 'ai-assistant') initAIAssistant();
         }
 
         async function apiRequest(endpoint, options = {}) {
@@ -2947,6 +3384,528 @@ async function submitApplication() {
     }
 }
 
+ // ============================================
+// AI BUSINESS ASSISTANT - FRONTEND FUNCTIONS
+// ============================================
+
+let currentAIResponse = '';
+let currentResponseType = '';
+let chatHistory = [];
+
+// Load AI Settings on dashboard load
+async function loadAISettings() {
+    try {
+        const response = await apiRequest('/api/ai/settings');
+        if (response.success) {
+            const settings = response.settings;
+            const remaining = settings.remaining_today;
+            const plan = settings.plan;
+            
+            document.getElementById('aiRemainingCount').innerHTML = `
+                <div style="font-size: 24px; font-weight: 700;">${remaining}</div>
+                <div style="font-size: 11px;">of ${settings.daily_limit} daily</div>
+                <div class="ai-usage-bar" style="margin-top: 8px;">
+                    <div class="ai-usage-fill" style="width: ${((settings.daily_limit - remaining) / settings.daily_limit) * 100}%"></div>
+                </div>
+                <div style="font-size: 11px; margin-top: 5px;">${plan.toUpperCase()} PLAN</div>
+            `;
+            
+            document.getElementById('aiUsageBadge').innerHTML = `
+                <i class="fas fa-${plan === 'premium' ? 'crown' : 'chart-line'}"></i> 
+                ${plan === 'premium' ? 'Premium' : 'Free'} - ${remaining} left today
+            `;
+        }
+    } catch (error) {
+        console.error('Load AI settings error:', error);
+    }
+}
+
+// Switch AI Tool
+function showAITool(tool) {
+    // Hide all forms
+    const forms = ['businessPlanForm', 'proposalForm', 'ideaAnalyzerForm', 'marketingForm', 'grantForm', 'chatForm', 'savedForm'];
+    forms.forEach(form => {
+        const el = document.getElementById(form);
+        if (el) el.style.display = 'none';
+    });
+    
+    // Show selected form
+    let formId = '';
+    switch(tool) {
+        case 'business_plan': formId = 'businessPlanForm'; break;
+        case 'proposal': formId = 'proposalForm'; break;
+        case 'idea_analyzer': formId = 'ideaAnalyzerForm'; break;
+        case 'marketing': formId = 'marketingForm'; break;
+        case 'grant_support': formId = 'grantForm'; break;
+        case 'chat': formId = 'chatForm'; break;
+        case 'saved': formId = 'savedForm'; loadSavedDocuments(); break;
+    }
+    
+    if (formId) {
+        document.getElementById(formId).style.display = 'block';
+    }
+    
+    // Hide response area
+    document.getElementById('aiResponse').style.display = 'none';
+    
+    // Update active tab
+    document.querySelectorAll('[data-ai-tool]').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.aiTool === tool) {
+            tab.classList.add('active');
+        }
+    });
+}
+
+// Generate Business Plan
+async function generateBusinessPlan() {
+    const data = {
+        business_name: document.getElementById('bpBusinessName').value,
+        industry: document.getElementById('bpIndustry').value,
+        target_market: document.getElementById('bpTargetMarket').value,
+        description: document.getElementById('bpDescription').value,
+        revenue_model: document.getElementById('bpRevenueModel').value,
+        goals: document.getElementById('bpGoals').value
+    };
+    
+    if (!data.business_name || !data.industry || !data.target_market || !data.description) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    await callAIEndpoint('/api/ai/business-plan', data, 'business_plan');
+}
+
+// Generate Proposal
+async function generateProposal() {
+    const data = {
+        type: document.getElementById('proposalType').value,
+        target: document.getElementById('proposalTarget').value,
+        business_name: document.getElementById('proposalBusinessName').value,
+        purpose: document.getElementById('proposalPurpose').value,
+        details: document.getElementById('proposalDetails').value
+    };
+    
+    if (!data.type || !data.target || !data.business_name || !data.purpose) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    await callAIEndpoint('/api/ai/proposal', data, 'proposal');
+}
+
+// Analyze Business Idea
+async function analyzeBusinessIdea() {
+    const data = {
+        idea: document.getElementById('ideaDescription').value,
+        industry: document.getElementById('ideaIndustry').value,
+        market: document.getElementById('ideaMarket').value
+    };
+    
+    if (!data.idea) {
+        showToast('Please describe your business idea', 'error');
+        return;
+    }
+    
+    await callAIEndpoint('/api/ai/analyze-idea', data, 'idea_analyzer');
+}
+
+// Generate Marketing Content
+async function generateMarketing() {
+    const data = {
+        type: document.getElementById('marketingType').value,
+        business_name: document.getElementById('marketingBusinessName').value,
+        product: document.getElementById('marketingProduct').value,
+        target_audience: document.getElementById('marketingAudience').value,
+        tone: document.getElementById('marketingTone').value
+    };
+    
+    if (!data.type || !data.business_name || !data.product) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    await callAIEndpoint('/api/ai/marketing', data, 'marketing');
+}
+
+// Generate Grant Support
+async function generateGrantSupport() {
+    const data = {
+        type: document.getElementById('grantType').value,
+        business_name: document.getElementById('grantBusinessName').value,
+        project: document.getElementById('grantProject').value,
+        impact: document.getElementById('grantImpact').value,
+        details: document.getElementById('grantDetails').value
+    };
+    
+    if (!data.type || !data.business_name || !data.project) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    await callAIEndpoint('/api/ai/grant-support', data, 'grant_support');
+}
+
+// Send Chat Message
+async function sendChatMessage() {
+    const message = document.getElementById('chatInput').value.trim();
+    if (!message) return;
+    
+    // Add user message to chat
+    addChatMessage(message, 'user');
+    document.getElementById('chatInput').value = '';
+    
+    // Show typing indicator
+    const typingDiv = addTypingIndicator();
+    
+    try {
+        const response = await apiRequest('/api/ai/chat', {
+            method: 'POST',
+            body: JSON.stringify({
+                message: message,
+                history: chatHistory
+            })
+        });
+        
+        // Remove typing indicator
+        typingDiv.remove();
+        
+        if (response.success) {
+            addChatMessage(response.content, 'ai');
+            chatHistory.push({ role: 'user', content: message });
+            chatHistory.push({ role: 'assistant', content: response.content });
+            
+            // Keep history limited
+            if (chatHistory.length > 20) {
+                chatHistory = chatHistory.slice(-20);
+            }
+        } else {
+            showToast(response.message || 'Error generating response', 'error');
+        }
+    } catch (error) {
+        typingDiv.remove();
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+function addChatMessage(content, sender) {
+    const messagesDiv = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+    messageDiv.style.marginBottom = '15px';
+    messageDiv.style.textAlign = sender === 'user' ? 'right' : 'left';
+    
+    const bubble = document.createElement('div');
+    bubble.style.display = 'inline-block';
+    bubble.style.padding = '10px 15px';
+    bubble.style.borderRadius = '15px';
+    bubble.style.maxWidth = '80%';
+    bubble.style.whiteSpace = 'pre-wrap';
+    bubble.style.wordWrap = 'break-word';
+    
+    if (sender === 'user') {
+        bubble.style.background = '#FF0000';
+        bubble.style.color = 'white';
+        bubble.innerHTML = `<i class="fas fa-user"></i> ${escapeHtml(content)}`;
+    } else {
+        bubble.style.background = '#e2e8f0';
+        bubble.style.color = '#1a202c';
+        bubble.innerHTML = `<i class="fas fa-robot" style="color: #FF0000;"></i> ${formatAIContent(content)}`;
+    }
+    
+    messageDiv.appendChild(bubble);
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function addTypingIndicator() {
+    const messagesDiv = document.getElementById('chatMessages');
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message ai';
+    typingDiv.style.marginBottom = '15px';
+    typingDiv.innerHTML = `
+        <div style="display: inline-block; background: #e2e8f0; padding: 10px 20px; border-radius: 15px;">
+            <div class="loading-spinner" style="display: inline-block; margin-right: 8px;"></div>
+            <span>AI is thinking...</span>
+        </div>
+    `;
+    messagesDiv.appendChild(typingDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    return typingDiv;
+}
+
+// Generic AI Endpoint Call
+async function callAIEndpoint(endpoint, data, type) {
+    const responseDiv = document.getElementById('aiResponse');
+    const contentDiv = document.getElementById('aiResponseContent');
+    
+    responseDiv.style.display = 'block';
+    contentDiv.innerHTML = '<div class="loading-spinner" style="margin: 20px auto;"></div><p style="text-align: center;">Generating your content...</p>';
+    
+    try {
+        const response = await apiRequest(endpoint, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.success) {
+            currentAIResponse = response.content;
+            currentResponseType = type;
+            contentDiv.innerHTML = formatAIContent(response.content);
+            
+            // Update AI usage display
+            await loadAISettings();
+            
+            // Show save button for non-chat responses
+            if (type !== 'chat') {
+                showToast('Content generated successfully! You can save this for later.', 'success');
+            }
+        } else {
+            contentDiv.innerHTML = `<div style="color: #EF4444; text-align: center; padding: 40px;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <p>${response.message || 'Error generating content'}</p>
+                ${response.message?.includes('limit') ? '<button class="btn btn-primary" onclick="showUpgradeModal()" style="margin-top: 15px;">Upgrade to Premium</button>' : ''}
+            </div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div style="color: #EF4444; text-align: center; padding: 40px;">
+            <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
+            <p>Error: ${error.message}</p>
+        </div>`;
+    }
+}
+
+// Format AI Content for Display
+function formatAIContent(content) {
+    let formatted = content;
+    
+    // Convert markdown-style headers
+    formatted = formatted.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+    formatted = formatted.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+    formatted = formatted.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+    
+    // Convert bold
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert italic
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // Convert unordered lists
+    formatted = formatted.replace(/^\s*[-*] (.*$)/gm, '<li>$1</li>');
+    formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    
+    // Convert numbered lists
+    formatted = formatted.replace(/^\s*\d+\. (.*$)/gm, '<li>$1</li>');
+    
+    // Convert line breaks
+    formatted = formatted.replace(/\n\n/g, '</p><p>');
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    return `<div style="font-family: inherit;">${formatted}</div>`;
+}
+
+// Copy AI Response
+function copyAIResponse() {
+    navigator.clipboard.writeText(currentAIResponse);
+    showToast('Copied to clipboard!', 'success');
+}
+
+// Download AI Response
+function downloadAIResponse(format) {
+    if (!currentAIResponse) {
+        showToast('No content to download', 'error');
+        return;
+    }
+    
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const filename = `lba-ai-${currentResponseType}-${timestamp}`;
+    
+    if (format === 'txt') {
+        const blob = new Blob([currentAIResponse], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } else if (format === 'pdf') {
+        // Simple PDF generation
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>LBA AI Assistant - ${currentResponseType}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 40px; max-width: 800px; margin: 0 auto; }
+                    h1 { color: #FF0000; }
+                    h2 { color: #1a202c; margin-top: 20px; }
+                    .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #FF0000; }
+                    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Liberia Business Awards</h1>
+                    <p>AI Business Assistant - Generated Content</p>
+                    <p>Date: ${new Date().toLocaleString()}</p>
+                </div>
+                <div class="content">
+                    ${formatAIContent(currentAIResponse)}
+                </div>
+                <div class="footer">
+                    <p>Generated by LBA AI Business Assistant | liberiabusinessawardslr.com</p>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
+}
+
+// Save AI Response
+async function saveAIResponse() {
+    if (!currentAIResponse) {
+        showToast('No content to save', 'error');
+        return;
+    }
+    
+    const title = prompt('Enter a title for this document:', `${currentResponseType.replace('_', ' ').toUpperCase()} - ${new Date().toLocaleDateString()}`);
+    if (!title) return;
+    
+    try {
+        const response = await apiRequest('/api/ai/documents', {
+            method: 'POST',
+            body: JSON.stringify({
+                title: title,
+                type: currentResponseType,
+                content: currentAIResponse,
+                metadata: { generated_at: new Date().toISOString() }
+            })
+        });
+        
+        if (response.success) {
+            showToast('Document saved successfully!', 'success');
+        }
+    } catch (error) {
+        showToast('Error saving document', 'error');
+    }
+}
+
+// Load Saved Documents
+async function loadSavedDocuments() {
+    const container = document.getElementById('savedDocumentsList');
+    container.innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading...</p></div>';
+    
+    try {
+        const response = await apiRequest('/api/ai/documents');
+        if (response.success && response.documents) {
+            const docs = response.documents;
+            if (docs.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px;">
+                        <i class="fas fa-folder-open" style="font-size: 48px; color: #cbd5e0;"></i>
+                        <p style="margin-top: 15px;">No saved documents yet</p>
+                        <p style="font-size: 13px; color: #64748b;">Generate content and save it here for later</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = docs.map(doc => `
+                <div class="document-card">
+                    <div class="document-icon"><i class="fas fa-${getDocIcon(doc.type)}"></i></div>
+                    <div class="document-info">
+                        <div class="document-name">${escapeHtml(doc.title)}</div>
+                        <div class="document-date">${new Date(doc.created_at).toLocaleDateString()}</div>
+                        <div class="document-type">${doc.type.replace('_', ' ').toUpperCase()}</div>
+                    </div>
+                    <div class="document-actions">
+                        <button onclick="viewSavedDocument('${doc._id}')" title="View"><i class="fas fa-eye"></i></button>
+                        <button onclick="deleteSavedDocument('${doc._id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        container.innerHTML = '<div style="text-align: center; padding: 50px; color: #EF4444;">Error loading documents</div>';
+    }
+}
+
+function getDocIcon(type) {
+    const icons = {
+        'business_plan': 'chart-line',
+        'proposal': 'file-alt',
+        'idea_analyzer': 'lightbulb',
+        'marketing': 'bullhorn',
+        'grant_support': 'hand-holding-usd',
+        'chat': 'comments'
+    };
+    return icons[type] || 'file';
+}
+
+async function viewSavedDocument(id) {
+    try {
+        const response = await apiRequest(`/api/ai/documents/${id}`);
+        if (response.success) {
+            currentAIResponse = response.document.content;
+            currentResponseType = response.document.type;
+            const contentDiv = document.getElementById('aiResponseContent');
+            contentDiv.innerHTML = formatAIContent(response.document.content);
+            document.getElementById('aiResponse').style.display = 'block';
+            showToast('Document loaded', 'success');
+        }
+    } catch (error) {
+        showToast('Error loading document', 'error');
+    }
+}
+
+async function deleteSavedDocument(id) {
+    if (!confirm('Delete this document?')) return;
+    try {
+        await apiRequest(`/api/ai/documents/${id}`, { method: 'DELETE' });
+        showToast('Document deleted', 'success');
+        loadSavedDocuments();
+    } catch (error) {
+        showToast('Error deleting document', 'error');
+    }
+}
+
+// Show Upgrade Modal
+function showUpgradeModal() {
+    if (confirm('Upgrade to Premium for unlimited AI access! Contact admin or visit our pricing page.')) {
+        window.location.href = '/pricing.html';
+    }
+}
+
+// Initialize AI Assistant when page loads
+function initAIAssistant() {
+    loadAISettings();
+    
+    // Setup AI tool tabs
+    document.querySelectorAll('[data-ai-tool]').forEach(tab => {
+        tab.addEventListener('click', () => {
+            showAITool(tab.dataset.aiTool);
+        });
+    });
+    
+    // Enter key for chat
+    document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendChatMessage();
+        }
+    });
+}
+
+// Call this when dashboard loads
+if (typeof window !== 'undefined') {
+    // Add to existing initialization
+    const originalInit = window.initAIAssistant;
+    window.initAIAssistant = initAIAssistant;
+}
+         
 // ============================================
 // BUSINESS SPOTLIGHT STORY FUNCTIONS
 // ============================================
@@ -3344,16 +4303,21 @@ async function deleteSpotlightStory(id, title) {
     } catch (error) {
         showToast('Error deleting story', 'error');
     }
-}
 
-// Update switchPage to include spotlight
+
+     // Update switchPage to include spotlight
 const originalSwitchPage = switchPage;
 window.switchPage = function(page) {
     originalSwitchPage(page);
     if (page === 'spotlight') {
         loadBusinessSpotlightStories();
     }
-};  
+}; 
+
+         
+}
+
+
 
         function setupAdImagePreview() {
     const fileInput = document.getElementById('adImageFile');
