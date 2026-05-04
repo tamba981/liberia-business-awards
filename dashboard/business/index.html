@@ -42,35 +42,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Dashboard - Liberia Business Awards</title>
     
-    <!-- ============ ANTI-CONSOLE SECURITY (MUST BE FIRST) ============ -->
-    <script>
-    (function() {
-        const noop = function() {};
-        const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace'];
-        methods.forEach(m => { if (window.console && window.console[m]) window.console[m] = noop; });
-        
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        
-        document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-        
-        let devToolsOpen = false;
-        Object.defineProperty(window, 'outerWidth', { get: function() { devToolsOpen = true; return window.innerWidth; }, set: function() {} });
-        setInterval(() => { if (devToolsOpen) { localStorage.clear(); window.location.href = '/dashboard/login.html'; } devToolsOpen = false; }, 1000);
-    })();
-    </script>
-
-     <!-- Advanced Security Protection -->
-    <script src="/dashboard/security-monitor.js"></script>
-    <meta name="csrf-token" content="">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
