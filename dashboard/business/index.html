@@ -42,35 +42,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Dashboard - Liberia Business Awards</title>
     
-    <!-- ============ ANTI-CONSOLE SECURITY (MUST BE FIRST) ============ -->
-    <script>
-    (function() {
-        const noop = function() {};
-        const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace'];
-        methods.forEach(m => { if (window.console && window.console[m]) window.console[m] = noop; });
-        
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        
-        document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-        
-        let devToolsOpen = false;
-        Object.defineProperty(window, 'outerWidth', { get: function() { devToolsOpen = true; return window.innerWidth; }, set: function() {} });
-        setInterval(() => { if (devToolsOpen) { localStorage.clear(); window.location.href = '/dashboard/login.html'; } devToolsOpen = false; }, 1000);
-    })();
-    </script>
 
-     <!-- Advanced Security Protection -->
-    <script src="/dashboard/security-monitor.js"></script>
-    <meta name="csrf-token" content="">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+     
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -2020,24 +1993,31 @@
         });
 
         async function checkAuth() {
-            const token = localStorage.getItem('lba_auth_token');
-            const userRole = localStorage.getItem('lba_user_role');
-            const userDataStr = localStorage.getItem('lba_user_data');
-            if (!token || userRole !== 'business' || !userDataStr) return false;
-            try {
-                const response = await fetch(`${BACKEND_URL}/auth/verify`, {
-                    method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-                });
-                if (!response.ok) throw new Error('Invalid token');
-                const data = await response.json();
-                if (data.success) {
-                    appState.user = data.user || JSON.parse(userDataStr);
-                    if (data.user) localStorage.setItem('lba_user_data', JSON.stringify(data.user));
-                    return true;
+    const token = localStorage.getItem('lba_auth_token');
+    const userRole = localStorage.getItem('lba_user_role');
+    const userDataStr = localStorage.getItem('lba_user_data');
+    if (!token || userRole !== 'business' || !userDataStr) return false;
+    try {
+        const response = await fetch(`${BACKEND_URL}/auth/verify`, {
+            method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error('Invalid token');
+        const data = await response.json();
+        if (data.success) {
+            appState.user = data.user || JSON.parse(userDataStr);
+            if (data.user) {
+                // CRITICAL FIX: Preserve logo URL when updating user data
+                const existingLogo = JSON.parse(userDataStr).logo;
+                if (existingLogo && !data.user.logo) {
+                    data.user.logo = existingLogo;
                 }
-                return false;
-            } catch (error) { console.error('Auth check failed:', error); return false; }
+                localStorage.setItem('lba_user_data', JSON.stringify(data.user));
+            }
+            return true;
         }
+        return false;
+    } catch (error) { console.error('Auth check failed:', error); return false; }
+}
 
         function setupUI() {
             document.getElementById('businessName').textContent = appState.user?.name || 'Business';
@@ -2172,10 +2152,28 @@
         const data = await apiRequest('/api/business/profile');
         if (data.success) {
             appState.profile = data.profile || data.business || {};
+            
+            // CRITICAL FIX: Also update the user data in localStorage with the logo URL
+            const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+            if (appState.profile.logo) {
+                userData.logo = appState.profile.logo;
+            }
+            if (appState.profile.business_name) {
+                userData.name = appState.profile.business_name;
+            }
+            localStorage.setItem('lba_user_data', JSON.stringify(userData));
+            
             updateProfileDisplay();
         }
     } catch (error) { 
         console.error('Profile load error:', error);
+        // Try to load from localStorage as fallback
+        const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+        if (userData.logo && !appState.profile?.logo) {
+            appState.profile = appState.profile || {};
+            appState.profile.logo = userData.logo;
+            updateProfileDisplay();
+        }
     }
 }
 
@@ -2215,13 +2213,15 @@ function updateProfileDisplay() {
     document.getElementById('profileDescription').textContent = profile.description || profile.business_description || '-';
     document.getElementById('profileAddress').textContent = profile.address || profile.business_address || '-';
     
-    // FIX: Update logo in dashboard header (profile avatar)
+    // FIX: Update logo in dashboard header (user avatar) - IMPROVED
     const userAvatar = document.getElementById('userAvatar');
-    if (profile.logo && profile.logo !== '') {
-        // Show logo image in avatar
-        userAvatar.style.backgroundImage = `url(${profile.logo})`;
+    const logoUrl = profile.logo || profile.logo_url;
+    
+    if (logoUrl && logoUrl !== '' && logoUrl !== 'null' && logoUrl !== 'undefined') {
+        userAvatar.style.backgroundImage = `url(${logoUrl})`;
         userAvatar.style.backgroundSize = 'cover';
         userAvatar.style.backgroundPosition = 'center';
+        userAvatar.style.backgroundRepeat = 'no-repeat';
         userAvatar.textContent = '';
         userAvatar.style.display = 'flex';
         userAvatar.style.alignItems = 'center';
@@ -2235,8 +2235,8 @@ function updateProfileDisplay() {
     // FIX: Update logo in dashboard profile card (top section)
     const profileLogoImg = document.getElementById('profileLogoImg');
     const profileLogoIcon = document.getElementById('profileLogoIcon');
-    if (profile.logo && profile.logo !== '') {
-        profileLogoImg.src = profile.logo;
+    if (logoUrl && logoUrl !== '' && logoUrl !== 'null' && logoUrl !== 'undefined') {
+        profileLogoImg.src = logoUrl;
         profileLogoImg.style.display = 'block';
         profileLogoIcon.style.display = 'none';
     } else {
@@ -2247,8 +2247,8 @@ function updateProfileDisplay() {
     // FIX: Update logo in profile page (left column)
     const profilePageLogo = document.getElementById('profilePageLogo');
     const profilePageLogoIcon = document.getElementById('profilePageLogoIcon');
-    if (profile.logo && profile.logo !== '') {
-        profilePageLogo.src = profile.logo;
+    if (logoUrl && logoUrl !== '' && logoUrl !== 'null' && logoUrl !== 'undefined') {
+        profilePageLogo.src = logoUrl;
         profilePageLogo.style.display = 'block';
         profilePageLogoIcon.style.display = 'none';
     } else {
@@ -2983,7 +2983,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
 }
          
        
-        document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
+       document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const submitBtn = document.getElementById('profileSaveBtn');
     const originalText = submitBtn.innerHTML;
@@ -3021,20 +3021,19 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         if (response.success) {
             // CRITICAL FIX: Update the profile data with the returned data
             if (response.profile) {
-                // Merge the updated data into existing profile
                 appState.profile = { ...appState.profile, ...response.profile };
+                
+                // CRITICAL FIX: Save logo URL to localStorage for persistence
+                const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+                userData.name = businessName;
+                if (response.profile.logo) {
+                    userData.logo = response.profile.logo;
+                }
+                localStorage.setItem('lba_user_data', JSON.stringify(userData));
             }
             
             // Force refresh all displays
             updateProfileDisplay();
-            
-            // Also update user data in localStorage
-            const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
-            userData.name = businessName;
-            if (response.profile && response.profile.logo) {
-                userData.logo = response.profile.logo;
-            }
-            localStorage.setItem('lba_user_data', JSON.stringify(userData));
             
             // Update the business name in header
             document.getElementById('businessName').textContent = businessName;
@@ -3045,7 +3044,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
             // Clear file input
             document.getElementById('logoUpload').value = '';
             
-            // Also clear the logo preview in the modal
+            // Clear the logo preview in the modal
             document.getElementById('logoPreviewImg').style.display = 'none';
             document.getElementById('logoPreviewIcon').style.display = 'block';
             
