@@ -4794,30 +4794,71 @@ async function trackAIUsage(businessId, feature, tokensUsed = 0) {
     }
 }
 
+
 async function callAIAssistant(messages, feature) {
-    // Use OpenRouter - single API key for all models
-    const OpenAI = require('openai');
-    
-    const openrouterClient = new OpenAI({
-        baseURL: 'https://openrouter.ai/api/v1',
-        apiKey: process.env.OPENROUTER_API_KEY,  // Your new key!
-        defaultHeaders: {
-            'HTTP-Referer': 'https://liberiabusinessawardslr.com',
-            'X-Title': 'LBA Business Assistant'
+    try {
+        // Use OpenRouter - single API key for all models
+        const OpenAI = require('openai');
+        
+        const openrouterClient = new OpenAI({
+            baseURL: 'https://openrouter.ai/api/v1',
+            apiKey: process.env.OPENROUTER_API_KEY,
+            defaultHeaders: {
+                'HTTP-Referer': 'https://liberiabusinessawardslr.com',
+                'X-Title': 'LBA Business Assistant'
+            }
+        });
+        
+        const completion = await openrouterClient.chat.completions.create({
+            model: 'openai/gpt-3.5-turbo',  
+            messages: [
+                { role: 'system', content: AI_SYSTEM_PROMPT },
+                ...messages
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+        });
+        
+        return completion.choices[0].message.content;
+        
+    } catch (error) {
+        console.error('AI Assistant Error:', error.message);
+        
+        // Handle insufficient credits error specifically
+        if (error.message && error.message.includes('Insufficient credits')) {
+            return `⚠️ **AI Service Temporarily Unavailable**
+
+Our AI assistant is currently experiencing high demand. 
+
+**What you can do:**
+• Try again in a few minutes
+• Contact support if the issue persists
+
+We apologize for the inconvenience and appreciate your patience. The Liberia Business Awards team is working to restore full service.`;
         }
-    });
-    
-    const completion = await openrouterClient.chat.completions.create({
-        model: 'openai/gpt-3.5-turbo',  
-        messages: [
-            { role: 'system', content: AI_SYSTEM_PROMPT },
-            ...messages
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-    });
-    
-    return completion.choices[0].message.content;
+        
+        // Handle other API errors
+        if (error.status === 401 || error.message.includes('API key')) {
+            return `⚠️ **AI Service Configuration Issue**
+
+Our team has been notified. Please try again later or contact support for assistance.
+
+Thank you for your understanding.`;
+        }
+        
+        // Generic fallback for any other error
+        return `⚠️ **Unable to Generate Content**
+
+We're experiencing technical difficulties at the moment. 
+
+**Please try:**
+• Refreshing the page
+• Trying again in a few minutes
+
+If the problem continues, please contact our support team.
+
+Thank you for your patience.`;
+    }
 }
 
 // ============ AI ROUTES ============
@@ -4901,7 +4942,23 @@ Provide the following sections:
 Make it practical for a Liberian business context.`;
         
         const messages = [{ role: 'user', content: prompt }];
-        const response = await callAIAssistant(messages, 'business_plan');
+        let response;
+try {
+    response = await callAIAssistant(messages, 'business_plan');
+} catch (error) {
+    console.error('Business plan generation error:', error);
+    response = `⚠️ **Unable to Generate Business Plan**
+
+We're experiencing technical difficulties at the moment. 
+
+**Please try:**
+• Refreshing the page
+• Trying again in a few minutes
+
+If the problem continues, please contact our support team.
+
+Thank you for your patience.`;
+}
         
         await trackAIUsage(req.user._id, 'business_plan');
         
@@ -4950,7 +5007,23 @@ Requirements:
 - Follow LBA branding style for Liberian businesses`;
 
         const messages = [{ role: 'user', content: prompt }];
-        const response = await callAIAssistant(messages, 'proposal');
+        let response;
+try {
+    response = await callAIAssistant(messages, 'proposal');
+} catch (error) {
+    console.error('Proposal generation error:', error);
+    response = `⚠️ **Unable to Generate Proposal**
+
+We're experiencing technical difficulties at the moment. 
+
+**Please try:**
+• Refreshing the page
+• Trying again in a few minutes
+
+If the problem continues, please contact our support team.
+
+Thank you for your patience.`;
+}
         
         await trackAIUsage(req.user._id, 'proposal');
         
@@ -4993,7 +5066,23 @@ Provide a structured analysis with:
 Keep it actionable and relevant to the Liberian business environment.`;
 
         const messages = [{ role: 'user', content: prompt }];
-        const response = await callAIAssistant(messages, 'idea_analyzer');
+        let response;
+try {
+    response = await callAIAssistant(messages, 'idea_analyzer');
+} catch (error) {
+    console.error('Idea analyzer error:', error);
+    response = `⚠️ **Unable to Analyze Idea**
+
+We're experiencing technical difficulties at the moment. 
+
+**Please try:**
+• Refreshing the page
+• Trying again in a few minutes
+
+If the problem continues, please contact our support team.
+
+Thank you for your patience.`;
+}
         
         await trackAIUsage(req.user._id, 'idea_analyzer');
         
@@ -5037,7 +5126,23 @@ Tone: ${tone || 'Professional yet engaging'}
 Provide 3-5 high-quality options that would resonate with the Liberian market.`;
 
         const messages = [{ role: 'user', content: prompt }];
-        const response = await callAIAssistant(messages, 'marketing');
+        let response;
+try {
+    response = await callAIAssistant(messages, 'marketing');
+} catch (error) {
+    console.error('Marketing generation error:', error);
+    response = `⚠️ **Unable to Generate Marketing Content**
+
+We're experiencing technical difficulties at the moment. 
+
+**Please try:**
+• Refreshing the page
+• Trying again in a few minutes
+
+If the problem continues, please contact our support team.
+
+Thank you for your patience.`;
+}
         
         await trackAIUsage(req.user._id, 'marketing');
         
@@ -5085,7 +5190,23 @@ Focus on:
 - Alignment with development goals in Liberia`;
 
         const messages = [{ role: 'user', content: prompt }];
-        const response = await callAIAssistant(messages, 'grant_support');
+        let response;
+try {
+    response = await callAIAssistant(messages, 'grant_support');
+} catch (error) {
+    console.error('Grant support error:', error);
+    response = `⚠️ **Unable to Generate Grant Support**
+
+We're experiencing technical difficulties at the moment. 
+
+**Please try:**
+• Refreshing the page
+• Trying again in a few minutes
+
+If the problem continues, please contact our support team.
+
+Thank you for your patience.`;
+}
         
         await trackAIUsage(req.user._id, 'grant_support');
         
@@ -5117,7 +5238,23 @@ app.post('/api/ai/chat', authenticate, authorize('business'), async (req, res) =
             { role: 'user', content: message }
         ];
         
-        const response = await callAIAssistant(messages, 'chat');
+        let response;
+try {
+    response = await callAIAssistant(messages, 'chat');
+} catch (error) {
+    console.error('Chat error:', error);
+    response = `⚠️ **Unable to Process Your Request**
+
+We're experiencing technical difficulties at the moment. 
+
+**Please try:**
+• Refreshing the page
+• Trying again in a few minutes
+
+If the problem continues, please contact our support team.
+
+Thank you for your patience.`;
+}
         
         await trackAIUsage(req.user._id, 'chat');
         
