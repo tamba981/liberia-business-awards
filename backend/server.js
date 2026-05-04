@@ -113,6 +113,18 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@liberiabusinessawardslr.co
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
+// ============ AI CONFIGURATION ============
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const AI_PROVIDER = process.env.AI_PROVIDER || 'openrouter';
+
+// Log AI configuration status (don't log the actual key!)
+if (OPENROUTER_API_KEY) {
+    console.log('✅ OpenRouter API key configured');
+} else {
+    console.log('⚠️ OpenRouter API key not set - AI features will not work');
+}
+console.log(`🤖 AI Provider: ${AI_PROVIDER}`);
+
 // ============ FILE UPLOAD CONFIGURATION - RAILWAY VOLUME READY ============
 // Use Railway volume path if available, otherwise local ./uploads
 const uploadDir = process.env.RAILWAY_VOLUME_MOUNT_PATH 
@@ -4783,25 +4795,20 @@ async function trackAIUsage(businessId, feature, tokensUsed = 0) {
 }
 
 async function callAIAssistant(messages, feature) {
-    const openai = require('openai');
-    
-    if (!process.env.OPENAI_API_KEY) {
-        // Fallback to Gemini
-        const { GoogleGenerativeAI } = require('@google/generative-ai');
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-        
-        const prompt = messages.map(m => `${m.role}: ${m.content}`).join('\n');
-        const result = await model.generateContent(prompt);
-        return result.response.text();
-    }
-    
-    // Use OpenAI
+    // Use OpenRouter - single API key for all models
     const OpenAI = require('openai');
-    const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     
-    const completion = await openaiClient.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+    const openrouterClient = new OpenAI({
+        baseURL: 'https://openrouter.ai/api/v1',
+        apiKey: process.env.OPENROUTER_API_KEY,  // Your new key!
+        defaultHeaders: {
+            'HTTP-Referer': 'https://liberiabusinessawardslr.com',
+            'X-Title': 'LBA Business Assistant'
+        }
+    });
+    
+    const completion = await openrouterClient.chat.completions.create({
+        model: 'google/gemini-2.0-flash',  // Free tier model - perfect for MVP!
         messages: [
             { role: 'system', content: AI_SYSTEM_PROMPT },
             ...messages
