@@ -4303,19 +4303,19 @@ async function deleteSpotlightStory(id, title) {
     } catch (error) {
         showToast('Error deleting story', 'error');
     }
+}
 
-
-     // Update switchPage to include spotlight
+// Update switchPage to include spotlight AND ai-assistant
 const originalSwitchPage = switchPage;
 window.switchPage = function(page) {
     originalSwitchPage(page);
     if (page === 'spotlight') {
         loadBusinessSpotlightStories();
     }
-}; 
-
-         
-}
+    if (page === 'ai-assistant') {
+        initAIAssistant();
+    }
+};
 
 
 
