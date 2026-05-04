@@ -4808,7 +4808,7 @@ async function callAIAssistant(messages, feature) {
     });
     
     const completion = await openrouterClient.chat.completions.create({
-        model: 'google/gemini-2.0-flash',  // Free tier model - perfect for MVP!
+        model: 'openai/gpt-3.5-turbo',  
         messages: [
             { role: 'system', content: AI_SYSTEM_PROMPT },
             ...messages
