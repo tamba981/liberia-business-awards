@@ -2069,30 +2069,48 @@
         }
 
         function switchPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            document.getElementById(page + 'Page').style.display = 'block';
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
-            const titles = { 
-    dashboard: 'Dashboard', 
-    profile: 'Business Profile', 
-    nominations: 'My Nominations', 
-    spotlight: 'My Spotlight Stories', 
-    documents: 'Documents', 
-    opportunities: 'Opportunity Center', 
-    notifications: 'Notifications', 
-    settings: 'Settings',
-    'ai-assistant': 'AI Business Assistant' 
-};
-            document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
-            appState.currentPage = page;
-            if (page === 'nominations' && appState.nominations.data.length === 0) loadNominations();
-            else if (page === 'documents' && appState.documents.data.length === 0) loadDocuments();
-            else if (page === 'notifications') loadNotifications();
-             else if (page === 'opportunities') loadOpportunities(1);
-             else if (page === 'spotlight') loadBusinessSpotlightStories(); 
-             else if (page === 'ai-assistant') initAIAssistant();  
-        }
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    
+    // Handle special case for ai-assistant (id is aiAssistantPage, not ai-assistantPage)
+    let pageId = page === 'ai-assistant' ? 'aiAssistantPage' : page + 'Page';
+    const targetPage = document.getElementById(pageId);
+    
+    if (targetPage) {
+        targetPage.style.display = 'block';
+    } else {
+        console.error('Page not found:', pageId);
+        return;
+    }
+    
+    // Update active menu item
+    document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+    const activeMenuItem = document.querySelector(`.menu-item[data-page="${page}"]`);
+    if (activeMenuItem) activeMenuItem.classList.add('active');
+    
+    // Update page title
+    const titles = { 
+        dashboard: 'Dashboard', 
+        profile: 'Business Profile', 
+        nominations: 'My Nominations', 
+        spotlight: 'My Spotlight Stories', 
+        documents: 'Documents', 
+        opportunities: 'Opportunity Center', 
+        notifications: 'Notifications', 
+        settings: 'Settings',
+        'ai-assistant': 'AI Business Assistant' 
+    };
+    document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
+    appState.currentPage = page;
+    
+    // Load page-specific data
+    if (page === 'nominations' && appState.nominations.data.length === 0) loadNominations();
+    else if (page === 'documents' && appState.documents.data.length === 0) loadDocuments();
+    else if (page === 'notifications') loadNotifications();
+    else if (page === 'opportunities') loadOpportunities(1);
+    else if (page === 'spotlight') loadBusinessSpotlightStories(); 
+    else if (page === 'ai-assistant') initAIAssistant();  
+}
 
         async function apiRequest(endpoint, options = {}) {
             const token = localStorage.getItem('lba_auth_token');
