@@ -3394,8 +3394,9 @@ async function loadAISettings() {
 }
 
 // Switch AI Tool
+// Switch AI Tool - ADD NULL CHECKS
 function showAITool(tool) {
-    // Hide all forms
+    // Hide all forms with null checks
     const forms = ['businessPlanForm', 'proposalForm', 'ideaAnalyzerForm', 'marketingForm', 'grantForm', 'chatForm', 'savedForm'];
     forms.forEach(form => {
         const el = document.getElementById(form);
@@ -3415,19 +3416,24 @@ function showAITool(tool) {
     }
     
     if (formId) {
-        document.getElementById(formId).style.display = 'block';
+        const formElement = document.getElementById(formId);
+        if (formElement) formElement.style.display = 'block';
     }
     
     // Hide response area
-    document.getElementById('aiResponse').style.display = 'none';
+    const aiResponse = document.getElementById('aiResponse');
+    if (aiResponse) aiResponse.style.display = 'none';
     
-    // Update active tab
-    document.querySelectorAll('[data-ai-tool]').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.dataset.aiTool === tool) {
-            tab.classList.add('active');
-        }
-    });
+    // Update active tab - with null check
+    const tabs = document.querySelectorAll('[data-ai-tool]');
+    if (tabs && tabs.length > 0) {
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.aiTool === tool) {
+                tab.classList.add('active');
+            }
+        });
+    }
 }
 
 // Generate Business Plan
@@ -3854,29 +3860,41 @@ function showUpgradeModal() {
 
 // Initialize AI Assistant when page loads
 function initAIAssistant() {
-    loadAISettings();
+    console.log('🤖 Initializing AI Assistant...');
     
-    // Setup AI tool tabs
-    document.querySelectorAll('[data-ai-tool]').forEach(tab => {
-        tab.addEventListener('click', () => {
-            showAITool(tab.dataset.aiTool);
-        });
-    });
-    
-    // Enter key for chat
-    document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendChatMessage();
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+        try {
+            loadAISettings();
+            
+            // Setup AI tool tabs - with null check
+            const toolTabs = document.querySelectorAll('[data-ai-tool]');
+            if (toolTabs && toolTabs.length > 0) {
+                toolTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        showAITool(tab.dataset.aiTool);
+                    });
+                });
+            } else {
+                console.log('⚠️ No AI tool tabs found yet');
+            }
+            
+            // Enter key for chat - with null check
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                    }
+                });
+            }
+            
+            console.log('✅ AI Assistant initialized successfully');
+        } catch (error) {
+            console.error('Error initializing AI Assistant:', error);
         }
-    });
-}
-
-// Call this when dashboard loads
-if (typeof window !== 'undefined') {
-    // Add to existing initialization
-    const originalInit = window.initAIAssistant;
-    window.initAIAssistant = initAIAssistant;
+    }, 100);
 }
          
 // ============================================
