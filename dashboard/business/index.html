@@ -1001,6 +1001,48 @@
     border-radius: 2px;
     transition: width 0.3s ease;
 }        
+
+/* Tooltip Styles */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+}
+
+.tooltip .tooltip-text {
+    visibility: hidden;
+    background-color: #1a202c;
+    color: white;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: normal;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* First-time user highlight */
+.first-time-highlight {
+    animation: pulse 2s ease-in-out;
+    position: relative;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+}         
          
 </style>
 </head>
@@ -1371,53 +1413,65 @@
         </div>
         
         <!-- Quick Access Tools -->
-        <div style="margin-bottom: 30px;">
-            <h3 style="margin-bottom: 20px;"><i class="fas fa-bolt" style="color: #FF0000;"></i> Quick Tools</h3>
-            <div class="stats-grid">
-                <div class="stat-card" onclick="showAITool('business_plan')" style="cursor: pointer;">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #FF0000, #ff4444);"><i class="fas fa-chart-line"></i></div>
-                    <div class="stat-content">
-                        <h3>Business Plan</h3>
-                        <p>Generate professional business plans</p>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="showAITool('proposal')" style="cursor: pointer;">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #87CEEB, #5bc0de);"><i class="fas fa-file-alt"></i></div>
-                    <div class="stat-content">
-                        <h3>Proposal Writer</h3>
-                        <p>Create sponsorship & partnership letters</p>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="showAITool('idea_analyzer')" style="cursor: pointer;">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #10B981, #34d399);"><i class="fas fa-lightbulb"></i></div>
-                    <div class="stat-content">
-                        <h3>Idea Analyzer</h3>
-                        <p>Get feedback on your business ideas</p>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="showAITool('marketing')" style="cursor: pointer;">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #F59E0B, #fbbf24);"><i class="fas fa-bullhorn"></i></div>
-                    <div class="stat-content">
-                        <h3>Marketing Assistant</h3>
-                        <p>Generate social media & ad copy</p>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="showAITool('grant_support')" style="cursor: pointer;">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6, #60a5fa);"><i class="fas fa-hand-holding-usd"></i></div>
-                    <div class="stat-content">
-                        <h3>Grant Support</h3>
-                        <p>Prepare funding applications</p>
-                    </div>
-                </div>
-                <div class="stat-card" onclick="showAITool('chat')" style="cursor: pointer;">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #8B5CF6, #a78bfa);"><i class="fas fa-comments"></i></div>
-                    <div class="stat-content">
-                        <h3>Open Chat</h3>
-                        <p>Ask any business question</p>
-                    </div>
-                </div>
+<div style="margin-bottom: 30px;">
+    <h3 style="margin-bottom: 20px;">
+        <i class="fas fa-bolt" style="color: #FF0000;"></i> Quick Tools
+        <span class="tooltip" style="margin-left: 10px; font-size: 12px;">
+            🤖 New!
+            <span class="tooltip-text">AI-powered tools to help grow your business</span>
+        </span>
+    </h3>
+    <div class="stats-grid">
+        <div class="stat-card tooltip" onclick="showAITool('business_plan')" style="cursor: pointer; position: relative;">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #FF0000, #ff4444);"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-content">
+                <h3>Business Plan</h3>
+                <p>Generate professional business plans</p>
             </div>
+            <span class="tooltip-text" style="bottom: auto; top: 100%; transform: translateX(-50%); margin-top: 5px;">Create a complete business plan in minutes</span>
         </div>
+        <div class="stat-card tooltip" onclick="showAITool('proposal')" style="cursor: pointer; position: relative;">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #87CEEB, #5bc0de);"><i class="fas fa-file-alt"></i></div>
+            <div class="stat-content">
+                <h3>Proposal Writer</h3>
+                <p>Create sponsorship & partnership letters</p>
+            </div>
+            <span class="tooltip-text" style="bottom: auto; top: 100%; transform: translateX(-50%); margin-top: 5px;">Professional proposals and business letters</span>
+        </div>
+        <div class="stat-card tooltip" onclick="showAITool('idea_analyzer')" style="cursor: pointer; position: relative;">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #10B981, #34d399);"><i class="fas fa-lightbulb"></i></div>
+            <div class="stat-content">
+                <h3>Idea Analyzer</h3>
+                <p>Get feedback on your business ideas</p>
+            </div>
+            <span class="tooltip-text" style="bottom: auto; top: 100%; transform: translateX(-50%); margin-top: 5px;">SWOT analysis and improvement suggestions</span>
+        </div>
+        <div class="stat-card tooltip" onclick="showAITool('marketing')" style="cursor: pointer; position: relative;">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #F59E0B, #fbbf24);"><i class="fas fa-bullhorn"></i></div>
+            <div class="stat-content">
+                <h3>Marketing Assistant</h3>
+                <p>Generate social media & ad copy</p>
+            </div>
+            <span class="tooltip-text" style="bottom: auto; top: 100%; transform: translateX(-50%); margin-top: 5px;">Captions, ads, and marketing strategies</span>
+        </div>
+        <div class="stat-card tooltip" onclick="showAITool('grant_support')" style="cursor: pointer; position: relative;">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6, #60a5fa);"><i class="fas fa-hand-holding-usd"></i></div>
+            <div class="stat-content">
+                <h3>Grant Support</h3>
+                <p>Prepare funding applications</p>
+            </div>
+            <span class="tooltip-text" style="bottom: auto; top: 100%; transform: translateX(-50%); margin-top: 5px;">Grant responses and impact statements</span>
+        </div>
+        <div class="stat-card tooltip" onclick="showAITool('chat')" style="cursor: pointer; position: relative;">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #8B5CF6, #a78bfa);"><i class="fas fa-comments"></i></div>
+            <div class="stat-content">
+                <h3>Open Chat</h3>
+                <p>Ask any business question</p>
+            </div>
+            <span class="tooltip-text" style="bottom: auto; top: 100%; transform: translateX(-50%); margin-top: 5px;">Free AI chat for business advice</span>
+        </div>
+    </div>
+</div>
         
         <!-- AI Workspace -->
         <div class="ai-workspace" style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
@@ -1457,9 +1511,10 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Business Description *</label>
-                    <textarea id="bpDescription" rows="3" placeholder="Describe what your business does..."></textarea>
-                </div>
+    <label>Business Description *</label>
+    <textarea id="bpDescription" rows="3" placeholder="Describe what your business does..." maxlength="2000"></textarea>
+    <small id="bpDescCounter" style="display: block; text-align: right; color: #64748b; margin-top: 5px;">0/2000</small>
+</div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Revenue Model</label>
@@ -1497,9 +1552,10 @@
                     <input type="text" id="proposalBusinessName" placeholder="Your company name">
                 </div>
                 <div class="form-group">
-                    <label>Purpose/Purpose of Letter *</label>
-                    <textarea id="proposalPurpose" rows="3" placeholder="What do you want to achieve?"></textarea>
-                </div>
+    <label>Purpose/Purpose of Letter *</label>
+    <textarea id="proposalPurpose" rows="3" placeholder="What do you want to achieve?" maxlength="2000"></textarea>
+    <small id="proposalCounter" style="display: block; text-align: right; color: #64748b; margin-top: 5px;">0/2000</small>
+</div>
                 <div class="form-group">
                     <label>Additional Details</label>
                     <textarea id="proposalDetails" rows="2" placeholder="Any specific requirements or context..."></textarea>
@@ -1512,10 +1568,11 @@
             <!-- Idea Analyzer Form -->
             <div id="ideaAnalyzerForm" class="ai-form" style="display: none;">
                 <h3><i class="fas fa-lightbulb"></i> Business Idea Analyzer</h3>
-                <div class="form-group">
-                    <label>Describe Your Business Idea *</label>
-                    <textarea id="ideaDescription" rows="4" placeholder="Describe your business idea in detail..."></textarea>
-                </div>
+               <div class="form-group">
+    <label>Describe Your Business Idea *</label>
+    <textarea id="ideaDescription" rows="4" placeholder="Describe your business idea in detail..." maxlength="2000"></textarea>
+    <small id="ideaCounter" style="display: block; text-align: right; color: #64748b; margin-top: 5px;">0/2000</small>
+</div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Industry</label>
@@ -1607,7 +1664,12 @@
             
             <!-- Open Chat -->
             <div id="chatForm" class="ai-form" style="display: none;">
-                <h3><i class="fas fa-comments"></i> Open Chat - Ask Anything</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3><i class="fas fa-comments"></i> Open Chat - Ask Anything</h3>
+        <button class="action-btn" onclick="clearChat()" style="background: #fee2e2; color: #EF4444;">
+            <i class="fas fa-trash-alt"></i> Clear Chat
+                 </button>
+               </div>
                 <div class="chat-messages" id="chatMessages" style="height: 400px; overflow-y: auto; background: #f8fafc; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
                     <div class="chat-message" style="margin-bottom: 15px;">
                         <div style="display: inline-block; background: #e2e8f0; padding: 10px 15px; border-radius: 15px; max-width: 80%;">
@@ -1637,6 +1699,7 @@
                     <h4><i class="fas fa-robot" style="color: #FF0000;"></i> AI Response</h4>
                     <div>
                         <button class="action-btn" onclick="copyAIResponse()"><i class="fas fa-copy"></i> Copy</button>
+                        <button class="action-btn" onclick="regenerateResponse()"><i class="fas fa-sync-alt"></i> Regenerate</button>
                         <button class="action-btn" onclick="downloadAIResponse('txt')"><i class="fas fa-file-alt"></i> TXT</button>
                         <button class="action-btn" onclick="downloadAIResponse('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
                         <button class="action-btn" onclick="saveAIResponse()"><i class="fas fa-save"></i> Save</button>
@@ -3646,6 +3709,22 @@ async function sendChatMessage() {
     }
 }
 
+// ADD THIS NEW FUNCTION
+function clearChat() {
+    chatHistory = [];
+    const messagesDiv = document.getElementById('chatMessages');
+    if (messagesDiv) {
+        messagesDiv.innerHTML = `
+            <div class="chat-message" style="margin-bottom: 15px;">
+                <div style="display: inline-block; background: #e2e8f0; padding: 10px 15px; border-radius: 15px; max-width: 80%;">
+                    <i class="fas fa-robot" style="color: #FF0000;"></i> Chat cleared! Ask me anything about business growth, funding, strategy, or entrepreneurship!
+                </div>
+            </div>
+        `;
+    }
+    showToast('Chat history cleared', 'success');
+}         
+         
 function addChatMessage(content, sender) {
     const messagesDiv = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
@@ -3692,6 +3771,110 @@ function addTypingIndicator() {
     return typingDiv;
 }
 
+// Character counters for textareas
+function setupCharacterCounters() {
+    const textareas = [
+        { id: 'bpDescription', counterId: 'bpDescCounter' },
+        { id: 'proposalPurpose', counterId: 'proposalCounter' },
+        { id: 'ideaDescription', counterId: 'ideaCounter' },
+        { id: 'marketingProduct', counterId: 'marketingCounter' },
+        { id: 'grantProject', counterId: 'grantCounter' }
+    ];
+    
+    textareas.forEach(item => {
+        const textarea = document.getElementById(item.id);
+        const counter = document.getElementById(item.counterId);
+        if (textarea && counter) {
+            textarea.addEventListener('input', function() {
+                const length = this.value.length;
+                counter.textContent = `${length}/2000`;
+                if (length > 1900) {
+                    counter.style.color = '#EF4444';
+                } else {
+                    counter.style.color = '#64748b';
+                }
+            });
+        }
+    });
+}
+
+ // Check if first time visiting AI Assistant
+function checkFirstTimeAI() {
+    const hasVisited = localStorage.getItem('lba_ai_visited');
+    if (!hasVisited) {
+        setTimeout(() => {
+            const toolCards = document.querySelectorAll('.stat-card');
+            if (toolCards[0]) {
+                toolCards[0].classList.add('first-time-highlight');
+                showToast('✨ Welcome to AI Assistant! Click any tool to get started.', 'info');
+            }
+            localStorage.setItem('lba_ai_visited', 'true');
+        }, 1000);
+    }
+}
+  // Regenerate last AI response
+async function regenerateResponse() {
+    if (!currentResponseType || !currentAIResponse) {
+        showToast('No previous response to regenerate', 'warning');
+        return;
+    }
+    
+    // Get the last used data based on response type
+    let data = {};
+    switch(currentResponseType) {
+        case 'business_plan':
+            data = {
+                business_name: document.getElementById('bpBusinessName').value,
+                industry: document.getElementById('bpIndustry').value,
+                target_market: document.getElementById('bpTargetMarket').value,
+                description: document.getElementById('bpDescription').value,
+                revenue_model: document.getElementById('bpRevenueModel').value,
+                goals: document.getElementById('bpGoals').value
+            };
+            await callAIEndpoint('/api/ai/business-plan', data, 'business_plan');
+            break;
+        case 'proposal':
+            data = {
+                type: document.getElementById('proposalType').value,
+                target: document.getElementById('proposalTarget').value,
+                business_name: document.getElementById('proposalBusinessName').value,
+                purpose: document.getElementById('proposalPurpose').value,
+                details: document.getElementById('proposalDetails').value
+            };
+            await callAIEndpoint('/api/ai/proposal', data, 'proposal');
+            break;
+        case 'idea_analyzer':
+            data = {
+                idea: document.getElementById('ideaDescription').value,
+                industry: document.getElementById('ideaIndustry').value,
+                market: document.getElementById('ideaMarket').value
+            };
+            await callAIEndpoint('/api/ai/analyze-idea', data, 'idea_analyzer');
+            break;
+        case 'marketing':
+            data = {
+                type: document.getElementById('marketingType').value,
+                business_name: document.getElementById('marketingBusinessName').value,
+                product: document.getElementById('marketingProduct').value,
+                target_audience: document.getElementById('marketingAudience').value,
+                tone: document.getElementById('marketingTone').value
+            };
+            await callAIEndpoint('/api/ai/marketing', data, 'marketing');
+            break;
+        case 'grant_support':
+            data = {
+                type: document.getElementById('grantType').value,
+                business_name: document.getElementById('grantBusinessName').value,
+                project: document.getElementById('grantProject').value,
+                impact: document.getElementById('grantImpact').value,
+                details: document.getElementById('grantDetails').value
+            };
+            await callAIEndpoint('/api/ai/grant-support', data, 'grant_support');
+            break;
+        default:
+            showToast('Cannot regenerate this type of response', 'warning');
+    }
+}       
 // Generic AI Endpoint Call
 async function callAIEndpoint(endpoint, data, type) {
     const responseDiv = document.getElementById('aiResponse');
@@ -3940,6 +4123,8 @@ function showUpgradeModal() {
 // Initialize AI Assistant when page loads
 function initAIAssistant() {
     console.log('🤖 Initializing AI Assistant...');
+     setupCharacterCounters();
+     checkFirstTimeAI();
     
     // Small delay to ensure DOM is ready
     setTimeout(() => {
