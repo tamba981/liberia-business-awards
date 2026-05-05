@@ -4913,9 +4913,20 @@ app.get('/api/ai/settings', authenticate, authorize('business'), async (req, res
 app.post('/api/ai/business-plan', authenticate, authorize('business'), async (req, res) => {
     try {
         const access = await checkAIAccess(req.user._id, 'business_plan');
-        if (!access.allowed) {
-            return res.status(403).json({ success: false, message: access.reason });
-        }
+if (!access.allowed) {
+    return res.status(200).json({ 
+        success: true, 
+        content: `⚠️ **Daily Limit Reached**
+
+You've used all your free AI requests for today.
+
+**What you can do:**
+• Try again tomorrow when your daily limit resets
+• Contact us to upgrade to Premium for unlimited access
+
+Thank you for your understanding!`
+    });
+}
         
         const { business_name, industry, target_market, description, revenue_model, goals } = req.body;
         
@@ -4976,9 +4987,16 @@ Thank you for your patience.`;
 app.post('/api/ai/proposal', authenticate, authorize('business'), async (req, res) => {
     try {
         const access = await checkAIAccess(req.user._id, 'proposal');
-        if (!access.allowed) {
-            return res.status(403).json({ success: false, message: access.reason });
-        }
+if (!access.allowed) {
+    return res.status(200).json({ 
+        success: true, 
+        content: `⚠️ **Daily Limit Reached**
+
+You've used all your free AI requests for today.
+
+Please try again tomorrow or upgrade to Premium for unlimited access.`
+    });
+}
         
         const { type, target, business_name, purpose, details } = req.body;
         
@@ -5040,9 +5058,16 @@ Thank you for your patience.`;
 app.post('/api/ai/analyze-idea', authenticate, authorize('business'), async (req, res) => {
     try {
         const access = await checkAIAccess(req.user._id, 'idea_analyzer');
-        if (!access.allowed) {
-            return res.status(403).json({ success: false, message: access.reason });
-        }
+if (!access.allowed) {
+    return res.status(200).json({ 
+        success: true, 
+        content: `⚠️ **Daily Limit Reached**
+
+You've reached your daily limit for AI analyses.
+
+Your limit will reset tomorrow. Upgrade to Premium for unlimited access!`
+    });
+}
         
         const { idea, industry, market } = req.body;
         
@@ -5099,9 +5124,16 @@ Thank you for your patience.`;
 app.post('/api/ai/marketing', authenticate, authorize('business'), async (req, res) => {
     try {
         const access = await checkAIAccess(req.user._id, 'marketing');
-        if (!access.allowed) {
-            return res.status(403).json({ success: false, message: access.reason });
-        }
+if (!access.allowed) {
+    return res.status(200).json({ 
+        success: true, 
+        content: `⚠️ **Daily Limit Reached**
+
+You've used all your free AI marketing generations for today.
+
+Try again tomorrow or upgrade to Premium!`
+    });
+}
         
         const { type, business_name, product, target_audience, tone } = req.body;
         
@@ -5159,9 +5191,16 @@ Thank you for your patience.`;
 app.post('/api/ai/grant-support', authenticate, authorize('business'), async (req, res) => {
     try {
         const access = await checkAIAccess(req.user._id, 'grant_support');
-        if (!access.allowed) {
-            return res.status(403).json({ success: false, message: access.reason });
-        }
+if (!access.allowed) {
+    return res.status(200).json({ 
+        success: true, 
+        content: `⚠️ **Daily Limit Reached**
+
+You've reached your daily limit for grant support requests.
+
+Please try again tomorrow or contact us to upgrade to Premium.`
+    });
+}
         
         const { type, business_name, project, impact, details } = req.body;
         
@@ -5223,9 +5262,20 @@ Thank you for your patience.`;
 app.post('/api/ai/chat', authenticate, authorize('business'), async (req, res) => {
     try {
         const access = await checkAIAccess(req.user._id, 'chat');
-        if (!access.allowed) {
-            return res.status(403).json({ success: false, message: access.reason });
-        }
+if (!access.allowed) {
+    return res.status(200).json({ 
+        success: true, 
+        content: `⚠️ **Daily Limit Reached**
+
+You've used all your free AI chat messages for today.
+
+**What you can do:**
+• Try again tomorrow (your limit resets daily)
+• Upgrade to Premium for unlimited chat access
+
+Thank you for using LBA AI Business Assistant!`
+    });
+}
         
         const { message, history = [] } = req.body;
         
