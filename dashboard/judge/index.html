@@ -711,7 +711,9 @@
                             <select id="categoryFilter" onchange="filterNominations()">
                                 <option value="all">All Categories</option>
                             </select>
-                            <input type="text" id="searchNominations" placeholder="Search business..." onkeyup="filterNominations()">
+                            <input type="text" id="searchNominations" placeholder="Search business...">
+                           <button class="sheet-btn" onclick="filterNominations()"><i class="fas fa-search"></i> Search</button>
+                            <button class="sheet-btn secondary" onclick="clearSearchAndReload()"><i class="fas fa-times"></i> Clear</button>
                             <button class="refresh-btn" onclick="loadNominations()">
                                 <i class="fas fa-sync-alt"></i> Refresh
                             </button>
@@ -946,7 +948,12 @@
                     document.getElementById('memberSince').textContent = new Date(judgeData.created_at).getFullYear();
                 }
             }
-            
+
+            // Force clear search input on initial load
+    const searchInput = document.getElementById('searchNominations');
+    if (searchInput) {
+        searchInput.value = '';
+    } 
             const menuToggle = document.getElementById('menuToggle');
             const sidebar = document.getElementById('sidebar');
             if (menuToggle) {
@@ -1059,6 +1066,13 @@
             
             isLoadingNominations = true;
             console.log('📊 Loading nominations from Google Sheets...');
+
+             // CLEAR SEARCH INPUT FIRST THING - ADD THIS HERE
+             const searchInput = document.getElementById('searchNominations');
+            if (searchInput) {
+            console.log('🧹 Clearing search input at start of loadNominations');
+            searchInput.value = '';
+           }        
             
             const tbody = document.getElementById('nominationsTableBody');
             if (tbody) {
@@ -1253,6 +1267,16 @@
         function filterNominations() {
     const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
     const searchTerm = document.getElementById('searchNominations')?.value.toLowerCase() || '';
+
+    // FIX: Ignore if search term is the admin email (autofill issue)
+    if (searchTerm === 'admin@liberiabusinessawardslr.com') {
+        console.log('🔍 Ignoring autofilled email in search, clearing...');
+        const searchInput = document.getElementById('searchNominations');
+        if (searchInput) searchInput.value = '';
+        searchTerm = '';
+    }        
+            
+            
     
     console.log('🔍 FILTERING:');
     console.log('   Category filter:', categoryFilter);
@@ -1532,7 +1556,12 @@ function resetAndReload() {
                 showToast(error.message || 'Failed to save comment', 'error');
             }
         }
-        
+
+        function clearSearchAndReload() {
+    const searchInput = document.getElementById('searchNominations');
+    if (searchInput) searchInput.value = '';
+    filterNominations();
+}
         // ============================================
         // HISTORY FUNCTIONS
         // ============================================
