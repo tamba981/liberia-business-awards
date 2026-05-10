@@ -1518,71 +1518,114 @@ async function saveComment() {
 }
         
         // ============================================
-        // HISTORY FUNCTIONS
-        // ============================================
-        async function loadHistory(page = 1) {
-            currentHistoryPage = page;
-            const tbody = document.getElementById('historyTableBody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading history...</p><\/td><\/tr>';
-            
-            try {
-                const token = localStorage.getItem('lba_auth_token');
-                const response = await fetch(`${API_BASE}/judge/history?page=${page}&limit=10`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                if (data.success) {
-                    displayHistory(data.votes || []);
-                    totalHistoryPages = data.pagination?.pages || 1;
-                    updateHistoryPagination();
-                }
-            } catch (error) {
-                console.error('Error loading history:', error);
-                tbody.innerHTML = `<td><td colspan="5" style="text-align: center; color: #EF4444;">Error loading history: ${error.message}<\/td><\/tr>`;
+// HISTORY FUNCTIONS - Load from Google Sheets
+// ============================================
+async function loadHistory(page = 1) {
+    currentHistoryPage = page;
+    const tbody = document.getElementById('historyTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading your voting history...</p><\/td><\/tr>';
+    
+    try {
+        const judgeEmail = judgeData?.email || '';
+        
+        // Fetch votes from Google Sheets
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllVotes`);
+        const data = await response.json();
+        
+        console.log('📊 All votes from Google Sheets:', data);
+        
+        let judgeVotes = [];
+        
+        if (data.success && data.votes) {
+            // Filter votes by judge's email
+            judgeVotes = data.votes.filter(vote => 
+                vote.voter_email === judgeEmail || 
+                (vote.source === 'judge_dashboard' && vote.voter_email === judgeEmail)
+            );
+            console.log(`📊 Found ${judgeVotes.length} votes from this judge`);
+        }
+        
+        // Also fetch from the Votes sheet directly as fallback
+        if (judgeVotes.length === 0) {
+            const votesResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSheetData&sheet=Votes`);
+            const votesData = await votesResponse.json();
+            if (votesData.success && votesData.rows) {
+                judgeVotes = votesData.rows.filter(row => 
+                    row.voter_email === judgeEmail || 
+                    row['Voter Email'] === judgeEmail
+                ).map(row => ({
+                    business_name: row.business_name || row['Business Name'],
+                    category: row.category || row.Category,
+                    score: row.vote_value || row['Vote Value'],
+                    comment: row.comment || '',
+                    created_at: row.timestamp || row.Timestamp
+                }));
             }
         }
         
-        function displayHistory(votes) {
-            const tbody = document.getElementById('historyTableBody');
-            if (!votes || votes.length === 0) {
-                tbody.innerHTML = '</tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-history" style="font-size: 48px; color: #cbd5e0;"></i><p>No voting history found.</p><p style="font-size: 12px;">Cast your votes above to see them here.</p><\/td><\/tr>';
-                return;
-            }
-            
-            tbody.innerHTML = votes.map(vote => {
-                let dateStr = 'Recent';
-                if (vote.created_at) {
-                    const date = new Date(vote.created_at);
-                    if (!isNaN(date.getTime())) dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                }
-                return `
-                    <tr>
-                        <td><strong>${escapeHtml(vote.business_name || 'Unknown Business')}</strong><\/td>
-                        <td>${escapeHtml(vote.category || 'General')}<\/td>
-                        <td><span style="font-weight: 800; color: #FF0000; font-size: 18px;">${vote.score}<\/span> / 10<\/td>
-                        <td>${vote.comment ? escapeHtml(vote.comment.substring(0, 50)) + (vote.comment.length > 50 ? '...' : '') : '-'}<\/td>
-                        <td>${dateStr}<\/td>
-                     \\
-                `;
-            }).join('');
-        }
+        displayHistory(judgeVotes);
+        totalHistoryPages = Math.ceil(judgeVotes.length / itemsPerPage) || 1;
+        updateHistoryPagination();
         
-        function updateHistoryPagination() {
-            const pagination = document.getElementById('historyPagination');
-            if (!pagination) return;
-            if (totalHistoryPages <= 1) { pagination.innerHTML = ''; return; }
-            
-            let html = `<button class="page-btn" ${currentHistoryPage === 1 ? 'disabled' : ''} onclick="loadHistory(${currentHistoryPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
-            for (let i = 1; i <= totalHistoryPages; i++) {
-                if (i === 1 || i === totalHistoryPages || (i >= currentHistoryPage - 2 && i <= currentHistoryPage + 2)) {
-                    html += `<button class="page-btn ${i === currentHistoryPage ? 'active' : ''}" onclick="loadHistory(${i})">${i}</button>`;
-                } else if (i === currentHistoryPage - 3 || i === currentHistoryPage + 3) {
-                    html += `<span class="page-btn" disabled>...</span>`;
-                }
-            }
-            html += `<button class="page-btn" ${currentHistoryPage === totalHistoryPages ? 'disabled' : ''} onclick="loadHistory(${currentHistoryPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
-            pagination.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading history:', error);
+        const tbody = document.getElementById('historyTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #EF4444;">Error loading history: ${error.message}<\/td><\/tr>`;
         }
+    }
+}
+
+function displayHistory(votes) {
+    const tbody = document.getElementById('historyTableBody');
+    if (!votes || votes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-history" style="font-size: 48px; color: #cbd5e0;"></i><p>No voting history found.</p><p style="font-size: 12px;">Cast your votes above to see them here.</p><\/td><\/tr>';
+        return;
+    }
+    
+    // Sort by date (newest first)
+    const sortedVotes = [...votes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    // Paginate
+    const start = (currentHistoryPage - 1) * itemsPerPage;
+    const pageVotes = sortedVotes.slice(start, start + itemsPerPage);
+    
+    tbody.innerHTML = pageVotes.map(vote => {
+        let dateStr = 'Recent';
+        if (vote.created_at) {
+            const date = new Date(vote.created_at);
+            if (!isNaN(date.getTime())) {
+                dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+        }
+        return `
+            <tr>
+                <td><strong>${escapeHtml(vote.business_name || 'Unknown Business')}</strong><\/td>
+                <td>${escapeHtml(vote.category || 'General')}<\/td>
+                <td><span style="font-weight: 800; color: #FF0000; font-size: 18px;">${vote.score}<\/span> / 10<\/td>
+                <td>${vote.comment ? escapeHtml(vote.comment.substring(0, 50)) + (vote.comment.length > 50 ? '...' : '') : '-'}<\/td>
+                <td>${dateStr}<\/td>
+             \\
+        `;
+    }).join('');
+}
+
+function updateHistoryPagination() {
+    const pagination = document.getElementById('historyPagination');
+    if (!pagination) return;
+    if (totalHistoryPages <= 1) { pagination.innerHTML = ''; return; }
+    
+    let html = `<button class="page-btn" ${currentHistoryPage === 1 ? 'disabled' : ''} onclick="loadHistory(${currentHistoryPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    for (let i = 1; i <= totalHistoryPages; i++) {
+        if (i === 1 || i === totalHistoryPages || (i >= currentHistoryPage - 2 && i <= currentHistoryPage + 2)) {
+            html += `<button class="page-btn ${i === currentHistoryPage ? 'active' : ''}" onclick="loadHistory(${i})">${i}</button>`;
+        } else if (i === currentHistoryPage - 3 || i === currentHistoryPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    html += `<button class="page-btn" ${currentHistoryPage === totalHistoryPages ? 'disabled' : ''} onclick="loadHistory(${currentHistoryPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
         
         // ============================================
         // PASSWORD CHANGE
