@@ -1368,8 +1368,8 @@ function changeVotablePage(page) {
     displayVotableNominations();
 }
         
-     // ============================================
-// VOTE SUBMISSION (Creates a valid ObjectId format)
+    // ============================================
+// VOTE SUBMISSION - Direct to Google Sheets (matches frontend voting)
 // ============================================
 async function submitVote(nominationId, businessName, category) {
     const safeId = nominationId.replace(/[^a-zA-Z0-9]/g, '_');
@@ -1386,69 +1386,71 @@ async function submitVote(nominationId, businessName, category) {
     voteBtn.disabled = true;
     
     try {
+        // Get judge info for the vote
         const token = localStorage.getItem('lba_auth_token');
-        
-        // Generate a valid-looking MongoDB ObjectId (24 hex characters)
-        // Format: 24 character hex string
-        function generateObjectId() {
-            const timestamp = Math.floor(Date.now() / 1000).toString(16);
-            const random = Math.random().toString(16).substring(2, 18);
-            return (timestamp + random).padEnd(24, '0').substring(0, 24);
-        }
-        
-        // Try to find existing MongoDB ID from allNominations
-        let mongoId = null;
-        const matchingNom = allNominations.find(n => 
-            n.business_name.toLowerCase().replace(/\+/g, ' ') === businessName.toLowerCase().replace(/\+/g, ' ')
-        );
-        
-        if (matchingNom && matchingNom._id && !matchingNom._id.startsWith('nom_')) {
-            mongoId = matchingNom._id;
-        } else {
-            // Generate a new valid ObjectId
-            mongoId = generateObjectId();
-            console.log('Generated new ObjectId for business:', mongoId);
-        }
+        const judgeEmail = judgeData?.email || 'judge@liberiabusinessawards.com';
+        const judgeName = judgeData?.name || 'Judge';
         
         // Decode URL-encoded business name
         const decodedBusinessName = decodeURIComponent(businessName.replace(/\+/g, ' '));
         const decodedCategory = decodeURIComponent(category.replace(/\+/g, ' '));
         
-        const payload = {
-            nomination_id: mongoId,
-            business_name: decodedBusinessName,
-            category: decodedCategory,
-            score: parseInt(rating),
-            is_jury: true
-        };
+        // Send vote directly to Google Apps Script - same as frontend voting system
+        const formData = new URLSearchParams();
+        formData.append('formType', 'vote');
+        formData.append('business_id', nominationId);
+        formData.append('business_name', decodedBusinessName);
+        formData.append('category', decodedCategory);
+        formData.append('vote_value', rating);
+        formData.append('voter_email', judgeEmail);
+        formData.append('voter_name', judgeName);
+        formData.append('is_jury', 'true');  // Mark as jury vote for higher weight
+        formData.append('vote_weight', '3');  // Jury votes count 3x
+        formData.append('source', 'judge_dashboard');
+        formData.append('timestamp', new Date().toISOString());
         
-        console.log('Submitting vote payload:', payload);
+        console.log('Submitting vote to Google Apps Script:', Object.fromEntries(formData));
         
-        const response = await fetch(`${API_BASE}/judge/vote`, {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
             method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`, 
-                'Content-Type': 'application/json' 
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: JSON.stringify(payload)
+            body: formData
         });
         
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            if (data.success) {
-                showToast(`✓ Vote submitted for "${decodedBusinessName}"!`, 'success');
-                await loadDashboardData();
-                await loadVotableNominations();
-                await loadHistory();
-                await loadNominations();
-            } else {
-                throw new Error(data.message || 'Vote submission failed');
+        const result = await response.json();
+        console.log('Vote submission result:', result);
+        
+        if (result.success) {
+            showToast(`✓ Vote submitted for "${decodedBusinessName}"! This vote now appears on the public leaderboard.`, 'success');
+            
+            // Also try to send to backend if available
+            try {
+                await fetch(`${API_BASE}/judge/vote`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`, 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        business_name: decodedBusinessName,
+                        category: decodedCategory,
+                        score: parseInt(rating),
+                        is_jury: true
+                    })
+                });
+            } catch(e) {
+                console.log('Backend sync not available, vote saved to Google Sheets only');
             }
+            
+            // Reload all data
+            await loadDashboardData();
+            await loadVotableNominations();
+            await loadHistory();
+            await loadNominations();
         } else {
-            const text = await response.text();
-            console.error('Server response:', text);
-            throw new Error('Server error. Please try again.');
+            throw new Error(result.error || 'Vote submission failed');
         }
     } catch (error) {
         console.error('Vote error:', error);
@@ -1459,8 +1461,15 @@ async function submitVote(nominationId, businessName, category) {
 }
 
 // ============================================
-// COMMENT FUNCTIONS (Fixed)
+// COMMENT FUNCTIONS - Direct to Google Sheets
 // ============================================
+function openCommentModal(nominationId) {
+    currentNominationId = nominationId;
+    const nomination = votableNominations.find(n => n._id === nominationId);
+    document.getElementById('commentText').value = nomination?.my_comment || '';
+    document.getElementById('commentModal').classList.add('active');
+}
+
 async function saveComment() {
     const comment = document.getElementById('commentText').value;
     if (!comment.trim()) { showToast('Please enter a comment', 'warning'); return; }
@@ -1469,51 +1478,38 @@ async function saveComment() {
     const businessName = nomination?.business_name || '';
     const decodedBusinessName = decodeURIComponent(businessName.replace(/\+/g, ' '));
     
-    // Generate ObjectId
-    function generateObjectId() {
-        const timestamp = Math.floor(Date.now() / 1000).toString(16);
-        const random = Math.random().toString(16).substring(2, 18);
-        return (timestamp + random).padEnd(24, '0').substring(0, 24);
-    }
-    
-    let mongoId = null;
-    const matchingNom = allNominations.find(n => 
-        n.business_name.toLowerCase().replace(/\+/g, ' ') === decodedBusinessName.toLowerCase()
-    );
-    
-    if (matchingNom && matchingNom._id && !matchingNom._id.startsWith('nom_')) {
-        mongoId = matchingNom._id;
-    } else {
-        mongoId = generateObjectId();
-    }
-    
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/judge/comment`, {
+        const judgeEmail = judgeData?.email || 'judge@liberiabusinessawards.com';
+        const judgeName = judgeData?.name || 'Judge';
+        
+        // Save comment to Google Apps Script
+        const formData = new URLSearchParams();
+        formData.append('formType', 'judge_comment');
+        formData.append('business_name', decodedBusinessName);
+        formData.append('comment', comment);
+        formData.append('judge_name', judgeName);
+        formData.append('judge_email', judgeEmail);
+        formData.append('timestamp', new Date().toISOString());
+        
+        console.log('Saving comment to Google Apps Script:', Object.fromEntries(formData));
+        
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
             method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${token}`, 
-                'Content-Type': 'application/json' 
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: JSON.stringify({ 
-                nomination_id: mongoId,
-                business_name: decodedBusinessName,
-                comment: comment 
-            })
+            body: formData
         });
         
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            if (data.success) {
-                showToast('Comment saved successfully', 'success');
-                hideModal('commentModal');
-                await loadVotableNominations();
-            } else {
-                throw new Error(data.message || 'Failed to save comment');
-            }
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Comment saved successfully', 'success');
+            hideModal('commentModal');
+            await loadVotableNominations();
         } else {
-            throw new Error('Server error. Please try again.');
+            throw new Error(result.error || 'Failed to save comment');
         }
     } catch (error) {
         console.error('Save comment error:', error);
