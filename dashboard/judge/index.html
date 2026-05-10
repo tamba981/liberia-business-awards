@@ -995,42 +995,55 @@
         // NOMINATIONS - COMPLETE
         // ============================================
         async function loadNominations(page = 1) {
-            currentNominationPage = page;
-            const tbody = document.getElementById('nominationsTableBody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading nominations...</p><\/td><\/tr>';
-            
+    currentNominationPage = page;
+    const tbody = document.getElementById('nominationsTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading nominations...<\/td><\/tr>';
+    
+    try {
+        // Fetch from Google Sheets (same as admin dashboard)
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
+        const data = await response.json();
+        
+        if (data.success && data.nominations) {
+            // Get judge's existing votes from backend (for tracking)
+            const token = localStorage.getItem('lba_auth_token');
+            let existingVotes = [];
             try {
-                const token = localStorage.getItem('lba_auth_token');
-                const category = document.getElementById('categoryFilter')?.value || 'all';
-                let url = `${API_BASE}/judge/nominations?page=${page}&limit=10`;
-                if (category && category !== 'all') {
-                    url += `&category=${encodeURIComponent(category)}`;
-                }
-                
-                console.log('📡 Fetching nominations:', url);
-                
-                const response = await fetch(url, {
+                const voteResponse = await fetch(`${API_BASE}/judge/history`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
-                const data = await response.json();
-                console.log('📥 Nominations response:', data);
-                
-                if (data.success) {
-                    nominations = data.nominations || [];
-                    totalNominationPages = data.pagination?.pages || 1;
-                    displayNominations();
-                    updateNominationPagination();
-                } else {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444;">${data.message || 'Error loading nominations'}<\/td><\/tr>`;
+                const voteData = await voteResponse.json();
+                if (voteData.success) {
+                    existingVotes = voteData.votes || [];
                 }
-            } catch (error) {
-                console.error('Error loading nominations:', error);
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading nominations: ${error.message}<\/td><\/tr>`;
-            }
+            } catch(e) {}
+            
+            // Process nominations
+            const nominations = data.nominations.map(nom => {
+                const existingVote = existingVotes.find(v => v.business_name === nom.business_name);
+                return {
+                    _id: nom.id,
+                    business_name: nom.business_name,
+                    category: nom.category,
+                    description: nom.reason || nom.description,
+                    my_score: existingVote?.score || null,
+                    my_comment: existingVote?.comment || null,
+                    has_voted: !!existingVote
+                };
+            });
+            
+            // Filter out already voted
+            const pendingNominations = nominations.filter(n => !n.has_voted);
+            
+            totalNominationPages = 1;
+            displayNominations(pendingNominations);
+            updateNominationPagination();
         }
+    } catch (error) {
+        console.error('Error loading nominations:', error);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading nominations<\/td><\/tr>';
+    }
+}
         
         function displayNominations() {
             const tbody = document.getElementById('nominationsTableBody');
