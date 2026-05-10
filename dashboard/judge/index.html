@@ -1386,36 +1386,36 @@ async function submitVote(nominationId, businessName, category) {
     voteBtn.disabled = true;
     
     try {
-        // Get judge info for the vote
         const token = localStorage.getItem('lba_auth_token');
-        const judgeEmail = judgeData?.email || 'judge@liberiabusinessawards.com';
+        const judgeEmail = judgeData?.email || '';
         const judgeName = judgeData?.name || 'Judge';
         
         // Decode URL-encoded business name
         const decodedBusinessName = decodeURIComponent(businessName.replace(/\+/g, ' '));
         const decodedCategory = decodeURIComponent(category.replace(/\+/g, ' '));
         
-        // Send vote directly to Google Apps Script - same as frontend voting system
+        console.log('📧 Submitting vote as judge:', judgeEmail);
+        
+        // Send vote to Google Apps Script with proper email
         const formData = new URLSearchParams();
         formData.append('formType', 'vote');
         formData.append('business_id', nominationId);
         formData.append('business_name', decodedBusinessName);
         formData.append('category', decodedCategory);
         formData.append('vote_value', rating);
-        formData.append('voter_email', judgeEmail);
+        formData.append('voter_email', judgeEmail);  // CRITICAL: Include judge's email
         formData.append('voter_name', judgeName);
-        formData.append('is_jury', 'true');  // Mark as jury vote for higher weight
-        formData.append('vote_weight', '3');  // Jury votes count 3x
+        formData.append('is_jury', 'true');
+        formData.append('vote_weight', '3');
         formData.append('source', 'judge_dashboard');
+        formData.append('source_email', judgeEmail);  // Add extra email field for redundancy
         formData.append('timestamp', new Date().toISOString());
         
         console.log('Submitting vote to Google Apps Script:', Object.fromEntries(formData));
         
         const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: formData
         });
         
@@ -1423,31 +1423,12 @@ async function submitVote(nominationId, businessName, category) {
         console.log('Vote submission result:', result);
         
         if (result.success) {
-            showToast(`✓ Vote submitted for "${decodedBusinessName}"! This vote now appears on the public leaderboard.`, 'success');
-            
-            // Also try to send to backend if available
-            try {
-                await fetch(`${API_BASE}/judge/vote`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`, 
-                        'Content-Type': 'application/json' 
-                    },
-                    body: JSON.stringify({
-                        business_name: decodedBusinessName,
-                        category: decodedCategory,
-                        score: parseInt(rating),
-                        is_jury: true
-                    })
-                });
-            } catch(e) {
-                console.log('Backend sync not available, vote saved to Google Sheets only');
-            }
+            showToast(`✓ Vote submitted for "${decodedBusinessName}"!`, 'success');
             
             // Reload all data
             await loadDashboardData();
             await loadVotableNominations();
-            await loadHistory();
+            await loadHistory();  // This should now show the vote
             await loadNominations();
         } else {
             throw new Error(result.error || 'Vote submission failed');
@@ -1529,23 +1510,53 @@ async function loadHistory(page = 1) {
         const judgeEmail = judgeData?.email || '';
         console.log('🔍 Loading history for judge email:', judgeEmail);
         
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllVotes`);
-        const data = await response.json();
+        // Get votes from VoteTotals and Votes sheet
+        const votesResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllVotes`);
+        const votesData = await votesResponse.json();
         
-        console.log('📊 All votes from Google Sheets:', data);
+        console.log('📊 All votes from Google Sheets:', votesData);
         
         let judgeVotes = [];
         
-        if (data.success && data.votes) {
-            judgeVotes = data.votes.filter(vote => {
-                const voterEmail = vote.voter_email || '';
-                const match = voterEmail === judgeEmail;
-                if (match) {
-                    console.log('✅ Found matching vote:', vote);
+        if (votesData.success && votesData.votes) {
+            // More flexible matching - check multiple fields
+            judgeVotes = votesData.votes.filter(vote => {
+                const voterEmail = (vote.voter_email || '').toLowerCase();
+                const sourceEmail = (vote.source_email || '').toLowerCase();
+                const judgeEmailLower = judgeEmail.toLowerCase();
+                
+                // Check multiple possible email fields
+                if (voterEmail === judgeEmailLower) {
+                    console.log('✅ Found vote by voter_email:', vote);
+                    return true;
                 }
-                return match;
+                if (sourceEmail === judgeEmailLower) {
+                    console.log('✅ Found vote by source_email:', vote);
+                    return true;
+                }
+                // Also check if the vote is from judge dashboard source (could be anonymous)
+                if (vote.source === 'judge_dashboard' && !voterEmail) {
+                    console.log('✅ Found judge dashboard vote without email:', vote);
+                    return true;
+                }
+                return false;
             });
-            console.log(`📊 Found ${judgeVotes.length} votes from judge: ${judgeEmail}`);
+            
+            console.log(`📊 Found ${judgeVotes.length} votes from this judge`);
+        }
+        
+        // Also fetch from VoteTotals for this judge's votes
+        const totalsResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getVoteTotals`);
+        const totalsData = await totalsResponse.json();
+        
+        if (totalsData.success && totalsData.totals) {
+            // Add any missing votes from totals
+            judgeVotes.forEach(vote => {
+                vote.score = vote.vote_value || vote.score;
+                vote.business_name = vote.business_name || vote.businessName;
+                vote.category = vote.category;
+                vote.created_at = vote.timestamp || vote.created_at;
+            });
         }
         
         if (judgeVotes.length === 0) {
