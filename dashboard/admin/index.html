@@ -6650,16 +6650,44 @@ async function loadJudges(page = 1) {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        
+        // DEBUG: Log token info (remove in production)
+        console.log('🔑 Token present:', !!token);
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                console.log('👤 Token user_id:', payload.userId);
+                console.log('👤 Token role:', payload.role);
+            } catch(e) { console.log('Token decode error:', e); }
+        }
+        
         let url = `${API_BASE}/admin/judges?page=${page}&limit=20`;
         if (status !== 'all') {
             url += `&status=${status}`;
         }
         
+        console.log('📡 Fetching judges from:', url);
+        
         const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
         });
         
+        console.log('📡 Response status:', response.status);
+        
+        if (response.status === 401) {
+            console.error('❌ Authentication failed - token may be expired');
+            // Try to refresh the token or redirect to login
+            showNotification('Session expired. Please refresh the page and log in again.', 'error');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Session expired. Please <a href="#" onclick="location.reload()">refresh the page</a> and log in again.<\/td><\/tr>';
+            return;
+        }
+        
         const data = await response.json();
+        console.log('📥 Judges response:', data);
         
         if (data.success) {
             judgesData = data.judges || [];
@@ -6668,11 +6696,12 @@ async function loadJudges(page = 1) {
             updateJudgesPagination();
             updateJudgeStats(judgesData);
         } else {
-            await loadJudgesFromSheets();
+            console.error('❌ API returned error:', data.message);
+            tbody.innerHTML = `<td><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${data.message || 'Failed to load judges'}<\/td><\/tr>`;
         }
     } catch (error) {
-        console.error('Error loading judges:', error);
-        await loadJudgesFromSheets();
+        console.error('❌ Error loading judges:', error);
+        tbody.innerHTML = `<td><td colspan="7" style="text-align: center; color: #EF4444;">Error loading judges: ${error.message}<\/td><\/tr>`;
     }
 }
 
@@ -6724,6 +6753,9 @@ function displayJudges(judges) {
                 statusClass = 'status-pending';
         }
         
+        // Use the correct ID field
+        const judgeId = judge._id || judge.id;
+        
         return `
             <tr>
                 <td><strong>${escapeHtml(judge.name)}</strong></td>
@@ -6734,13 +6766,13 @@ function displayJudges(judges) {
                 <td>${judge.votes_cast || 0}</td>
                 <td>
                     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                        <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editJudge('${judge._id || judge.id}')">
-                            <i class="fas fa-edit"></i>
+                        <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editJudge('${judgeId}')">
+                            <i class="fas fa-edit"></i> Edit
                         </button>
-                        <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteJudge('${judge._id || judge.id}')">
-                            <i class="fas fa-trash"></i>
+                        <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteJudge('${judgeId}')">
+                            <i class="fas fa-trash"></i> Delete
                         </button>
-                        <button class="sheet-btn" style="padding: 6px 12px;" onclick="resetJudgePassword('${judge._id || judge.id}')">
+                        <button class="sheet-btn" style="padding: 6px 12px;" onclick="resetJudgePassword('${judgeId}')">
                             <i class="fas fa-key"></i> Reset Pwd
                         </button>
                     </div>
