@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');  // ← ADD THIS - it's missing!
 
 const judgeSchema = new mongoose.Schema({
     name: { type: String, required: true },
