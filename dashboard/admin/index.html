@@ -6878,69 +6878,47 @@ async function editJudge(id) {
 
 
 async function saveJudge() {
-    // First, ensure the modal exists
-    let modal = document.getElementById('addJudgeModal');
-    if (!modal) {
-        console.log('Modal not found, creating judges modal first...');
-        createJudgesModal();
-        modal = document.getElementById('addJudgeModal');
-        if (!modal) {
-            console.error('Failed to create judges modal');
-            showNotification('Error: Could not open judge form', 'error');
-            return;
-        }
-    }
-    
-    // Get the judge ID if editing
-    const judgeIdEl = document.getElementById('judgeId');
-    const id = judgeIdEl ? judgeIdEl.value : '';
-    
-    // Get error element
-    const errorEl = document.getElementById('judgeError');
-    if (errorEl) errorEl.style.display = 'none';
-    
-    // Get all form values with safety checks
+    // Get all form values with correct IDs
     const nameEl = document.getElementById('judgeName');
     const emailEl = document.getElementById('judgeEmail');
+    const passwordEl = document.getElementById('judgePassword');
     const professionEl = document.getElementById('judgeProfession');
     const organizationEl = document.getElementById('judgeOrganization');
-    const expertiseEl = document.getElementById('judgeExpertise');
-    const phoneEl = document.getElementById('judgePhone');
-    const photoEl = document.getElementById('judgePhoto');
     const bioEl = document.getElementById('judgeBio');
+    const photoEl = document.getElementById('judgePhoto');
     const statusEl = document.getElementById('judgeStatus');
-    const passwordEl = document.getElementById('judgePassword');
+    const judgeIdEl = document.getElementById('judgeId');
+    const errorEl = document.getElementById('judgeError');
     
-    // If elements still not found, show error
-    if (!nameEl || !emailEl || !professionEl) {
-        console.error('Form elements not found. Available elements:', {
-            judgeName: !!document.getElementById('judgeName'),
-            judgeEmail: !!document.getElementById('judgeEmail'),
-            judgeProfession: !!document.getElementById('judgeProfession')
-        });
-        showNotification('Form not ready. Please close and reopen the Add Judge form.', 'error');
+    // Check if email field exists - if not, the modal might have a different ID
+    if (!emailEl) {
+        console.error('Email field not found! Check your modal HTML');
+        showNotification('Form error: Email field missing. Please check the Add Judge form.', 'error');
         return;
     }
     
+    const id = judgeIdEl ? judgeIdEl.value : '';
+    const errorDisplay = errorEl;
+    if (errorDisplay) errorDisplay.style.display = 'none';
+    
     const judgeData = {
-        name: nameEl.value.trim(),
-        email: emailEl.value.trim(),
-        profession: professionEl.value.trim(),
+        name: nameEl ? nameEl.value.trim() : '',
+        email: emailEl ? emailEl.value.trim() : '',
+        profession: professionEl ? professionEl.value.trim() : '',
         organization: organizationEl ? organizationEl.value : '',
-        expertise: expertiseEl ? expertiseEl.value : '',
-        phone: phoneEl ? phoneEl.value : '',
-        photo: photoEl ? photoEl.value : '',
         bio: bioEl ? bioEl.value : '',
+        photo: photoEl ? photoEl.value : '',
         status: statusEl ? statusEl.value : 'pending'
     };
     
     // Validation
     if (!judgeData.name || !judgeData.email || !judgeData.profession) {
-        if (errorEl) {
-            errorEl.textContent = 'Name, Email, and Profession are required';
-            errorEl.style.display = 'block';
+        const errorMsg = 'Name, Email, and Profession are required';
+        if (errorDisplay) {
+            errorDisplay.textContent = errorMsg;
+            errorDisplay.style.display = 'block';
         } else {
-            showNotification('Name, Email, and Profession are required', 'error');
+            showNotification(errorMsg, 'error');
         }
         return;
     }
@@ -6948,11 +6926,12 @@ async function saveJudge() {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(judgeData.email)) {
-        if (errorEl) {
-            errorEl.textContent = 'Please enter a valid email address';
-            errorEl.style.display = 'block';
+        const errorMsg = 'Please enter a valid email address';
+        if (errorDisplay) {
+            errorDisplay.textContent = errorMsg;
+            errorDisplay.style.display = 'block';
         } else {
-            showNotification('Please enter a valid email address', 'error');
+            showNotification(errorMsg, 'error');
         }
         return;
     }
@@ -6960,18 +6939,19 @@ async function saveJudge() {
     // Handle password for new judge
     const password = passwordEl ? passwordEl.value : '';
     if (!id && (!password || password.length < 6)) {
-        if (errorEl) {
-            errorEl.textContent = 'Password must be at least 6 characters';
-            errorEl.style.display = 'block';
+        const errorMsg = 'Password must be at least 6 characters';
+        if (errorDisplay) {
+            errorDisplay.textContent = errorMsg;
+            errorDisplay.style.display = 'block';
         } else {
-            showNotification('Password must be at least 6 characters', 'error');
+            showNotification(errorMsg, 'error');
         }
         return;
     }
     
     if (password) judgeData.password = password;
     
-    // Find the save button
+    // Find and disable save button
     const saveBtn = document.querySelector('#addJudgeModal .sheet-btn:last-child') || 
                     document.querySelector('#addJudgeModal button[onclick*="saveJudge"]');
     let originalText = '';
@@ -7009,9 +6989,9 @@ async function saveJudge() {
             loadJudges();
         } else {
             const errorMsg = result.message || 'Error saving judge';
-            if (errorEl) {
-                errorEl.textContent = errorMsg;
-                errorEl.style.display = 'block';
+            if (errorDisplay) {
+                errorDisplay.textContent = errorMsg;
+                errorDisplay.style.display = 'block';
             } else {
                 showNotification(errorMsg, 'error');
             }
@@ -7019,9 +6999,9 @@ async function saveJudge() {
     } catch (error) {
         console.error('Save judge error:', error);
         const errorMsg = error.message || 'Error saving judge';
-        if (errorEl) {
-            errorEl.textContent = errorMsg;
-            errorEl.style.display = 'block';
+        if (errorDisplay) {
+            errorDisplay.textContent = errorMsg;
+            errorDisplay.style.display = 'block';
         } else {
             showNotification(errorMsg, 'error');
         }
@@ -7031,7 +7011,8 @@ async function saveJudge() {
             saveBtn.disabled = false;
         }
     }
-}
+}        
+        
 
 async function deleteJudge(id) {
     if (!confirm('⚠️ Delete this judge? This will remove their access and voting records.')) return;
