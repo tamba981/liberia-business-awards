@@ -1080,134 +1080,276 @@
             filterNominations();
         }
         
+       // ============================================
+// VOTABLE NOMINATIONS - LOAD FROM VOTINGBUSINESSES SHEET
+// ============================================
+async function loadVotableNominations() {
+    console.log('📊 Loading businesses from VotingBusinesses sheet (admin-added only)...');
+    const tbody = document.getElementById('votableTableBody');
+    if (tbody) tbody.innerHTML = '<td><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading businesses from Voting List...</p><\/td><\/tr>';
+    
+    try {
+        // Fetch from VotingBusinesses sheet - same as frontend voting section
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getVotingBusinesses&limit=100`);
+        const data = await response.json();
+        
+        console.log('📊 VotingBusinesses data:', data);
+        
+        let votingBusinesses = [];
+        if (data.success && data.businesses && data.businesses.length > 0) {
+            votingBusinesses = data.businesses;
+            console.log(`📊 Found ${votingBusinesses.length} businesses in voting list`);
+        } else {
+            console.log('📊 No businesses in voting list, using sample data');
+            votingBusinesses = getSampleVotingBusinesses();
+        }
+        
+        // Get existing votes for this judge
+        const token = localStorage.getItem('lba_auth_token');
+        let existingVotes = [];
+        try {
+            const voteResponse = await fetch(`${API_BASE}/judge/history`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const voteData = await voteResponse.json();
+            if (voteData.success) {
+                existingVotes = voteData.votes || [];
+                console.log(`📊 Found ${existingVotes.length} existing votes from this judge`);
+            }
+        } catch(e) {
+            console.log('No existing votes found:', e.message);
+        }
+        
+        // Process voting businesses
+        votableNominations = votingBusinesses.map((biz, index) => {
+            const businessName = biz.business_name || biz.Business_Name || `Business ${index + 1}`;
+            const existingVote = existingVotes.find(v => 
+                v.business_name === businessName || 
+                v.business_id === biz._id
+            );
+            
+            return {
+                _id: biz._id || biz.id || `vb_${index}`,
+                business_name: businessName,
+                category: biz.category || 'General Business',
+                description: biz.description || biz.business_description || 'No description provided',
+                logo: biz.logo || '',
+                location: biz.location || 'Liberia',
+                my_score: existingVote?.score || null,
+                my_comment: existingVote?.comment || null,
+                has_voted: !!existingVote
+            };
+        });
+        
+        // Update display
+        filterVotableNominations();
+        
+        if (votableNominations.length === 0) {
+            showToast('No businesses have been added to the voting list by the admin yet.', 'info');
+        } else {
+            const pendingCount = votableNominations.filter(n => !n.has_voted).length;
+            showToast(`Loaded ${pendingCount} businesses ready for voting`, 'success');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading voting businesses:', error);
+        const tbody = document.getElementById('votableTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444; padding: 40px;">
+                <i class="fas fa-exclamation-circle fa-2x"></i>
+                <p>Error loading voting list: ${error.message}</p>
+                <button class="refresh-btn" onclick="loadVotableNominations()" style="margin-top: 15px;">Retry</button>
+            <\/td><\/tr>`;
+        }
+        votableNominations = getSampleVotingBusinesses();
+        filterVotableNominations();
+    }
+}
+
+// Sample voting businesses for testing (same as what admin would add)
+function getSampleVotingBusinesses() {
+    return [
+        { 
+            _id: 'vb_001', 
+            business_name: 'Stefix Services', 
+            category: 'General Business', 
+            description: 'Professional business services and consulting in Liberia.',
+            location: 'Monrovia, Liberia',
+            logo: '',
+            vote_stats: { average_score: 0, total_votes: 0 }
+        },
+        { 
+            _id: 'vb_002', 
+            business_name: 'LBA OBSERVER', 
+            category: 'Media', 
+            description: 'Leading media outlet covering business news in Liberia.',
+            location: 'Monrovia, Liberia',
+            logo: '',
+            vote_stats: { average_score: 0, total_votes: 0 }
+        },
+        { 
+            _id: 'vb_003', 
+            business_name: 'Green Energy Solutions', 
+            category: 'Energy', 
+            description: 'Providing renewable energy solutions across Liberia.',
+            location: 'Monrovia, Liberia',
+            logo: '',
+            vote_stats: { average_score: 0, total_votes: 0 }
+        }
+    ];
+}
+
         // ============================================
-        // VOTABLE NOMINATIONS (WHERE JUDGES CAST VOTES)
-        // ============================================
-        async function loadVotableNominations() {
-            console.log('📊 Loading votable nominations...');
-            const tbody = document.getElementById('votableTableBody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading businesses...</p><\/td><\/tr>';
-            
-            try {
-                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
-                const data = await response.json();
-                
-                let rawNominations = [];
-                if (data.success && data.nominations) rawNominations = data.nominations;
-                if (rawNominations.length === 0) rawNominations = getSampleNominations();
-                
-                const token = localStorage.getItem('lba_auth_token');
-                let existingVotes = [];
-                try {
-                    const voteResponse = await fetch(`${API_BASE}/judge/history`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const voteData = await voteResponse.json();
-                    if (voteData.success) existingVotes = voteData.votes || [];
-                } catch(e) {}
-                
-                votableNominations = rawNominations.map((nom, index) => {
-                    const businessName = nom.business_name || nom.Business_Name || `Business ${index + 1}`;
-                    const existingVote = existingVotes.find(v => v.business_name === businessName);
-                    return {
-                        _id: nom.id || nom._id || `nom_${index}`,
-                        business_name: businessName,
-                        category: nom.category || nom.Category || 'General Business',
-                        description: nom.description || nom.reason || 'No description provided',
-                        my_score: existingVote?.score || null,
-                        my_comment: existingVote?.comment || null,
-                        has_voted: !!existingVote
-                    };
-                });
-                
-                filterVotableNominations();
-                
-            } catch (error) {
-                console.error('Error loading votable nominations:', error);
-                votableNominations = getSampleNominations().map((n, i) => ({...n, _id: `sample_${i}`, my_score: null, my_comment: null, has_voted: false}));
-                filterVotableNominations();
-            }
+// FILTER VOTABLE NOMINATIONS
+// ============================================
+function filterVotableNominations() {
+    const categoryFilter = document.getElementById('voteCategoryFilter')?.value || 'all';
+    const searchTerm = document.getElementById('voteSearch')?.value.toLowerCase() || '';
+    
+    console.log('🔍 FILTERING VOTABLE:');
+    console.log('   Category filter:', categoryFilter);
+    console.log('   Search term:', searchTerm);
+    console.log('   Total votable before filter:', votableNominations.length);
+    
+    let filtered = votableNominations;
+    
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+        filtered = filtered.filter(n => n.category === categoryFilter);
+        console.log(`   After category filter: ${filtered.length}`);
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+        filtered = filtered.filter(n => 
+            n.business_name.toLowerCase().includes(searchTerm) ||
+            n.category.toLowerCase().includes(searchTerm)
+        );
+        console.log(`   After search filter: ${filtered.length}`);
+    }
+    
+    filteredVotable = filtered;
+    currentVotablePage = 1;
+    
+    console.log('   Final filteredVotable length:', filteredVotable.length);
+    
+    displayVotableNominations();
+}
+
+// ============================================
+// DISPLAY VOTABLE NOMINATIONS (WITH VOTING CONTROLS)
+// ============================================
+function displayVotableNominations() {
+    const tbody = document.getElementById('votableTableBody');
+    if (!tbody) return;
+    
+    console.log('🚨 DISPLAY VOTABLE CALLED');
+    console.log('   filteredVotable length:', filteredVotable.length);
+    
+    if (filteredVotable.length === 0) {
+        if (votableNominations.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">
+                <i class="fas fa-vote-yea" style="font-size: 48px; color: #cbd5e0;"></i>
+                <p>No businesses have been added to the voting list yet.</p>
+                <p style="font-size: 12px; color: #64748b;">Ask the admin to add businesses to the voting list.</p>
+            <\/td><\/tr>`;
+        } else {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">
+                <i class="fas fa-filter" style="font-size: 48px; color: #cbd5e0;"></i>
+                <p>No matching businesses found.</p>
+                <p style="font-size: 12px; color: #64748b;">Try changing your category filter or search term.</p>
+            <\/td><\/tr>`;
         }
-        
-        function filterVotableNominations() {
-            const categoryFilter = document.getElementById('voteCategoryFilter')?.value || 'all';
-            const searchTerm = document.getElementById('voteSearch')?.value.toLowerCase() || '';
-            
-            let filtered = votableNominations;
-            if (categoryFilter !== 'all') filtered = filtered.filter(n => n.category === categoryFilter);
-            if (searchTerm) filtered = filtered.filter(n => n.business_name.toLowerCase().includes(searchTerm));
-            
-            filteredVotable = filtered;
-            currentVotablePage = 1;
-            displayVotableNominations();
+        totalVotablePages = 1;
+        updateVotablePagination();
+        return;
+    }
+    
+    const start = (currentVotablePage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageNominations = filteredVotable.slice(start, end);
+    
+    console.log(`   Displaying ${pageNominations.length} nominations on page ${currentVotablePage}`);
+    
+    tbody.innerHTML = pageNominations.map(nom => {
+        const safeId = nom._id.replace(/[^a-zA-Z0-9]/g, '_');
+        return `
+        <tr>
+            <td>
+                <strong>${escapeHtml(nom.business_name)}</strong>
+                ${nom.location ? `<br><small style="color: #64748b;"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(nom.location)}</small>` : ''}
+            <\/td>
+            <td>${escapeHtml(nom.category)}<\/td>
+            <td>
+                <div style="max-width: 300px; max-height: 80px; overflow-y: auto;">
+                    ${escapeHtml((nom.description || '').substring(0, 150))}${(nom.description || '').length > 150 ? '...' : ''}
+                </div>
+            <\/td>
+            <td>
+                ${!nom.has_voted ? `
+                    <select id="rating_${safeId}" class="rating-select" ${nom.has_voted ? 'disabled' : ''}>
+                        <option value="">Select</option>
+                        ${[1,2,3,4,5,6,7,8,9,10].map(i => 
+                            `<option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>`
+                        ).join('')}
+                    </select>
+                ` : `<span class="vote-indicator"><i class="fas fa-check-circle"></i> Voted: ${nom.my_score}/10</span>`}
+            <\/td>
+            <td>
+                ${!nom.has_voted ? `
+                    <button class="comment-btn" onclick="openCommentModal('${nom._id}')" title="Add Comment">
+                        <i class="fas fa-comment"></i>
+                    </button>
+                ` : nom.my_comment ? `<span title="${escapeHtml(nom.my_comment)}"><i class="fas fa-comment-dots"></i> ${nom.my_comment.substring(0, 30)}${nom.my_comment.length > 30 ? '...' : ''}</span>` : '-'}
+            <\/td>
+            <td>
+                ${!nom.has_voted ? `
+                    <button class="vote-btn" onclick="submitVote('${nom._id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')">
+                        <i class="fas fa-check"></i> Submit Vote
+                    </button>
+                ` : `<span class="status-badge status-active">✓ Voted</span>`}
+            <\/td>
+          \\
+        `;
+    }).join('');
+    
+    totalVotablePages = Math.ceil(filteredVotable.length / itemsPerPage);
+    updateVotablePagination();
+}
+
+// ============================================
+// VOTABLE PAGINATION
+// ============================================
+function updateVotablePagination() {
+    const pagination = document.getElementById('votablePagination');
+    if (!pagination) return;
+    
+    if (totalVotablePages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${currentVotablePage === 1 ? 'disabled' : ''} onclick="changeVotablePage(${currentVotablePage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= totalVotablePages; i++) {
+        if (i === 1 || i === totalVotablePages || (i >= currentVotablePage - 2 && i <= currentVotablePage + 2)) {
+            html += `<button class="page-btn ${i === currentVotablePage ? 'active' : ''}" onclick="changeVotablePage(${i})">${i}</button>`;
+        } else if (i === currentVotablePage - 3 || i === currentVotablePage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
         }
-        
-        function displayVotableNominations() {
-            const tbody = document.getElementById('votableTableBody');
-            if (!tbody) return;
-            
-            if (filteredVotable.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-check-circle" style="font-size: 48px; color: #10B981;"></i><p>All businesses have been voted on!</p><\/td><\/tr>';
-                totalVotablePages = 1;
-                updateVotablePagination();
-                return;
-            }
-            
-            const start = (currentVotablePage - 1) * itemsPerPage;
-            const pageNominations = filteredVotable.slice(start, start + itemsPerPage);
-            
-            tbody.innerHTML = pageNominations.map(nom => `
-                <tr>
-                    <td><strong>${escapeHtml(nom.business_name)}</strong><br><small>ID: ${nom._id.substring(0, 8)}...</small></td>
-                    <td>${escapeHtml(nom.category)}</td>
-                    <td><div style="max-width: 300px;">${escapeHtml((nom.description || '').substring(0, 100))}${(nom.description || '').length > 100 ? '...' : ''}</div></td>
-                    <td>
-                        ${!nom.has_voted ? `
-                            <select id="rating_${nom._id.replace(/[^a-zA-Z0-9]/g, '_')}" class="rating-select">
-                                <option value="">Select</option>
-                                ${[1,2,3,4,5,6,7,8,9,10].map(i => `<option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>`).join('')}
-                            </select>
-                        ` : `<span class="vote-indicator"><i class="fas fa-check-circle"></i> Voted: ${nom.my_score}/10</span>`}
-                    </td>
-                    <td>
-                        ${!nom.has_voted ? `
-                            <button class="comment-btn" onclick="openCommentModal('${nom._id}')" title="Add Comment">
-                                <i class="fas fa-comment"></i>
-                            </button>
-                        ` : nom.my_comment ? `<span title="${escapeHtml(nom.my_comment)}"><i class="fas fa-comment-dots"></i> ${nom.my_comment.substring(0, 20)}...</span>` : '-'}
-                    </td>
-                    <td>
-                        ${!nom.has_voted ? `
-                            <button class="vote-btn" onclick="submitVote('${nom._id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')">
-                                <i class="fas fa-check"></i> Submit Vote
-                            </button>
-                        ` : `<span class="status-badge status-active">✓ Voted</span>`}
-                    </td>
-                 </tr>
-            `).join('');
-            
-            totalVotablePages = Math.ceil(filteredVotable.length / itemsPerPage);
-            updateVotablePagination();
-        }
-        
-        function updateVotablePagination() {
-            const pagination = document.getElementById('votablePagination');
-            if (!pagination) return;
-            if (totalVotablePages <= 1) { pagination.innerHTML = ''; return; }
-            
-            let html = `<button class="page-btn" ${currentVotablePage === 1 ? 'disabled' : ''} onclick="changeVotablePage(${currentVotablePage - 1})"><i class="fas fa-chevron-left"></i></button>`;
-            for (let i = 1; i <= totalVotablePages; i++) {
-                if (i === 1 || i === totalVotablePages || (i >= currentVotablePage - 2 && i <= currentVotablePage + 2)) {
-                    html += `<button class="page-btn ${i === currentVotablePage ? 'active' : ''}" onclick="changeVotablePage(${i})">${i}</button>`;
-                } else if (i === currentVotablePage - 3 || i === currentVotablePage + 3) {
-                    html += `<span class="page-btn" disabled>...</span>`;
-                }
-            }
-            html += `<button class="page-btn" ${currentVotablePage === totalVotablePages ? 'disabled' : ''} onclick="changeVotablePage(${currentVotablePage + 1})"><i class="fas fa-chevron-right"></i></button>`;
-            pagination.innerHTML = html;
-        }
-        
-        function changeVotablePage(page) { currentVotablePage = page; displayVotableNominations(); }
+    }
+    
+    html += `<button class="page-btn" ${currentVotablePage === totalVotablePages ? 'disabled' : ''} onclick="changeVotablePage(${currentVotablePage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+// ============================================
+// CHANGE VOTABLE PAGE
+// ============================================
+function changeVotablePage(page) {
+    currentVotablePage = page;
+    displayVotableNominations();
+}
         
         // ============================================
         // VOTE SUBMISSION (Connects to Frontend Voting System)
