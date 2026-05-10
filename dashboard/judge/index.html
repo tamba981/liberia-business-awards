@@ -870,6 +870,7 @@
         let totalHistoryPages = 1;
         let currentNominationId = null;
         let itemsPerPage = 10;
+        let isLoadingNominations = false;
         
         // ============================================
         // INITIALIZATION
@@ -1046,131 +1047,143 @@
         // LOAD NOMINATIONS - FIXED VERSION
         // ============================================
         async function loadNominations() {
-            console.log('📊 Loading nominations from Google Sheets...');
-            
-            const tbody = document.getElementById('nominationsTableBody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading nominations from Google Sheets...</p><\/td><\/tr>';
-            }
-            
-            try {
-                // Call your Google Apps Script getNominations endpoint
-                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
-                const data = await response.json();
-                
-                console.log('📊 Raw nominations data from Google Sheets:', data);
-                
-                let rawNominations = [];
-                
-                // Parse the response from your Apps Script
-                if (data.success && data.nominations && data.nominations.length > 0) {
-                    rawNominations = data.nominations;
-                    console.log(`📊 Found ${rawNominations.length} nominations from Nominations sheet`);
-                } else if (data.success && data.submissions) {
-                    rawNominations = data.submissions.filter(s => 
-                        s.formType === 'nomination' || s.formType === 'nominate'
-                    );
-                    console.log(`📊 Found ${rawNominations.length} nominations from Submissions`);
-                } else if (Array.isArray(data)) {
-                    rawNominations = data;
-                }
-                
-                if (rawNominations.length === 0) {
-                    console.log('📊 No nominations found, using sample data');
-                    rawNominations = getSampleNominations();
-                }
-                
-                // Get existing votes for this judge
-                const token = localStorage.getItem('lba_auth_token');
-                let existingVotes = [];
-                try {
-                    const voteResponse = await fetch(`${API_BASE}/judge/history`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const voteData = await voteResponse.json();
-                    if (voteData.success) {
-                        existingVotes = voteData.votes || [];
-                        console.log(`📊 Found ${existingVotes.length} existing votes from this judge`);
-                    }
-                } catch(e) {
-                    console.log('No existing votes found:', e.message);
-                }
-                
-                // Process nominations
-                allNominations = rawNominations.map((nom, index) => {
-                    const businessName = nom.business_name || nom.displayName || nom.Business_Name || `Business ${index + 1}`;
-                    const existingVote = existingVotes.find(v => 
-                        v.business_name === businessName || 
-                        (v.business_id && v.business_id === nom.id)
-                    );
-                    
-                    return {
-                        _id: nom.id || nom._id || `nom_${Date.now()}_${index}`,
-                        business_name: businessName,
-                        category: nom.category || nom.Category || 'General Business',
-                        description: nom.description || nom.reason || nom.Reason || nom.Description || 'No description provided',
-                        nominee_email: nom.nominator_email || nom.email || '',
-                        nominee_phone: nom.phone || '',
-                        timestamp: nom.timestamp || new Date().toISOString(),
-                        my_score: existingVote?.score || null,
-                        my_comment: existingVote?.comment || null,
-                        has_voted: !!existingVote
-                    };
-                });
-                
-                // Filter for pending (not voted yet)
-                const pendingNominations = allNominations.filter(n => !n.has_voted);
-                
-                console.log(`📊 Pending nominations to review: ${pendingNominations.length}`);
-                
-                // Update badge counts
-                const countEl = document.getElementById('pendingCount');
-                if (countEl) countEl.textContent = pendingNominations.length;
-                
-                // Update dashboard stats
-                document.getElementById('pendingNominations').textContent = pendingNominations.length;
-                document.getElementById('reviewedNominations').textContent = existingVotes.length;
-                
-                // Populate category filter from actual categories
-                const categories = [...new Set(allNominations.map(n => n.category))];
-                const categoryFilter = document.getElementById('categoryFilter');
-                if (categoryFilter && categories.length > 0) {
-                    const currentValue = categoryFilter.value;
-                    categoryFilter.innerHTML = '<option value="all">All Categories</option>';
-                    categories.forEach(cat => {
-                        if (cat && cat !== 'undefined') {
-                            categoryFilter.innerHTML += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
-                        }
-                    });
-                    categoryFilter.value = currentValue;
-                }
-                
-                // Apply filters and display
-                filterNominations();
-                
-                if (pendingNominations.length === 0 && rawNominations.length > 0) {
-                    showToast(`You've reviewed all ${rawNominations.length} nominations! Great job! 🎉`, 'success');
-                } else if (pendingNominations.length === 0) {
-                    showToast('No nominations found. Check back later!', 'info');
-                } else {
-                    showToast(`Loaded ${pendingNominations.length} nominations to review`, 'success');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error loading nominations:', error);
-                const tbody = document.getElementById('nominationsTableBody');
-                if (tbody) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444; padding: 40px;">
-                        <i class="fas fa-exclamation-circle fa-2x"></i>
-                        <p>Error loading nominations: ${error.message}</p>
-                        <button class="refresh-btn" onclick="loadNominations()" style="margin-top: 15px;">Retry</button>
-                    <\/td><\/tr>`;
-                }
-                // Use sample data as fallback
-                allNominations = getSampleNominations();
-                filterNominations();
-            }
+    if (isLoadingNominations) {
+        console.log('📊 Nominations already loading, skipping...');
+        return;
+    }
+    
+    isLoadingNominations = true;
+    console.log('📊 Loading nominations from Google Sheets...');
+    
+    const tbody = document.getElementById('nominationsTableBody');
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading nominations from Google Sheets...</p><\/td><\/tr>';
+    }
+    
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
+        const data = await response.json();
+        
+        console.log('📊 Raw nominations data:', data);
+        
+        let rawNominations = [];
+        
+        if (data.success && data.nominations && data.nominations.length > 0) {
+            rawNominations = data.nominations;
+            console.log(`📊 Found ${rawNominations.length} nominations`);
+        } else if (data.success && data.submissions) {
+            rawNominations = data.submissions.filter(s => 
+                s.formType === 'nomination' || s.formType === 'nominate'
+            );
+        } else if (Array.isArray(data)) {
+            rawNominations = data;
         }
+        
+        if (rawNominations.length === 0) {
+            console.log('📊 No nominations found, using sample data');
+            rawNominations = getSampleNominations();
+        }
+        
+        // Get existing votes for this judge
+        const token = localStorage.getItem('lba_auth_token');
+        let existingVotes = [];
+        try {
+            const voteResponse = await fetch(`${API_BASE}/judge/history`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const voteData = await voteResponse.json();
+            if (voteData.success) {
+                existingVotes = voteData.votes || [];
+                console.log(`📊 Found ${existingVotes.length} existing votes from this judge`);
+                // Log the business names that have been voted on
+                if (existingVotes.length > 0) {
+                    console.log('   Voted businesses:', existingVotes.map(v => v.business_name));
+                }
+            }
+        } catch(e) {
+            console.log('No existing votes found:', e.message);
+        }
+        
+        // Process nominations - FIX: Better matching logic
+        allNominations = rawNominations.map((nom, index) => {
+            const businessName = nom.business_name || nom.Business_Name || `Business ${index + 1}`;
+            
+            // FIX: Better matching - check if business name matches any voted business
+            const existingVote = existingVotes.find(v => {
+                // Compare business names (case insensitive)
+                const voteBusinessName = (v.business_name || '').toLowerCase();
+                const currentBusinessName = (businessName || '').toLowerCase();
+                return voteBusinessName === currentBusinessName;
+            });
+            
+            console.log(`Processing: "${businessName}" - Has voted: ${!!existingVote}`);
+            
+            return {
+                _id: nom.id || nom._id || `nom_${Date.now()}_${index}`,
+                business_name: businessName,
+                category: nom.category || nom.Category || 'General Business',
+                description: nom.description || nom.reason || nom.Reason || 'No description provided',
+                nominee_email: nom.nominator_email || nom.email || '',
+                nominee_phone: nom.phone || '',
+                timestamp: nom.timestamp || new Date().toISOString(),
+                my_score: existingVote?.score || null,
+                my_comment: existingVote?.comment || null,
+                has_voted: !!existingVote  // This should be false if no vote exists
+            };
+        });
+        
+        // Verify the has_voted flag is correct
+        const votedCount = allNominations.filter(n => n.has_voted).length;
+        const pendingCount = allNominations.filter(n => !n.has_voted).length;
+        console.log(`📊 Total: ${allNominations.length}, Voted: ${votedCount}, Pending: ${pendingCount}`);
+        
+        // Update badge counts
+        const countEl = document.getElementById('pendingCount');
+        if (countEl) countEl.textContent = pendingCount;
+        
+        // Update dashboard stats
+        document.getElementById('pendingNominations').textContent = pendingCount;
+        document.getElementById('reviewedNominations').textContent = votedCount;
+        
+        // Populate category filter from actual categories
+        const categories = [...new Set(allNominations.map(n => n.category).filter(c => c && c !== 'undefined'))];
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter && categories.length > 0) {
+            const currentValue = categoryFilter.value;
+            categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+            categories.forEach(cat => {
+                categoryFilter.innerHTML += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
+            });
+            categoryFilter.value = currentValue;
+        }
+        
+        // Apply filters and display - show ALL pending nominations
+        filterNominations();
+        
+        if (pendingCount === 0 && allNominations.length > 0) {
+            showToast(`You've reviewed all ${allNominations.length} nominations! Great job! 🎉`, 'success');
+        } else if (pendingCount === 0) {
+            showToast('No nominations found. Check back later!', 'info');
+        } else {
+            showToast(`Loaded ${pendingCount} nominations to review`, 'success');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading nominations:', error);
+        const tbody = document.getElementById('nominationsTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<td><td colspan="6" style="text-align: center; color: #EF4444; padding: 40px;">
+                <i class="fas fa-exclamation-circle fa-2x"></i>
+                <p>Error loading nominations: ${error.message}</p>
+                <button class="refresh-btn" onclick="loadNominations()" style="margin-top: 15px;">Retry</button>
+            <\/td><\/tr>`;
+        }
+        allNominations = getSampleNominations();
+        filterNominations();
+    } finally {
+        isLoadingNominations = false;
+    }
+}
         
         // Sample nominations for testing
         function getSampleNominations() {
