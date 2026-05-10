@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Judge Dashboard - Liberia Business Awards</title>
-
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,15 +18,10 @@
             --warning-color: #F59E0B;
             --danger-color: #EF4444;
             --info-color: #3B82F6;
-            --purple: #8B5CF6;
             --sidebar-width: 280px;
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Poppins', sans-serif;
@@ -36,10 +30,7 @@
             min-height: 100vh;
         }
         
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
+        .dashboard-container { display: flex; min-height: 100vh; }
         
         .sidebar {
             width: var(--sidebar-width);
@@ -57,22 +48,10 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .sidebar-header h3 {
-            color: white;
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
+        .sidebar-header h3 { color: white; font-size: 24px; font-weight: 700; margin-bottom: 5px; }
+        .sidebar-header p { color: var(--lba-blue); font-size: 13px; opacity: 0.8; }
         
-        .sidebar-header p {
-            color: var(--lba-blue);
-            font-size: 13px;
-            opacity: 0.8;
-        }
-        
-        .sidebar-menu {
-            padding: 25px 0;
-        }
+        .sidebar-menu { padding: 25px 0; }
         
         .menu-item {
             padding: 14px 25px;
@@ -91,33 +70,11 @@
             border-left-color: var(--lba-red);
         }
         
-        .menu-item i {
-            margin-right: 15px;
-            width: 20px;
-            text-align: center;
-            font-size: 18px;
-        }
+        .menu-item i { margin-right: 15px; width: 20px; font-size: 18px; }
+        .menu-item span { flex: 1; font-weight: 500; }
+        .menu-item .badge { background: var(--lba-red); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
         
-        .menu-item span {
-            flex: 1;
-            font-weight: 500;
-        }
-        
-        .menu-item .badge {
-            background: var(--lba-red);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .main-content {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            padding: 30px;
-            min-height: 100vh;
-        }
+        .main-content { flex: 1; margin-left: var(--sidebar-width); padding: 30px; min-height: 100vh; }
         
         .header {
             background: white;
@@ -130,17 +87,8 @@
             align-items: center;
         }
         
-        .header h1 {
-            color: var(--lba-dark);
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        .header p {
-            color: #64748b;
-            font-size: 14px;
-        }
+        .header h1 { color: var(--lba-dark); font-size: 28px; font-weight: 700; margin-bottom: 5px; }
+        .header p { color: #64748b; font-size: 14px; }
         
         .user-info {
             display: flex;
@@ -152,9 +100,7 @@
             cursor: pointer;
         }
         
-        .user-info:hover {
-            background: #e2e8f0;
-        }
+        .user-info:hover { background: #e2e8f0; }
         
         .user-avatar {
             width: 50px;
@@ -187,10 +133,7 @@
             transition: all 0.3s;
         }
         
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
-        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12); }
         
         .stat-icon {
             width: 70px;
@@ -208,18 +151,8 @@
         .stat-card:nth-child(3) .stat-icon { background: linear-gradient(135deg, var(--success-color), #5cd85c); }
         .stat-card:nth-child(4) .stat-icon { background: linear-gradient(135deg, var(--warning-color), #ffdb4d); }
         
-        .stat-content h3 {
-            font-size: 32px;
-            font-weight: 800;
-            color: var(--lba-dark);
-            margin-bottom: 5px;
-        }
-        
-        .stat-content p {
-            color: #64748b;
-            font-size: 15px;
-            font-weight: 500;
-        }
+        .stat-content h3 { font-size: 32px; font-weight: 800; color: var(--lba-dark); margin-bottom: 5px; }
+        .stat-content p { color: #64748b; font-size: 15px; font-weight: 500; }
         
         .welcome-card {
             background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
@@ -245,15 +178,8 @@
             color: white;
         }
         
-        .welcome-info h2 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .welcome-info p {
-            color: var(--lba-blue);
-            font-size: 14px;
-        }
+        .welcome-info h2 { font-size: 24px; margin-bottom: 5px; }
+        .welcome-info p { color: var(--lba-blue); font-size: 14px; }
         
         .status-badge {
             display: inline-block;
@@ -262,9 +188,9 @@
             font-size: 12px;
             font-weight: 600;
         }
-        
         .status-pending { background: #dbeafe; color: #1d4ed8; }
         .status-active { background: #dcfce7; color: #15803d; }
+        .status-voted { background: #dcfce7; color: #15803d; }
         
         .content-section {
             background: white;
@@ -283,13 +209,7 @@
             gap: 15px;
         }
         
-        .section-header h2 {
-            font-size: 22px;
-            color: var(--lba-dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .section-header h2 { font-size: 22px; color: var(--lba-dark); display: flex; align-items: center; gap: 10px; }
         
         .filter-controls {
             display: flex;
@@ -317,10 +237,7 @@
             transition: all 0.3s;
         }
         
-        .refresh-btn:hover {
-            background: #6bb9e2;
-            transform: translateY(-2px);
-        }
+        .refresh-btn:hover { background: #6bb9e2; transform: translateY(-2px); }
         
         .data-table-container {
             overflow-x: auto;
@@ -331,7 +248,7 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 800px;
+            min-width: 600px;
         }
         
         .data-table th {
@@ -349,11 +266,9 @@
             vertical-align: middle;
         }
         
-        .data-table tr:hover {
-            background: #f8fafc;
-        }
+        .data-table tr:hover { background: #f8fafc; }
         
-        .rating-select {
+        .vote-section-table .rating-select {
             padding: 8px 12px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
@@ -361,10 +276,7 @@
             width: 90px;
         }
         
-        .rating-select:focus {
-            outline: none;
-            border-color: var(--lba-red);
-        }
+        .vote-section-table .rating-select:focus { outline: none; border-color: var(--lba-red); }
         
         .vote-btn {
             background: linear-gradient(135deg, var(--lba-red), #ff4444);
@@ -377,19 +289,9 @@
             transition: all 0.3s;
         }
         
-        .vote-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
-        }
-        
-        .vote-btn:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-        }
-        
-        .vote-btn.voted {
-            background: #10B981;
-        }
+        .vote-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3); }
+        .vote-btn:disabled { background: #cbd5e0; cursor: not-allowed; }
+        .vote-btn.voted { background: #10B981; }
         
         .comment-btn {
             background: none;
@@ -399,10 +301,7 @@
             color: var(--lba-blue);
             transition: all 0.3s;
         }
-        
-        .comment-btn:hover {
-            color: var(--lba-red);
-        }
+        .comment-btn:hover { color: var(--lba-red); }
         
         .modal {
             display: none;
@@ -417,10 +316,7 @@
             justify-content: center;
             padding: 20px;
         }
-        
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
         
         .modal-content {
             background: white;
@@ -436,34 +332,12 @@
             align-items: center;
             margin-bottom: 20px;
         }
+        .modal-header h2 { color: var(--lba-dark); font-size: 22px; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; }
+        .modal-close:hover { color: var(--lba-red); }
         
-        .modal-header h2 {
-            color: var(--lba-dark);
-            font-size: 22px;
-        }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #64748b;
-        }
-        
-        .modal-close:hover {
-            color: var(--lba-red);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
         .form-group textarea, .form-group input {
             width: 100%;
             padding: 12px;
@@ -503,7 +377,6 @@
             border-left: 4px solid;
             max-width: 400px;
         }
-        
         .toast.success { border-left-color: var(--success-color); }
         .toast.error { border-left-color: var(--danger-color); }
         .toast.warning { border-left-color: var(--warning-color); }
@@ -545,17 +418,8 @@
             transition: all 0.3s;
             font-weight: 500;
         }
-        
-        .page-btn:hover, .page-btn.active {
-            background: var(--lba-red);
-            color: white;
-            border-color: var(--lba-red);
-        }
-        
-        .page-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .page-btn:hover, .page-btn.active { background: var(--lba-red); color: white; border-color: var(--lba-red); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .real-time-indicator {
             display: inline-flex;
@@ -575,10 +439,7 @@
             animation: pulse 2s infinite;
         }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
         @media (max-width: 992px) {
             .sidebar { transform: translateX(-100%); }
@@ -594,6 +455,20 @@
             .section-header { flex-direction: column; align-items: stretch; }
             .filter-controls { justify-content: space-between; }
         }
+        
+        .vote-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #dcfce7;
+            color: #15803d;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .vote-indicator i { font-size: 12px; }
     </style>
 </head>
 <body>
@@ -617,7 +492,7 @@
                 </div>
                 
                 <div class="menu-item" data-page="history">
-                    <i class="fas fa-history"></i>
+                    <i class="fas fa-vote-yea"></i>
                     <span>My Votes</span>
                 </div>
                 
@@ -662,7 +537,7 @@
                     <div class="welcome-info">
                         <h2>Welcome, <span id="welcomeJudgeName">Judge</span>!</h2>
                         <p><i class="fas fa-gavel"></i> You are logged in as an authorized judge for the Liberia Business Awards</p>
-                        <p style="margin-top: 10px; font-size: 13px;">Please review the nominations below and cast your votes based on the judging criteria.</p>
+                        <p style="margin-top: 10px; font-size: 13px;">Review nominations, then cast your votes in the "My Votes" section.</p>
                     </div>
                 </div>
                 
@@ -678,7 +553,7 @@
                         <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                         <div class="stat-content">
                             <h3 id="reviewedNominations">0</h3>
-                            <p>Already Reviewed</p>
+                            <p>Nominations Reviewed</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -698,6 +573,7 @@
                 </div>
             </div>
             
+            <!-- NOMINATIONS TO REVIEW - READ ONLY (NO VOTING) -->
             <div id="nominationsPage" class="page" style="display: none;">
                 <div class="content-section">
                     <div class="section-header">
@@ -712,11 +588,45 @@
                                 <option value="all">All Categories</option>
                             </select>
                             <input type="text" id="searchNominations" placeholder="Search business...">
-                           <button class="sheet-btn" onclick="filterNominations()"><i class="fas fa-search"></i> Search</button>
+                            <button class="sheet-btn" onclick="filterNominations()"><i class="fas fa-search"></i> Search</button>
                             <button class="sheet-btn secondary" onclick="clearSearchAndReload()"><i class="fas fa-times"></i> Clear</button>
-                            <button class="refresh-btn" onclick="loadNominations()">
-                                <i class="fas fa-sync-alt"></i> Refresh
-                            </button>
+                            <button class="refresh-btn" onclick="loadNominations()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                    </div>
+                    
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Business Name</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nominationsTableBody">
+                                <tr><td colspan="4" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                    <p>Loading nominations from Google Sheets...</p>
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="nominationsPagination"></div>
+                </div>
+            </div>
+            
+            <!-- MY VOTES - WHERE JUDGES CAST VOTES -->
+            <div id="historyPage" class="page" style="display: none;">
+                <div class="content-section vote-section-table">
+                    <div class="section-header">
+                        <h2><i class="fas fa-vote-yea"></i> Cast Your Votes</h2>
+                        <div class="filter-controls">
+                            <select id="voteCategoryFilter" onchange="filterVotableNominations()">
+                                <option value="all">All Categories</option>
+                            </select>
+                            <input type="text" id="voteSearch" placeholder="Search business..." onkeyup="filterVotableNominations()">
+                            <button class="refresh-btn" onclick="loadVotableNominations()"><i class="fas fa-sync-alt"></i> Refresh</button>
                         </div>
                     </div>
                     
@@ -732,25 +642,21 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="nominationsTableBody">
+                            <tbody id="votableTableBody">
                                 <tr><td colspan="6" style="text-align: center; padding: 40px;">
                                     <i class="fas fa-spinner fa-spin fa-2x"></i>
-                                    <p>Loading nominations from Google Sheets...</p>
-                                <\/td><\/tr>
+                                    <p>Loading businesses ready for voting...</p>
+                                </td></tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="pagination" id="nominationsPagination"></div>
+                    <div class="pagination" id="votablePagination"></div>
                 </div>
-            </div>
-            
-            <div id="historyPage" class="page" style="display: none;">
-                <div class="content-section">
+                
+                <!-- Voting History Section -->
+                <div class="content-section" style="margin-top: 30px;">
                     <div class="section-header">
                         <h2><i class="fas fa-history"></i> My Voting History</h2>
-                        <button class="refresh-btn" onclick="loadHistory(1)">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
                     </div>
                     
                     <div class="data-table-container">
@@ -765,10 +671,10 @@
                                 </tr>
                             </thead>
                             <tbody id="historyTableBody">
-                                <td><td colspan="5" style="text-align: center; padding: 40px;">
+                                <tr><td colspan="5" style="text-align: center; padding: 40px;">
                                     <i class="fas fa-spinner fa-spin fa-2x"></i>
                                     <p>Loading your voting history...</p>
-                                <\/td><\/tr>
+                                </td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -812,6 +718,7 @@
         </div>
     </div>
     
+    <!-- Comment Modal -->
     <div class="modal" id="commentModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -828,6 +735,7 @@
         </div>
     </div>
     
+    <!-- Password Modal -->
     <div class="modal" id="passwordModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -868,6 +776,12 @@
         let filteredNominations = [];
         let currentNominationPage = 1;
         let totalNominationPages = 1;
+        
+        let votableNominations = [];
+        let filteredVotable = [];
+        let currentVotablePage = 1;
+        let totalVotablePages = 1;
+        
         let currentHistoryPage = 1;
         let totalHistoryPages = 1;
         let currentNominationId = null;
@@ -890,9 +804,11 @@
             setupNavigation();
             await loadDashboardData();
             await loadNominations();
+            await loadVotableNominations();
+            await loadHistory();
             await loadCategories();
             
-            console.log('✅ Judge Dashboard Ready - Nominations loaded from Google Sheets');
+            console.log('✅ Judge Dashboard Ready');
         });
         
         // ============================================
@@ -902,23 +818,16 @@
             const token = localStorage.getItem('lba_auth_token');
             const userRole = localStorage.getItem('lba_user_role');
             
-            if (!token || userRole !== 'judge') {
-                return false;
-            }
+            if (!token || userRole !== 'judge') return false;
             
             try {
                 const response = await fetch(`${API_BASE}/judge/verify`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
                 });
-                
                 if (!response.ok) throw new Error('Invalid token');
-                
                 const data = await response.json();
-                if (data.success) {
-                    judgeData = data.judge;
-                    return true;
-                }
+                if (data.success) { judgeData = data.judge; return true; }
                 return false;
             } catch (error) {
                 console.error('Auth check failed:', error);
@@ -948,38 +857,26 @@
                     document.getElementById('memberSince').textContent = new Date(judgeData.created_at).getFullYear();
                 }
             }
-
-            // Force clear search input on initial load
-    const searchInput = document.getElementById('searchNominations');
-    if (searchInput) {
-        searchInput.value = '';
-    } 
+            
+            const searchInput = document.getElementById('searchNominations');
+            if (searchInput) searchInput.value = '';
+            
             const menuToggle = document.getElementById('menuToggle');
             const sidebar = document.getElementById('sidebar');
             if (menuToggle) {
-                menuToggle.addEventListener('click', () => {
-                    sidebar.classList.toggle('active');
-                });
+                menuToggle.addEventListener('click', () => sidebar.classList.toggle('active'));
             }
-            
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !menuToggle?.contains(e.target) && sidebar.classList.contains('active')) {
-                    sidebar.classList.remove('active');
-                }
-            });
             
             document.getElementById('logoutBtn')?.addEventListener('click', logout);
         }
         
         function setupNavigation() {
             document.querySelectorAll('.menu-item[data-page]').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    switchPage(e.currentTarget.dataset.page);
-                });
+                item.addEventListener('click', (e) => switchPage(e.currentTarget.dataset.page));
             });
         }
         
-                function switchPage(page) {
+        function switchPage(page) {
             document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
             const pageElement = document.getElementById(page + 'Page');
             if (pageElement) pageElement.style.display = 'block';
@@ -991,19 +888,17 @@
             const titles = {
                 dashboard: 'Judge Dashboard',
                 nominations: 'Nominations to Review',
-                history: 'My Voting History',
+                history: 'Cast Your Votes',
                 profile: 'My Profile'
             };
             document.getElementById('pageTitle').textContent = titles[page] || 'Judge Dashboard';
             
             if (page === 'history') {
-                loadHistory(1);
+                loadVotableNominations();
+                loadHistory();
             } else if (page === 'nominations') {
-                // Clear search input when switching to nominations page
                 const searchInput = document.getElementById('searchNominations');
-                if (searchInput) {
-                    searchInput.value = '';
-                }
+                if (searchInput) searchInput.value = '';
                 displayFilteredNominations();
             }
         }
@@ -1017,18 +912,14 @@
                 const response = await fetch(`${API_BASE}/judge/stats`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
                     document.getElementById('pendingNominations').textContent = data.stats.pending || 0;
                     document.getElementById('reviewedNominations').textContent = data.stats.reviewed || 0;
                     document.getElementById('avgScore').textContent = data.stats.avgScore || '0.0';
                     document.getElementById('totalVotes').textContent = data.stats.totalVotes || 0;
                 }
-            } catch (error) {
-                console.error('Error loading dashboard stats:', error);
-            }
+            } catch (error) { console.error('Error loading stats:', error); }
         }
         
         // ============================================
@@ -1040,70 +931,48 @@
                 const response = await fetch(`${API_BASE}/judge/categories`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
                 const data = await response.json();
-                
                 if (data.success && data.categories && data.categories.length > 0) {
                     const filter = document.getElementById('categoryFilter');
+                    const voteFilter = document.getElementById('voteCategoryFilter');
                     filter.innerHTML = '<option value="all">All Categories</option>';
+                    if (voteFilter) voteFilter.innerHTML = '<option value="all">All Categories</option>';
                     data.categories.forEach(cat => {
                         filter.innerHTML += `<option value="${cat}">${cat}</option>`;
+                        if (voteFilter) voteFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
                     });
                 }
-            } catch (error) {
-                console.error('Error loading categories:', error);
-            }
+            } catch (error) { console.error('Error loading categories:', error); }
         }
         
         // ============================================
-        // LOAD NOMINATIONS - FIXED VERSION
+        // LOAD NOMINATIONS (READ ONLY - FOR REVIEW)
         // ============================================
-                async function loadNominations() {
-            if (isLoadingNominations) {
-                console.log('📊 Nominations already loading, skipping...');
-                return;
-            }
-            
+        async function loadNominations() {
+            if (isLoadingNominations) { console.log('Already loading, skipping...'); return; }
             isLoadingNominations = true;
             console.log('📊 Loading nominations from Google Sheets...');
-
-             // CLEAR SEARCH INPUT FIRST THING - ADD THIS HERE
-             const searchInput = document.getElementById('searchNominations');
-            if (searchInput) {
-            console.log('🧹 Clearing search input at start of loadNominations');
-            searchInput.value = '';
-           }        
+            
+            const searchInput = document.getElementById('searchNominations');
+            if (searchInput) searchInput.value = '';
             
             const tbody = document.getElementById('nominationsTableBody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading nominations from Google Sheets...</p><\/td><\/tr>';
-            }
+            if (tbody) tbody.innerHTML = '<td><td colspan="4" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading nominations...</p><\/td><\/tr>';
             
             try {
                 const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
                 const data = await response.json();
                 
-                console.log('📊 Raw nominations data:', data);
-                
                 let rawNominations = [];
-                
                 if (data.success && data.nominations && data.nominations.length > 0) {
                     rawNominations = data.nominations;
-                    console.log(`📊 Found ${rawNominations.length} nominations`);
                 } else if (data.success && data.submissions) {
-                    rawNominations = data.submissions.filter(s => 
-                        s.formType === 'nomination' || s.formType === 'nominate'
-                    );
-                } else if (Array.isArray(data)) {
-                    rawNominations = data;
+                    rawNominations = data.submissions.filter(s => s.formType === 'nomination' || s.formType === 'nominate');
                 }
                 
-                if (rawNominations.length === 0) {
-                    console.log('📊 No nominations found, using sample data');
-                    rawNominations = getSampleNominations();
-                }
+                if (rawNominations.length === 0) rawNominations = getSampleNominations();
                 
-                // Get existing votes for this judge
+                // Get existing votes to mark as reviewed
                 const token = localStorage.getItem('lba_auth_token');
                 let existingVotes = [];
                 try {
@@ -1111,326 +980,88 @@
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     const voteData = await voteResponse.json();
-                    if (voteData.success) {
-                        existingVotes = voteData.votes || [];
-                        console.log(`📊 Found ${existingVotes.length} existing votes from this judge`);
-                        if (existingVotes.length > 0) {
-                            console.log('   Voted businesses:', existingVotes.map(v => v.business_name));
-                        }
-                    }
-                } catch(e) {
-                    console.log('No existing votes found:', e.message);
-                }
+                    if (voteData.success) existingVotes = voteData.votes || [];
+                } catch(e) {}
                 
-                // Process nominations
                 allNominations = rawNominations.map((nom, index) => {
                     const businessName = nom.business_name || nom.Business_Name || `Business ${index + 1}`;
-                    
-                    const existingVote = existingVotes.find(v => {
-                        const voteBusinessName = (v.business_name || '').toLowerCase();
-                        const currentBusinessName = (businessName || '').toLowerCase();
-                        return voteBusinessName === currentBusinessName;
-                    });
-                    
+                    const hasVoted = existingVotes.some(v => v.business_name === businessName);
                     return {
-                        _id: nom.id || nom._id || `nom_${Date.now()}_${index}`,
+                        _id: nom.id || nom._id || `nom_${index}`,
                         business_name: businessName,
                         category: nom.category || nom.Category || 'General Business',
-                        description: nom.description || nom.reason || nom.Reason || 'No description provided',
-                        nominee_email: nom.nominator_email || nom.email || '',
-                        nominee_phone: nom.phone || '',
-                        timestamp: nom.timestamp || new Date().toISOString(),
-                        my_score: existingVote?.score || null,
-                        my_comment: existingVote?.comment || null,
-                        has_voted: !!existingVote
+                        description: nom.description || nom.reason || 'No description provided',
+                        has_voted: hasVoted,
+                        status: hasVoted ? 'voted' : 'pending'
                     };
                 });
                 
-                const votedCount = allNominations.filter(n => n.has_voted).length;
                 const pendingCount = allNominations.filter(n => !n.has_voted).length;
-                console.log(`📊 Total: ${allNominations.length}, Voted: ${votedCount}, Pending: ${pendingCount}`);
-                
-                // Update badge counts
-                const countEl = document.getElementById('pendingCount');
-                if (countEl) countEl.textContent = pendingCount;
-                
-                // Update dashboard stats
+                document.getElementById('pendingCount').textContent = pendingCount;
                 document.getElementById('pendingNominations').textContent = pendingCount;
-                document.getElementById('reviewedNominations').textContent = votedCount;
+                document.getElementById('reviewedNominations').textContent = existingVotes.length;
                 
-                // Populate category filter from actual categories
-                const categories = [...new Set(allNominations.map(n => n.category).filter(c => c && c !== 'undefined'))];
-                const categoryFilter = document.getElementById('categoryFilter');
-                if (categoryFilter && categories.length > 0) {
-                    const currentValue = categoryFilter.value;
-                    categoryFilter.innerHTML = '<option value="all">All Categories</option>';
-                    categories.forEach(cat => {
-                        categoryFilter.innerHTML += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
-                    });
-                    categoryFilter.value = currentValue;
-                }
-                
-                // Clear search input if it has a value
-                const searchInput = document.getElementById('searchNominations');
-                if (searchInput && searchInput.value !== '') {
-                    console.log('🧹 Clearing search input that had value:', searchInput.value);
-                    searchInput.value = '';
-                }
-                
-                // Apply filters and display
                 filterNominations();
-                
-                if (pendingCount === 0 && allNominations.length > 0) {
-                    showToast(`You've reviewed all ${allNominations.length} nominations! Great job! 🎉`, 'success');
-                } else if (pendingCount === 0) {
-                    showToast('No nominations found. Check back later!', 'info');
-                } else {
-                    showToast(`Loaded ${pendingCount} nominations to review`, 'success');
-                }
                 
             } catch (error) {
-                console.error('❌ Error loading nominations:', error);
-                const tbody = document.getElementById('nominationsTableBody');
-                if (tbody) {
-                    tbody.innerHTML = `<td><td colspan="6" style="text-align: center; color: #EF4444; padding: 40px;">
-                        <i class="fas fa-exclamation-circle fa-2x"></i>
-                        <p>Error loading nominations: ${error.message}</p>
-                        <button class="refresh-btn" onclick="loadNominations()" style="margin-top: 15px;">Retry</button>
-                    <\/td><\/tr>`;
-                }
+                console.error('Error loading nominations:', error);
                 allNominations = getSampleNominations();
                 filterNominations();
-            } finally {
-                isLoadingNominations = false;
-            }
+            } finally { isLoadingNominations = false; }
         }
         
-        // Sample nominations for testing
-        function getSampleNominations() {
-            return [
-                {
-                    _id: 'sample_1',
-                    business_name: 'Liberia Business Solutions Inc.',
-                    category: 'Business Excellence',
-                    description: 'A leading business solutions provider in Liberia, offering innovative services to local enterprises.',
-                    timestamp: new Date().toISOString(),
-                    has_voted: false,
-                    my_score: null,
-                    my_comment: null
-                },
-                {
-                    _id: 'sample_2',
-                    business_name: 'Green Energy Liberia',
-                    category: 'Innovation Award',
-                    description: 'Pioneering renewable energy solutions across the country, providing solar power to rural communities.',
-                    timestamp: new Date().toISOString(),
-                    has_voted: false,
-                    my_score: null,
-                    my_comment: null
-                },
-                {
-                    _id: 'sample_3',
-                    business_name: 'Liberia Tech Hub',
-                    category: 'Technology Award',
-                    description: 'Empowering youth through technology education and creating job opportunities in the tech sector.',
-                    timestamp: new Date().toISOString(),
-                    has_voted: false,
-                    my_score: null,
-                    my_comment: null
-                },
-                {
-                    _id: 'sample_4',
-                    business_name: 'Coastal Fisheries Cooperative',
-                    category: 'Agribusiness Award',
-                    description: 'Sustainable fishing practices and supporting local fishing communities along the coast.',
-                    timestamp: new Date().toISOString(),
-                    has_voted: false,
-                    my_score: null,
-                    my_comment: null
-                },
-                {
-                    _id: 'sample_5',
-                    business_name: 'Monrovia Financial Services',
-                    category: 'Financial Services Award',
-                    description: 'Providing accessible banking and financial services to underserved communities in Monrovia.',
-                    timestamp: new Date().toISOString(),
-                    has_voted: false,
-                    my_score: null,
-                    my_comment: null
-                }
-            ];
-        }
-        
-        // ============================================
-        // FILTER NOMINATIONS
-        // ============================================
-        function filterNominations() {
-    const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
-    const searchTerm = document.getElementById('searchNominations')?.value.toLowerCase() || '';
-
-    // FIX: Ignore if search term is the admin email (autofill issue)
-    if (searchTerm === 'admin@liberiabusinessawardslr.com') {
-        console.log('🔍 Ignoring autofilled email in search, clearing...');
-        const searchInput = document.getElementById('searchNominations');
-        if (searchInput) searchInput.value = '';
-        searchTerm = '';
-    }        
-            
-            
-    
-    console.log('🔍 FILTERING:');
-    console.log('   Category filter:', categoryFilter);
-    console.log('   Search term:', searchTerm);
-    console.log('   Total nominations before filter:', allNominations.length);
-    
-    // Start with pending only (not voted yet)
-    let filtered = allNominations.filter(n => !n.has_voted);
-    console.log('   After pending filter:', filtered.length);
-    
-    // Apply category filter
-    if (categoryFilter !== 'all') {
-        filtered = filtered.filter(n => n.category === categoryFilter);
-        console.log(`   After category filter (${categoryFilter}):`, filtered.length);
-    }
-    
-    // Apply search filter
-    if (searchTerm) {
-        filtered = filtered.filter(n => 
-            n.business_name.toLowerCase().includes(searchTerm) ||
-            n.category.toLowerCase().includes(searchTerm)
-        );
-        console.log(`   After search filter:`, filtered.length);
-    }
-    
-    filteredNominations = filtered;
-    currentNominationPage = 1;
-    
-    console.log('   Final filteredNominations length:', filteredNominations.length);
-    
-    displayFilteredNominations();
-}
-        
-        // ============================================
-        // DISPLAY NOMINATIONS
-        // ============================================
-        
+        // Display nominations (READ ONLY - no voting controls)
         function displayFilteredNominations() {
-         console.log('🚨 displayFilteredNominations CALLED');
-    console.log('   allNominations length:', allNominations.length);
-    console.log('   filteredNominations length:', filteredNominations.length);    
-    const tbody = document.getElementById('nominationsTableBody');
-    if (!tbody) return;
-    
-    // DEBUG: Log what we're about to display
-    console.log('🔍 DISPLAY DEBUG:');
-    console.log('   allNominations length:', allNominations.length);
-    console.log('   filteredNominations length:', filteredNominations.length);
-    console.log('   currentNominationPage:', currentNominationPage);
-    console.log('   itemsPerPage:', itemsPerPage);
-    
-    if (filteredNominations.length === 0 && allNominations.length > 0) {
-        console.log('⚠️ filteredNominations is empty but allNominations has data!');
-        console.log('   Checking filter conditions...');
-        console.log('   Category filter:', document.getElementById('categoryFilter')?.value);
-        console.log('   Search term:', document.getElementById('searchNominations')?.value);
+            const tbody = document.getElementById('nominationsTableBody');
+            if (!tbody) return;
+            
+            if (filteredNominations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;"><i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e0;"></i><p>No nominations to review.</p><\/td><\/tr>';
+                totalNominationPages = 1;
+                updateNominationPagination();
+                return;
+            }
+            
+            const start = (currentNominationPage - 1) * itemsPerPage;
+            const pageNominations = filteredNominations.slice(start, start + itemsPerPage);
+            
+            tbody.innerHTML = pageNominations.map(nom => `
+                <tr>
+                    <td><strong>${escapeHtml(nom.business_name)}</strong><br><small>ID: ${nom._id.substring(0, 8)}...</small></td>
+                    <td>${escapeHtml(nom.category)}</td>
+                    <td><div style="max-width: 300px;">${escapeHtml((nom.description || '').substring(0, 120))}${(nom.description || '').length > 120 ? '...' : ''}</div></td>
+                    <td>
+                        ${nom.has_voted ? 
+                            '<span class="vote-indicator"><i class="fas fa-check-circle"></i> Voted</span>' : 
+                            '<span class="status-badge status-pending">Pending Review</span>'
+                        }
+                    </td>
+                 </tr>
+            `).join('');
+            
+            totalNominationPages = Math.ceil(filteredNominations.length / itemsPerPage);
+            updateNominationPagination();
+        }
         
-        // Show the first few nominations to debug
-        console.log('   First 3 nominations:', allNominations.slice(0, 3).map(n => ({
-            name: n.business_name,
-            category: n.category,
-            has_voted: n.has_voted
-        })));
-        
-        tbody.innerHTML = `<td><td colspan="6" style="text-align: center; padding: 40px; color: #EF4444;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 48px;"></i>
-            <p><strong>Debug: ${allNominations.length} nominations loaded but none displayed</strong></p>
-            <p>Filter: ${document.getElementById('categoryFilter')?.value} | Search: "${document.getElementById('searchNominations')?.value}"</p>
-            <p>has_voted status: ${allNominations.filter(n => n.has_voted).length} voted, ${allNominations.filter(n => !n.has_voted).length} pending</p>
-            <button class="refresh-btn" onclick="resetAndReload()">Reset Filters & Reload</button>
-        <\/td><\/tr>`;
-        totalNominationPages = 1;
-        updateNominationPagination();
-        return;
-    }
-    
-    if (filteredNominations.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">
-            <i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e0;"></i>
-            <p>No nominations to review at this time.</p>
-            <p style="font-size: 12px; color: #64748b;">Check back later for new nominations.</p>
-        <\/td><\/tr>`;
-        totalNominationPages = 1;
-        updateNominationPagination();
-        return;
-    }
-    
-    const start = (currentNominationPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const pageNominations = filteredNominations.slice(start, end);
-    
-    console.log(`   Displaying ${pageNominations.length} nominations on page ${currentNominationPage}`);
-    
-    tbody.innerHTML = pageNominations.map(nom => `
-        <tr>
-            <td>
-                <strong>${escapeHtml(nom.business_name)}</strong>
-                <br><small style="color: #64748b; font-size: 11px;">ID: ${nom._id.substring(0, 8)}...</small>
-            <\/td>
-            <td>${escapeHtml(nom.category)}<\/td>
-            <td>
-                <div style="max-width: 300px;">
-                    ${escapeHtml((nom.description || '').substring(0, 120))}${(nom.description || '').length > 120 ? '...' : ''}
-                </div>
-            <\/td>
-            <td>
-                <select id="rating_${nom._id.replace(/[^a-zA-Z0-9]/g, '_')}" class="rating-select">
-                    <option value="">Select</option>
-                    ${[1,2,3,4,5,6,7,8,9,10].map(i => `
-                        <option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>
-                    `).join('')}
-                </select>
-            <\/td>
-            <td>
-                <button class="comment-btn" onclick="openCommentModal('${nom._id}')" title="Add Comment">
-                    <i class="fas fa-comment"></i>
-                </button>
-            <\/td>
-            <td>
-                <button class="vote-btn" 
-                        onclick="submitVote('${nom._id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')">
-                    <i class="fas fa-check"></i> Submit Vote
-                </button>
-            <\/td>
-         \\
-    `).join('');
-    
-    totalNominationPages = Math.ceil(filteredNominations.length / itemsPerPage);
-    updateNominationPagination();
-}
-
-// Add this helper function to reset filters and reload
-function resetAndReload() {
-    console.log('🔄 Resetting filters and reloading...');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const searchInput = document.getElementById('searchNominations');
-    
-    if (categoryFilter) categoryFilter.value = 'all';
-    if (searchInput) searchInput.value = '';
-    
-    loadNominations();
-}
+        function filterNominations() {
+            const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
+            const searchTerm = document.getElementById('searchNominations')?.value.toLowerCase() || '';
+            
+            let filtered = allNominations;
+            if (categoryFilter !== 'all') filtered = filtered.filter(n => n.category === categoryFilter);
+            if (searchTerm) filtered = filtered.filter(n => n.business_name.toLowerCase().includes(searchTerm));
+            
+            filteredNominations = filtered;
+            currentNominationPage = 1;
+            displayFilteredNominations();
+        }
         
         function updateNominationPagination() {
             const pagination = document.getElementById('nominationsPagination');
             if (!pagination) return;
-            
-            if (totalNominationPages <= 1) {
-                pagination.innerHTML = '';
-                return;
-            }
+            if (totalNominationPages <= 1) { pagination.innerHTML = ''; return; }
             
             let html = `<button class="page-btn" ${currentNominationPage === 1 ? 'disabled' : ''} onclick="changeNominationPage(${currentNominationPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
-            
             for (let i = 1; i <= totalNominationPages; i++) {
                 if (i === 1 || i === totalNominationPages || (i >= currentNominationPage - 2 && i <= currentNominationPage + 2)) {
                     html += `<button class="page-btn ${i === currentNominationPage ? 'active' : ''}" onclick="changeNominationPage(${i})">${i}</button>`;
@@ -1438,38 +1069,157 @@ function resetAndReload() {
                     html += `<span class="page-btn" disabled>...</span>`;
                 }
             }
-            
             html += `<button class="page-btn" ${currentNominationPage === totalNominationPages ? 'disabled' : ''} onclick="changeNominationPage(${currentNominationPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
             pagination.innerHTML = html;
         }
         
-        function changeNominationPage(page) {
-            currentNominationPage = page;
-            displayFilteredNominations();
+        function changeNominationPage(page) { currentNominationPage = page; displayFilteredNominations(); }
+        function clearSearchAndReload() {
+            const searchInput = document.getElementById('searchNominations');
+            if (searchInput) searchInput.value = '';
+            filterNominations();
         }
         
         // ============================================
-        // VOTING FUNCTIONS
+        // VOTABLE NOMINATIONS (WHERE JUDGES CAST VOTES)
+        // ============================================
+        async function loadVotableNominations() {
+            console.log('📊 Loading votable nominations...');
+            const tbody = document.getElementById('votableTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading businesses...</p><\/td><\/tr>';
+            
+            try {
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
+                const data = await response.json();
+                
+                let rawNominations = [];
+                if (data.success && data.nominations) rawNominations = data.nominations;
+                if (rawNominations.length === 0) rawNominations = getSampleNominations();
+                
+                const token = localStorage.getItem('lba_auth_token');
+                let existingVotes = [];
+                try {
+                    const voteResponse = await fetch(`${API_BASE}/judge/history`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const voteData = await voteResponse.json();
+                    if (voteData.success) existingVotes = voteData.votes || [];
+                } catch(e) {}
+                
+                votableNominations = rawNominations.map((nom, index) => {
+                    const businessName = nom.business_name || nom.Business_Name || `Business ${index + 1}`;
+                    const existingVote = existingVotes.find(v => v.business_name === businessName);
+                    return {
+                        _id: nom.id || nom._id || `nom_${index}`,
+                        business_name: businessName,
+                        category: nom.category || nom.Category || 'General Business',
+                        description: nom.description || nom.reason || 'No description provided',
+                        my_score: existingVote?.score || null,
+                        my_comment: existingVote?.comment || null,
+                        has_voted: !!existingVote
+                    };
+                });
+                
+                filterVotableNominations();
+                
+            } catch (error) {
+                console.error('Error loading votable nominations:', error);
+                votableNominations = getSampleNominations().map((n, i) => ({...n, _id: `sample_${i}`, my_score: null, my_comment: null, has_voted: false}));
+                filterVotableNominations();
+            }
+        }
+        
+        function filterVotableNominations() {
+            const categoryFilter = document.getElementById('voteCategoryFilter')?.value || 'all';
+            const searchTerm = document.getElementById('voteSearch')?.value.toLowerCase() || '';
+            
+            let filtered = votableNominations;
+            if (categoryFilter !== 'all') filtered = filtered.filter(n => n.category === categoryFilter);
+            if (searchTerm) filtered = filtered.filter(n => n.business_name.toLowerCase().includes(searchTerm));
+            
+            filteredVotable = filtered;
+            currentVotablePage = 1;
+            displayVotableNominations();
+        }
+        
+        function displayVotableNominations() {
+            const tbody = document.getElementById('votableTableBody');
+            if (!tbody) return;
+            
+            if (filteredVotable.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-check-circle" style="font-size: 48px; color: #10B981;"></i><p>All businesses have been voted on!</p><\/td><\/tr>';
+                totalVotablePages = 1;
+                updateVotablePagination();
+                return;
+            }
+            
+            const start = (currentVotablePage - 1) * itemsPerPage;
+            const pageNominations = filteredVotable.slice(start, start + itemsPerPage);
+            
+            tbody.innerHTML = pageNominations.map(nom => `
+                <tr>
+                    <td><strong>${escapeHtml(nom.business_name)}</strong><br><small>ID: ${nom._id.substring(0, 8)}...</small></td>
+                    <td>${escapeHtml(nom.category)}</td>
+                    <td><div style="max-width: 300px;">${escapeHtml((nom.description || '').substring(0, 100))}${(nom.description || '').length > 100 ? '...' : ''}</div></td>
+                    <td>
+                        ${!nom.has_voted ? `
+                            <select id="rating_${nom._id.replace(/[^a-zA-Z0-9]/g, '_')}" class="rating-select">
+                                <option value="">Select</option>
+                                ${[1,2,3,4,5,6,7,8,9,10].map(i => `<option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>`).join('')}
+                            </select>
+                        ` : `<span class="vote-indicator"><i class="fas fa-check-circle"></i> Voted: ${nom.my_score}/10</span>`}
+                    </td>
+                    <td>
+                        ${!nom.has_voted ? `
+                            <button class="comment-btn" onclick="openCommentModal('${nom._id}')" title="Add Comment">
+                                <i class="fas fa-comment"></i>
+                            </button>
+                        ` : nom.my_comment ? `<span title="${escapeHtml(nom.my_comment)}"><i class="fas fa-comment-dots"></i> ${nom.my_comment.substring(0, 20)}...</span>` : '-'}
+                    </td>
+                    <td>
+                        ${!nom.has_voted ? `
+                            <button class="vote-btn" onclick="submitVote('${nom._id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')">
+                                <i class="fas fa-check"></i> Submit Vote
+                            </button>
+                        ` : `<span class="status-badge status-active">✓ Voted</span>`}
+                    </td>
+                 </tr>
+            `).join('');
+            
+            totalVotablePages = Math.ceil(filteredVotable.length / itemsPerPage);
+            updateVotablePagination();
+        }
+        
+        function updateVotablePagination() {
+            const pagination = document.getElementById('votablePagination');
+            if (!pagination) return;
+            if (totalVotablePages <= 1) { pagination.innerHTML = ''; return; }
+            
+            let html = `<button class="page-btn" ${currentVotablePage === 1 ? 'disabled' : ''} onclick="changeVotablePage(${currentVotablePage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+            for (let i = 1; i <= totalVotablePages; i++) {
+                if (i === 1 || i === totalVotablePages || (i >= currentVotablePage - 2 && i <= currentVotablePage + 2)) {
+                    html += `<button class="page-btn ${i === currentVotablePage ? 'active' : ''}" onclick="changeVotablePage(${i})">${i}</button>`;
+                } else if (i === currentVotablePage - 3 || i === currentVotablePage + 3) {
+                    html += `<span class="page-btn" disabled>...</span>`;
+                }
+            }
+            html += `<button class="page-btn" ${currentVotablePage === totalVotablePages ? 'disabled' : ''} onclick="changeVotablePage(${currentVotablePage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+            pagination.innerHTML = html;
+        }
+        
+        function changeVotablePage(page) { currentVotablePage = page; displayVotableNominations(); }
+        
+        // ============================================
+        // VOTE SUBMISSION (Connects to Frontend Voting System)
         // ============================================
         async function submitVote(nominationId, businessName, category) {
             const safeId = nominationId.replace(/[^a-zA-Z0-9]/g, '_');
             const ratingSelect = document.getElementById(`rating_${safeId}`);
-            
-            if (!ratingSelect) {
-                showToast('Error: Could not find rating selector', 'error');
-                return;
-            }
+            if (!ratingSelect) { showToast('Error: Could not find rating selector', 'error'); return; }
             
             const rating = ratingSelect.value;
-            
-            if (!rating) {
-                showToast('Please select a rating (1-10) before submitting', 'warning');
-                return;
-            }
-            
-            if (!confirm(`Submit rating of ${rating}/10 for "${businessName}"?\n\nThis action cannot be undone.`)) {
-                return;
-            }
+            if (!rating) { showToast('Please select a rating (1-10) before submitting', 'warning'); return; }
+            if (!confirm(`Submit rating of ${rating}/10 for "${businessName}"?\n\nThis vote will be visible on the public leaderboard.`)) return;
             
             const voteBtn = event.target;
             const originalText = voteBtn.innerHTML;
@@ -1478,25 +1228,29 @@ function resetAndReload() {
             
             try {
                 const token = localStorage.getItem('lba_auth_token');
+                const judgeEmail = judgeData?.email || '';
+                
+                // Send to backend - this will update the frontend voting system
                 const response = await fetch(`${API_BASE}/judge/vote`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         nomination_id: nominationId,
                         business_name: businessName,
                         category: category,
-                        score: parseInt(rating)
+                        score: parseInt(rating),
+                        is_jury: true  // Mark as jury vote for higher weight in public voting
                     })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    showToast(`✓ Vote submitted successfully for "${businessName}"`, 'success');
+                    showToast(`✓ Vote submitted for "${businessName}"! This vote now appears on the public leaderboard.`, 'success');
+                    // Reload all data
                     await loadDashboardData();
+                    await loadVotableNominations();
+                    await loadHistory();
                     await loadNominations();
                 } else {
                     throw new Error(data.message || 'Vote submission failed');
@@ -1509,95 +1263,69 @@ function resetAndReload() {
             }
         }
         
+        // ============================================
+        // COMMENT FUNCTIONS
+        // ============================================
         function openCommentModal(nominationId) {
             currentNominationId = nominationId;
-            const nomination = allNominations.find(n => n._id === nominationId);
-            if (nomination && nomination.my_comment) {
-                document.getElementById('commentText').value = nomination.my_comment;
-            } else {
-                document.getElementById('commentText').value = '';
-            }
+            const nomination = votableNominations.find(n => n._id === nominationId);
+            document.getElementById('commentText').value = nomination?.my_comment || '';
             document.getElementById('commentModal').classList.add('active');
         }
         
         async function saveComment() {
             const comment = document.getElementById('commentText').value;
-            
-            if (!comment.trim()) {
-                showToast('Please enter a comment', 'warning');
-                return;
-            }
+            if (!comment.trim()) { showToast('Please enter a comment', 'warning'); return; }
             
             try {
                 const token = localStorage.getItem('lba_auth_token');
                 const response = await fetch(`${API_BASE}/judge/comment`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        nomination_id: currentNominationId,
-                        comment: comment
-                    })
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nomination_id: currentNominationId, comment: comment })
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
                     showToast('Comment saved successfully', 'success');
                     hideModal('commentModal');
-                    await loadNominations();
+                    await loadVotableNominations();
                 } else {
                     throw new Error(data.message || 'Failed to save comment');
                 }
             } catch (error) {
-                console.error('Save comment error:', error);
                 showToast(error.message || 'Failed to save comment', 'error');
             }
         }
-
-        function clearSearchAndReload() {
-    const searchInput = document.getElementById('searchNominations');
-    if (searchInput) searchInput.value = '';
-    filterNominations();
-}
+        
         // ============================================
         // HISTORY FUNCTIONS
         // ============================================
         async function loadHistory(page = 1) {
             currentHistoryPage = page;
             const tbody = document.getElementById('historyTableBody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading history...</p><\/td><\/tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading history...</p><\/td><\/tr>';
             
             try {
                 const token = localStorage.getItem('lba_auth_token');
                 const response = await fetch(`${API_BASE}/judge/history?page=${page}&limit=10`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
                     displayHistory(data.votes || []);
                     totalHistoryPages = data.pagination?.pages || 1;
                     updateHistoryPagination();
-                } else {
-                    throw new Error(data.message || 'Failed to load history');
                 }
             } catch (error) {
                 console.error('Error loading history:', error);
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #EF4444;">Error loading history: ${error.message}<\/td><\/tr>`;
+                tbody.innerHTML = `<td><td colspan="5" style="text-align: center; color: #EF4444;">Error loading history: ${error.message}<\/td><\/tr>`;
             }
         }
         
         function displayHistory(votes) {
             const tbody = document.getElementById('historyTableBody');
-            
             if (!votes || votes.length === 0) {
-                tbody.innerHTML = '<table><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-history" style="font-size: 48px; color: #cbd5e0;"></i><p>No voting history found.</p><p style="font-size: 12px;">Your votes will appear here once you submit them.</p><\/td><\/tr>';
+                tbody.innerHTML = '</tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-history" style="font-size: 48px; color: #cbd5e0;"></i><p>No voting history found.</p><p style="font-size: 12px;">Cast your votes above to see them here.</p><\/td><\/tr>';
                 return;
             }
             
@@ -1605,9 +1333,7 @@ function resetAndReload() {
                 let dateStr = 'Recent';
                 if (vote.created_at) {
                     const date = new Date(vote.created_at);
-                    if (!isNaN(date.getTime())) {
-                        dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    }
+                    if (!isNaN(date.getTime())) dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 }
                 return `
                     <tr>
@@ -1624,14 +1350,9 @@ function resetAndReload() {
         function updateHistoryPagination() {
             const pagination = document.getElementById('historyPagination');
             if (!pagination) return;
-            
-            if (totalHistoryPages <= 1) {
-                pagination.innerHTML = '';
-                return;
-            }
+            if (totalHistoryPages <= 1) { pagination.innerHTML = ''; return; }
             
             let html = `<button class="page-btn" ${currentHistoryPage === 1 ? 'disabled' : ''} onclick="loadHistory(${currentHistoryPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
-            
             for (let i = 1; i <= totalHistoryPages; i++) {
                 if (i === 1 || i === totalHistoryPages || (i >= currentHistoryPage - 2 && i <= currentHistoryPage + 2)) {
                     html += `<button class="page-btn ${i === currentHistoryPage ? 'active' : ''}" onclick="loadHistory(${i})">${i}</button>`;
@@ -1639,7 +1360,6 @@ function resetAndReload() {
                     html += `<span class="page-btn" disabled>...</span>`;
                 }
             }
-            
             html += `<button class="page-btn" ${currentHistoryPage === totalHistoryPages ? 'disabled' : ''} onclick="loadHistory(${currentHistoryPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
             pagination.innerHTML = html;
         }
@@ -1666,13 +1386,11 @@ function resetAndReload() {
                 errorEl.style.display = 'block';
                 return;
             }
-            
             if (newPassword !== confirmPassword) {
                 errorEl.textContent = 'New passwords do not match';
                 errorEl.style.display = 'block';
                 return;
             }
-            
             if (newPassword.length < 6) {
                 errorEl.textContent = 'Password must be at least 6 characters';
                 errorEl.style.display = 'block';
@@ -1683,18 +1401,10 @@ function resetAndReload() {
                 const token = localStorage.getItem('lba_auth_token');
                 const response = await fetch(`${API_BASE}/judge/change-password`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        current_password: currentPassword,
-                        new_password: newPassword
-                    })
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
                     showToast('Password changed successfully!', 'success');
                     hideModal('passwordModal');
@@ -1711,17 +1421,18 @@ function resetAndReload() {
         // ============================================
         // UTILITY FUNCTIONS
         // ============================================
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function getSampleNominations() {
+            return [
+                { _id: 'sample_1', business_name: 'Liberia Business Solutions Inc.', category: 'Business Excellence', description: 'A leading business solutions provider in Liberia.', timestamp: new Date().toISOString() },
+                { _id: 'sample_2', business_name: 'Green Energy Liberia', category: 'Innovation Award', description: 'Pioneering renewable energy solutions across the country.', timestamp: new Date().toISOString() },
+                { _id: 'sample_3', business_name: 'Liberia Tech Hub', category: 'Technology Award', description: 'Empowering youth through technology education.', timestamp: new Date().toISOString() },
+                { _id: 'sample_4', business_name: 'Coastal Fisheries Cooperative', category: 'Agribusiness Award', description: 'Sustainable fishing practices in coastal communities.', timestamp: new Date().toISOString() },
+                { _id: 'sample_5', business_name: 'Monrovia Financial Services', category: 'Financial Services Award', description: 'Accessible banking for underserved communities.', timestamp: new Date().toISOString() }
+            ];
         }
         
-        function hideModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.remove('active');
-        }
+        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        function hideModal(modalId) { const modal = document.getElementById(modalId); if (modal) modal.classList.remove('active'); }
         
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -1730,20 +1441,14 @@ function resetAndReload() {
             const icons = { success: 'check-circle', error: 'exclamation-circle', warning: 'exclamation-triangle', info: 'info-circle' };
             toast.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i><span style="flex:1;">${escapeHtml(message)}</span><i class="fas fa-times" style="cursor:pointer;" onclick="this.parentElement.remove()"></i>`;
             container.appendChild(toast);
-            setTimeout(() => {
-                if (toast.parentNode) toast.remove();
-            }, 5000);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
         }
         
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.clear();
-                window.location.href = '../login.html';
-            }
-        }
+        function logout() { if (confirm('Logout?')) { localStorage.clear(); window.location.href = '../login.html'; } }
         
         // Export functions to global scope
         window.loadNominations = loadNominations;
+        window.loadVotableNominations = loadVotableNominations;
         window.loadHistory = loadHistory;
         window.submitVote = submitVote;
         window.openCommentModal = openCommentModal;
@@ -1754,9 +1459,12 @@ function resetAndReload() {
         window.switchPage = switchPage;
         window.logout = logout;
         window.filterNominations = filterNominations;
+        window.filterVotableNominations = filterVotableNominations;
         window.changeNominationPage = changeNominationPage;
+        window.changeVotablePage = changeVotablePage;
+        window.clearSearchAndReload = clearSearchAndReload;
         
-        console.log('✅ Judge Dashboard Ready - Fully Integrated with Google Sheets Nominations');
+        console.log('✅ Judge Dashboard Ready - Voting connected to frontend system');
     </script>
 </body>
 </html>
