@@ -1156,7 +1156,12 @@
             });
             categoryFilter.value = currentValue;
         }
+
+                console.log('🔍 BEFORE filterNominations - allNominations length:', allNominations.length);
+        console.log('🔍 Sample pending check - first nomination has_voted:', allNominations[0]?.has_voted);
         
+        // Apply filters and display - show ALL pending nominations
+        filterNominations();
         // Apply filters and display - show ALL pending nominations
         filterNominations();
         
@@ -1245,100 +1250,150 @@
         // FILTER NOMINATIONS
         // ============================================
         function filterNominations() {
-            const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
-            const searchTerm = document.getElementById('searchNominations')?.value.toLowerCase() || '';
-            
-            // Start with pending only (not voted yet)
-            let filtered = allNominations.filter(n => !n.has_voted);
-            
-            // Apply category filter
-            if (categoryFilter !== 'all') {
-                filtered = filtered.filter(n => n.category === categoryFilter);
-            }
-            
-            // Apply search filter
-            if (searchTerm) {
-                filtered = filtered.filter(n => 
-                    n.business_name.toLowerCase().includes(searchTerm) ||
-                    n.category.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            filteredNominations = filtered;
-            currentNominationPage = 1;
-            displayFilteredNominations();
-        }
+    const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
+    const searchTerm = document.getElementById('searchNominations')?.value.toLowerCase() || '';
+    
+    console.log('🔍 FILTERING:');
+    console.log('   Category filter:', categoryFilter);
+    console.log('   Search term:', searchTerm);
+    console.log('   Total nominations before filter:', allNominations.length);
+    
+    // Start with pending only (not voted yet)
+    let filtered = allNominations.filter(n => !n.has_voted);
+    console.log('   After pending filter:', filtered.length);
+    
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+        filtered = filtered.filter(n => n.category === categoryFilter);
+        console.log(`   After category filter (${categoryFilter}):`, filtered.length);
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+        filtered = filtered.filter(n => 
+            n.business_name.toLowerCase().includes(searchTerm) ||
+            n.category.toLowerCase().includes(searchTerm)
+        );
+        console.log(`   After search filter:`, filtered.length);
+    }
+    
+    filteredNominations = filtered;
+    currentNominationPage = 1;
+    
+    console.log('   Final filteredNominations length:', filteredNominations.length);
+    
+    displayFilteredNominations();
+}
         
         // ============================================
         // DISPLAY NOMINATIONS
         // ============================================
+        
         function displayFilteredNominations() {
-            const tbody = document.getElementById('nominationsTableBody');
-            if (!tbody) return;
-            
-            const start = (currentNominationPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const pageNominations = filteredNominations.slice(start, end);
-            
-            if (pageNominations.length === 0 && filteredNominations.length === 0 && allNominations.length > 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">
-                    <i class="fas fa-check-circle" style="font-size: 48px; color: #10B981;"></i>
-                    <p>No more nominations to review!</p>
-                    <p style="font-size: 12px; color: #64748b;">You've reviewed all pending nominations. Check back later!</p>
-                <\/td><\/tr>`;
-                totalNominationPages = 1;
-                updateNominationPagination();
-                return;
-            }
-            
-            if (pageNominations.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">
-                    <i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e0;"></i>
-                    <p>No nominations to review at this time.</p>
-                    <p style="font-size: 12px; color: #64748b;">Check back later for new nominations.</p>
-                <\/td><\/tr>`;
-                totalNominationPages = 1;
-                updateNominationPagination();
-                return;
-            }
-            
-            tbody.innerHTML = pageNominations.map(nom => `
-                <tr>
-                    <td>
-                        <strong>${escapeHtml(nom.business_name)}</strong>
-                        <br><small style="color: #64748b; font-size: 11px;">ID: ${nom._id.substring(0, 8)}...</small>
-                    <\/td>
-                    <td>${escapeHtml(nom.category)}<\/td>
-                    <td>
-                        <div style="max-width: 300px;">
-                            ${escapeHtml(nom.description.substring(0, 120))}${nom.description.length > 120 ? '...' : ''}
-                        </div>
-                    <\/td>
-                    <td>
-                        <select id="rating_${nom._id.replace(/[^a-zA-Z0-9]/g, '_')}" class="rating-select">
-                            <option value="">Select</option>
-                            ${[1,2,3,4,5,6,7,8,9,10].map(i => `
-                                <option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>
-                            `).join('')}
-                        </select>
-                    <\/td>
-                    <td>
-                        <button class="comment-btn" onclick="openCommentModal('${nom._id}')" title="Add Comment">
-                            <i class="fas fa-comment"></i>
-                        </button>
-                    <\/td>
-                    <td>
-                        <button class="vote-btn" 
-                                onclick="submitVote('${nom._id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')">
-                            <i class="fas fa-check"></i> Submit Vote
-                        </button>
-                    <\/td>
-                 \\
-            `).join('');
-            
-            totalNominationPages = Math.ceil(filteredNominations.length / itemsPerPage);
-            updateNominationPagination();
-        }
+         console.log('🚨 displayFilteredNominations CALLED');
+    console.log('   allNominations length:', allNominations.length);
+    console.log('   filteredNominations length:', filteredNominations.length);    
+    const tbody = document.getElementById('nominationsTableBody');
+    if (!tbody) return;
+    
+    // DEBUG: Log what we're about to display
+    console.log('🔍 DISPLAY DEBUG:');
+    console.log('   allNominations length:', allNominations.length);
+    console.log('   filteredNominations length:', filteredNominations.length);
+    console.log('   currentNominationPage:', currentNominationPage);
+    console.log('   itemsPerPage:', itemsPerPage);
+    
+    if (filteredNominations.length === 0 && allNominations.length > 0) {
+        console.log('⚠️ filteredNominations is empty but allNominations has data!');
+        console.log('   Checking filter conditions...');
+        console.log('   Category filter:', document.getElementById('categoryFilter')?.value);
+        console.log('   Search term:', document.getElementById('searchNominations')?.value);
+        
+        // Show the first few nominations to debug
+        console.log('   First 3 nominations:', allNominations.slice(0, 3).map(n => ({
+            name: n.business_name,
+            category: n.category,
+            has_voted: n.has_voted
+        })));
+        
+        tbody.innerHTML = `<td><td colspan="6" style="text-align: center; padding: 40px; color: #EF4444;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px;"></i>
+            <p><strong>Debug: ${allNominations.length} nominations loaded but none displayed</strong></p>
+            <p>Filter: ${document.getElementById('categoryFilter')?.value} | Search: "${document.getElementById('searchNominations')?.value}"</p>
+            <p>has_voted status: ${allNominations.filter(n => n.has_voted).length} voted, ${allNominations.filter(n => !n.has_voted).length} pending</p>
+            <button class="refresh-btn" onclick="resetAndReload()">Reset Filters & Reload</button>
+        <\/td><\/tr>`;
+        totalNominationPages = 1;
+        updateNominationPagination();
+        return;
+    }
+    
+    if (filteredNominations.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">
+            <i class="fas fa-inbox" style="font-size: 48px; color: #cbd5e0;"></i>
+            <p>No nominations to review at this time.</p>
+            <p style="font-size: 12px; color: #64748b;">Check back later for new nominations.</p>
+        <\/td><\/tr>`;
+        totalNominationPages = 1;
+        updateNominationPagination();
+        return;
+    }
+    
+    const start = (currentNominationPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageNominations = filteredNominations.slice(start, end);
+    
+    console.log(`   Displaying ${pageNominations.length} nominations on page ${currentNominationPage}`);
+    
+    tbody.innerHTML = pageNominations.map(nom => `
+        <tr>
+            <td>
+                <strong>${escapeHtml(nom.business_name)}</strong>
+                <br><small style="color: #64748b; font-size: 11px;">ID: ${nom._id.substring(0, 8)}...</small>
+            <\/td>
+            <td>${escapeHtml(nom.category)}<\/td>
+            <td>
+                <div style="max-width: 300px;">
+                    ${escapeHtml((nom.description || '').substring(0, 120))}${(nom.description || '').length > 120 ? '...' : ''}
+                </div>
+            <\/td>
+            <td>
+                <select id="rating_${nom._id.replace(/[^a-zA-Z0-9]/g, '_')}" class="rating-select">
+                    <option value="">Select</option>
+                    ${[1,2,3,4,5,6,7,8,9,10].map(i => `
+                        <option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>
+                    `).join('')}
+                </select>
+            <\/td>
+            <td>
+                <button class="comment-btn" onclick="openCommentModal('${nom._id}')" title="Add Comment">
+                    <i class="fas fa-comment"></i>
+                </button>
+            <\/td>
+            <td>
+                <button class="vote-btn" 
+                        onclick="submitVote('${nom._id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')">
+                    <i class="fas fa-check"></i> Submit Vote
+                </button>
+            <\/td>
+         \\
+    `).join('');
+    
+    totalNominationPages = Math.ceil(filteredNominations.length / itemsPerPage);
+    updateNominationPagination();
+}
+
+// Add this helper function to reset filters and reload
+function resetAndReload() {
+    console.log('🔄 Resetting filters and reloading...');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const searchInput = document.getElementById('searchNominations');
+    
+    if (categoryFilter) categoryFilter.value = 'all';
+    if (searchInput) searchInput.value = '';
+    
+    loadNominations();
+}
         
         function updateNominationPagination() {
             const pagination = document.getElementById('nominationsPagination');
