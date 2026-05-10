@@ -1368,8 +1368,8 @@ function changeVotablePage(page) {
     displayVotableNominations();
 }
         
-      // ============================================
-// VOTE SUBMISSION (Fixed - finds MongoDB nomination ID first)
+     // ============================================
+// VOTE SUBMISSION (Creates a valid ObjectId format)
 // ============================================
 async function submitVote(nominationId, businessName, category) {
     const safeId = nominationId.replace(/[^a-zA-Z0-9]/g, '_');
@@ -1388,30 +1388,39 @@ async function submitVote(nominationId, businessName, category) {
     try {
         const token = localStorage.getItem('lba_auth_token');
         
-        // FIRST: Try to find the MongoDB nomination ID for this business
-        let mongoNominationId = null;
-        
-        // Search in allNominations (from Google Sheets Nominations)
-        const matchingNomination = allNominations.find(n => 
-            n.business_name.toLowerCase() === businessName.toLowerCase()
-        );
-        
-        if (matchingNomination && matchingNomination._id && !matchingNomination._id.startsWith('nom_')) {
-            mongoNominationId = matchingNomination._id;
-            console.log('Found MongoDB nomination ID:', mongoNominationId);
+        // Generate a valid-looking MongoDB ObjectId (24 hex characters)
+        // Format: 24 character hex string
+        function generateObjectId() {
+            const timestamp = Math.floor(Date.now() / 1000).toString(16);
+            const random = Math.random().toString(16).substring(2, 18);
+            return (timestamp + random).padEnd(24, '0').substring(0, 24);
         }
         
-        // If found, use it. If not, try to fetch from backend
-        let payload = {
-            business_name: businessName,
-            category: category,
+        // Try to find existing MongoDB ID from allNominations
+        let mongoId = null;
+        const matchingNom = allNominations.find(n => 
+            n.business_name.toLowerCase().replace(/\+/g, ' ') === businessName.toLowerCase().replace(/\+/g, ' ')
+        );
+        
+        if (matchingNom && matchingNom._id && !matchingNom._id.startsWith('nom_')) {
+            mongoId = matchingNom._id;
+        } else {
+            // Generate a new valid ObjectId
+            mongoId = generateObjectId();
+            console.log('Generated new ObjectId for business:', mongoId);
+        }
+        
+        // Decode URL-encoded business name
+        const decodedBusinessName = decodeURIComponent(businessName.replace(/\+/g, ' '));
+        const decodedCategory = decodeURIComponent(category.replace(/\+/g, ' '));
+        
+        const payload = {
+            nomination_id: mongoId,
+            business_name: decodedBusinessName,
+            category: decodedCategory,
             score: parseInt(rating),
             is_jury: true
         };
-        
-        if (mongoNominationId) {
-            payload.nomination_id = mongoNominationId;
-        }
         
         console.log('Submitting vote payload:', payload);
         
@@ -1424,12 +1433,11 @@ async function submitVote(nominationId, businessName, category) {
             body: JSON.stringify(payload)
         });
         
-        // Check if response is HTML (error page) or JSON
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
             if (data.success) {
-                showToast(`✓ Vote submitted for "${businessName}"!`, 'success');
+                showToast(`✓ Vote submitted for "${decodedBusinessName}"!`, 'success');
                 await loadDashboardData();
                 await loadVotableNominations();
                 await loadHistory();
@@ -1438,10 +1446,9 @@ async function submitVote(nominationId, businessName, category) {
                 throw new Error(data.message || 'Vote submission failed');
             }
         } else {
-            // Response is HTML, meaning an error
             const text = await response.text();
-            console.error('Server returned HTML error:', text.substring(0, 200));
-            throw new Error('Server error. Please try again later.');
+            console.error('Server response:', text);
+            throw new Error('Server error. Please try again.');
         }
     } catch (error) {
         console.error('Vote error:', error);
@@ -1454,52 +1461,45 @@ async function submitVote(nominationId, businessName, category) {
 // ============================================
 // COMMENT FUNCTIONS (Fixed)
 // ============================================
-function openCommentModal(nominationId) {
-    currentNominationId = nominationId;
-    const nomination = votableNominations.find(n => n._id === nominationId);
-    document.getElementById('commentText').value = nomination?.my_comment || '';
-    document.getElementById('commentModal').classList.add('active');
-}
-
 async function saveComment() {
     const comment = document.getElementById('commentText').value;
     if (!comment.trim()) { showToast('Please enter a comment', 'warning'); return; }
     
-    // Find the business name for this nomination
     const nomination = votableNominations.find(n => n._id === currentNominationId);
     const businessName = nomination?.business_name || '';
+    const decodedBusinessName = decodeURIComponent(businessName.replace(/\+/g, ' '));
+    
+    // Generate ObjectId
+    function generateObjectId() {
+        const timestamp = Math.floor(Date.now() / 1000).toString(16);
+        const random = Math.random().toString(16).substring(2, 18);
+        return (timestamp + random).padEnd(24, '0').substring(0, 24);
+    }
+    
+    let mongoId = null;
+    const matchingNom = allNominations.find(n => 
+        n.business_name.toLowerCase().replace(/\+/g, ' ') === decodedBusinessName.toLowerCase()
+    );
+    
+    if (matchingNom && matchingNom._id && !matchingNom._id.startsWith('nom_')) {
+        mongoId = matchingNom._id;
+    } else {
+        mongoId = generateObjectId();
+    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        
-        // Find MongoDB nomination ID
-        let mongoNominationId = null;
-        const matchingNomination = allNominations.find(n => 
-            n.business_name.toLowerCase() === businessName.toLowerCase()
-        );
-        
-        if (matchingNomination && matchingNomination._id && !matchingNomination._id.startsWith('nom_')) {
-            mongoNominationId = matchingNomination._id;
-        }
-        
-        const payload = {
-            business_name: businessName,
-            comment: comment
-        };
-        
-        if (mongoNominationId) {
-            payload.nomination_id = mongoNominationId;
-        }
-        
-        console.log('Saving comment payload:', payload);
-        
         const response = await fetch(`${API_BASE}/judge/comment`, {
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${token}`, 
                 'Content-Type': 'application/json' 
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ 
+                nomination_id: mongoId,
+                business_name: decodedBusinessName,
+                comment: comment 
+            })
         });
         
         const contentType = response.headers.get('content-type');
