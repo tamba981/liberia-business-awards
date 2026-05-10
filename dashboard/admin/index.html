@@ -10170,37 +10170,62 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                 <input type="hidden" id="judgeId">
                 
                 <div class="form-group">
-                    <label>Name *</label>
-                    <input type="text" id="judgeName" class="sheet-btn secondary" style="width: 100%;" required>
+                    <label>Full Name *</label>
+                    <input type="text" id="judgeName" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="judgeEmail" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                    <small>This will be their login username</small>
+                </div>
+                
+                <div class="form-group" id="judgePasswordField">
+                    <label>Password *</label>
+                    <input type="password" id="judgePassword" class="sheet-btn secondary" style="width: 100%; padding: 12px;" minlength="6" required>
+                    <small>Minimum 6 characters. They can change this after login.</small>
                 </div>
                 
                 <div class="form-group">
                     <label>Profession *</label>
-                    <input type="text" id="judgeProfession" class="sheet-btn secondary" style="width: 100%;" required>
+                    <input type="text" id="judgeProfession" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Organization</label>
-                    <input type="text" id="judgeOrganization" class="sheet-btn secondary" style="width: 100%;">
+                    <input type="text" id="judgeOrganization" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Expertise Areas</label>
+                    <input type="text" id="judgeExpertise" class="sheet-btn secondary" style="width: 100%; padding: 12px;" placeholder="e.g., Finance, Technology, Agriculture">
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="judgePhone" class="sheet-btn secondary" style="width: 100%; padding: 12px;" placeholder="+231 XXX XXX XXX">
                 </div>
                 
                 <div class="form-group">
                     <label>Photo URL</label>
-                    <input type="url" id="judgePhoto" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                    <input type="url" id="judgePhoto" class="sheet-btn secondary" style="width: 100%; padding: 12px;" placeholder="https://...">
                 </div>
                 
                 <div class="form-group">
                     <label>Bio</label>
-                    <textarea id="judgeBio" rows="4" class="sheet-btn secondary" style="width: 100%;"></textarea>
+                    <textarea id="judgeBio" rows="3" class="sheet-btn secondary" style="width: 100%; padding: 12px;" placeholder="Professional background..."></textarea>
                 </div>
                 
                 <div class="form-group">
                     <label>Status</label>
-                    <select id="judgeStatus" class="sheet-btn secondary" style="width: 100%;">
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
+                    <select id="judgeStatus" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="active">Active - Can vote</option>
+                        <option value="inactive">Inactive - Cannot vote</option>
+                        <option value="pending">Pending - Awaiting approval</option>
                     </select>
                 </div>
+                
+                <div class="error-message" id="judgeError" style="display: none; color: #EF4444;"></div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button type="button" class="sheet-btn warning" onclick="hideModal('addJudgeModal')" style="flex: 1;">Cancel</button>
