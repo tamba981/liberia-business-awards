@@ -1403,6 +1403,7 @@ async function submitVote(nominationId, businessName, category) {
         formData.append('business_name', decodedBusinessName);
         formData.append('category', decodedCategory);
         formData.append('vote_value', rating);
+        formData.append('voteValue', rating);  // Add this for compatibility
         formData.append('voter_email', judgeEmail);  // CRITICAL: Include judge's email
         formData.append('voter_name', judgeName);
         formData.append('is_jury', 'true');
