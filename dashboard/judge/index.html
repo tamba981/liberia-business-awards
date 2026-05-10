@@ -876,7 +876,7 @@
             });
         }
         
-        function switchPage(page) {
+               function switchPage(page) {
             document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
             const pageElement = document.getElementById(page + 'Page');
             if (pageElement) pageElement.style.display = 'block';
@@ -894,6 +894,11 @@
             document.getElementById('pageTitle').textContent = titles[page] || 'Judge Dashboard';
             
             if (page === 'history') {
+                // Clear search input when switching to voting page
+                const voteSearchInput = document.getElementById('voteSearch');
+                if (voteSearchInput) {
+                    voteSearchInput.value = '';
+                }
                 loadVotableNominations();
                 loadHistory();
             } else if (page === 'nominations') {
@@ -955,6 +960,12 @@
             
             const searchInput = document.getElementById('searchNominations');
             if (searchInput) searchInput.value = '';
+
+            // Also clear vote search input on initial load
+            const voteSearchInput = document.getElementById('voteSearch');
+            if (voteSearchInput) {
+                voteSearchInput.value = '';
+            }
             
             const tbody = document.getElementById('nominationsTableBody');
             if (tbody) tbody.innerHTML = '<td><td colspan="4" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading nominations...</p><\/td><\/tr>';
@@ -1085,6 +1096,12 @@
 // ============================================
 async function loadVotableNominations() {
     console.log('📊 Loading businesses from VotingBusinesses sheet (admin-added only)...');
+    // CLEAR SEARCH INPUT AT START
+    const voteSearchInput = document.getElementById('voteSearch');
+    if (voteSearchInput) {
+        console.log('🧹 Clearing vote search input');
+        voteSearchInput.value = '';
+    }
     const tbody = document.getElementById('votableTableBody');
     if (tbody) tbody.innerHTML = '<td><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading businesses from Voting List...</p><\/td><\/tr>';
     
