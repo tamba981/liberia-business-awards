@@ -995,98 +995,44 @@
         // ============================================
         // NOMINATIONS - COMPLETE
         // ============================================
-        async function loadNominations(page = 1) {
-    currentNominationPage = page;
+        function displayNominations(nominations) {
     const tbody = document.getElementById('nominationsTableBody');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading nominations...<\/td><\/tr>';
     
-    try {
-        // Fetch from Google Sheets (same as admin dashboard)
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
-        const data = await response.json();
-        
-        if (data.success && data.nominations) {
-            // Get judge's existing votes from backend (for tracking)
-            const token = localStorage.getItem('lba_auth_token');
-            let existingVotes = [];
-            try {
-                const voteResponse = await fetch(`${API_BASE}/judge/history`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const voteData = await voteResponse.json();
-                if (voteData.success) {
-                    existingVotes = voteData.votes || [];
-                }
-            } catch(e) {}
-            
-            // Process nominations
-            const nominations = data.nominations.map(nom => {
-                const existingVote = existingVotes.find(v => v.business_name === nom.business_name);
-                return {
-                    _id: nom.id,
-                    business_name: nom.business_name,
-                    category: nom.category,
-                    description: nom.reason || nom.description,
-                    my_score: existingVote?.score || null,
-                    my_comment: existingVote?.comment || null,
-                    has_voted: !!existingVote
-                };
-            });
-            
-            // Filter out already voted
-            const pendingNominations = nominations.filter(n => !n.has_voted);
-            
-            totalNominationPages = 1;
-            displayNominations(pendingNominations);
-            updateNominationPagination();
-        }
-    } catch (error) {
-        console.error('Error loading nominations:', error);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading nominations<\/td><\/tr>';
+    if (!nominations || nominations.length === 0) {
+        tbody.innerHTML = '<td><td colspan="6" style="text-align: center;">No nominations to review at this time.<\/td><\/tr>';
+        return;
     }
+    
+    tbody.innerHTML = nominations.map(nom => `
+        <tr>
+            <td><strong>${escapeHtml(nom.business_name)}</strong><br>
+                <small style="color: #64748b;">ID: ${nom._id}</small>
+            <\/td>
+            <td>${escapeHtml(nom.category)}<\/td>
+            <td>${escapeHtml(nom.description.substring(0, 100))}...<\/td>
+            <td>
+                <select id="rating_${nom._id}" class="rating-select">
+                    <option value="">Select Rating</option>
+                    ${[1,2,3,4,5,6,7,8,9,10].map(i => `
+                        <option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>
+                    `).join('')}
+                </select>
+            <\/td>
+            <td>
+                <button class="comment-btn" onclick="openCommentModal('${nom._id}')" title="Add Comment">
+                    <i class="fas fa-comment"></i>
+                </button>
+            <\/td>
+            <td>
+                <button class="vote-btn ${nom.has_voted ? 'voted' : ''}" 
+                        onclick="submitVote('${nom._id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')"
+                        ${nom.has_voted ? 'disabled' : ''}>
+                    ${nom.has_voted ? '✓ Voted' : 'Submit Vote'}
+                </button>
+            <\/td>
+         \\
+    `).join('');
 }
-        
-        function displayNominations() {
-            const tbody = document.getElementById('nominationsTableBody');
-            
-            if (!nominations || nominations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-award" style="font-size: 48px; color: #cbd5e0;"></i><p>No nominations to review at this time.</p><\/td><\/tr>';
-                return;
-            }
-            
-            tbody.innerHTML = nominations.map(nom => `
-                <tr>
-                    <td>
-                        <strong>${escapeHtml(nom.business_name || 'Unknown Business')}</strong>
-                        <br>
-                        <small style="color: #64748b;">ID: ${nom.nomination_id || nom._id}</small>
-                    <\/td>
-                    <td>${escapeHtml(nom.category || 'General')}<\/td>
-                    <td>${escapeHtml((nom.description || '').substring(0, 100))}...<\/td>
-                    <td>
-                        <select id="rating_${nom._id || nom.nomination_id}" class="rating-select" ${nom.my_score ? 'disabled' : ''}>
-                            <option value="">Select Rating</option>
-                            ${[1,2,3,4,5,6,7,8,9,10].map(i => `
-                                <option value="${i}" ${nom.my_score === i ? 'selected' : ''}>${i} / 10</option>
-                            `).join('')}
-                        </select>
-                    <\/td>
-                    <td>
-                        <button class="comment-btn" onclick="openCommentModal('${nom._id || nom.nomination_id}')" title="Add Comment">
-                            <i class="fas fa-comment"></i>
-                            ${nom.my_comment ? '<span style="font-size: 10px; display: block;">✓</span>' : ''}
-                        </button>
-                    <\/td>
-                    <td>
-                        <button class="vote-btn ${nom.my_score ? 'voted' : ''}" 
-                                onclick="submitVote('${nom._id || nom.nomination_id}', '${escapeHtml(nom.business_name)}', '${escapeHtml(nom.category)}')"
-                                ${nom.my_score ? 'disabled' : ''}>
-                            ${nom.my_score ? '✓ Voted' : 'Submit Vote'}
-                        </button>
-                    <\/td>
-                 \\
-            `).join('');
-        }
         
         function updateNominationPagination() {
             const pagination = document.getElementById('nominationsPagination');
