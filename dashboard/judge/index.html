@@ -1368,8 +1368,8 @@ function changeVotablePage(page) {
     displayVotableNominations();
 }
         
-       // ============================================
-// VOTE SUBMISSION (Fixed for Backend Compatibility)
+      // ============================================
+// VOTE SUBMISSION (Fixed - finds MongoDB nomination ID first)
 // ============================================
 async function submitVote(nominationId, businessName, category) {
     const safeId = nominationId.replace(/[^a-zA-Z0-9]/g, '_');
@@ -1388,58 +1388,60 @@ async function submitVote(nominationId, businessName, category) {
     try {
         const token = localStorage.getItem('lba_auth_token');
         
-        // Send to backend - using business_name as identifier instead of nomination_id
-        // This avoids the ObjectId casting error
+        // FIRST: Try to find the MongoDB nomination ID for this business
+        let mongoNominationId = null;
+        
+        // Search in allNominations (from Google Sheets Nominations)
+        const matchingNomination = allNominations.find(n => 
+            n.business_name.toLowerCase() === businessName.toLowerCase()
+        );
+        
+        if (matchingNomination && matchingNomination._id && !matchingNomination._id.startsWith('nom_')) {
+            mongoNominationId = matchingNomination._id;
+            console.log('Found MongoDB nomination ID:', mongoNominationId);
+        }
+        
+        // If found, use it. If not, try to fetch from backend
+        let payload = {
+            business_name: businessName,
+            category: category,
+            score: parseInt(rating),
+            is_jury: true
+        };
+        
+        if (mongoNominationId) {
+            payload.nomination_id = mongoNominationId;
+        }
+        
+        console.log('Submitting vote payload:', payload);
+        
         const response = await fetch(`${API_BASE}/judge/vote`, {
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${token}`, 
                 'Content-Type': 'application/json' 
             },
-            body: JSON.stringify({
-                business_name: businessName,
-                category: category,
-                score: parseInt(rating),
-                is_jury: true  // Mark as jury vote for higher weight in public voting
-            })
+            body: JSON.stringify(payload)
         });
         
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast(`✓ Vote submitted for "${businessName}"! This vote now appears on the public leaderboard.`, 'success');
-            // Reload all data
-            await loadDashboardData();
-            await loadVotableNominations();
-            await loadHistory();
-            await loadNominations();
-        } else {
-            // If the above fails, try alternative endpoint
-            console.log('Trying alternative vote endpoint...');
-            const altResponse = await fetch(`${API_BASE}/judge/cast-vote`, {
-                method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`, 
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({
-                    business_name: businessName,
-                    nomination_id: nominationId,
-                    category: category,
-                    score: parseInt(rating),
-                    is_jury: true
-                })
-            });
-            const altData = await altResponse.json();
-            if (altData.success) {
+        // Check if response is HTML (error page) or JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            if (data.success) {
                 showToast(`✓ Vote submitted for "${businessName}"!`, 'success');
                 await loadDashboardData();
                 await loadVotableNominations();
                 await loadHistory();
                 await loadNominations();
             } else {
-                throw new Error(altData.message || 'Vote submission failed');
+                throw new Error(data.message || 'Vote submission failed');
             }
+        } else {
+            // Response is HTML, meaning an error
+            const text = await response.text();
+            console.error('Server returned HTML error:', text.substring(0, 200));
+            throw new Error('Server error. Please try again later.');
         }
     } catch (error) {
         console.error('Vote error:', error);
@@ -1448,8 +1450,8 @@ async function submitVote(nominationId, businessName, category) {
         voteBtn.disabled = false;
     }
 }
-        
-        // ============================================
+
+// ============================================
 // COMMENT FUNCTIONS (Fixed)
 // ============================================
 function openCommentModal(nominationId) {
@@ -1469,26 +1471,49 @@ async function saveComment() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        // Use business_name instead of nomination_id to avoid ObjectId issues
+        
+        // Find MongoDB nomination ID
+        let mongoNominationId = null;
+        const matchingNomination = allNominations.find(n => 
+            n.business_name.toLowerCase() === businessName.toLowerCase()
+        );
+        
+        if (matchingNomination && matchingNomination._id && !matchingNomination._id.startsWith('nom_')) {
+            mongoNominationId = matchingNomination._id;
+        }
+        
+        const payload = {
+            business_name: businessName,
+            comment: comment
+        };
+        
+        if (mongoNominationId) {
+            payload.nomination_id = mongoNominationId;
+        }
+        
+        console.log('Saving comment payload:', payload);
+        
         const response = await fetch(`${API_BASE}/judge/comment`, {
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${token}`, 
                 'Content-Type': 'application/json' 
             },
-            body: JSON.stringify({ 
-                business_name: businessName,
-                nomination_id: currentNominationId,
-                comment: comment 
-            })
+            body: JSON.stringify(payload)
         });
-        const data = await response.json();
-        if (data.success) {
-            showToast('Comment saved successfully', 'success');
-            hideModal('commentModal');
-            await loadVotableNominations();
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            if (data.success) {
+                showToast('Comment saved successfully', 'success');
+                hideModal('commentModal');
+                await loadVotableNominations();
+            } else {
+                throw new Error(data.message || 'Failed to save comment');
+            }
         } else {
-            throw new Error(data.message || 'Failed to save comment');
+            throw new Error('Server error. Please try again.');
         }
     } catch (error) {
         console.error('Save comment error:', error);
