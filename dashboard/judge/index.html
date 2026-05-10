@@ -1527,8 +1527,8 @@ async function loadHistory(page = 1) {
     
     try {
         const judgeEmail = judgeData?.email || '';
+        console.log('🔍 Loading history for judge email:', judgeEmail);
         
-        // Fetch votes from Google Sheets
         const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllVotes`);
         const data = await response.json();
         
@@ -1537,30 +1537,20 @@ async function loadHistory(page = 1) {
         let judgeVotes = [];
         
         if (data.success && data.votes) {
-            // Filter votes by judge's email
-            judgeVotes = data.votes.filter(vote => 
-                vote.voter_email === judgeEmail || 
-                (vote.source === 'judge_dashboard' && vote.voter_email === judgeEmail)
-            );
-            console.log(`📊 Found ${judgeVotes.length} votes from this judge`);
+            judgeVotes = data.votes.filter(vote => {
+                const voterEmail = vote.voter_email || '';
+                const match = voterEmail === judgeEmail;
+                if (match) {
+                    console.log('✅ Found matching vote:', vote);
+                }
+                return match;
+            });
+            console.log(`📊 Found ${judgeVotes.length} votes from judge: ${judgeEmail}`);
         }
         
-        // Also fetch from the Votes sheet directly as fallback
         if (judgeVotes.length === 0) {
-            const votesResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSheetData&sheet=Votes`);
-            const votesData = await votesResponse.json();
-            if (votesData.success && votesData.rows) {
-                judgeVotes = votesData.rows.filter(row => 
-                    row.voter_email === judgeEmail || 
-                    row['Voter Email'] === judgeEmail
-                ).map(row => ({
-                    business_name: row.business_name || row['Business Name'],
-                    category: row.category || row.Category,
-                    score: row.vote_value || row['Vote Value'],
-                    comment: row.comment || '',
-                    created_at: row.timestamp || row.Timestamp
-                }));
-            }
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-history" style="font-size: 48px; color: #cbd5e0;"></i><p>No voting history found.</p><p style="font-size: 12px;">Cast your votes above to see them here.</p><\/td><\/tr>';
+            return;
         }
         
         displayHistory(judgeVotes);
@@ -1569,10 +1559,7 @@ async function loadHistory(page = 1) {
         
     } catch (error) {
         console.error('Error loading history:', error);
-        const tbody = document.getElementById('historyTableBody');
-        if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #EF4444;">Error loading history: ${error.message}<\/td><\/tr>`;
-        }
+        tbody.innerHTML = `<td><td colspan="5" style="text-align: center; color: #EF4444;">Error loading history: ${error.message}<\/td><\/tr>`;
     }
 }
 
