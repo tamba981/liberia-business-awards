@@ -1368,7 +1368,7 @@ function changeVotablePage(page) {
     displayVotableNominations();
 }
         
-    // ============================================
+// ============================================
 // VOTE SUBMISSION - Direct to Google Sheets (matches frontend voting)
 // ============================================
 async function submitVote(nominationId, businessName, category) {
@@ -1397,22 +1397,20 @@ async function submitVote(nominationId, businessName, category) {
         console.log('📧 Submitting vote as judge:', judgeEmail);
         
         // Send vote to Google Apps Script with proper email
-        const formData = new URLSearchParams();
-        formData.append('formType', 'vote');
-        formData.append('business_id', nominationId);
-        formData.append('business_name', decodedBusinessName);
-        formData.append('category', decodedCategory);
-        formData.append('vote_value', rating);
-        formData.append('voteValue', rating);  // Add this for compatibility
-        formData.append('voter_email', judgeEmail);  // CRITICAL: Include judge's email
-        formData.append('voter_name', judgeName);
-        formData.append('is_jury', 'true');
-        formData.append('vote_weight', '3');
-        formData.append('source', 'judge_dashboard');
-        formData.append('source_email', judgeEmail);  // Add extra email field for redundancy
-        formData.append('timestamp', new Date().toISOString());
-        
-        console.log('Submitting vote to Google Apps Script:', Object.fromEntries(formData));
+const formData = new URLSearchParams();
+formData.append('formType', 'vote');
+formData.append('businessId', nominationId);           // ← FIXED: camelCase, not underscore
+formData.append('businessName', decodedBusinessName); // ← FIXED: camelCase
+formData.append('category', decodedCategory);
+formData.append('voteValue', rating);                 // ← FIXED: camelCase, not underscore
+formData.append('voterEmail', judgeEmail);            // ← FIXED: camelCase
+formData.append('isJury', 'true');                    // ← FIXED: camelCase
+formData.append('is_jury', 'true');                   // ← KEEP BOTH for compatibility
+formData.append('voteWeight', '3');                   // ← FIXED: camelCase
+formData.append('source', 'judge_dashboard');
+formData.append('timestamp', new Date().toISOString());
+
+console.log('Submitting vote to Google Apps Script:', Object.fromEntries(formData));
         
         const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
             method: 'POST',
