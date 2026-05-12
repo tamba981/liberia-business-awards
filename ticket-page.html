@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Paystack Popup Script -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
         body { background: #f9fafb; scroll-behavior: smooth; }
@@ -20,6 +22,9 @@
         .payment-method-card { transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; }
         .payment-method-card.active { border-color: #FF0000; background-color: #fff5f5; box-shadow: 0 4px 12px rgba(255,0,0,0.1); }
         .toast-notify { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 12px 24px; border-radius: 40px; z-index: 9999; font-weight: 500; box-shadow: 0 8px 20px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .loading-spinner { width: 60px; height: 60px; border: 4px solid #f3f3f3; border-top: 4px solid #FF0000; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -164,7 +169,7 @@
         <p class="text-center text-gray-400 text-xs mt-4">*Limited cash tickets available at venue box office. Online bookings recommended.</p>
     </div>
 
-    <!-- TICKET PURCHASE MODAL (Integrated with Backend) -->
+    <!-- TICKET PURCHASE MODAL -->
     <div id="ticketModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] opacity-0 invisible transition-all duration-300 modal-transition">
         <div class="bg-white rounded-2xl w-full max-w-3xl mx-4 shadow-2xl transform transition-all scale-95 overflow-hidden">
             <div class="gradient-lba px-6 py-4 flex justify-between items-center text-white">
@@ -180,6 +185,10 @@
                         <div class="border-t pt-4">
                             <p class="font-semibold flex items-center gap-2"><i class="fas fa-chair"></i> Seat allocation</p>
                             <p class="text-xs text-gray-500 mt-1">Seats will be assigned automatically based on your ticket type and purchase order. E-tickets show exact seat numbers.</p>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <span class="seat-badge"><i class="fas fa-check-circle text-green-500"></i> Orchestra section</span>
+                                <span class="seat-badge"><i class="fas fa-wheelchair"></i> Accessible seats available</span>
+                            </div>
                         </div>
                         <div>
                             <p class="font-semibold mb-2">Payment Options</p>
@@ -213,12 +222,21 @@
     </footer>
 
     <script>
-        // Your Google Apps Script Web App URL (replace with your actual deployment URL)
+        // ============================================
+        // PAYSTACK CONFIGURATION
+        // ============================================
+        // IMPORTANT: Replace with your actual Paystack Public Key
+        // Get it from: https://dashboard.paystack.com/#/settings/developer
+        const PAYSTACK_PUBLIC_KEY = 'pk_live_YOUR_PUBLIC_KEY'; // Replace with your live key
+        // For testing, use test key: 'pk_test_...'
+        
+        // Your Google Apps Script Web App URL
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
 
         let currentTicket = { name: "Standard", price: 30 };
         let currentQuantity = 1;
         let selectedPayment = "card";
+        let currentOrderId = null;
 
         // DOM refs
         const modal = document.getElementById('ticketModal');
@@ -287,10 +305,240 @@
             toast.className = 'toast-notify';
             toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${msg}`;
             document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
+            setTimeout(() => toast.remove(), 5000);
         }
 
-        // Submit ticket purchase to Google Apps Script
+        function showLoading(show) {
+            let overlay = document.getElementById('paymentLoadingOverlay');
+            if (show) {
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'paymentLoadingOverlay';
+                    overlay.className = 'loading-overlay';
+                    overlay.innerHTML = `
+                        <div class="loading-spinner"></div>
+                        <p class="text-white mt-4 text-lg font-semibold">Processing payment...</p>
+                        <p class="text-white/70 text-sm mt-2">Please do not close this window</p>
+                    `;
+                    document.body.appendChild(overlay);
+                } else {
+                    overlay.style.display = 'flex';
+                }
+            } else if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+
+        // Generate unique order ID
+        function generateOrderId() {
+            return 'LBA-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+
+        // Generate seat numbers
+        function generateSeats(ticketType, quantity) {
+            const seats = [];
+            for(let i=1; i<=quantity; i++) {
+                let row = '';
+                if(ticketType.includes('VIP')) row = `VIP-${Math.floor(Math.random() * 20) + 1}`;
+                else if(ticketType.includes('Business')) row = `B-${Math.floor(Math.random() * 30) + 3}`;
+                else if(ticketType.includes('Table')) row = `TBL-${Math.floor(Math.random() * 10) + 1}`;
+                else row = `S-${Math.floor(Math.random() * 100) + 9}`;
+                seats.push(`${row} Seat ${Math.floor(Math.random() * 30) + 1}`);
+            }
+            return seats;
+        }
+
+        // Save order to Google Sheets
+        async function saveOrderToSheets(orderData) {
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        formType: 'ticket_purchase',
+                        ticketType: orderData.ticketType,
+                        quantity: orderData.quantity,
+                        totalAmount: orderData.totalAmount,
+                        paymentMethod: orderData.paymentMethod,
+                        customerEmail: orderData.customerEmail,
+                        seats: orderData.seats.join(', '),
+                        orderId: orderData.orderId,
+                        status: orderData.status,
+                        transactionId: orderData.transactionId || '',
+                        source: 'website',
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                console.log('Order saved to Google Sheets:', orderData);
+                return true;
+            } catch (error) {
+                console.error('Error saving to sheets:', error);
+                return false;
+            }
+        }
+
+        // Send email confirmation via Apps Script
+        async function sendEmailConfirmation(orderData) {
+            try {
+                await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        formType: 'ticket_confirmation',
+                        email: orderData.customerEmail,
+                        ticketType: orderData.ticketType,
+                        quantity: orderData.quantity,
+                        totalAmount: orderData.totalAmount,
+                        seats: orderData.seats.join(', '),
+                        orderId: orderData.orderId,
+                        transactionId: orderData.transactionId || '',
+                        paymentMethod: orderData.paymentMethod,
+                        eventDate: 'December 19, 2026',
+                        eventTime: '6:00 PM GMT',
+                        venue: 'Monrovia City Hall Conference Center'
+                    })
+                });
+                console.log('Confirmation email sent to:', orderData.customerEmail);
+                return true;
+            } catch (error) {
+                console.error('Error sending email:', error);
+                return false;
+            }
+        }
+
+        // Process Card Payment with Paystack
+        function processCardPayment(orderData) {
+            return new Promise((resolve, reject) => {
+                const amountInCents = Math.round(orderData.totalAmount * 100);
+                
+                const handler = PaystackPop.setup({
+                    key: PAYSTACK_PUBLIC_KEY,
+                    email: orderData.customerEmail,
+                    amount: amountInCents,
+                    currency: 'USD',
+                    ref: orderData.orderId,
+                    metadata: {
+                        custom_fields: [
+                            { display_name: "Ticket Type", variable_name: "ticket_type", value: orderData.ticketType },
+                            { display_name: "Quantity", variable_name: "quantity", value: orderData.quantity },
+                            { display_name: "Seats", variable_name: "seats", value: orderData.seats.join(', ') }
+                        ]
+                    },
+                    callback: function(response) {
+                        console.log('Payment successful:', response);
+                        resolve({
+                            success: true,
+                            transactionId: response.reference,
+                            message: 'Payment completed successfully'
+                        });
+                    },
+                    onClose: function() {
+                        console.log('Payment window closed');
+                        reject(new Error('Payment was cancelled'));
+                    }
+                });
+                
+                handler.openIframe();
+            });
+        }
+
+        // Process Mobile Money (MTN/Lonestar) - Manual payment reference
+        async function processMobileMoney(orderData) {
+            showLoading(true);
+            
+            // Generate payment reference
+            const paymentRef = 'MM-' + Date.now() + '-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+            
+            // Save order as pending first
+            await saveOrderToSheets({
+                ...orderData,
+                status: 'pending_payment',
+                transactionId: paymentRef
+            });
+            
+            showLoading(false);
+            
+            // Show payment instructions
+            const proceed = confirm(
+                `📱 MOBILE MONEY PAYMENT INSTRUCTIONS\n\n` +
+                `Amount to pay: $${orderData.totalAmount}\n\n` +
+                `1. Open your MTN Mobile Money or Lonestar app\n` +
+                `2. Go to "Pay Merchant"\n` +
+                `3. Enter Merchant Code: 1234567\n` +
+                `4. Enter Amount: $${orderData.totalAmount}\n` +
+                `5. Enter Reference: ${paymentRef}\n` +
+                `6. Complete the payment\n\n` +
+                `After payment, click OK and we'll verify your payment.\n` +
+                `Your tickets will be sent within 30 minutes.\n\n` +
+                `Click OK to confirm you'll complete the payment`
+            );
+            
+            if (proceed) {
+                return {
+                    success: true,
+                    transactionId: paymentRef,
+                    message: 'Mobile payment initiated'
+                };
+            } else {
+                throw new Error('Payment cancelled');
+            }
+        }
+
+        // Process Bank Transfer
+        async function processBankTransfer(orderData) {
+            showLoading(true);
+            
+            const paymentRef = 'BT-' + Date.now() + '-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+            
+            await saveOrderToSheets({
+                ...orderData,
+                status: 'pending_payment',
+                transactionId: paymentRef
+            });
+            
+            showLoading(false);
+            
+            const proceed = confirm(
+                `🏦 BANK TRANSFER INSTRUCTIONS\n\n` +
+                `Amount to transfer: $${orderData.totalAmount}\n\n` +
+                `Bank: ECOBANK Liberia\n` +
+                `Account Name: Liberia Business Awards\n` +
+                `Account Number: 1234567890\n` +
+                `IBAN: LR4300123456789\n` +
+                `Reference: ${paymentRef}\n\n` +
+                `Upload your payment receipt at:\n` +
+                `https://liberiabusinessawardslr.com/upload-payment\n\n` +
+                `After transfer, click OK and we'll verify your payment.\n` +
+                `Your tickets will be sent within 24 hours.\n\n` +
+                `Click OK to confirm you'll complete the transfer`
+            );
+            
+            if (proceed) {
+                return {
+                    success: true,
+                    transactionId: paymentRef,
+                    message: 'Bank transfer initiated'
+                };
+            } else {
+                throw new Error('Bank transfer cancelled');
+            }
+        }
+
+        // Process PayPal (redirect)
+        function processPayPal(orderData) {
+            const palPalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=liberiabusinessawards@gmail.com&item_name=${encodeURIComponent(orderData.ticketType)} Tickets&amount=${orderData.totalAmount}&currency_code=USD&invoice=${orderData.orderId}&return=https://liberiabusinessawardslr.com/tickets/thank-you&cancel_return=https://liberiabusinessawardslr.com/tickets`;
+            
+            window.open(palPalUrl, '_blank');
+            
+            return {
+                success: true,
+                message: 'PayPal redirect initiated'
+            };
+        }
+
+        // Main payment handler
         proceedBtn.addEventListener('click', async () => {
             const customerEmail = customerEmailInput ? customerEmailInput.value.trim() : '';
             if (!customerEmail) {
@@ -302,56 +550,93 @@
                 return;
             }
 
-            // Generate seat numbers simulation
-            const seats = [];
-            for(let i=1; i<=currentQuantity; i++) {
-                let row = '';
-                if(currentTicket.name.includes('VIP')) row = `VIP-${Math.floor(Math.random() * 20) + 1}`;
-                else if(currentTicket.name.includes('Business')) row = `B-${Math.floor(Math.random() * 30) + 3}`;
-                else if(currentTicket.name.includes('Table')) row = `TBL-${Math.floor(Math.random() * 10) + 1}`;
-                else row = `S-${Math.floor(Math.random() * 100) + 9}`;
-                seats.push(`${row} Seat ${Math.floor(Math.random() * 30) + 1}`);
-            }
-
+            // Generate order data
+            const seats = generateSeats(currentTicket.name, currentQuantity);
+            const orderId = generateOrderId();
+            const totalAmount = currentTicket.price * currentQuantity;
+            
             const orderData = {
-                formType: 'ticket_purchase',
+                orderId: orderId,
                 ticketType: currentTicket.name,
                 quantity: currentQuantity,
-                totalAmount: currentTicket.price * currentQuantity,
+                totalAmount: totalAmount,
                 paymentMethod: selectedPayment,
                 customerEmail: customerEmail,
-                seats: seats.join(', '),
-                purchasedAt: new Date().toISOString(),
-                source: 'website'
+                seats: seats,
+                status: 'completed'
             };
 
-            // Disable button
+            // Disable button and show loading
             proceedBtn.disabled = true;
             proceedBtn.innerText = 'Processing...';
 
             try {
-                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(orderData)
-                });
-                // Since mode: 'no-cors' we can't read response, assume success
-                console.log('Ticket order sent to Google Sheets:', orderData);
-                showToast(`🎉 Order placed! ${currentQuantity} x ${currentTicket.name} | Total $${orderData.totalAmount}. Tickets will be sent to ${customerEmail}.`, 'success');
-                closeTicketModal();
-                // optional reset form
-                if(customerEmailInput) customerEmailInput.value = '';
+                let paymentResult;
+                
+                switch(selectedPayment) {
+                    case 'card':
+                        showLoading(true);
+                        paymentResult = await processCardPayment(orderData);
+                        showLoading(false);
+                        break;
+                    case 'mobilemoney':
+                        paymentResult = await processMobileMoney(orderData);
+                        break;
+                    case 'paypal':
+                        paymentResult = processPayPal(orderData);
+                        break;
+                    case 'bank':
+                        paymentResult = await processBankTransfer(orderData);
+                        break;
+                    default:
+                        paymentResult = { success: false, message: 'Invalid payment method' };
+                }
+                
+                if (paymentResult.success) {
+                    // Save completed order to sheets
+                    await saveOrderToSheets({
+                        ...orderData,
+                        transactionId: paymentResult.transactionId || '',
+                        status: paymentResult.transactionId ? 'completed' : 'pending'
+                    });
+                    
+                    // Send email confirmation
+                    await sendEmailConfirmation({
+                        ...orderData,
+                        transactionId: paymentResult.transactionId || ''
+                    });
+                    
+                    // Show success message
+                    showToast(`🎉 Order placed! ${currentQuantity} x ${currentTicket.name} | Total $${totalAmount}. Tickets will be sent to ${customerEmail}.`, 'success');
+                    
+                    // Close modal and reset form
+                    closeTicketModal();
+                    if(customerEmailInput) customerEmailInput.value = '';
+                    currentQuantity = 1;
+                    updateSummary();
+                    
+                    // Optional: Redirect to thank you page
+                    // window.location.href = '/tickets/thank-you.html?order=' + orderId;
+                } else {
+                    showToast(paymentResult.message || 'Payment failed. Please try again.', 'error');
+                }
             } catch (error) {
-                console.error('Purchase error:', error);
-                showToast('Error processing order. Please try again.', 'error');
+                console.error('Payment error:', error);
+                showToast(error.message || 'Error processing payment. Please try again.', 'error');
             } finally {
                 proceedBtn.disabled = false;
                 proceedBtn.innerText = 'Proceed to Payment';
+                showLoading(false);
             }
         });
 
         modal.addEventListener('click', (e) => { if(e.target === modal) closeTicketModal(); });
+        
+        // Check if Paystack is loaded
+        if (typeof PaystackPop === 'undefined') {
+            console.warn('Paystack script not loaded. Card payments will not work.');
+            showToast('Payment system loading. Please refresh the page.', 'warning');
+        }
     </script>
 </body>
 </html>
