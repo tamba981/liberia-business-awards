@@ -1412,7 +1412,14 @@
         <span>Pending Businesses</span>
         <span class="badge" id="pendingBusinessesCount">0</span>
     </a>
+    <a href="#" class="menu-item" onclick="showTicketSalesModal()">
+        <i class="fas fa-ticket-alt"></i>
+        <span>Ticket Sales</span>
+        <span class="badge" id="ticketOrdersCount">0</span>
+    </a>
 </div>
+
+                
                 
                 <div class="menu-divider"></div>
                 
@@ -1583,7 +1590,15 @@
                             <p>Post news and updates to all users</p>
                         </div>
                     </a>
-                    
+                    <a href="#" class="action-card" onclick="showTicketSalesModal()">
+    <div class="action-icon">
+        <i class="fas fa-ticket-alt"></i>
+    </div>
+    <div class="action-content">
+        <h3>Manage Tickets</h3>
+        <p>View all ticket orders and sales</p>
+    </div>
+</a>
                     <a href="#" class="action-card" onclick="showAnalyticsModal()">
                         <div class="action-icon">
                             <i class="fas fa-chart-line"></i>
@@ -4597,6 +4612,126 @@ setInterval(function() {
 }, 30000);
 
 console.log('✅ Voting system fully integrated and ready!');
+
+                // ============================================
+        // TICKET SALES MANAGEMENT (ADMIN)
+        // ============================================
+
+        function showTicketSalesModal() {
+            hideAllModals();
+            
+            let modal = document.getElementById('ticketSalesModal');
+            if (!modal) createTicketSalesModal();
+            
+            modal = document.getElementById('ticketSalesModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            loadTicketOrders();
+        }
+
+        function createTicketSalesModal() {
+            const modalHTML = `
+            <div class="modal" id="ticketSalesModal">
+                <div class="modal-content" style="max-width: 1200px;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                        <h2><i class="fas fa-ticket-alt"></i> Ticket Sales Management</h2>
+                        <button class="modal-close" onclick="hideModal('ticketSalesModal')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="filter-controls" style="margin-bottom: 20px;">
+                            <div class="filter-grid">
+                                <div class="filter-group">
+                                    <label>Filter by Ticket Type</label>
+                                    <select id="ticketTypeFilter" onchange="loadTicketOrders()">
+                                        <option value="all">All Types</option>
+                                        <option value="Standard">Standard</option>
+                                        <option value="Business Class">Business Class</option>
+                                        <option value="VIP Experience">VIP Experience</option>
+                                        <option value="Table Sponsor">Table Sponsor</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label>Search (Email)</label>
+                                    <input type="text" id="ticketSearch" placeholder="Search..." onkeyup="filterTicketOrders()">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="data-table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Ticket Type</th>
+                                        <th>Quantity</th>
+                                        <th>Total ($)</th>
+                                        <th>Customer Email</th>
+                                        <th>Seats</th>
+                                        <th>Payment Method</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ticketOrdersTableBody">
+                                    <tr><td colspan="8" style="text-align: center;">Loading...<\/td><\/tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        async function loadTicketOrders() {
+            const tbody = document.getElementById('ticketOrdersTableBody');
+            if (!tbody) return;
+            
+            const filterType = document.getElementById('ticketTypeFilter')?.value || 'all';
+            const GOOGLE_APPS_SCRIPT_URL_ADMIN = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+            
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading tickets...<\/td><\/tr>';
+            
+            try {
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=getTicketOrders&type=${filterType}`);
+                const data = await response.json();
+                
+                if (data.success && data.orders && data.orders.length > 0) {
+                    tbody.innerHTML = data.orders.map(order => `
+                        <tr>
+                            <td>${new Date(order.timestamp).toLocaleString()}</td>
+                            <td><strong>${escapeHtml(order.ticketType)}</strong></td>
+                            <td>${order.quantity}</td>
+                            <td>$${order.totalAmount}</td>
+                            <td>${escapeHtml(order.customerEmail)}</span></td>
+                            <td><small>${escapeHtml(order.seats)}</small></td>
+                            <td><span class="status-badge status-active">${escapeHtml(order.paymentMethod)}</span></td>
+                            <td><span class="status-badge status-active">Confirmed</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '</tr><td colspan="8" style="text-align: center;">No ticket orders found.<\/td><\/tr>';
+                }
+            } catch (error) {
+                console.error('Load ticket orders error:', error);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #EF4444;">Error loading orders.<\/td><\/tr>';
+            }
+        }
+
+        function filterTicketOrders() {
+            const search = document.getElementById('ticketSearch')?.value.toLowerCase() || '';
+            const rows = document.querySelectorAll('#ticketOrdersTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
+            });
+        }
+
+        window.showTicketSalesModal = showTicketSalesModal;
+        window.loadTicketOrders = loadTicketOrders;
+        window.filterTicketOrders = filterTicketOrders;
      
         // ============================================
         // EXPORT TO GLOBAL SCOPE
@@ -9498,6 +9633,9 @@ setTimeout(() => {
 
 // Add to window
 window.diagnoseSpotlight = diagnoseSpotlight;
+
+
+        
 </script>
     
    <!-- ============ SPOTLIGHT MANAGEMENT MODAL ============ -->
