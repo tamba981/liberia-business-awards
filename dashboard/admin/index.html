@@ -9191,9 +9191,12 @@ function createSettingsModal() {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
+// ============================================
+// LOAD SETTINGS FROM GOOGLE SHEETS
+// ============================================
 async function loadSettings() {
     try {
-        // First try to load from localStorage
+        // First try to load from localStorage as fallback
         const savedEventSettings = localStorage.getItem('lba_event_settings');
         if (savedEventSettings) {
             const settings = JSON.parse(savedEventSettings);
@@ -9205,89 +9208,102 @@ async function loadSettings() {
             document.getElementById('settingsEventInfo').value = settings.eventInfo || '';
         }
         
-        // Then load from API
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/settings`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // Load from Google Sheets
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getEventSettings`);
         const data = await response.json();
         
-        if (data.success) {
+        console.log('📡 Event settings loaded:', data);
+        
+        if (data.success && data.settings) {
             const s = data.settings;
-            document.getElementById('settingsPlatformName').value = s.platformName || '';
-            document.getElementById('settingsAdminEmail').value = s.adminEmail || '';
+            document.getElementById('settingsEventName').value = s.eventName || 'Liberia Business Awards 2026';
+            document.getElementById('settingsEventDate').value = s.eventDate || '';
+            document.getElementById('settingsEventTime').value = s.eventTime || '6:00 PM GMT';
+            document.getElementById('settingsVenue').value = s.venue || 'Monrovia City Hall Conference Center, Monrovia, Liberia';
+            document.getElementById('settingsSupportPhone').value = s.supportPhone || '+231 886 590 302';
+            document.getElementById('settingsEventInfo').value = s.eventInfo || '';
+            
+            // Also load general settings if needed
+            document.getElementById('settingsPlatformName').value = s.platformName || 'Liberia Business Awards';
+            document.getElementById('settingsAdminEmail').value = s.adminEmail || CONFIG.ADMIN_EMAIL;
             document.getElementById('settingsLogo').value = s.logo || '';
             document.getElementById('settingsSystemStatus').value = s.systemStatus || 'online';
             
-            // Load event settings from backend if available
-            if (s.eventSettings) {
-                document.getElementById('settingsEventName').value = s.eventSettings.eventName || 'Liberia Business Awards 2026';
-                document.getElementById('settingsEventDate').value = s.eventSettings.eventDate || '';
-                document.getElementById('settingsEventTime').value = s.eventSettings.eventTime || '6:00 PM GMT';
-                document.getElementById('settingsVenue').value = s.eventSettings.venue || 'Monrovia City Hall Conference Center, Monrovia, Liberia';
-                document.getElementById('settingsSupportPhone').value = s.eventSettings.supportPhone || '+231 886 590 302';
-                document.getElementById('settingsEventInfo').value = s.eventSettings.eventInfo || '';
-            }
-            
-            // Update system status indicator
-            const systemStatus = document.getElementById('systemStatus');
-            if (systemStatus) {
-                systemStatus.style.background = s.systemStatus === 'online' ? '#10B981' : '#F59E0B';
-            }
+            // Save to localStorage as backup
+            localStorage.setItem('lba_event_settings', JSON.stringify({
+                eventName: s.eventName,
+                eventDate: s.eventDate,
+                eventTime: s.eventTime,
+                venue: s.venue,
+                supportPhone: s.supportPhone,
+                eventInfo: s.eventInfo
+            }));
         }
     } catch (error) {
         console.error('Error loading settings:', error);
+        showNotification('Could not load settings from server. Using saved settings.', 'warning');
     }
 }
 
+// ============================================
+// SAVE SETTINGS TO GOOGLE SHEETS
+// ============================================
 async function saveSettings() {
     const settingsData = {
+        formType: 'update_event_settings',
+        eventName: document.getElementById('settingsEventName').value,
+        eventDate: document.getElementById('settingsEventDate').value,
+        eventTime: document.getElementById('settingsEventTime').value,
+        venue: document.getElementById('settingsVenue').value,
+        supportPhone: document.getElementById('settingsSupportPhone').value,
+        eventInfo: document.getElementById('settingsEventInfo').value,
         platformName: document.getElementById('settingsPlatformName').value,
         adminEmail: document.getElementById('settingsAdminEmail').value,
         logo: document.getElementById('settingsLogo').value,
         systemStatus: document.getElementById('settingsSystemStatus').value,
-        eventSettings: {
-            eventName: document.getElementById('settingsEventName').value,
-            eventDate: document.getElementById('settingsEventDate').value,
-            eventTime: document.getElementById('settingsEventTime').value,
-            venue: document.getElementById('settingsVenue').value,
-            supportPhone: document.getElementById('settingsSupportPhone').value,
-            eventInfo: document.getElementById('settingsEventInfo').value
-        }
+        timestamp: new Date().toISOString()
     };
     
-    // Save to localStorage
-    localStorage.setItem('lba_event_settings', JSON.stringify(settingsData.eventSettings));
+    // Save to localStorage immediately for backup
+    localStorage.setItem('lba_event_settings', JSON.stringify({
+        eventName: settingsData.eventName,
+        eventDate: settingsData.eventDate,
+        eventTime: settingsData.eventTime,
+        venue: settingsData.venue,
+        supportPhone: settingsData.supportPhone,
+        eventInfo: settingsData.eventInfo
+    }));
+    
+    // Show saving indicator
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
     
     try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/settings`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(settingsData)
+        // Save to Google Sheets
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(settingsData)
         });
         
-        if (response.ok) {
-            showNotification('Settings saved successfully!', 'success');
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('✅ Settings saved successfully!', 'success');
             hideModal('settingsModal');
-            
-            // Update system status indicator
-            const systemStatus = document.getElementById('systemStatus');
-            if (systemStatus) {
-                systemStatus.style.background = settingsData.systemStatus === 'online' ? '#10B981' : '#F59E0B';
-            }
-            
-            // Clear the ticket modal cache so it reloads with new settings
-            if (typeof updateTicketModalSettings === 'function') {
-                updateTicketModalSettings();
-            }
+        } else {
+            showNotification('⚠️ Saved locally but server sync failed. Settings will be used for emails.', 'warning');
+            hideModal('settingsModal');
         }
     } catch (error) {
         console.error('Error saving settings:', error);
-        showNotification('Error saving settings: ' + error.message, 'error');
+        showNotification('⚠️ Settings saved locally. Will be used for emails.', 'warning');
+        hideModal('settingsModal');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
     }
 }
 
