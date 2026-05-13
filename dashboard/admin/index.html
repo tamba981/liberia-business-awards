@@ -4631,95 +4631,158 @@ console.log('✅ Voting system fully integrated and ready!');
         }
 
         function createTicketSalesModal() {
-            const modalHTML = `
-            <div class="modal" id="ticketSalesModal">
-                <div class="modal-content" style="max-width: 1200px;">
-                    <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
-                        <h2><i class="fas fa-ticket-alt"></i> Ticket Sales Management</h2>
-                        <button class="modal-close" onclick="hideModal('ticketSalesModal')">
-                            <i class="fas fa-times"></i>
-                        </button>
+    const modalHTML = `
+    <div class="modal" id="ticketSalesModal">
+        <div class="modal-content" style="max-width: 1400px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-ticket-alt"></i> Ticket Sales Management</h2>
+                <button class="modal-close" onclick="hideModal('ticketSalesModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Stats Summary -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="stat-card" style="padding: 15px;">
+                        <h3 id="totalTicketsSold">0</h3>
+                        <p>Total Tickets Sold</p>
                     </div>
-                    <div class="modal-body">
-                        <div class="filter-controls" style="margin-bottom: 20px;">
-                            <div class="filter-grid">
-                                <div class="filter-group">
-                                    <label>Filter by Ticket Type</label>
-                                    <select id="ticketTypeFilter" onchange="loadTicketOrders()">
-                                        <option value="all">All Types</option>
-                                        <option value="Standard">Standard</option>
-                                        <option value="Business Class">Business Class</option>
-                                        <option value="VIP Experience">VIP Experience</option>
-                                        <option value="Table Sponsor">Table Sponsor</option>
-                                    </select>
-                                </div>
-                                <div class="filter-group">
-                                    <label>Search (Email)</label>
-                                    <input type="text" id="ticketSearch" placeholder="Search..." onkeyup="filterTicketOrders()">
-                                </div>
-                            </div>
+                    <div class="stat-card" style="padding: 15px;">
+                        <h3 id="totalRevenue">$0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                    <div class="stat-card" style="padding: 15px;">
+                        <h3 id="pendingPayments">0</h3>
+                        <p>Pending Payments</p>
+                    </div>
+                    <div class="stat-card" style="padding: 15px;">
+                        <h3 id="completedOrders">0</h3>
+                        <p>Completed Orders</p>
+                    </div>
+                </div>
+
+                <div class="filter-controls" style="margin-bottom: 20px;">
+                    <div class="filter-grid">
+                        <div class="filter-group">
+                            <label>Filter by Ticket Type</label>
+                            <select id="ticketTypeFilter" onchange="loadTicketOrders()">
+                                <option value="all">All Types</option>
+                                <option value="Standard">Standard</option>
+                                <option value="Business Class">Business Class</option>
+                                <option value="VIP Experience">VIP Experience</option>
+                                <option value="Table Sponsor">Table Sponsor</option>
+                            </select>
                         </div>
-                        <div class="data-table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Ticket Type</th>
-                                        <th>Quantity</th>
-                                        <th>Total ($)</th>
-                                        <th>Customer Email</th>
-                                        <th>Seats</th>
-                                        <th>Payment Method</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="ticketOrdersTableBody">
-                                    <tr><td colspan="8" style="text-align: center;">Loading...<\/td><\/tr>
-                                </tbody>
-                            </table>
+                        <div class="filter-group">
+                            <label>Filter by Status</label>
+                            <select id="ticketStatusFilter" onchange="loadTicketOrders()">
+                                <option value="all">All Status</option>
+                                <option value="pending_payment">Pending Payment</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Search (Email/Order ID)</label>
+                            <input type="text" id="ticketSearch" placeholder="Search..." onkeyup="filterTicketOrders()">
                         </div>
                     </div>
                 </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                        <th>Ticket Type</th>
+                       <th>Qty</th>
+                       <th>Total ($)</th>
+                       <th>Customer Email</th>
+                       <th>Seats</th>
+                       <th>Payment Method</th>
+                       <th>Status</th>
+                       <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketOrdersTableBody">
+                            <tr><td colspan="9" style="text-align: center;">Loading...<\/td><\/tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-        }
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
 
         async function loadTicketOrders() {
-            const tbody = document.getElementById('ticketOrdersTableBody');
-            if (!tbody) return;
+    const tbody = document.getElementById('ticketOrdersTableBody');
+    if (!tbody) return;
+    
+    const filterType = document.getElementById('ticketTypeFilter')?.value || 'all';
+    const GOOGLE_APPS_SCRIPT_URL_ADMIN = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+    
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading tickets...<\/td><\/tr>';
+    
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=getTicketOrders&type=${filterType}`);
+        const data = await response.json();
+        
+        if (data.success && data.orders && data.orders.length > 0) {
+            // ============================================
+            // ✅ ADD THE STATS CALCULATION CODE RIGHT HERE
+            // ============================================
             
-            const filterType = document.getElementById('ticketTypeFilter')?.value || 'all';
-            const GOOGLE_APPS_SCRIPT_URL_ADMIN = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
-            
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading tickets...<\/td><\/tr>';
-            
-            try {
-                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=getTicketOrders&type=${filterType}`);
-                const data = await response.json();
-                
-                if (data.success && data.orders && data.orders.length > 0) {
-                    tbody.innerHTML = data.orders.map(order => `
-                        <tr>
-                            <td>${new Date(order.timestamp).toLocaleString()}</td>
-                            <td><strong>${escapeHtml(order.ticketType)}</strong></td>
-                            <td>${order.quantity}</td>
-                            <td>$${order.totalAmount}</td>
-                            <td>${escapeHtml(order.customerEmail)}</span></td>
-                            <td><small>${escapeHtml(order.seats)}</small></td>
-                            <td><span class="status-badge status-active">${escapeHtml(order.paymentMethod)}</span></td>
-                            <td><span class="status-badge status-active">Confirmed</span></td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '</tr><td colspan="8" style="text-align: center;">No ticket orders found.<\/td><\/tr>';
-                }
-            } catch (error) {
-                console.error('Load ticket orders error:', error);
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #EF4444;">Error loading orders.<\/td><\/tr>';
-            }
-        }
+            let totalSold = 0;
+            let totalRevenue = 0;
+            let pendingCount = 0;
+            let completedCount = 0;
 
+            data.orders.forEach(order => {
+                totalSold += order.quantity;
+                totalRevenue += order.totalAmount;
+                if (order.status === 'pending_payment') pendingCount++;
+                if (order.status === 'completed') completedCount++;
+            });
+
+            document.getElementById('totalTicketsSold').textContent = totalSold;
+            document.getElementById('totalRevenue').textContent = `$${totalRevenue}`;
+            document.getElementById('pendingPayments').textContent = pendingCount;
+            document.getElementById('completedOrders').textContent = completedCount;
+            
+            // THEN CONTINUE WITH DISPLAYING THE ORDERS
+            tbody.innerHTML = data.orders.map(order => `
+                <tr>
+                    <td>${new Date(order.timestamp).toLocaleString()}</td>
+                    <td><strong>${escapeHtml(order.ticketType)}</strong></td>
+                    <td>${order.quantity}</td>
+                    <td>$${order.totalAmount}</td>
+                    <td>${escapeHtml(order.customerEmail)}</span></td>
+                    <td><small>${escapeHtml(order.seats)}</small></td>
+                    <td><span class="status-badge status-active">${escapeHtml(order.paymentMethod)}</span></td>
+                    <td><span class="status-badge ${order.status === 'completed' ? 'status-active' : 'status-pending'}">${order.status || 'pending'}</span></td>
+                    <td>
+                        ${order.status === 'pending_payment' ? 
+                            `<button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="markTicketAsPaid('${order.orderId}')">
+                                <i class="fas fa-check"></i> Mark Paid
+                            </button>` : 
+                            `<span class="status-badge status-active">✓ Confirmed</span>`
+                        }
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('ticketOrdersCount').textContent = data.orders.length;
+        } else {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No ticket orders found.<\/td><\/tr>';
+            document.getElementById('ticketOrdersCount').textContent = '0';
+        }
+    } catch (error) {
+        console.error('Load ticket orders error:', error);
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #EF4444;">Error loading orders.<\/td><\/tr>';
+    }
+}
+
+        
         function filterTicketOrders() {
             const search = document.getElementById('ticketSearch')?.value.toLowerCase() || '';
             const rows = document.querySelectorAll('#ticketOrdersTableBody tr');
@@ -4732,6 +4795,41 @@ console.log('✅ Voting system fully integrated and ready!');
         window.showTicketSalesModal = showTicketSalesModal;
         window.loadTicketOrders = loadTicketOrders;
         window.filterTicketOrders = filterTicketOrders;
+
+        // Mark ticket as paid and send confirmation
+async function markTicketAsPaid(orderId) {
+    if (!confirm(`Confirm payment for order ${orderId}? This will send tickets to the customer.`)) return;
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/tickets/${orderId}/confirm`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`✅ Payment confirmed for ${orderId}! Tickets sent.`, 'success');
+            loadTicketOrders(); // Refresh the list
+        } else {
+            showNotification(result.message || 'Error confirming payment', 'error');
+        }
+    } catch (error) {
+        console.error('Error marking ticket as paid:', error);
+        showNotification('Error confirming payment', 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+
      
         // ============================================
         // EXPORT TO GLOBAL SCOPE
