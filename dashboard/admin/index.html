@@ -487,6 +487,29 @@
             padding: 6px 15px;
             border-radius: 20px;
         }
+
+        .settings-section {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.settings-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #1a202c;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-section small {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    margin-top: 4px;
+}
         
         /* Modern Quick Actions */
         .quick-actions {
@@ -9170,19 +9193,46 @@ function createSettingsModal() {
 
 async function loadSettings() {
     try {
-        const result = await fetchSettings();
+        // First try to load from localStorage
+        const savedEventSettings = localStorage.getItem('lba_event_settings');
+        if (savedEventSettings) {
+            const settings = JSON.parse(savedEventSettings);
+            document.getElementById('settingsEventName').value = settings.eventName || 'Liberia Business Awards 2026';
+            document.getElementById('settingsEventDate').value = settings.eventDate || '';
+            document.getElementById('settingsEventTime').value = settings.eventTime || '6:00 PM GMT';
+            document.getElementById('settingsVenue').value = settings.venue || 'Monrovia City Hall Conference Center, Monrovia, Liberia';
+            document.getElementById('settingsSupportPhone').value = settings.supportPhone || '+231 886 590 302';
+            document.getElementById('settingsEventInfo').value = settings.eventInfo || '';
+        }
         
-        if (result.success && result.settings) {
-            document.getElementById('settingsPlatformName').value = result.settings.platformName || '';
-            document.getElementById('settingsAdminEmail').value = result.settings.adminEmail || '';
-            document.getElementById('settingsLogo').value = result.settings.logo || '';
-            document.getElementById('settingsSystemStatus').value = result.settings.systemStatus || 'online';
+        // Then load from API
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/settings`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            const s = data.settings;
+            document.getElementById('settingsPlatformName').value = s.platformName || '';
+            document.getElementById('settingsAdminEmail').value = s.adminEmail || '';
+            document.getElementById('settingsLogo').value = s.logo || '';
+            document.getElementById('settingsSystemStatus').value = s.systemStatus || 'online';
+            
+            // Load event settings from backend if available
+            if (s.eventSettings) {
+                document.getElementById('settingsEventName').value = s.eventSettings.eventName || 'Liberia Business Awards 2026';
+                document.getElementById('settingsEventDate').value = s.eventSettings.eventDate || '';
+                document.getElementById('settingsEventTime').value = s.eventSettings.eventTime || '6:00 PM GMT';
+                document.getElementById('settingsVenue').value = s.eventSettings.venue || 'Monrovia City Hall Conference Center, Monrovia, Liberia';
+                document.getElementById('settingsSupportPhone').value = s.eventSettings.supportPhone || '+231 886 590 302';
+                document.getElementById('settingsEventInfo').value = s.eventSettings.eventInfo || '';
+            }
             
             // Update system status indicator
             const systemStatus = document.getElementById('systemStatus');
-            const statusText = document.querySelector('.system-status span');
             if (systemStatus) {
-                systemStatus.style.background = result.settings.systemStatus === 'online' ? '#10B981' : '#F59E0B';
+                systemStatus.style.background = s.systemStatus === 'online' ? '#10B981' : '#F59E0B';
             }
         }
     } catch (error) {
@@ -9195,14 +9245,33 @@ async function saveSettings() {
         platformName: document.getElementById('settingsPlatformName').value,
         adminEmail: document.getElementById('settingsAdminEmail').value,
         logo: document.getElementById('settingsLogo').value,
-        systemStatus: document.getElementById('settingsSystemStatus').value
+        systemStatus: document.getElementById('settingsSystemStatus').value,
+        eventSettings: {
+            eventName: document.getElementById('settingsEventName').value,
+            eventDate: document.getElementById('settingsEventDate').value,
+            eventTime: document.getElementById('settingsEventTime').value,
+            venue: document.getElementById('settingsVenue').value,
+            supportPhone: document.getElementById('settingsSupportPhone').value,
+            eventInfo: document.getElementById('settingsEventInfo').value
+        }
     };
     
+    // Save to localStorage
+    localStorage.setItem('lba_event_settings', JSON.stringify(settingsData.eventSettings));
+    
     try {
-        const result = await updateSettings(settingsData);
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/settings`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(settingsData)
+        });
         
-        if (result.success) {
-            showNotification('Settings saved!', 'success');
+        if (response.ok) {
+            showNotification('Settings saved successfully!', 'success');
             hideModal('settingsModal');
             
             // Update system status indicator
@@ -9210,15 +9279,33 @@ async function saveSettings() {
             if (systemStatus) {
                 systemStatus.style.background = settingsData.systemStatus === 'online' ? '#10B981' : '#F59E0B';
             }
-        } else {
-            showNotification(result.error || 'Error saving settings', 'error');
+            
+            // Clear the ticket modal cache so it reloads with new settings
+            if (typeof updateTicketModalSettings === 'function') {
+                updateTicketModalSettings();
+            }
         }
     } catch (error) {
         console.error('Error saving settings:', error);
-        showNotification('Error saving settings', 'error');
+        showNotification('Error saving settings: ' + error.message, 'error');
     }
 }
 
+        
+function getEventSettings() {
+    const saved = localStorage.getItem('lba_event_settings');
+    if (saved) {
+        return JSON.parse(saved);
+    }
+    return {
+        eventName: 'Liberia Business Awards 3.0',
+        eventDate: '2026-12-19',
+        eventTime: '6:00 PM GMT',
+        venue: 'Monrovia City Hall Conference Center, Monrovia, Liberia',
+        supportPhone: '+231 886 590 302',
+        eventInfo: ''
+    };
+}
 // ============ EXPORT ALL NEW FUNCTIONS TO GLOBAL SCOPE ============
 window.showAnnouncementModal = showAnnouncementModal;
 window.showAnnouncementsModal = showAnnouncementModal;
@@ -10687,9 +10774,9 @@ window.diagnoseSpotlight = diagnoseSpotlight;
     </div>
 </div>
 
-<!-- ============ SETTINGS MODAL ============ -->
+<!-- ============ SETTINGS MODAL - ENHANCED WITH EVENT SETTINGS ============ -->
 <div class="modal" id="settingsModal">
-    <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-content" style="max-width: 700px;">
         <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
             <h2><i class="fas fa-cog"></i> System Settings</h2>
             <button class="modal-close" onclick="hideModal('settingsModal')">
@@ -10698,32 +10785,85 @@ window.diagnoseSpotlight = diagnoseSpotlight;
         </div>
         <div class="modal-body">
             <form id="settingsForm">
-                <div class="form-group">
-                    <label>Platform Name</label>
-                    <input type="text" id="settingsPlatformName" class="sheet-btn secondary" style="width: 100%;">
+                <!-- General Settings -->
+                <div class="settings-section" style="margin-bottom: 25px;">
+                    <h3 style="font-size: 16px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #FF0000;">General Settings</h3>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Platform Name</label>
+                        <input type="text" id="settingsPlatformName" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Admin Email</label>
+                        <input type="email" id="settingsAdminEmail" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Logo URL</label>
+                        <input type="url" id="settingsLogo" class="sheet-btn secondary" style="width: 100%; padding: 10px;" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>System Status</label>
+                        <select id="settingsSystemStatus" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                            <option value="online">Online</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label>Admin Email</label>
-                    <input type="email" id="settingsAdminEmail" class="sheet-btn secondary" style="width: 100%;">
-                </div>
-                
-                <div class="form-group">
-                    <label>Logo URL</label>
-                    <input type="url" id="settingsLogo" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
-                </div>
-                
-                <div class="form-group">
-                    <label>System Status</label>
-                    <select id="settingsSystemStatus" class="sheet-btn secondary" style="width: 100%;">
-                        <option value="online">Online</option>
-                        <option value="maintenance">Maintenance</option>
-                    </select>
+
+                <!-- Event Settings -->
+                <div class="settings-section" style="margin-bottom: 25px;">
+                    <h3 style="font-size: 16px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #FF0000;">
+                        <i class="fas fa-calendar-alt"></i> Event Details (Used in Ticket Emails)
+                    </h3>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Event Name</label>
+                        <input type="text" id="settingsEventName" class="sheet-btn secondary" style="width: 100%; padding: 10px;" 
+                               placeholder="Liberia Business Awards 2026">
+                        <small>Displayed on ticket emails</small>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Event Date</label>
+                        <input type="date" id="settingsEventDate" class="sheet-btn secondary" style="width: 100%; padding: 10px;">
+                        <small>Format: YYYY-MM-DD</small>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Event Time</label>
+                        <input type="text" id="settingsEventTime" class="sheet-btn secondary" style="width: 100%; padding: 10px;" 
+                               placeholder="6:00 PM GMT">
+                        <small>Example: 6:00 PM GMT</small>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Venue / Location</label>
+                        <textarea id="settingsVenue" rows="3" class="sheet-btn secondary" style="width: 100%; padding: 10px;" 
+                                  placeholder="Monrovia City Hall Conference Center, Monrovia, Liberia"></textarea>
+                        <small>Full address with venue name, city, country</small>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Support Phone Number</label>
+                        <input type="tel" id="settingsSupportPhone" class="sheet-btn secondary" style="width: 100%; padding: 10px;" 
+                               placeholder="+231 886 590 302">
+                        <small>Phone number for ticket support inquiries</small>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Additional Information</label>
+                        <textarea id="settingsEventInfo" rows="2" class="sheet-btn secondary" style="width: 100%; padding: 10px;" 
+                                  placeholder="Dress code: Formal | Doors open at 5:00 PM | Parking available"></textarea>
+                        <small>Optional - will appear at bottom of ticket email</small>
+                    </div>
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button type="button" class="sheet-btn warning" onclick="hideModal('settingsModal')" style="flex: 1;">Cancel</button>
-                    <button type="button" class="sheet-btn" onclick="saveSettings()" style="flex: 2;">Save Settings</button>
+                    <button type="button" class="sheet-btn" onclick="saveSettings()" style="flex: 2;">Save All Settings</button>
                 </div>
             </form>
         </div>
