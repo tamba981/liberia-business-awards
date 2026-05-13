@@ -4760,7 +4760,7 @@ console.log('✅ Voting system fully integrated and ready!');
                     <td>${escapeHtml(order.customerEmail)}</span></td>
                     <td><small>${escapeHtml(order.seats)}</small></td>
                     <td><span class="status-badge status-active">${escapeHtml(order.paymentMethod)}</span></td>
-                    <td><span class="status-badge ${order.status === 'completed' ? 'status-active' : 'status-pending'}">${order.status || 'pending'}</span></td>
+                    <td><span class="status-badge ${order.status === 'completed' ? 'status-active' : 'status-pending'}">${order.status === 'pending_payment' ? 'Pending Payment' : 'Confirmed'}</span></td>
                     <td>
                         ${order.status === 'pending_payment' ? 
                             `<button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="markTicketAsPaid('${order.orderId}')">
@@ -4807,9 +4807,12 @@ async function markTicketAsPaid(orderId) {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/tickets/${orderId}/confirm`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
+        const GOOGLE_APPS_SCRIPT_URL_ADMIN = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+        
+        // Call Apps Script to confirm payment
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=confirmTicket&orderId=${orderId}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
         });
         
         const result = await response.json();
@@ -4818,11 +4821,11 @@ async function markTicketAsPaid(orderId) {
             showNotification(`✅ Payment confirmed for ${orderId}! Tickets sent.`, 'success');
             loadTicketOrders(); // Refresh the list
         } else {
-            showNotification(result.message || 'Error confirming payment', 'error');
+            showNotification(result.message || result.error || 'Error confirming payment', 'error');
         }
     } catch (error) {
         console.error('Error marking ticket as paid:', error);
-        showNotification('Error confirming payment', 'error');
+        showNotification('Error confirming payment: ' + error.message, 'error');
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
