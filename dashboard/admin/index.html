@@ -4806,17 +4806,12 @@ console.log('✅ Voting system fully integrated and ready!');
         
         console.log('📡 Marking ticket as paid for order:', orderId);
         
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL_ADMIN, {
-            method: 'POST',
+        // CHANGE TO GET INSTEAD OF POST
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=confirmTicket&orderId=${encodeURIComponent(orderId)}`, {
+            method: 'GET',
             headers: { 
-                'Accept': 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                formType: 'confirm_ticket_payment',
-                orderId: orderId,
-                timestamp: new Date().toISOString()
-            })
+                'Accept': 'application/json'
+            }
         });
         
         console.log('📡 Response status:', response.status);
@@ -4849,7 +4844,6 @@ console.log('✅ Voting system fully integrated and ready!');
         btn.disabled = false;
     }
 }
-
 
      
         // ============================================
