@@ -8,8 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Paystack Popup Script -->
-    <script src="https://js.paystack.co/v1/inline.js"></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
         body { background: #f9fafb; scroll-behavior: smooth; }
@@ -18,6 +16,8 @@
         .ticket-card:hover { transform: translateY(-8px); box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2); }
         .btn-primary { transition: all 0.2s; background: #FF0000; }
         .btn-primary:hover { background: #cc0000; transform: scale(1.02); box-shadow: 0 8px 20px rgba(255,0,0,0.3); }
+        .btn-primary-processing { background: #3B82F6 !important; }
+        .btn-primary-processing:hover { background: #2563EB !important; }
         .modal-transition { transition: opacity 0.25s ease, visibility 0.25s; }
         .payment-method-card { transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; }
         .payment-method-card.active { border-color: #FF0000; background-color: #fff5f5; box-shadow: 0 4px 12px rgba(255,0,0,0.1); }
@@ -25,6 +25,18 @@
         .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         .loading-spinner { width: 60px; height: 60px; border: 4px solid #f3f3f3; border-top: 4px solid #FF0000; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .payment-instructions { background: #f0fdf4; border: 2px solid #10B981; border-radius: 16px; padding: 20px; margin: 15px 0; }
+        .payment-number { background: #f1f5f9; padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .payment-number:hover { background: #e2e8f0; transform: translateX(5px); }
+        .payment-number.selected { border-color: #FF0000; background: #fff5f5; }
+        .copied-badge { background: #10B981; color: white; padding: 2px 8px; border-radius: 20px; font-size: 11px; animation: fadeOut 1.5s ease; }
+        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+        .btn-red { background: #FF0000; color: white; transition: all 0.2s; }
+        .btn-red:hover { background: #cc0000; transform: scale(1.02); }
+        .btn-red:active { transform: scale(0.98); }
+        .btn-processing { background: #3B82F6 !important; }
+        .btn-processing span { display: inline-block; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -158,20 +170,18 @@
         </div>
 
         <!-- payment methods -->
-        <div class="text-center mb-8"><h2 class="text-3xl font-bold text-gray-800">Secure & Flexible Payments</h2><p class="text-gray-500 mt-2">We support multiple payment methods for your convenience</p></div>
+        <div class="text-center mb-8"><h2 class="text-3xl font-bold text-gray-800">Secure & Flexible Payments</h2><p class="text-gray-500 mt-2">Choose your preferred payment method</p></div>
         <div class="flex flex-wrap justify-center gap-6 text-center text-gray-600 bg-white p-6 rounded-2xl shadow-sm max-w-3xl mx-auto">
+            <div><i class="fas fa-mobile-alt text-3xl text-green-600"></i><p class="text-xs mt-1">Mobile Money</p></div>
             <div><i class="fab fa-cc-visa text-3xl text-blue-700"></i><p class="text-xs mt-1">Visa/Mastercard</p></div>
-            <div><i class="fas fa-mobile-alt text-3xl text-green-600"></i><p class="text-xs mt-1">Mobile Money (MTN/Lonestar)</p></div>
             <div><i class="fab fa-paypal text-3xl text-indigo-500"></i><p class="text-xs mt-1">PayPal</p></div>
             <div><i class="fas fa-university text-3xl text-gray-700"></i><p class="text-xs mt-1">Bank Transfer</p></div>
-            <div><i class="fas fa-money-bill-wave text-3xl text-lba-red"></i><p class="text-xs mt-1">Cash at venue*</p></div>
         </div>
-        <p class="text-center text-gray-400 text-xs mt-4">*Limited cash tickets available at venue box office. Online bookings recommended.</p>
     </div>
 
     <!-- TICKET PURCHASE MODAL -->
     <div id="ticketModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] opacity-0 invisible transition-all duration-300 modal-transition">
-        <div class="bg-white rounded-2xl w-full max-w-3xl mx-4 shadow-2xl transform transition-all scale-95 overflow-hidden">
+        <div class="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-2xl transform transition-all scale-95 overflow-hidden">
             <div class="gradient-lba px-6 py-4 flex justify-between items-center text-white">
                 <div><h3 class="text-2xl font-bold" id="modalTicketTitle">Standard Ticket</h3><p class="text-sm opacity-90">Liberia Business Awards 2026</p></div>
                 <button onclick="closeTicketModal()" class="text-white hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times"></i></button>
@@ -185,21 +195,69 @@
                         <div class="border-t pt-4">
                             <p class="font-semibold flex items-center gap-2"><i class="fas fa-chair"></i> Seat allocation</p>
                             <p class="text-xs text-gray-500 mt-1">Seats will be assigned automatically based on your ticket type and purchase order. E-tickets show exact seat numbers.</p>
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                <span class="seat-badge"><i class="fas fa-check-circle text-green-500"></i> Orchestra section</span>
-                                <span class="seat-badge"><i class="fas fa-wheelchair"></i> Accessible seats available</span>
-                            </div>
                         </div>
                         <div>
                             <p class="font-semibold mb-2">Payment Options</p>
                             <div class="grid grid-cols-2 gap-3" id="paymentMethodsContainer">
+                                <div class="payment-method-card p-3 rounded-xl flex items-center gap-3" data-method="mobilemoney"><i class="fas fa-mobile-alt text-2xl text-green-600"></i> <span>Mobile Money (Recommended)</span></div>
                                 <div class="payment-method-card p-3 rounded-xl flex items-center gap-3" data-method="card"><i class="fab fa-cc-visa text-2xl text-blue-700"></i> <span>Credit/Debit Card</span></div>
-                                <div class="payment-method-card p-3 rounded-xl flex items-center gap-3" data-method="mobilemoney"><i class="fas fa-mobile-alt text-2xl text-green-600"></i> <span>Mobile Money (MTN/Lonestar)</span></div>
                                 <div class="payment-method-card p-3 rounded-xl flex items-center gap-3" data-method="paypal"><i class="fab fa-paypal text-2xl text-indigo-500"></i> <span>PayPal</span></div>
                                 <div class="payment-method-card p-3 rounded-xl flex items-center gap-3" data-method="bank"><i class="fas fa-building-columns text-2xl text-gray-700"></i> <span>Bank Transfer</span></div>
                             </div>
-                            <div id="mobileMoneyDetails" class="mt-3 p-3 bg-gray-50 rounded-xl hidden text-sm"><i class="fas fa-info-circle text-lba-red"></i> After placing order, you'll receive SMS with payment code. Pay using MTN Mobile Money or Lonestar.</div>
-                            <div id="bankDetails" class="mt-3 p-3 bg-gray-50 rounded-xl hidden text-sm"><i class="fas fa-university"></i> LBA Account: IBAN: LR4300123456789, Bank: ECOBANK Liberia. Reference: your order ID.</div>
+                            
+                            <!-- Mobile Money Instructions -->
+                            <div id="mobileMoneyInstructions" class="payment-instructions">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="fas fa-mobile-alt text-green-600 text-xl"></i>
+                                    <h4 class="font-bold text-green-700">Mobile Money Payment</h4>
+                                </div>
+                                <p class="text-sm text-gray-700 mb-3">Select a number to pay to, then send payment using your <strong>Order ID</strong> as reference:</p>
+                                
+                                <div class="space-y-2 mb-4">
+                                    <div class="payment-number" data-number="+231886590302" onclick="selectPaymentNumber('+231886590302')">
+                                        <span><i class="fas fa-phone text-green-600"></i> +231 886 590 302</span>
+                                        <button class="copy-number-btn text-xs text-gray-400 hover:text-gray-600" onclick="event.stopPropagation(); copyToClipboard('+231886590302')">
+                                            <i class="fas fa-copy"></i> Click to copy
+                                        </button>
+                                    </div>
+                                    <div class="payment-number" data-number="+231770562292" onclick="selectPaymentNumber('+231770562292')">
+                                        <span><i class="fas fa-phone text-green-600"></i> +231 770 562 292</span>
+                                        <button class="copy-number-btn text-xs text-gray-400 hover:text-gray-600" onclick="event.stopPropagation(); copyToClipboard('+231770562292')">
+                                            <i class="fas fa-copy"></i> Click to copy
+                                        </button>
+                                    </div>
+                                    <div class="payment-number" data-number="+231772876644" onclick="selectPaymentNumber('+231772876644')">
+                                        <span><i class="fas fa-phone text-green-600"></i> +231 77 287 66 44</span>
+                                        <button class="copy-number-btn text-xs text-gray-400 hover:text-gray-600" onclick="event.stopPropagation(); copyToClipboard('+231772876644')">
+                                            <i class="fas fa-copy"></i> Click to copy
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-yellow-50 p-3 rounded-lg text-sm">
+                                    <p class="font-semibold text-yellow-800">⚠️ Important:</p>
+                                    <p class="text-yellow-700 text-xs mt-1">1. Use your <strong>Order ID</strong> as payment reference</p>
+                                    <p class="text-yellow-700 text-xs">2. After payment, click "I've Made Payment" below</p>
+                                    <p class="text-yellow-700 text-xs">3. Your tickets will be sent within 30 minutes</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Card Payment Instructions -->
+                            <div id="cardInstructions" class="payment-instructions hidden">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="fab fa-cc-visa text-blue-700 text-xl"></i>
+                                    <h4 class="font-bold text-blue-700">Card Payment</h4>
+                                </div>
+                                <p class="text-sm text-gray-700 mb-3">You'll be redirected to our secure payment page to enter your card details.</p>
+                                <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                                    <p class="text-blue-700 text-xs">✅ Secure SSL encryption</p>
+                                    <p class="text-blue-700 text-xs">✅ All major cards accepted</p>
+                                </div>
+                            </div>
+                            
+                            <div id="bankDetails" class="mt-3 p-3 bg-gray-50 rounded-xl hidden text-sm">
+                                <i class="fas fa-university"></i> LBA Account: IBAN: LR4300123456789, Bank: ECOBANK Liberia. Reference: your order ID.
+                            </div>
                         </div>
                         <div class="pt-2"><label class="block font-semibold text-gray-700 mb-2"><i class="fas fa-envelope"></i> Your Email (for ticket delivery)</label><input type="email" id="customerEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="your@email.com" required></div>
                     </div>
@@ -208,10 +266,40 @@
                         <div class="flex justify-between mt-3 pb-2 border-b border-dashed"><span id="summaryTicketName">Standard Ticket</span><span id="summaryTicketPrice">$30</span></div>
                         <div class="flex justify-between py-2 border-b border-dashed"><span>Quantity</span><span id="summaryQty">1</span></div>
                         <div class="flex justify-between font-bold text-lg mt-3 pt-2"><span>Total</span><span id="totalAmount">$30</span></div>
-                        <div class="mt-5 text-xs text-gray-500"><i class="fas fa-lock"></i> Secure checkout · E-tickets sent instantly</div>
-                        <button id="proceedPaymentBtn" class="w-full mt-5 bg-lba-red text-white py-3 rounded-xl font-bold shadow-md hover:bg-red-700 transition">Proceed to Payment</button>
+                        <div class="mt-5 text-xs text-gray-500"><i class="fas fa-lock"></i> Secure checkout</div>
+                        <button id="proceedPaymentBtn" class="w-full mt-5 bg-red-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-red-700 transition">Proceed to Payment</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Confirmation Modal (for Mobile Money) -->
+    <div id="paymentConfirmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[10000] opacity-0 invisible transition-all duration-300 modal-transition">
+        <div class="bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl transform transition-all scale-95 overflow-hidden">
+            <div class="gradient-lba px-6 py-4 text-white">
+                <h3 class="text-xl font-bold"><i class="fas fa-clock"></i> Confirm Payment</h3>
+            </div>
+            <div class="p-6 text-center">
+                <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-hourglass-half text-yellow-600 text-3xl"></i>
+                </div>
+                <h4 class="text-lg font-bold mb-2">Payment Pending Verification</h4>
+                <p class="text-gray-600 text-sm mb-4">We've recorded your order. Please complete the payment using your Mobile Money.</p>
+                
+                <div class="bg-gray-50 p-4 rounded-lg text-left mb-4">
+                    <p class="text-sm font-semibold">Order ID: <span id="confirmOrderId" class="text-lba-red"></span></p>
+                    <p class="text-sm">Amount: <span id="confirmAmount"></span></p>
+                    <p class="text-sm">Pay to: <span id="confirmSelectedNumber" class="font-medium text-green-600">Select a number above</span></p>
+                    <p class="text-sm">Reference: Use your <strong class="text-lba-red">Order ID</strong> as payment reference</p>
+                </div>
+                
+                <button id="confirmPaymentBtn" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition">
+                    <i class="fas fa-check"></i> I've Made Payment
+                </button>
+                <button onclick="closePaymentConfirmModal()" class="w-full mt-2 text-gray-500 text-sm py-2 hover:text-gray-700">
+                    Cancel
+                </button>
             </div>
         </div>
     </div>
@@ -222,21 +310,13 @@
     </footer>
 
     <script>
-        // ============================================
-        // PAYSTACK CONFIGURATION
-        // ============================================
-        // IMPORTANT: Replace with your actual Paystack Public Key
-        // Get it from: https://dashboard.paystack.com/#/settings/developer
-        const PAYSTACK_PUBLIC_KEY = 'pk_live_YOUR_PUBLIC_KEY'; // Replace with your live key
-        // For testing, use test key: 'pk_test_...'
-        
         // Your Google Apps Script Web App URL
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
 
         let currentTicket = { name: "Standard", price: 30 };
         let currentQuantity = 1;
-        let selectedPayment = "card";
-        let currentOrderId = null;
+        let selectedPayment = "mobilemoney";
+        let selectedPaymentNumber = "+231886590302";
 
         // DOM refs
         const modal = document.getElementById('ticketModal');
@@ -248,7 +328,8 @@
         const summaryTicketPrice = document.getElementById('summaryTicketPrice');
         const totalAmountSpan = document.getElementById('totalAmount');
         const paymentMethods = document.querySelectorAll('.payment-method-card');
-        const mobileMoneyDiv = document.getElementById('mobileMoneyDetails');
+        const mobileMoneyDiv = document.getElementById('mobileMoneyInstructions');
+        const cardDiv = document.getElementById('cardInstructions');
         const bankDiv = document.getElementById('bankDetails');
         const customerEmailInput = document.getElementById('customerEmail');
         const proceedBtn = document.getElementById('proceedPaymentBtn');
@@ -265,13 +346,21 @@
         window.openTicketModal = function(ticketName, price) {
             currentTicket = { name: ticketName, price: price };
             currentQuantity = 1;
-            selectedPayment = "card";
+            selectedPayment = "mobilemoney";
+            selectedPaymentNumber = "+231886590302";
             updateSummary();
             document.getElementById('modalTicketTitle').innerText = `${ticketName} Ticket`;
             paymentMethods.forEach(m => m.classList.remove('active'));
-            document.querySelector('.payment-method-card[data-method="card"]').classList.add('active');
-            mobileMoneyDiv.classList.add('hidden');
+            document.querySelector('.payment-method-card[data-method="mobilemoney"]').classList.add('active');
+            mobileMoneyDiv.classList.remove('hidden');
+            cardDiv.classList.add('hidden');
             bankDiv.classList.add('hidden');
+            
+            // Reset selected number highlight
+            document.querySelectorAll('.payment-number').forEach(el => el.classList.remove('selected'));
+            const firstNumber = document.querySelector('.payment-number');
+            if (firstNumber) firstNumber.classList.add('selected');
+            
             if(customerEmailInput) customerEmailInput.value = '';
             modal.classList.remove('opacity-0', 'invisible');
             modal.classList.add('opacity-100', 'visible');
@@ -284,6 +373,41 @@
             document.body.style.overflow = 'auto';
         }
 
+        window.closePaymentConfirmModal = function() {
+            const confirmModal = document.getElementById('paymentConfirmModal');
+            confirmModal.classList.remove('opacity-100', 'visible');
+            confirmModal.classList.add('opacity-0', 'invisible');
+            closeTicketModal();
+        }
+
+        window.selectPaymentNumber = function(number) {
+            selectedPaymentNumber = number;
+            // Update UI - highlight selected number
+            document.querySelectorAll('.payment-number').forEach(el => {
+                el.classList.remove('selected');
+                if (el.getAttribute('data-number') === number) {
+                    el.classList.add('selected');
+                }
+            });
+            showToast(`✅ Selected: ${number}`, 'success');
+        }
+
+        window.copyToClipboard = async function(number) {
+            try {
+                await navigator.clipboard.writeText(number);
+                showToast(`✅ ${number} copied to clipboard!`, 'success');
+            } catch (err) {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = number;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast(`✅ ${number} copied!`, 'success');
+            }
+        }
+
         qtyMinus.addEventListener('click', () => { if (currentQuantity > 1) { currentQuantity--; updateSummary(); } else showToast("Minimum 1 ticket required", "info"); });
         qtyPlus.addEventListener('click', () => { if (currentQuantity < 10) { currentQuantity++; updateSummary(); } else showToast("Maximum 10 tickets per order", "warning"); });
 
@@ -292,9 +416,19 @@
                 paymentMethods.forEach(m => m.classList.remove('active'));
                 method.classList.add('active');
                 selectedPayment = method.getAttribute('data-method');
-                if (selectedPayment === 'mobilemoney') { mobileMoneyDiv.classList.remove('hidden'); bankDiv.classList.add('hidden'); }
-                else if (selectedPayment === 'bank') { bankDiv.classList.remove('hidden'); mobileMoneyDiv.classList.add('hidden'); }
-                else { mobileMoneyDiv.classList.add('hidden'); bankDiv.classList.add('hidden'); }
+                
+                // Show/hide instruction panels
+                mobileMoneyDiv.classList.add('hidden');
+                cardDiv.classList.add('hidden');
+                bankDiv.classList.add('hidden');
+                
+                if (selectedPayment === 'mobilemoney') {
+                    mobileMoneyDiv.classList.remove('hidden');
+                } else if (selectedPayment === 'card') {
+                    cardDiv.classList.remove('hidden');
+                } else if (selectedPayment === 'bank') {
+                    bankDiv.classList.remove('hidden');
+                }
             });
         });
 
@@ -317,7 +451,7 @@
                     overlay.className = 'loading-overlay';
                     overlay.innerHTML = `
                         <div class="loading-spinner"></div>
-                        <p class="text-white mt-4 text-lg font-semibold">Processing payment...</p>
+                        <p class="text-white mt-4 text-lg font-semibold">Processing your order...</p>
                         <p class="text-white/70 text-sm mt-2">Please do not close this window</p>
                     `;
                     document.body.appendChild(overlay);
@@ -329,12 +463,10 @@
             }
         }
 
-        // Generate unique order ID
         function generateOrderId() {
             return 'LBA-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
         }
 
-        // Generate seat numbers
         function generateSeats(ticketType, quantity) {
             const seats = [];
             for(let i=1; i<=quantity; i++) {
@@ -348,10 +480,9 @@
             return seats;
         }
 
-        // Save order to Google Sheets
         async function saveOrderToSheets(orderData) {
             try {
-                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -366,6 +497,7 @@
                         orderId: orderData.orderId,
                         status: orderData.status,
                         transactionId: orderData.transactionId || '',
+                        paymentNumber: orderData.paymentNumber || '',
                         source: 'website',
                         timestamp: new Date().toISOString()
                     })
@@ -378,7 +510,6 @@
             }
         }
 
-        // Send email confirmation via Apps Script
         async function sendEmailConfirmation(orderData) {
             try {
                 await fetch(GOOGLE_APPS_SCRIPT_URL, {
@@ -395,6 +526,7 @@
                         orderId: orderData.orderId,
                         transactionId: orderData.transactionId || '',
                         paymentMethod: orderData.paymentMethod,
+                        paymentNumber: orderData.paymentNumber || '',
                         eventDate: 'December 19, 2026',
                         eventTime: '6:00 PM GMT',
                         venue: 'Monrovia City Hall Conference Center'
@@ -408,94 +540,46 @@
             }
         }
 
-        // Process Card Payment with Paystack
-        function processCardPayment(orderData) {
-            return new Promise((resolve, reject) => {
-                const amountInCents = Math.round(orderData.totalAmount * 100);
-                
-                const handler = PaystackPop.setup({
-                    key: PAYSTACK_PUBLIC_KEY,
-                    email: orderData.customerEmail,
-                    amount: amountInCents,
-                    currency: 'USD',
-                    ref: orderData.orderId,
-                    metadata: {
-                        custom_fields: [
-                            { display_name: "Ticket Type", variable_name: "ticket_type", value: orderData.ticketType },
-                            { display_name: "Quantity", variable_name: "quantity", value: orderData.quantity },
-                            { display_name: "Seats", variable_name: "seats", value: orderData.seats.join(', ') }
-                        ]
-                    },
-                    callback: function(response) {
-                        console.log('Payment successful:', response);
-                        resolve({
-                            success: true,
-                            transactionId: response.reference,
-                            message: 'Payment completed successfully'
-                        });
-                    },
-                    onClose: function() {
-                        console.log('Payment window closed');
-                        reject(new Error('Payment was cancelled'));
-                    }
-                });
-                
-                handler.openIframe();
-            });
-        }
-
-        // Process Mobile Money (MTN/Lonestar) - Manual payment reference
+        // Mobile Money Payment Handler
         async function processMobileMoney(orderData) {
             showLoading(true);
             
-            // Generate payment reference
-            const paymentRef = 'MM-' + Date.now() + '-' + Math.random().toString(36).substr(2, 8).toUpperCase();
-            
-            // Save order as pending first
+            // Save order as pending with selected payment number
             await saveOrderToSheets({
                 ...orderData,
                 status: 'pending_payment',
-                transactionId: paymentRef
+                transactionId: orderData.orderId,
+                paymentNumber: selectedPaymentNumber
             });
             
             showLoading(false);
             
-            // Show payment instructions
-            const proceed = confirm(
-                `📱 MOBILE MONEY PAYMENT INSTRUCTIONS\n\n` +
-                `Amount to pay: $${orderData.totalAmount}\n\n` +
-                `1. Open your MTN Mobile Money or Lonestar app\n` +
-                `2. Go to "Pay Merchant"\n` +
-                `3. Enter Merchant Code: 1234567\n` +
-                `4. Enter Amount: $${orderData.totalAmount}\n` +
-                `5. Enter Reference: ${paymentRef}\n` +
-                `6. Complete the payment\n\n` +
-                `After payment, click OK and we'll verify your payment.\n` +
-                `Your tickets will be sent within 30 minutes.\n\n` +
-                `Click OK to confirm you'll complete the payment`
-            );
+            // Show payment confirmation modal with order ID and selected number
+            document.getElementById('confirmOrderId').innerText = orderData.orderId;
+            document.getElementById('confirmAmount').innerText = `$${orderData.totalAmount}`;
+            document.getElementById('confirmSelectedNumber').innerText = selectedPaymentNumber;
             
-            if (proceed) {
-                return {
-                    success: true,
-                    transactionId: paymentRef,
-                    message: 'Mobile payment initiated'
-                };
-            } else {
-                throw new Error('Payment cancelled');
-            }
+            const confirmModal = document.getElementById('paymentConfirmModal');
+            confirmModal.classList.remove('opacity-0', 'invisible');
+            confirmModal.classList.add('opacity-100', 'visible');
+            
+            return { success: true, pending: true, orderId: orderData.orderId };
         }
 
-        // Process Bank Transfer
+        // Card Payment handler
+        async function processCardPayment(orderData) {
+            showToast('Card payment will be available soon. Please use Mobile Money.', 'warning');
+            return { success: false, error: 'Card payment coming soon' };
+        }
+
+        // Bank Transfer Handler
         async function processBankTransfer(orderData) {
             showLoading(true);
-            
-            const paymentRef = 'BT-' + Date.now() + '-' + Math.random().toString(36).substr(2, 8).toUpperCase();
             
             await saveOrderToSheets({
                 ...orderData,
                 status: 'pending_payment',
-                transactionId: paymentRef
+                transactionId: orderData.orderId
             });
             
             showLoading(false);
@@ -506,39 +590,19 @@
                 `Bank: ECOBANK Liberia\n` +
                 `Account Name: Liberia Business Awards\n` +
                 `Account Number: 1234567890\n` +
-                `IBAN: LR4300123456789\n` +
-                `Reference: ${paymentRef}\n\n` +
-                `Upload your payment receipt at:\n` +
-                `https://liberiabusinessawardslr.com/upload-payment\n\n` +
+                `Reference: ${orderData.orderId}\n\n` +
                 `After transfer, click OK and we'll verify your payment.\n` +
-                `Your tickets will be sent within 24 hours.\n\n` +
-                `Click OK to confirm you'll complete the transfer`
+                `Your tickets will be sent within 24 hours.`
             );
             
             if (proceed) {
-                return {
-                    success: true,
-                    transactionId: paymentRef,
-                    message: 'Bank transfer initiated'
-                };
+                return { success: true, pending: true, orderId: orderData.orderId };
             } else {
                 throw new Error('Bank transfer cancelled');
             }
         }
 
-        // Process PayPal (redirect)
-        function processPayPal(orderData) {
-            const palPalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=liberiabusinessawards@gmail.com&item_name=${encodeURIComponent(orderData.ticketType)} Tickets&amount=${orderData.totalAmount}&currency_code=USD&invoice=${orderData.orderId}&return=https://liberiabusinessawardslr.com/tickets/thank-you&cancel_return=https://liberiabusinessawardslr.com/tickets`;
-            
-            window.open(palPalUrl, '_blank');
-            
-            return {
-                success: true,
-                message: 'PayPal redirect initiated'
-            };
-        }
-
-        // Main payment handler
+        // Main payment handler - with button color change on click
         proceedBtn.addEventListener('click', async () => {
             const customerEmail = customerEmailInput ? customerEmailInput.value.trim() : '';
             if (!customerEmail) {
@@ -550,7 +614,6 @@
                 return;
             }
 
-            // Generate order data
             const seats = generateSeats(currentTicket.name, currentQuantity);
             const orderId = generateOrderId();
             const totalAmount = currentTicket.price * currentQuantity;
@@ -563,80 +626,94 @@
                 paymentMethod: selectedPayment,
                 customerEmail: customerEmail,
                 seats: seats,
-                status: 'completed'
+                status: 'pending',
+                paymentNumber: selectedPaymentNumber
             };
 
-            // Disable button and show loading
+            // Change button color to blue on click
+            proceedBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            proceedBtn.classList.add('bg-blue-600', 'btn-processing');
             proceedBtn.disabled = true;
-            proceedBtn.innerText = 'Processing...';
+            proceedBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin mr-2"></i>Processing...</span>';
 
             try {
                 let paymentResult;
                 
                 switch(selectedPayment) {
-                    case 'card':
-                        showLoading(true);
-                        paymentResult = await processCardPayment(orderData);
-                        showLoading(false);
-                        break;
                     case 'mobilemoney':
                         paymentResult = await processMobileMoney(orderData);
                         break;
-                    case 'paypal':
-                        paymentResult = processPayPal(orderData);
+                    case 'card':
+                        paymentResult = await processCardPayment(orderData);
                         break;
                     case 'bank':
                         paymentResult = await processBankTransfer(orderData);
                         break;
                     default:
-                        paymentResult = { success: false, message: 'Invalid payment method' };
+                        paymentResult = { success: false, error: 'Invalid payment method' };
                 }
                 
                 if (paymentResult.success) {
-                    // Save completed order to sheets
-                    await saveOrderToSheets({
-                        ...orderData,
-                        transactionId: paymentResult.transactionId || '',
-                        status: paymentResult.transactionId ? 'completed' : 'pending'
-                    });
-                    
-                    // Send email confirmation
-                    await sendEmailConfirmation({
-                        ...orderData,
-                        transactionId: paymentResult.transactionId || ''
-                    });
-                    
-                    // Show success message
-                    showToast(`🎉 Order placed! ${currentQuantity} x ${currentTicket.name} | Total $${totalAmount}. Tickets will be sent to ${customerEmail}.`, 'success');
-                    
-                    // Close modal and reset form
-                    closeTicketModal();
-                    if(customerEmailInput) customerEmailInput.value = '';
-                    currentQuantity = 1;
-                    updateSummary();
-                    
-                    // Optional: Redirect to thank you page
-                    // window.location.href = '/tickets/thank-you.html?order=' + orderId;
+                    if (paymentResult.pending) {
+                        showToast(`✅ Order created! Order ID: ${orderId}. Complete payment to receive tickets.`, 'success');
+                    } else {
+                        await saveOrderToSheets({
+                            ...orderData,
+                            status: 'completed',
+                            transactionId: paymentResult.transactionId
+                        });
+                        await sendEmailConfirmation(orderData);
+                        showToast(`🎉 Payment successful! Tickets sent to ${customerEmail}.`, 'success');
+                        closeTicketModal();
+                        if(customerEmailInput) customerEmailInput.value = '';
+                        currentQuantity = 1;
+                        updateSummary();
+                    }
                 } else {
-                    showToast(paymentResult.message || 'Payment failed. Please try again.', 'error');
+                    showToast(paymentResult.error || 'Payment failed. Please try again.', 'error');
+                    // Reset button color
+                    proceedBtn.classList.remove('bg-blue-600', 'btn-processing');
+                    proceedBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                    proceedBtn.disabled = false;
+                    proceedBtn.innerHTML = 'Proceed to Payment';
                 }
             } catch (error) {
                 console.error('Payment error:', error);
                 showToast(error.message || 'Error processing payment. Please try again.', 'error');
-            } finally {
+                // Reset button color on error
+                proceedBtn.classList.remove('bg-blue-600', 'btn-processing');
+                proceedBtn.classList.add('bg-red-600', 'hover:bg-red-700');
                 proceedBtn.disabled = false;
-                proceedBtn.innerText = 'Proceed to Payment';
-                showLoading(false);
+                proceedBtn.innerHTML = 'Proceed to Payment';
             }
+        });
+
+        // "I've Made Payment" button handler
+        document.getElementById('confirmPaymentBtn').addEventListener('click', async () => {
+            const confirmBtn = document.getElementById('confirmPaymentBtn');
+            confirmBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            confirmBtn.classList.add('bg-blue-600');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin mr-2"></i> Verifying...</span>';
+            
+            setTimeout(() => {
+                showToast('✅ Thank you! We will verify your payment and send tickets within 30 minutes.', 'success');
+                closePaymentConfirmModal();
+                confirmBtn.classList.remove('bg-blue-600');
+                confirmBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-check"></i> I\'ve Made Payment';
+                closeTicketModal();
+            }, 1500);
         });
 
         modal.addEventListener('click', (e) => { if(e.target === modal) closeTicketModal(); });
         
-        // Check if Paystack is loaded
-        if (typeof PaystackPop === 'undefined') {
-            console.warn('Paystack script not loaded. Card payments will not work.');
-            showToast('Payment system loading. Please refresh the page.', 'warning');
-        }
+        // Set default active payment method and highlight first number
+        document.querySelector('.payment-method-card[data-method="mobilemoney"]').classList.add('active');
+        mobileMoneyDiv.classList.remove('hidden');
+        const firstNumber = document.querySelector('.payment-number');
+        if (firstNumber) firstNumber.classList.add('selected');
     </script>
 </body>
 </html>
