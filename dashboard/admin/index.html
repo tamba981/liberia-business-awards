@@ -4779,8 +4779,9 @@ async function markTicketAsPaid(orderId) {
     btn.disabled = true;
     
     try {
-        const token = localStorage.getItem('lba_auth_token');
         const GOOGLE_APPS_SCRIPT_URL_ADMIN = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+        
+        console.log('📡 Marking ticket as paid for order:', orderId);
         
         // Call Apps Script to confirm payment
         const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=confirmTicket&orderId=${orderId}`, {
@@ -4788,13 +4789,26 @@ async function markTicketAsPaid(orderId) {
             headers: { 'Accept': 'application/json' }
         });
         
-        const result = await response.json();
+        console.log('📡 Response status:', response.status);
         
-        if (result.success) {
+        const result = await response.json();
+        console.log('📡 Response data:', result);
+        
+        // Check both result.success AND result.status
+        if (result.success === true || result.status === 'OK') {
             showNotification(`✅ Payment confirmed for ${orderId}! Tickets sent.`, 'success');
-            loadTicketOrders(); // Refresh the list
+            // Wait a moment before refreshing to let sheet update
+            setTimeout(() => {
+                loadTicketOrders();
+            }, 1000);
         } else {
-            showNotification(result.message || result.error || 'Error confirming payment', 'error');
+            // If email was sent but response says error, still show partial success
+            if (result.emailSent === true) {
+                showNotification(`⚠️ Payment confirmed but email may not have sent. Please check order #${orderId} manually.`, 'warning');
+                loadTicketOrders();
+            } else {
+                showNotification(result.message || result.error || 'Error confirming payment', 'error');
+            }
         }
     } catch (error) {
         console.error('Error marking ticket as paid:', error);
