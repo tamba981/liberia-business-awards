@@ -4792,7 +4792,7 @@ console.log('✅ Voting system fully integrated and ready!');
         window.loadTicketOrders = loadTicketOrders;
         window.filterTicketOrders = filterTicketOrders;
 
-        // Mark ticket as paid and send confirmation
+       // Mark ticket as paid and send confirmation
 async function markTicketAsPaid(orderId) {
     if (!confirm(`Confirm payment for order ${orderId}? This will send tickets to the customer.`)) return;
     
@@ -4806,20 +4806,24 @@ async function markTicketAsPaid(orderId) {
         
         console.log('📡 Marking ticket as paid for order:', orderId);
         
-        // Call Apps Script to confirm payment
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=confirmTicket&orderId=${encodeURIComponent(orderId)}`, {
-            method: 'GET',
+        // ✅ FIXED: Use POST instead of GET
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL_ADMIN, {
+            method: 'POST',
             headers: { 
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                formType: 'confirm_ticket_payment',  // ← NEW formType
+                orderId: orderId,
+                timestamp: new Date().toISOString()
+            })
         });
         
         console.log('📡 Response status:', response.status);
         
-        // Get the response text first for debugging
         const responseText = await response.text();
-        console.log('📡 Raw response text:', responseText);
+        console.log('📡 Raw response:', responseText);
         
         let result;
         try {
@@ -4829,17 +4833,12 @@ async function markTicketAsPaid(orderId) {
             result = { success: false, error: 'Invalid response from server' };
         }
         
-        console.log('📡 Parsed result:', result);
-        
-        // Check if the response indicates success
-        if (result.success === true || result.status === 'OK') {
+        if (result.success === true) {
             showNotification(`✅ Payment confirmed for ${orderId}! Tickets sent.`, 'success');
-            // Wait a moment before refreshing to let sheet update
             setTimeout(() => {
                 loadTicketOrders();
             }, 1000);
         } else {
-            // Show the actual error message from the server
             const errorMsg = result.error || result.message || 'Unknown error';
             showNotification(`❌ Error: ${errorMsg}`, 'error');
         }
