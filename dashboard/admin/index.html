@@ -4784,17 +4784,31 @@ async function markTicketAsPaid(orderId) {
         console.log('📡 Marking ticket as paid for order:', orderId);
         
         // Call Apps Script to confirm payment
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=confirmTicket&orderId=${orderId}`, {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL_ADMIN}?action=confirmTicket&orderId=${encodeURIComponent(orderId)}`, {
             method: 'GET',
-            headers: { 'Accept': 'application/json' }
+            headers: { 
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
         });
         
         console.log('📡 Response status:', response.status);
         
-        const result = await response.json();
-        console.log('📡 Response data:', result);
+        // Get the response text first for debugging
+        const responseText = await response.text();
+        console.log('📡 Raw response text:', responseText);
         
-        // Check both result.success AND result.status
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (e) {
+            console.error('❌ Failed to parse JSON:', e);
+            result = { success: false, error: 'Invalid response from server' };
+        }
+        
+        console.log('📡 Parsed result:', result);
+        
+        // Check if the response indicates success
         if (result.success === true || result.status === 'OK') {
             showNotification(`✅ Payment confirmed for ${orderId}! Tickets sent.`, 'success');
             // Wait a moment before refreshing to let sheet update
@@ -4802,16 +4816,12 @@ async function markTicketAsPaid(orderId) {
                 loadTicketOrders();
             }, 1000);
         } else {
-            // If email was sent but response says error, still show partial success
-            if (result.emailSent === true) {
-                showNotification(`⚠️ Payment confirmed but email may not have sent. Please check order #${orderId} manually.`, 'warning');
-                loadTicketOrders();
-            } else {
-                showNotification(result.message || result.error || 'Error confirming payment', 'error');
-            }
+            // Show the actual error message from the server
+            const errorMsg = result.error || result.message || 'Unknown error';
+            showNotification(`❌ Error: ${errorMsg}`, 'error');
         }
     } catch (error) {
-        console.error('Error marking ticket as paid:', error);
+        console.error('❌ Error marking ticket as paid:', error);
         showNotification('Error confirming payment: ' + error.message, 'error');
     } finally {
         btn.innerHTML = originalText;
