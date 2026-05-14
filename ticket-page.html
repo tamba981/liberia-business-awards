@@ -297,9 +297,9 @@
                 <button id="confirmPaymentBtn" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition">
                     <i class="fas fa-check"></i> I've Made Payment
                 </button>
-                <button onclick="closePaymentConfirmModal()" class="w-full mt-2 text-gray-500 text-sm py-2 hover:text-gray-700">
-                    Cancel
-                </button>
+                <button onclick="closePaymentConfirmModalAndReset()" class="w-full mt-2 text-gray-500 text-sm py-2 hover:text-gray-700">
+                Cancel
+             </button>
             </div>
         </div>
     </div>
@@ -371,7 +371,8 @@
             modal.classList.remove('opacity-100', 'visible');
             modal.classList.add('opacity-0', 'invisible');
             document.body.style.overflow = 'auto';
-        }
+            resetProceedButton(); // ADD THIS LINE
+       }
 
         window.closePaymentConfirmModal = function() {
             const confirmModal = document.getElementById('paymentConfirmModal');
@@ -380,6 +381,24 @@
             closeTicketModal();
         }
 
+        // ADD THIS NEW FUNCTION RIGHT HERE
+function resetProceedButton() {
+    const proceedBtn = document.getElementById('proceedPaymentBtn');
+    if (proceedBtn) {
+        proceedBtn.classList.remove('bg-blue-600', 'btn-processing');
+        proceedBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+        proceedBtn.disabled = false;
+        proceedBtn.innerHTML = 'Proceed to Payment';
+    }
+}
+        
+window.closePaymentConfirmModalAndReset = function() {
+    const confirmModal = document.getElementById('paymentConfirmModal');
+    confirmModal.classList.remove('opacity-100', 'visible');
+    confirmModal.classList.add('opacity-0', 'invisible');
+    resetProceedButton(); // Reset the proceed button
+    closeTicketModal(); // Close the main modal
+}
         window.selectPaymentNumber = function(number) {
             selectedPaymentNumber = number;
             // Update UI - highlight selected number
@@ -653,7 +672,7 @@
                         paymentResult = { success: false, error: 'Invalid payment method' };
                 }
                 
-                if (paymentResult.success) {
+                                if (paymentResult.success) {
                     if (paymentResult.pending) {
                         showToast(`✅ Order created! Order ID: ${orderId}. Complete payment to receive tickets.`, 'success');
                     } else {
@@ -671,41 +690,43 @@
                     }
                 } else {
                     showToast(paymentResult.error || 'Payment failed. Please try again.', 'error');
-                    // Reset button color
-                    proceedBtn.classList.remove('bg-blue-600', 'btn-processing');
-                    proceedBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-                    proceedBtn.disabled = false;
-                    proceedBtn.innerHTML = 'Proceed to Payment';
+                    resetProceedButton();
                 }
             } catch (error) {
                 console.error('Payment error:', error);
                 showToast(error.message || 'Error processing payment. Please try again.', 'error');
-                // Reset button color on error
-                proceedBtn.classList.remove('bg-blue-600', 'btn-processing');
-                proceedBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-                proceedBtn.disabled = false;
-                proceedBtn.innerHTML = 'Proceed to Payment';
+                resetProceedButton();
             }
         });
 
         // "I've Made Payment" button handler
         document.getElementById('confirmPaymentBtn').addEventListener('click', async () => {
-            const confirmBtn = document.getElementById('confirmPaymentBtn');
-            confirmBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
-            confirmBtn.classList.add('bg-blue-600');
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin mr-2"></i> Verifying...</span>';
-            
-            setTimeout(() => {
-                showToast('✅ Thank you! We will verify your payment and send tickets within 30 minutes.', 'success');
-                closePaymentConfirmModal();
-                confirmBtn.classList.remove('bg-blue-600');
-                confirmBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="fas fa-check"></i> I\'ve Made Payment';
-                closeTicketModal();
-            }, 1500);
-        });
+    const confirmBtn = document.getElementById('confirmPaymentBtn');
+    
+    
+    confirmBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+    confirmBtn.classList.add('bg-blue-600');
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin mr-2"></i> Verifying...</span>';
+    
+    setTimeout(() => {
+        showToast('✅ Thank you! We will verify your payment and send tickets within 30 minutes.', 'success');
+        
+        // Reset confirmation button
+        confirmBtn.classList.remove('bg-blue-600');
+        confirmBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-check"></i> I\'ve Made Payment';
+        
+        // Close both modals and reset proceed button
+        const confirmModal = document.getElementById('paymentConfirmModal');
+        confirmModal.classList.remove('opacity-100', 'visible');
+        confirmModal.classList.add('opacity-0', 'invisible');
+        
+        resetProceedButton();
+        closeTicketModal();
+    }, 1500);
+});
 
         modal.addEventListener('click', (e) => { if(e.target === modal) closeTicketModal(); });
         
