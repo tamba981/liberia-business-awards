@@ -2323,41 +2323,79 @@ document.head.appendChild(style);
         }
 
         // ============================================
-        // FIXED: SIMPLIFIED FETCH FUNCTIONS - NO CORS ISSUES
-        // ============================================
-        async function fetchFromSheets(action) {
-            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=${action}`;
+// FIXED FETCH WITH PROPER CORS HANDLING
+// ============================================
+async function fetchFromSheets(action, postData = null) {
+    const baseUrl = GOOGLE_APPS_SCRIPT_URL;
+    
+    try {
+        let response;
+        
+        if (postData) {
+            // POST request - use form-urlencoded (same as working frontend)
+            const formData = new URLSearchParams(postData);
+            response = await fetch(baseUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData.toString()
+            });
+        } else {
+            // GET request - add a cache-buster to prevent issues
+            const url = `${baseUrl}?action=${action}&_=${Date.now()}`;
+            console.log(`📡 GET: ${url}`);
             
-            console.log(`📡 Fetching: ${url}`);
-            
-            try {
-                // Simple fetch - no CORS mode, no complex options
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const text = await response.text();
-                
-                try {
-                    const data = JSON.parse(text);
-                    return data;
-                } catch (e) {
-                    console.log('📄 Response is not JSON:', text.substring(0, 100));
-                    return { success: false, error: 'Invalid JSON response' };
-                }
-                
-            } catch (error) {
-                console.error('❌ Fetch error:', error);
-                return { success: false, error: error.message };
-            }
+            response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                // Don't set mode: 'cors' - let browser handle default
+            });
         }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const text = await response.text();
+        
+        // Try to parse JSON, handle empty responses
+        if (!text || text.trim() === '') {
+            return { success: false, error: 'Empty response from server' };
+        }
+        
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('JSON parse error. Raw response:', text.substring(0, 200));
+            return { success: false, error: 'Invalid JSON response', raw: text.substring(0, 200) };
+        }
+        
+    } catch (error) {
+        console.error(`❌ Fetch error (${action}):`, error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Specific functions using the fixed fetch
+async function fetchDashboardStats() {
+    return await fetchFromSheets('getStats');
+}
+
+async function fetchRecentActivity() {
+    return await fetchFromSheets('getActivity');
+}
+
+async function fetchAllSheetData() {
+    return await fetchFromSheets('getAllData');
+}
+
+// For POST operations (like confirm_ticket_payment)
+async function postToSheets(formData) {
+    return await fetchFromSheets(null, formData);
+}
 
         // Update your fetchDashboardStats function
         async function fetchDashboardStats() {
