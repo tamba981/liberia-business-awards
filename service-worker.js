@@ -61,7 +61,7 @@ self.addEventListener('activate', event => {
 });
 
 // ============================================
-// FETCH EVENT - SIMPLE CACHE ONLY, NO OFFLINE PAGE
+// FETCH EVENT - EXCLUDE GOOGLE APPS SCRIPT
 // ============================================
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
@@ -71,16 +71,21 @@ self.addEventListener('fetch', event => {
     return;
   }
   
+  // SKIP GOOGLE APPS SCRIPT - Let browser handle directly
+  if (url.hostname.includes('script.google.com')) {
+    console.log('[Service Worker] Skipping Google Apps Script:', url.href);
+    return;  // Don't intercept - let browser handle normally
+  }
+  
   // Skip API requests - go to network only
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request));
     return;
   }
   
-  // For everything else, try network first, fallback to cache (no offline message)
+  // For everything else, try network first, fallback to cache
   event.respondWith(
     fetch(event.request).then(response => {
-      // Cache successful responses for future use
       if (response && response.ok) {
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then(cache => {
@@ -89,7 +94,6 @@ self.addEventListener('fetch', event => {
       }
       return response;
     }).catch(() => {
-      // If offline, try to serve from cache silently (no message)
       return caches.match(event.request);
     })
   );
