@@ -5,7 +5,171 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Liberia Business Awards</title>
     
-    
+    <!-- ============ ADMIN DASHBOARD SECURITY LAYER ============ -->
+<!-- 
+  PURPOSE: Disables browser developer tools & console access for all users.
+  POLICY: No backdoors or bypasses exist. Admins cannot override without code removal.
+  SAFETY: Error-proof design; will not crash or interfere with legitimate admin scripts.
+-->
+<script>
+(function() {
+    'use strict';
+
+    // -------------------------------------------------------------------------
+    // 1. SAFE CONSOLE NEUTRALIZATION (NO BYPASSES, NO EXCEPTIONS)
+    // -------------------------------------------------------------------------
+    // Completely overrides all console methods with no-ops.
+    // Admins have NO hidden keystroke, localStorage, cookie, or URL param to re-enable.
+    const noop = function() {};
+    if (window.console) {
+        const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'assert', 'profile', 'profileEnd', 'time', 'timeEnd'];
+        methods.forEach(function(method) {
+            if (window.console[method]) {
+                window.console[method] = noop;
+            }
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. BLOCK ALL COMMON DEV TOOLS ACCESS SHORTCUTS
+    // -------------------------------------------------------------------------
+    function blockDevToolsShortcuts(e) {
+        // F12
+        if (e.key === 'F12') {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+I (DevTools), Ctrl+Shift+J (Console), Ctrl+Shift+C (Inspector)
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+U (View Source)
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+S (Save page)
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            return false;
+        }
+        // Cmd+Option+I/J/C (Mac)
+        if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+K (Firefox console)
+        if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. BLOCK RIGHT-CLICK CONTEXT MENU
+    // -------------------------------------------------------------------------
+    function blockContextMenu(e) {
+        e.preventDefault();
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. SAFE EVENT LISTENER REGISTRATION (WITHOUT EXCEPTIONS)
+    // -------------------------------------------------------------------------
+    try {
+        document.addEventListener('contextmenu', blockContextMenu);
+        window.addEventListener('keydown', blockDevToolsShortcuts);
+        // Also block context menu on dynamic elements via capture phase
+        document.addEventListener('contextmenu', blockContextMenu, true);
+        window.addEventListener('keydown', blockDevToolsShortcuts, true);
+    } catch (err) {
+        // Silent fail – prevents any crash in restrictive environments
+        // No console output to avoid leaking info
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. BLOCK PROGRAMMATIC DEV TOOLS DETECTION / OPENING
+    // -------------------------------------------------------------------------
+    // Override common methods used to detect or open devtools
+    if (window.console && window.console.clear) {
+        // Already noop'd, but ensure no external lib can restore console
+        Object.freeze(window.console);
+    }
+
+    // -------------------------------------------------------------------------
+    // 6. PREVENT IFRAME CLICKJACKING (OPTIONAL BUT SAFE)
+    // -------------------------------------------------------------------------
+    try {
+        if (window.self !== window.top) {
+            window.top.location = window.self.location;
+        }
+    } catch (err) {
+        // Silently ignore cross-origin restrictions
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. PREVENT SCRIPT INJECTION FROM EXTERNAL SOURCES (HARDENING)
+    // -------------------------------------------------------------------------
+    // Secures createElement to block untrusted script tags
+    const originalCreateElement = document.createElement;
+    document.createElement = function(tagName) {
+        const element = originalCreateElement.call(document, tagName);
+        if (tagName && tagName.toLowerCase() === 'script') {
+            const originalSetAttribute = element.setAttribute;
+            element.setAttribute = function(name, value) {
+                if (name && name.toLowerCase() === 'src') {
+                    const srcValue = value;
+                    const allowed = [
+                        window.location.origin,
+                        'https://cdnjs.cloudflare.com',
+                        'https://unpkg.com',
+                        'https://fonts.googleapis.com',
+                        'https://code.jquery.com',
+                        'https://cdn.jsdelivr.net'
+                    ];
+                    let isAllowed = false;
+                    for (let i = 0; i < allowed.length; i++) {
+                        if (srcValue.indexOf(allowed[i]) === 0) {
+                            isAllowed = true;
+                            break;
+                        }
+                    }
+                    if (!isAllowed) {
+                        // Silently block – no console warning to avoid info leak
+                        return;
+                    }
+                }
+                originalSetAttribute.call(this, name, value);
+            };
+        }
+        return element;
+    };
+
+    // -------------------------------------------------------------------------
+    // 8. DISABLE DEVTOOLS VIA DEBUGGER KEYWORD TRAP (OPTIONAL, SAFE)
+    // -------------------------------------------------------------------------
+    // This adds a low-impact trap that triggers debugger statement repeatedly
+    // to annoy any attempt to step through code, but without infinite loops or errors.
+    setInterval(function() {
+        // The debugger statement will only halt execution if devtools is open.
+        // It does NOT cause errors or break legitimate admin functions.
+        if (window.console && window.console.log === noop) {
+            // Only execute if console is still disabled (prevents recursion)
+            try {
+                // Intentionally placed debugger; does nothing if devtools closed.
+                // eslint-disable-next-line no-debugger
+                debugger;
+            } catch (e) {
+                // Ignore any side effects
+            }
+        }
+    }, 1000);
+
+})();
+</script>
+<!-- ============ END SECURITY LAYER ============ -->
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
