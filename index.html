@@ -1426,19 +1426,28 @@ window.addEventListener('load', function() {
             <a href="#contact" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Contact</a>
             <a href="dashboard/login.html" onclick="closeMobileMenu()" class="text-gray-700 hover:text-lba-red font-medium py-2">Dashboard</a>
             <div class="pt-4 flex flex-col gap-3">
+    <!-- First row: Buy Tickets (full width) -->
     <a href="Tickets/ticket-page.html" onclick="closeMobileMenu()" class="flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-4 py-3 rounded-full font-medium hover:from-yellow-600 hover:to-yellow-700 transition text-sm w-full">
         <i class="fas fa-ticket-alt"></i> Buy Tickets
     </a>
-    <div class="flex gap-3">
-        <button onclick="openModal('registerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Register</button>
-        <button onclick="checkNominationStatus(); closeMobileMenu();" class="flex-1 bg-lba-red text-white px-4 py-2 rounded-full font-medium hover:bg-red-600 transition text-sm" id="mobileNominateBtn">Nominate</button>
-        <button onclick="openModal('partnerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-full font-medium hover:bg-blue-400 transition text-sm">Partner</button>
+    
+    <!-- Second row: Register, Nominate, Partner (3 buttons) -->
+    <div class="flex gap-2">
+        <button onclick="openModal('registerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-3 py-2 rounded-full font-medium hover:bg-blue-400 transition text-xs">Register</button>
+        <button onclick="checkNominationStatus(); closeMobileMenu();" class="flex-1 bg-lba-red text-white px-3 py-2 rounded-full font-medium hover:bg-red-600 transition text-xs" id="mobileNominateBtn">Nominate</button>
+        <button onclick="openModal('partnerModal'); closeMobileMenu();" class="flex-1 bg-lba-blue text-white px-3 py-2 rounded-full font-medium hover:bg-blue-400 transition text-xs">Partner</button>
     </div>
-    <a href="/lba-directory.html" onclick="closeMobileMenu()" class="flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-3 rounded-full font-medium hover:from-green-700 hover:to-green-600 transition text-sm w-full">
-        <i class="fas fa-user-plus mr-2"></i> Become a Member
-    </a> 
+    
+    <!-- Third row: Live Session and Become a Member (2 buttons side by side) -->
+    <div class="flex gap-2">
+        <button onclick="openModal('liveSessionModal'); closeMobileMenu();" class="flex-1 bg-gradient-to-r from-lba-red to-lba-blue text-white px-3 py-2 rounded-full font-medium hover:opacity-90 transition text-xs">
+            <i class="fas fa-video mr-1"></i> Live Session
+        </button>
+        <a href="/lba-directory.html" onclick="closeMobileMenu()" class="flex-1 bg-gradient-to-r from-green-600 to-green-500 text-white px-3 py-2 rounded-full font-medium hover:from-green-700 hover:to-green-600 transition text-xs text-center">
+            <i class="fas fa-user-plus mr-1"></i>Become a Member
+        </a>
+    </div>
 </div>
-        </div>
     </div>
 </nav>
     
