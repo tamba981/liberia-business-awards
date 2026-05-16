@@ -704,11 +704,22 @@ html, body {
     box-sizing: border-box;
 }
 
-/* Hide top header bar on mobile - too much text */
+/* Mobile responsive fixes */
 @media (max-width: 768px) {
-    /* Hide the top header with emails/phones */
-    .bg-lba-red.py-2.px-4 {
-        display: none !important;
+    /* Make top header text smaller and wrap */
+    .bg-lba-red.py-2.px-4 .flex {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .bg-lba-red.py-2.px-4 .text-sm {
+        font-size: 10px;
+        text-align: center;
+        word-break: break-word;
+    }
+    
+    .bg-lba-red.py-2.px-4 .flex.space-x-4 {
+        justify-content: center;
     }
     
     /* Ensure hero section fits */
@@ -756,21 +767,67 @@ html, body {
     }
 }
 
-/* For very small devices (below 480px) */
-@media (max-width: 480px) {
-    .hero-bg h1 {
-        font-size: 28px !important;
-    }
-    
-    .hero-bg p {
-        font-size: 16px !important;
-    }
-    
-    .stats-counter .text-4xl {
-        font-size: 24px !important;
-    }
-}        
+/* ============================================ */
+/* ✅ FIX MOBILE STICKY/JERKY SCROLLING */
+/* ============================================ */
 
+/* On mobile, make navbar position fixed instead of sticky for smoother scrolling */
+@media (max-width: 768px) {
+    nav.sticky, 
+    #navbar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        width: 100%;
+    }
+    
+    /* Add padding to body to prevent content hiding under fixed navbar */
+    body {
+        padding-top: 70px;
+    }
+    
+    /* Adjust hero section top padding to account for fixed navbar */
+    .hero-bg {
+        padding-top: 40px !important;
+    }
+    
+    /* Ensure smooth scrolling */
+    html {
+        scroll-padding-top: 80px;
+    }
+    
+    /* Fix for mobile menu overlay */
+    #mobileMenu {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow-y: auto;
+        z-index: 999;
+        background: white;
+    }
+    
+    /* Prevent body scroll when mobile menu is open */
+    body.menu-open {
+        overflow: hidden;
+    }
+}  
+
+ /* Force mobile header to display */
+@media (max-width: 768px) {
+    .bg-lba-red.py-2.px-4 {
+        display: flex !important;
+    }
+    
+    .bg-lba-red.py-2.px-4 .md\:hidden {
+        display: flex !important;
+    }
+}       
+        
 </style>
     
    <!-- Dynamic Structured Data for SEO - AUTO-UPDATING CEREMONY STRUCTURED DATA -->
@@ -1281,7 +1338,7 @@ window.addEventListener('load', function() {
         
         <!-- Mobile: Show only phone + one email -->
         <div class="text-xs mb-2 md:mb-0 block md:hidden text-center">
-            <i class="fas fa-phone-alt mr-1"></i> +231886590302
+            <i class="fas fa-phone-alt mr-1"></i>+231886590302 | +231 77 287 66 44
             <span class="mx-1">|</span>
             <i class="fas fa-envelope mr-1"></i> info@liberiabusinessawardslr.com
         </div>
