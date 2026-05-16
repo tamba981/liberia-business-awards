@@ -1263,19 +1263,36 @@ window.addEventListener('load', function() {
         </div>
     </div>
 
-    <!-- Top Header Bar -->
-    <div class="bg-lba-red text-white py-2 px-4">
-        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
-            <div class="text-sm mb-2 md:mb-0">
-                <i class="fas fa-phone-alt mr-1"></i> +231886590302 | +231 77 287 66 44 <i class="fas fa-envelope ml-2 mr-1"></i> liberiabusinessawards@gmail.com | contact@liberiabusinessawardslr.com | info@liberiabusinessawardslr.com | nominations@liberiabusinessawardslr.com | partnerships@liberiabusinessawardslr.com
+   <!-- Top Header Bar - Responsive Version -->
+<div class="bg-lba-red text-white py-2 px-4">
+    <div class="container mx-auto">
+        <!-- Desktop/Tablet: Show full contact -->
+        <div class="hidden md:flex justify-between items-center">
+            <div class="text-sm">
+                <i class="fas fa-phone-alt mr-1"></i> +231886590302 | +231 77 287 66 44
+                <span class="mx-2">|</span>
+                <i class="fas fa-envelope mr-1"></i> info@liberiabusinessawardslr.com
             </div>
             <div class="flex space-x-4">
-    <a href="ticket-page.html" class="text-sm bg-green-600 text-white px-3 py-1 rounded-full font-medium hover:bg-green-700 transition">🎟️ Get Tickets</a>
-    <button onclick="openModal('registerModal')" class="text-sm bg-white text-lba-red px-3 py-1 rounded-full font-medium hover:bg-gray-100 transition">Register</button>
-    <button onclick="openModal('liveSessionModal')" class="text-sm bg-lba-blue text-white px-3 py-1 rounded-full font-medium hover:bg-blue-400 transition">Live Session</button>
-</div>
+                <a href="ticket-page.html" class="text-sm bg-green-600 text-white px-3 py-1 rounded-full font-medium hover:bg-green-700 transition">🎟️ Get Tickets</a>
+                <button onclick="openModal('registerModal')" class="text-sm bg-white text-lba-red px-3 py-1 rounded-full font-medium hover:bg-gray-100 transition">Register</button>
+                <button onclick="openModal('liveSessionModal')" class="text-sm bg-lba-blue text-white px-3 py-1 rounded-full font-medium hover:bg-blue-400 transition">Live Session</button>
+            </div>
+        </div>
+        <!-- Mobile: Show simplified version -->
+        <div class="md:hidden flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-phone-alt text-xs"></i>
+                <span class="text-xs">+231886590302</span>
+                <i class="fas fa-envelope text-xs ml-1"></i>
+            </div>
+            <div class="flex space-x-2">
+                <a href="ticket-page.html" class="text-xs bg-green-600 text-white px-2 py-1 rounded-full">Tickets</a>
+                <button onclick="openModal('registerModal')" class="text-xs bg-white text-lba-red px-2 py-1 rounded-full">Register</button>
+            </div>
         </div>
     </div>
+</div>
 
    <!-- Navigation WITH SCROLLING ANNOUNCEMENT BAR INSIDE -->
 <nav class="bg-white shadow-md sticky top-0 z-50" id="navbar" aria-label="Main navigation">
