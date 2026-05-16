@@ -1263,34 +1263,36 @@ window.addEventListener('load', function() {
         </div>
     </div>
 
-   <!-- Top Header Bar - Responsive Version -->
+   <!-- Top Header Bar - All Contacts on Desktop, Simplified on Mobile -->
 <div class="bg-lba-red text-white py-2 px-4">
-    <div class="container mx-auto">
-        <!-- Desktop/Tablet: Show full contact -->
-        <div class="hidden md:flex justify-between items-center">
-            <div class="text-sm">
-                <i class="fas fa-phone-alt mr-1"></i> +231886590302 | +231 77 287 66 44
-                <span class="mx-2">|</span>
-                <i class="fas fa-envelope mr-1"></i> info@liberiabusinessawardslr.com
-            </div>
-            <div class="flex space-x-4">
-                <a href="ticket-page.html" class="text-sm bg-green-600 text-white px-3 py-1 rounded-full font-medium hover:bg-green-700 transition">🎟️ Get Tickets</a>
-                <button onclick="openModal('registerModal')" class="text-sm bg-white text-lba-red px-3 py-1 rounded-full font-medium hover:bg-gray-100 transition">Register</button>
-                <button onclick="openModal('liveSessionModal')" class="text-sm bg-lba-blue text-white px-3 py-1 rounded-full font-medium hover:bg-blue-400 transition">Live Session</button>
-            </div>
-        </div>
-        <!-- Mobile: Show simplified version -->
-        <div class="md:hidden flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-phone-alt text-xs"></i>
-                <span class="text-xs">+231886590302</span>
-                <i class="fas fa-envelope text-xs ml-1"></i>
-            </div>
-            <div class="flex space-x-2">
-                <a href="ticket-page.html" class="text-xs bg-green-600 text-white px-2 py-1 rounded-full">Tickets</a>
-                <button onclick="openModal('registerModal')" class="text-xs bg-white text-lba-red px-2 py-1 rounded-full">Register</button>
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
+        
+        <!-- Desktop: Show ALL contacts (wrapped for fit) -->
+        <div class="text-xs lg:text-sm mb-2 md:mb-0 hidden md:block text-center lg:text-left">
+            <div class="flex flex-wrap justify-center lg:justify-start gap-x-3 gap-y-1">
+                <span><i class="fas fa-phone-alt mr-1"></i> +231886590302 | +231 77 287 66 44</span>
+                <span><i class="fas fa-envelope mr-1"></i> liberiabusinessawards@gmail.com</span>
+                <span>contact@liberiabusinessawardslr.com</span>
+                <span>info@liberiabusinessawardslr.com</span>
+                <span>nominations@liberiabusinessawardslr.com</span>
+                <span>partnerships@liberiabusinessawardslr.com</span>
             </div>
         </div>
+        
+        <!-- Mobile: Show only phone + one email -->
+        <div class="text-xs mb-2 md:mb-0 block md:hidden text-center">
+            <i class="fas fa-phone-alt mr-1"></i> +231886590302
+            <span class="mx-1">|</span>
+            <i class="fas fa-envelope mr-1"></i> info@liberiabusinessawardslr.com
+        </div>
+        
+        <!-- Buttons: All 3 visible on both desktop and mobile -->
+        <div class="flex space-x-2 md:space-x-3 justify-center">
+            <a href="ticket-page.html" class="text-xs md:text-sm bg-green-600 text-white px-2 md:px-3 py-1 rounded-full font-medium hover:bg-green-700 transition whitespace-nowrap">🎟️ Tickets</a>
+            <button onclick="openModal('registerModal')" class="text-xs md:text-sm bg-white text-lba-red px-2 md:px-3 py-1 rounded-full font-medium hover:bg-gray-100 transition whitespace-nowrap">Register</button>
+            <button onclick="openModal('liveSessionModal')" class="text-xs md:text-sm bg-lba-blue text-white px-2 md:px-3 py-1 rounded-full font-medium hover:bg-blue-400 transition whitespace-nowrap">Live</button>
+        </div>
+        
     </div>
 </div>
 
