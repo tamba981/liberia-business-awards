@@ -706,20 +706,9 @@ html, body {
 
 /* Mobile responsive fixes */
 @media (max-width: 768px) {
-    /* Make top header text smaller and wrap */
-    .bg-lba-red.py-2.px-4 .flex {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .bg-lba-red.py-2.px-4 .text-sm {
-        font-size: 10px;
-        text-align: center;
-        word-break: break-word;
-    }
-    
-    .bg-lba-red.py-2.px-4 .flex.space-x-4 {
-        justify-content: center;
+    /* HIDE the top header bar completely on mobile (contact, emails, Register, Live Session) */
+    .bg-lba-red.py-2.px-4 {
+        display: none !important;
     }
     
     /* Ensure hero section fits */
@@ -767,6 +756,20 @@ html, body {
     }
 }
 
+/* For very small devices (below 480px) */
+@media (max-width: 480px) {
+    .hero-bg h1 {
+        font-size: 28px !important;
+    }
+    
+    .hero-bg p {
+        font-size: 16px !important;
+    }
+    
+    .stats-counter .text-4xl {
+        font-size: 24px !important;
+    }
+}
 /* ============================================ */
 /* ✅ FIX MOBILE STICKY/JERKY SCROLLING */
 /* ============================================ */
