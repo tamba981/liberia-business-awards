@@ -687,6 +687,90 @@ iframe {
     padding: 5px 10px;
 }
 
+/* ============================================ */
+/* ✅ MOBILE RESPONSIVE FIXES - ADD THIS CSS */
+/* ============================================ */
+
+/* Fix horizontal scroll on all devices */
+html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    position: relative !important;
+}
+
+/* Ensure all containers respect viewport */
+* {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Hide top header bar on mobile - too much text */
+@media (max-width: 768px) {
+    /* Hide the top header with emails/phones */
+    .bg-lba-red.py-2.px-4 {
+        display: none !important;
+    }
+    
+    /* Ensure hero section fits */
+    .hero-bg .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    /* Fix hero buttons wrap properly */
+    .hero-bg .flex.flex-col.sm\:flex-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .hero-bg .flex.flex-col.sm\:flex-row a,
+    .hero-bg .flex.flex-col.sm\:flex-row button {
+        width: 100%;
+        text-align: center;
+    }
+    
+    /* Fix any overflow issues */
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+        overflow-x: hidden;
+    }
+    
+    /* Ensure images don't overflow */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Fix iframes/videos */
+    iframe, video {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Fix floating elements */
+    .floating-ad,
+    .whatsapp-float,
+    .lba-chat-widget {
+        z-index: 9999;
+    }
+}
+
+/* For very small devices (below 480px) */
+@media (max-width: 480px) {
+    .hero-bg h1 {
+        font-size: 28px !important;
+    }
+    
+    .hero-bg p {
+        font-size: 16px !important;
+    }
+    
+    .stats-counter .text-4xl {
+        font-size: 24px !important;
+    }
+}        
+
 </style>
     
    <!-- Dynamic Structured Data for SEO - AUTO-UPDATING CEREMONY STRUCTURED DATA -->
