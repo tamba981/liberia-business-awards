@@ -6903,7 +6903,10 @@ function closeModal(modalId) {
 // ✅ GOOGLE APPS SCRIPT CONFIGURATION
 // ============================================
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
-
+// ============================================
+// ✅ API BASE URL FOR BACKEND
+// ============================================
+const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
 
  // ============================================
 // ✅ OFFLINE FORM QUEUE SYSTEM
@@ -8786,6 +8789,22 @@ window.addToSearchIndex({
 let businessDirectory = [];
 let directoryLoading = false;
 
+ // ============================================
+// HELPER FUNCTIONS FOR DIRECTORY
+// ============================================
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function escapeCsv(str) {
+    if (!str) return '';
+    return str.replace(/"/g, '""');
+}       
+        
 // Load directory from backend API
 async function loadDirectoryFromAPI() {
     if (directoryLoading) return;
@@ -9853,6 +9872,43 @@ function openAllDirectoryModal() {
     displayAllDirectory('all');
 }
 
+ // ============================================
+// FIXED: displayDirectory function
+// ============================================
+function displayDirectory(filter = 'all') {
+    console.log('✅ displayDirectory called with filter:', filter);
+    
+    const directoryItems = document.querySelectorAll('.directory-item, .category-item, [data-category]');
+    
+    directoryItems.forEach(item => {
+        if (filter === 'all' || item.dataset.category === filter) {
+            item.style.display = 'block';
+            item.classList.remove('hidden');
+        } else {
+            item.style.display = 'none';
+            item.classList.add('hidden');
+        }
+    });
+    
+    const filterButtons = document.querySelectorAll('.filter-btn, .category-btn');
+    filterButtons.forEach(btn => {
+        if (btn.dataset.filter === filter) {
+            btn.classList.add('active', 'bg-blue-600', 'text-white');
+            btn.classList.remove('bg-gray-200', 'text-gray-700');
+        } else {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white');
+            btn.classList.add('bg-gray-200', 'text-gray-700');
+        }
+    });
+    
+    return true;
+}
+
+// Alias for backward compatibility
+function filterDirectoryLegacy(category) {
+    displayDirectory(category);
+}       
+        
 // ============================================
 // FIX FOR: displayDirectory is not defined
 // ============================================
