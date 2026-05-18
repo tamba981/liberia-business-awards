@@ -8800,13 +8800,50 @@ window.addToSearchIndex({
 });
 
 
+// ============================================
+// DYNAMIC BUSINESS DIRECTORY - LOADED FROM BACKEND API
+// ============================================
 
-// =============== BUSINESS DIRECTORY ===============
-const businessDirectory = [
+let businessDirectory = [];
+let directoryLoading = false;
+
+// Load directory from backend API
+async function loadDirectoryFromAPI() {
+    if (directoryLoading) return;
+    directoryLoading = true;
+    
+    console.log('📂 Loading business directory from backend API...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/directory/businesses?limit=200`);
+        const data = await response.json();
+        
+        if (data.success && data.businesses && data.businesses.length > 0) {
+            businessDirectory = data.businesses;
+            console.log(`✅ Loaded ${businessDirectory.length} businesses from backend`);
+            return true;
+        } else {
+            console.warn('⚠️ No businesses from API, using fallback');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Error loading directory:', error);
+        return false;
+    } finally {
+        directoryLoading = false;
+    }
+}
+
+// ============================================
+// FALLBACK BUSINESS DIRECTORY DATA (YOUR EXISTING 59 BUSINESSES)
+// PRESERVED FOR OFFLINE/BACKUP USE
+// ============================================
+
+const fallbackBusinessDirectory = [
     {
         id: 1,
         name: "J-Palm Liberia (Kernel Fresh)",
-        category: "agriculture", // CHANGED from "manufacturing"
+        category: "agriculture",
         description: "Sustainable palm oil production and premium Liberian-made consumer goods. Award-winning products that compete internationally.",
         location: "Monrovia & Rural Communities",
         website: "https://www.jpalmliberia.com",
@@ -8814,12 +8851,13 @@ const businessDirectory = [
         award: "Sustainable Agriculture Award 2024",
         founder: "Mahmud Johnson",
         year: "2011",
-        impact: "200+ direct employees, 500+ smallholder farmers"
+        impact: "200+ direct employees, 500+ smallholder farmers",
+        verified: true
     },
     {
         id: 2,
         name: "Liberia Pure Honey",
-        category: "agriculture", // KEEP as is
+        category: "agriculture",
         description: "Premium pure honey that won first prize at the National Honey Show in England (2018). Superior aroma, taste and viscosity.",
         location: "Monrovia & Bong County",
         website: "#",
@@ -8827,12 +8865,13 @@ const businessDirectory = [
         award: "International Quality Award 2018",
         founder: "Gladys Freeman",
         year: "2016",
-        impact: "Empowering local beekeepers across Liberia"
+        impact: "Empowering local beekeepers across Liberia",
+        verified: true
     },
     {
         id: 3,
         name: "Liberian Girls Lunchbox",
-        category: "tourism", // CHANGED from "food-beverage" (fits better in Tourism/Hospitality)
+        category: "tourism",
         description: "Social enterprise providing nutritious meals while empowering young women through culinary skills training.",
         location: "Monrovia",
         website: "#",
@@ -8840,12 +8879,13 @@ const businessDirectory = [
         award: "Social Enterprise of the Year 2023",
         founder: "Christollie Ade Suah",
         year: "2019",
-        impact: "Trained 150+ young women in culinary arts"
+        impact: "Trained 150+ young women in culinary arts",
+        verified: true
     },
     {
         id: 4,
         name: "Orange Digital Center",
-        category: "technology", // KEEP as is
+        category: "technology",
         description: "Digital innovation hub providing tech training, startup incubation, and digital skills development for youth.",
         location: "Monrovia",
         website: "https://www.orange.com",
@@ -8853,12 +8893,13 @@ const businessDirectory = [
         award: "Digital Innovation Hub 2024",
         supervisor: "Orange Fab Program",
         year: "2021",
-        impact: "Trained 5,000+ youth in digital skills"
+        impact: "Trained 5,000+ youth in digital skills",
+        verified: true
     },
     {
         id: 5,
         name: "AgroRetti",
-        category: "agriculture", // KEEP as is
+        category: "agriculture",
         description: "Agricultural enterprise focusing on sustainable farming practices and making quality produce affordable for all Liberians.",
         location: "Margibi County",
         website: "#",
@@ -8866,12 +8907,13 @@ const businessDirectory = [
         award: "Young Agripreneur Award 2023",
         founder: "Goretti L. Atoka",
         year: "2020",
-        impact: "Supplying fresh produce to local markets"
+        impact: "Supplying fresh produce to local markets",
+        verified: true
     },
     {
         id: 6,
         name: "Patience Cocoa Inc.",
-        category: "manufacturing", // KEEP as is
+        category: "manufacturing",
         description: "Liberia's premier chocolate manufacturer producing 80% Liberian chocolate with international quality standards.",
         location: "Monrovia",
         website: "#",
@@ -8879,12 +8921,13 @@ const businessDirectory = [
         award: "Manufacturing Excellence 2023",
         founder: "Patience Cocoa",
         year: "2019",
-        impact: "Creating value from local cocoa beans"
+        impact: "Creating value from local cocoa beans",
+        verified: true
     },
     {
         id: 7,
         name: "Evergreen Enterprise Trading",
-        category: "manufacturing", // KEEP as is
+        category: "manufacturing",
         description: "Liberia's premier producer of alcoholic and non-alcoholic beverages, reducing import dependency on drinks.",
         location: "Monrovia",
         website: "#",
@@ -8892,12 +8935,13 @@ const businessDirectory = [
         award: "Beverage Industry Leader 2024",
         founder: "Verity Evergreen Neufville Sonkarlay",
         year: "2018",
-        impact: "Competing with $10M import market"
+        impact: "Competing with $10M import market",
+        verified: true
     },
     {
         id: 8,
         name: "Cachelle Creative Arts Center",
-        category: "arts", // CHANGED from "services"
+        category: "arts",
         description: "Creative arts hub promoting Liberian arts, culture, and education through various artistic expressions.",
         location: "Monrovia",
         website: "#",
@@ -8905,12 +8949,13 @@ const businessDirectory = [
         award: "Creative Arts Excellence 2023",
         founder: "Shoana Cachelle",
         year: "2017",
-        impact: "Empowering artists and creatives"
+        impact: "Empowering artists and creatives",
+        verified: true
     },
     {
         id: 9,
         name: "iCampus Liberia",
-        category: "education", // KEEP as is
+        category: "education",
         description: "Tech education platform empowering young people with digital skills and promoting good governance through technology.",
         location: "Monrovia",
         website: "#",
@@ -8918,12 +8963,13 @@ const businessDirectory = [
         award: "Tech Education Pioneer 2024",
         founder: "Luther Jeke",
         year: "2019",
-        impact: "Trained 2,000+ youth in tech skills"
+        impact: "Trained 2,000+ youth in tech skills",
+        verified: true
     },
     {
         id: 10,
         name: "Liberian Poet Society",
-        category: "arts", // CHANGED from "services"
+        category: "arts",
         description: "Platform showcasing and promoting Liberian poets and their writing skills, bridging cultural gaps.",
         location: "Monrovia",
         website: "#",
@@ -8931,12 +8977,13 @@ const businessDirectory = [
         award: "Cultural Preservation Award 2023",
         president: "William Pharell Anderson Sr.",
         year: "2018",
-        impact: "Promoting Liberian literary arts"
+        impact: "Promoting Liberian literary arts",
+        verified: true
     },
     {
         id: 11,
         name: "Tete's Afro-Interiors",
-        category: "arts", // CHANGED from "services"
+        category: "arts",
         description: "Interior design company specializing in Afro-centric designs and promoting African aesthetics in home decor.",
         location: "Monrovia",
         website: "#",
@@ -8944,12 +8991,13 @@ const businessDirectory = [
         award: "Creative Design Award 2023",
         founder: "Ruth Tete Farkollie",
         year: "2020",
-        impact: "Promoting African interior design"
+        impact: "Promoting African interior design",
+        verified: true
     },
     {
         id: 12,
         name: "Wungko's Farm",
-        category: "agriculture", // KEEP as is
+        category: "agriculture",
         description: "Agricultural enterprise focusing on quality produce with proper packaging for both local and international markets.",
         location: "Bong County",
         website: "#",
@@ -8957,12 +9005,13 @@ const businessDirectory = [
         award: "Agricultural Innovation 2024",
         founder: "Paul Sackie Wungko",
         year: "2018",
-        impact: "Creating export-ready agricultural products"
+        impact: "Creating export-ready agricultural products",
+        verified: true
     },
     {
         id: 13,
         name: "Gonet Academy",
-        category: "education", // KEEP as is
+        category: "education",
         description: "Professional development and digital skills training academy empowering Liberia's next generation of leaders.",
         location: "Paynesville",
         website: "#",
@@ -8970,12 +9019,13 @@ const businessDirectory = [
         award: "Education Excellence Award 2024",
         founder: "Mohammed Kerkulah",
         year: "2021",
-        impact: "500+ professionals certified across 12 cohorts"
+        impact: "500+ professionals certified across 12 cohorts",
+        verified: true
     },
     {
         id: 14,
         name: "EZee Market",
-        category: "technology", // CHANGED from "technology" (keep but verify)
+        category: "technology",
         description: "Digital marketplace connecting Liberian businesses with customers through e-commerce solutions.",
         location: "Monrovia",
         website: "#",
@@ -8983,12 +9033,13 @@ const businessDirectory = [
         award: "Digital Commerce Innovation 2023",
         founder: "EZee Team",
         year: "2020",
-        impact: "Connecting 200+ businesses online"
+        impact: "Connecting 200+ businesses online",
+        verified: false
     },
     {
         id: 15,
         name: "Eco-Fuel Liberia",
-        category: "energy", // CHANGED from "manufacturing"
+        category: "energy",
         description: "Sustainable energy solutions provider focusing on eco-friendly fuel alternatives for Liberia.",
         location: "Monrovia",
         website: "#",
@@ -8996,12 +9047,13 @@ const businessDirectory = [
         award: "Green Innovation Award 2024",
         founder: "Eco-Fuel Team",
         year: "2019",
-        impact: "Promoting sustainable energy solutions"
+        impact: "Promoting sustainable energy solutions",
+        verified: false
     },
     {
         id: 16,
         name: "Annita",
-        category: "technology", // KEEP as is
+        category: "technology",
         description: "Pan-African digital platform integrating e-commerce, fintech, and AI to help MSMEs scale across Africa.",
         location: "Monrovia",
         website: "https://www.an-nita.com",
@@ -9009,12 +9061,13 @@ const businessDirectory = [
         award: "Digital Innovation & Pan-African Impact Award",
         founder: "Christopher O. Fallah",
         year: "2020",
-        impact: "Featured at Intra-African Trade Fair 2025"
+        impact: "Featured at Intra-African Trade Fair 2025",
+        verified: true
     },
     {
         id: 17, 
         name: "National Toiletries Inc.",
-        category: "manufacturing", // KEEP as is
+        category: "manufacturing",
         description: "Supplying the best quality tissue, napkins, and paper towels in Liberia. Comfort, reliability, and value in every product.",
         location: "Bernard Farm, Liberia",
         website: "https://www.facebook.com/share/187ZVbJhNB/?mibextid=wwXIfr",
@@ -9022,206 +9075,220 @@ const businessDirectory = [
         award: "Manufacturing Excellence 2023",
         founder: "Fomba Trawally",
         year: "2018",
-        impact: "Providing quality hygiene products across Liberia"
+        impact: "Providing quality hygiene products across Liberia",
+        verified: true
     },
-
     {
         id: 18,
         name: "A-1 Technical Engineering Solutions",
-        category: "energy", // Renewable Energy
-        description: "Liberian engineering company specializing in clean energy solutions. Awarded UNDP Growth Accelerator grant in 2023 for renewable energy innovation. Part of Clean/Renewable Energy cohort.",
+        category: "energy",
+        description: "Liberian engineering company specializing in clean energy solutions. Awarded UNDP Growth Accelerator grant in 2023 for renewable energy innovation.",
         location: "Monrovia, Liberia",
         website: "#",
         phone: "+231 770 123 456",
         award: "UNDP Growth Accelerator Grant 2023",
         founder: "Engineering Team",
         year: "2020",
-        impact: "Developing sustainable energy solutions for rural communities"
+        impact: "Developing sustainable energy solutions for rural communities",
+        verified: false
     },
     {
         id: 19,
         name: "Liberia Electricity Corporation (LEC)",
         category: "energy",
-        description: "National electricity utility company providing power generation, transmission, and distribution across Liberia. Key player in Liberia's energy sector development.",
+        description: "National electricity utility company providing power generation, transmission, and distribution across Liberia.",
         location: "Monrovia & Nationwide",
         website: "https://www.lecliberia.com",
         phone: "+231 886 333 444",
         award: "National Energy Provider",
         founder: "Government of Liberia",
         year: "1973",
-        impact: "Powering homes and businesses across Liberia"
+        impact: "Powering homes and businesses across Liberia",
+        verified: false
     },
     {
         id: 20,
         name: "Liberia Renewable Energy Access (LIREA)",
         category: "energy",
-        description: "Renewable energy company focusing on solar power solutions for off-grid communities. Providing clean, affordable energy to rural areas.",
+        description: "Renewable energy company focusing on solar power solutions for off-grid communities.",
         location: "Monrovia & Rural Communities",
         website: "#",
         phone: "+231 777 555 666",
         award: "Renewable Energy Innovation Award 2023",
         founder: "Renewable Energy Team",
         year: "2019",
-        impact: "Installed 500+ solar systems in rural communities"
+        impact: "Installed 500+ solar systems in rural communities",
+        verified: false
     },
     {
         id: 21,
         name: "Mano Manufacturing & Energy Solutions",
         category: "energy",
-        description: "Integrated energy solutions provider offering solar equipment manufacturing and installation services. Supporting Liberia's transition to clean energy.",
+        description: "Integrated energy solutions provider offering solar equipment manufacturing and installation services.",
         location: "Monrovia Industrial Park",
         website: "#",
         phone: "+231 880 777 888",
         award: "Clean Energy Manufacturing Excellence 2024",
         founder: "Manufacturing Team",
         year: "2018",
-        impact: "Local manufacturing of solar equipment, reducing imports"
+        impact: "Local manufacturing of solar equipment, reducing imports",
+        verified: false
     },
     {
         id: 22,
         name: "BHP Billiton Liberia",
         category: "mining",
-        description: "Global mining company with iron ore operations in Liberia. One of the largest mining companies operating in the country with significant investments.",
+        description: "Global mining company with iron ore operations in Liberia. One of the largest mining companies operating in the country.",
         location: "Nimba County",
         website: "https://www.bhp.com",
         phone: "+231 886 999 000",
         award: "Mining Industry Leader",
         founder: "BHP Group",
         year: "2008",
-        impact: "Major employer and contributor to national economy"
+        impact: "Major employer and contributor to national economy",
+        verified: false
     },
     {
         id: 23,
         name: "Liberia Mining Company (LMC)",
         category: "mining",
-        description: "Liberian-owned mining company specializing in mineral exploration and extraction. Focused on sustainable mining practices and community development.",
+        description: "Liberian-owned mining company specializing in mineral exploration and extraction.",
         location: "Bong County",
         website: "#",
         phone: "+231 777 444 555",
         award: "Sustainable Mining Award 2023",
         founder: "Liberian Mining Group",
         year: "2015",
-        impact: "Creating local employment in mining communities"
+        impact: "Creating local employment in mining communities",
+        verified: false
     },
     {
         id: 24,
         name: "Golden Liberia Mining",
         category: "mining",
-        description: "Gold mining company operating in Liberia's rich mineral regions. Committed to responsible mining practices and environmental protection.",
+        description: "Gold mining company operating in Liberia's rich mineral regions.",
         location: "Grand Cape Mount County",
         website: "#",
         phone: "+231 770 888 999",
         award: "Gold Mining Excellence 2024",
         founder: "Gold Mining Consortium",
         year: "2017",
-        impact: "Exporting responsibly sourced gold to international markets"
+        impact: "Exporting responsibly sourced gold to international markets",
+        verified: false
     },
     {
         id: 25,
         name: "Liberia Diamond Corporation",
         category: "mining",
-        description: "Specialized diamond mining and trading company. Ensuring ethical sourcing and Kimberly Process compliance in diamond exports.",
+        description: "Specialized diamond mining and trading company. Ensuring ethical sourcing and Kimberly Process compliance.",
         location: "Lofa County",
         website: "#",
         phone: "+231 880 111 222",
         award: "Ethical Diamond Trading Award 2023",
         founder: "Diamond Industry Group",
         year: "2016",
-        impact: "Promoting ethical diamond trade practices"
+        impact: "Promoting ethical diamond trade practices",
+        verified: false
     },
     {
         id: 26,
         name: "TotalEnergies Liberia",
         category: "oil-gas",
-        description: "International energy company providing petroleum products and services in Liberia. Leading supplier of fuel and lubricants with nationwide distribution.",
+        description: "International energy company providing petroleum products and services in Liberia.",
         location: "Monrovia & Major Cities",
         website: "https://liberia.totalenergies.com",
         phone: "+231 886 777 666",
         award: "Fuel Distribution Excellence 2024",
         founder: "TotalEnergies Group",
         year: "2005",
-        impact: "Reliable fuel supply chain nationwide"
+        impact: "Reliable fuel supply chain nationwide",
+        verified: false
     },
     {
         id: 27,
         name: "ExxonMobil Liberia",
         category: "oil-gas",
-        description: "Global energy company engaged in petroleum exploration and fuel distribution in Liberia. Major player in Liberia's oil and gas sector.",
+        description: "Global energy company engaged in petroleum exploration and fuel distribution in Liberia.",
         location: "Monrovia",
         website: "https://corporate.exxonmobil.com",
         phone: "+231 777 333 222",
         award: "Petroleum Industry Leadership",
         founder: "ExxonMobil Corporation",
         year: "2010",
-        impact: "Investing in Liberia's energy infrastructure"
+        impact: "Investing in Liberia's energy infrastructure",
+        verified: false
     },
     {
         id: 28,
         name: "Liberian Oil Trading Company (LOTC)",
         category: "oil-gas",
-        description: "Liberian-owned petroleum trading company specializing in oil imports and distribution. Building local capacity in the oil and gas sector.",
+        description: "Liberian-owned petroleum trading company specializing in oil imports and distribution.",
         location: "Freeport of Monrovia",
         website: "#",
         phone: "+231 770 222 333",
         award: "Oil Trading Excellence 2023",
         founder: "Liberian Energy Entrepreneurs",
         year: "2014",
-        impact: "Developing local expertise in oil trading"
+        impact: "Developing local expertise in oil trading",
+        verified: false
     },
     {
         id: 29,
         name: "PetroTrade Liberia",
         category: "oil-gas",
-        description: "Petroleum products trading and distribution company. Specializing in bulk fuel supply to industries and commercial customers.",
+        description: "Petroleum products trading and distribution company. Specializing in bulk fuel supply to industries.",
         location: "Bushrod Island, Monrovia",
         website: "#",
         phone: "+231 880 444 555",
         award: "Commercial Fuel Supplier of the Year 2024",
         founder: "Petroleum Trading Group",
         year: "2012",
-        impact: "Supporting industrial growth through reliable fuel supply"
+        impact: "Supporting industrial growth through reliable fuel supply",
+        verified: false
     },
     {
         id: 30,
         name: "Green Energy Liberia",
         category: "energy",
-        description: "Hybrid energy solutions provider combining solar, wind, and biomass energy. Pioneering renewable energy integration in Liberia.",
+        description: "Hybrid energy solutions provider combining solar, wind, and biomass energy.",
         location: "Paynesville, Monrovia",
         website: "#",
         phone: "+231 777 666 777",
         award: "Hybrid Energy Innovation Award 2024",
         founder: "Green Energy Team",
         year: "2020",
-        impact: "Implementing integrated renewable energy systems"
+        impact: "Implementing integrated renewable energy systems",
+        verified: false
     },
     {
         id: 31,
         name: "Liberia Solar Power Initiative",
         category: "energy",
-        description: "Community-focused solar energy provider installing micro-grids for rural electrification. Partnering with international development agencies.",
+        description: "Community-focused solar energy provider installing micro-grids for rural electrification.",
         location: "Rural Communities Nationwide",
         website: "#",
         phone: "+231 886 555 444",
         award: "Rural Electrification Champion 2023",
         founder: "Solar Development Team",
         year: "2018",
-        impact: "Electrifying remote communities with solar power"
+        impact: "Electrifying remote communities with solar power",
+        verified: false
     },
-        {
+    {
         id: 32,
         name: "ArcelorMittal Liberia",
         category: "mining",
-        description: "World's leading steel and mining company operating Liberia's largest mining concession. Major iron ore producer with extensive operations in Nimba County. Key contributor to Liberia's economy through mining investments, infrastructure development, and community programs.",
+        description: "World's leading steel and mining company operating Liberia's largest mining concession. Major iron ore producer with extensive operations in Nimba County.",
         location: "Nimba County & Buchanan Port",
         website: "https://liberia.arcelormittal.com",
         phone: "+231 777 777 777",
         award: "Mining Industry Excellence Award 2023",
         founder: "ArcelorMittal Group",
         year: "2005",
-        impact: "Largest private sector investor in Liberia, employing over 2,000 people directly and 10,000+ indirectly. Rehabilitated 243km railroad and Buchanan Port infrastructure."
+        impact: "Largest private sector investor in Liberia, employing over 2,000 people directly",
+        verified: false
     },
- 
-     {
+    {
         id: 33,
         name: "Yonnie Continental Farm Incorporated",
         category: "agriculture",
@@ -9232,7 +9299,8 @@ const businessDirectory = [
         award: "Agricultural Excellence",
         founder: "Princess Yonnie Numah",
         year: "2024",
-        impact: "Supporting food security through continental farming"
+        impact: "Supporting food security through continental farming",
+        verified: false
     },
     {
         id: 34,
@@ -9245,7 +9313,8 @@ const businessDirectory = [
         award: "Trade Excellence",
         founder: "Zwannah Zwabonic Burphy",
         year: "2024",
-        impact: "Connecting markets through strategic trade"
+        impact: "Connecting markets through strategic trade",
+        verified: false
     },
     {
         id: 35,
@@ -9258,7 +9327,8 @@ const businessDirectory = [
         award: "Food Innovation",
         founder: "Isatta Joeatha Kiawu",
         year: "2024",
-        impact: "Creating delightful snack experiences"
+        impact: "Creating delightful snack experiences",
+        verified: false
     },
     {
         id: 36,
@@ -9271,7 +9341,8 @@ const businessDirectory = [
         award: "Digital Innovation",
         founder: "Christine Nagbe",
         year: "2024",
-        impact: "Connecting businesses through digital networks"
+        impact: "Connecting businesses through digital networks",
+        verified: false
     },
     {
         id: 37,
@@ -9284,7 +9355,8 @@ const businessDirectory = [
         award: "Service Excellence",
         founder: "Hassan Blayon",
         year: "2024",
-        impact: "Keeping Liberia cool with quality electrical services"
+        impact: "Keeping Liberia cool with quality electrical services",
+        verified: false
     },
     {
         id: 38,
@@ -9297,7 +9369,8 @@ const businessDirectory = [
         award: "Culinary Excellence",
         founder: "Earlla Aya Ronda NEBLETT",
         year: "2024",
-        impact: "Serving quality food to communities"
+        impact: "Serving quality food to communities",
+        verified: false
     },
     {
         id: 39,
@@ -9310,7 +9383,8 @@ const businessDirectory = [
         award: "Agricultural Innovation",
         founder: "Jacqueline Wungko",
         year: "2024",
-        impact: "Creating export-ready agricultural products"
+        impact: "Creating export-ready agricultural products",
+        verified: false
     },
     {
         id: 40,
@@ -9323,7 +9397,8 @@ const businessDirectory = [
         award: "Environmental Excellence",
         founder: "Pius Kumeh",
         year: "2024",
-        impact: "Creating cleaner, healthier environments"
+        impact: "Creating cleaner, healthier environments",
+        verified: false
     },
     {
         id: 41,
@@ -9336,7 +9411,8 @@ const businessDirectory = [
         award: "Beverage Innovation",
         founder: "Dorcas A Benson",
         year: "2024",
-        impact: "Bringing bliss through quality beverages"
+        impact: "Bringing bliss through quality beverages",
+        verified: false
     },
     {
         id: 42,
@@ -9349,7 +9425,8 @@ const businessDirectory = [
         award: "Business Development Excellence",
         founder: "Walker S. Mahn",
         year: "2024",
-        impact: "Supporting business growth and development"
+        impact: "Supporting business growth and development",
+        verified: false
     },
     {
         id: 43,
@@ -9362,7 +9439,8 @@ const businessDirectory = [
         award: "Healthcare Excellence",
         founder: "Alieu Barry",
         year: "2024",
-        impact: "Providing quality healthcare services"
+        impact: "Providing quality healthcare services",
+        verified: false
     },
     {
         id: 44,
@@ -9375,7 +9453,8 @@ const businessDirectory = [
         award: "Communications Excellence",
         founder: "Myriline Dogba",
         year: "2024",
-        impact: "Connecting through advanced communications"
+        impact: "Connecting through advanced communications",
+        verified: false
     },
     {
         id: 45,
@@ -9388,7 +9467,8 @@ const businessDirectory = [
         award: "Beauty Innovation",
         founder: "Rose M. Tulay",
         year: "2024",
-        impact: "Bringing glow to beauty routines"
+        impact: "Bringing glow to beauty routines",
+        verified: false
     },
     {
         id: 46,
@@ -9401,7 +9481,8 @@ const businessDirectory = [
         award: "Care Excellence",
         founder: "Lewis Sowa",
         year: "2024",
-        impact: "Supporting families through quality home care"
+        impact: "Supporting families through quality home care",
+        verified: false
     },
     {
         id: 47,
@@ -9414,7 +9495,8 @@ const businessDirectory = [
         award: "Natural Beverage Excellence",
         founder: "Dwah Faith Massaquoi",
         year: "2024",
-        impact: "Bringing natural goodness through juices"
+        impact: "Bringing natural goodness through juices",
+        verified: false
     },
     {
         id: 48,
@@ -9427,7 +9509,8 @@ const businessDirectory = [
         award: "Tech Accessibility",
         founder: "Daniel Johnson",
         year: "2024",
-        impact: "Making technology easy for everyone"
+        impact: "Making technology easy for everyone",
+        verified: false
     },
     {
         id: 49,
@@ -9440,7 +9523,8 @@ const businessDirectory = [
         award: "Business Diversification",
         founder: "Dorithy D Gwee",
         year: "2024",
-        impact: "Leading through diverse business solutions"
+        impact: "Leading through diverse business solutions",
+        verified: false
     },
     {
         id: 50,
@@ -9453,7 +9537,8 @@ const businessDirectory = [
         award: "Consumer Choice Excellence",
         founder: "Choices Team",
         year: "2024",
-        impact: "Empowering consumer choices"
+        impact: "Empowering consumer choices",
+        verified: false
     },
     {
         id: 51,
@@ -9466,7 +9551,8 @@ const businessDirectory = [
         award: "Agricultural Innovation",
         founder: "Melvin Duo",
         year: "2024",
-        impact: "Innovating animal agriculture in Liberia"
+        impact: "Innovating animal agriculture in Liberia",
+        verified: false
     },
     {
         id: 52,
@@ -9479,7 +9565,8 @@ const businessDirectory = [
         award: "Network Excellence",
         founder: "Amb. Konah KR Gayetee",
         year: "2024",
-        impact: "Connecting organizations internationally"
+        impact: "Connecting organizations internationally",
+        verified: false
     },
     {
         id: 53,
@@ -9492,7 +9579,8 @@ const businessDirectory = [
         award: "Business Support Excellence",
         founder: "T.sar Team",
         year: "2024",
-        impact: "Supporting business growth and development"
+        impact: "Supporting business growth and development",
+        verified: false
     },
     {
         id: 54,
@@ -9505,7 +9593,8 @@ const businessDirectory = [
         award: "Agricultural Excellence",
         founder: "Lincoln M.K Valliah",
         year: "2024",
-        impact: "Growing Liberia through quality agriculture"
+        impact: "Growing Liberia through quality agriculture",
+        verified: false
     },
     {
         id: 55,
@@ -9518,7 +9607,8 @@ const businessDirectory = [
         award: "Beauty Excellence",
         founder: "Favor Naakar Gweh",
         year: "2024",
-        impact: "Bringing glow to beauty routines"
+        impact: "Bringing glow to beauty routines",
+        verified: false
     },
     {
         id: 56,
@@ -9531,7 +9621,8 @@ const businessDirectory = [
         award: "Construction Excellence",
         founder: "Steven Julonta",
         year: "2024",
-        impact: "Building Liberia with guaranteed quality"
+        impact: "Building Liberia with guaranteed quality",
+        verified: false
     },
     {
         id: 57,
@@ -9544,7 +9635,8 @@ const businessDirectory = [
         award: "Harvest Excellence",
         founder: "Brianna Malaika Hooke",
         year: "2024",
-        impact: "Bringing quality harvest to communities"
+        impact: "Bringing quality harvest to communities",
+        verified: false
     },
     {
         id: 58,
@@ -9557,7 +9649,8 @@ const businessDirectory = [
         award: "Enterprise Excellence",
         founder: "Armour Cheyee",
         year: "2024",
-        impact: "Serving communities through enterprise"
+        impact: "Serving communities through enterprise",
+        verified: false
     },
     {
         id: 59,
@@ -9570,15 +9663,76 @@ const businessDirectory = [
         award: "Creative Excellence",
         founder: "Varro Smith",
         year: "2024",
-        impact: "Creating unique artistic expressions"
+        impact: "Creating unique artistic expressions",
+        verified: false
     }
 ];
 
-// Initialize directory
-function initDirectory() {
+// Initialize directory (load from API first, fallback to local)
+async function initDirectory() {
+    const loaded = await loadDirectoryFromAPI();
+    
+    if (!loaded && fallbackBusinessDirectory.length > 0) {
+        console.log('📂 Using fallback local directory data');
+        businessDirectory = fallbackBusinessDirectory;
+    }
+    
     displayLimitedDirectory('all');
-    // Also prepare all directory for modal
     displayAllDirectory('all');
+    console.log('✅ Directory initialized with', businessDirectory.length, 'businesses');
+}
+
+// Generate business card HTML (with dynamic verified badge)
+function generateBusinessCard(business, isModal = false) {
+    const modalClass = isModal ? 'modal-business-card' : '';
+    
+    // Use dynamic verified flag from database or fallback
+    const hasVerifiedBadge = business.verified === true || business.verified === 'true';
+    
+    return `
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow ${modalClass}" data-aos="fade-up">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold text-lba-red">
+                        ${escapeHtml(business.name)}
+                        ${hasVerifiedBadge ? `<span class="verified-badge"><img src="/images/VARIFY BATCH/LBA VARIFY BATCH.png" alt="Verified" onerror="this.style.display='none'"> VERIFIED</span>` : ''}
+                    </h3>
+                    <span class="bg-lba-blue text-white text-xs px-2 py-1 rounded-full capitalize">${escapeHtml(business.category).replace('-', ' ')}</span>
+                </div>
+                <p class="text-gray-600 mb-4">${escapeHtml(business.description)}</p>
+                <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex items-center">
+                        <i class="fas fa-map-marker-alt mr-2 text-lba-red"></i>
+                        ${escapeHtml(business.location)}
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-user-tie mr-2 text-lba-blue"></i>
+                        ${escapeHtml(business.founder || business.president || business.supervisor || 'Founder')}
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-calendar mr-2 text-lba-red"></i>
+                        Founded: ${escapeHtml(business.year)}
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-trophy mr-2 text-lba-blue"></i>
+                        ${escapeHtml(business.award)}
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-phone mr-2 text-lba-red"></i>
+                        ${escapeHtml(business.phone)}
+                    </div>
+                </div>
+                <div class="flex space-x-2 mt-4">
+                    <button onclick="viewBusinessDetails(${business._id || business.id})" class="flex-1 bg-lba-red text-white py-2 rounded-lg text-sm hover:bg-red-600 transition">
+                        View Details
+                    </button>
+                    <button onclick="contactBusiness(${business._id || business.id})" class="flex-1 border border-lba-blue text-lba-blue py-2 rounded-lg text-sm hover:bg-lba-blue hover:text-white transition">
+                        Contact
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Display limited directory (6 businesses)
@@ -9613,7 +9767,7 @@ function displayAllDirectory(category = 'all') {
         ? businessDirectory 
         : businessDirectory.filter(business => business.category === category);
     
-    // Update active filter button in modal - more robust approach
+    // Update active filter button in modal
     updateModalFilterButtons(category);
     
     let html = '';
@@ -9636,83 +9790,6 @@ function displayAllDirectory(category = 'all') {
     directoryContainer.innerHTML = html;
 }
 
-// Filter directory in modal - simplified
-function filterAllDirectory(category) {
-    displayAllDirectory(category);
-}
-
-// Update filter buttons in modal
-function updateModalFilterButtons(category) {
-    const filterBtns = document.querySelectorAll('.directory-filter-btn');
-    
-    filterBtns.forEach(btn => {
-        // Remove active classes from all buttons
-        btn.classList.remove('active', 'bg-lba-red', 'text-white');
-        btn.classList.add('bg-gray-200', 'text-gray-700');
-        
-        // Check if this button matches the category
-        const btnCategory = btn.textContent.toLowerCase().trim();
-        if ((category === 'all' && btnCategory.includes('all')) || 
-            (category !== 'all' && btnCategory.includes(category.replace('-', ' ')))) {
-            btn.classList.add('active', 'bg-lba-red', 'text-white');
-            btn.classList.remove('bg-gray-200', 'text-gray-700');
-        }
-    });
-}
-
-// Generate business card HTML
-function generateBusinessCard(business, isModal = false) {
-    const modalClass = isModal ? 'modal-business-card' : '';
-    
-    // Determine if business gets verified badge (first 10 or specific criteria)
-    const hasVerifiedBadge = business.id <= 12 || business.award?.includes('Winner') || business.award?.includes('Excellence');
-    
-    return `
-        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow ${modalClass}" data-aos="fade-up">
-            <div class="p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <h3 class="text-xl font-bold text-lba-red">
-                        ${business.name}
-                        ${hasVerifiedBadge ? `<span class="verified-badge"><img src="/images/VARIFY BATCH/LBA VARIFY BATCH.png" alt="Verified" onerror="this.style.display='none'"> VERIFIED</span>` : ''}
-                    </h3>
-                    <span class="bg-lba-blue text-white text-xs px-2 py-1 rounded-full capitalize">${business.category.replace('-', ' ')}</span>
-                </div>
-                <p class="text-gray-600 mb-4">${business.description}</p>
-                <div class="space-y-2 text-sm text-gray-600">
-                    <div class="flex items-center">
-                        <i class="fas fa-map-marker-alt mr-2 text-lba-red"></i>
-                        ${business.location}
-                    </div>
-                    <div class="flex items-center">
-                        <i class="fas fa-user-tie mr-2 text-lba-blue"></i>
-                        ${business.founder || business.president || business.supervisor || 'Founder'}
-                    </div>
-                    <div class="flex items-center">
-                        <i class="fas fa-calendar mr-2 text-lba-red"></i>
-                        Founded: ${business.year}
-                    </div>
-                    <div class="flex items-center">
-                        <i class="fas fa-trophy mr-2 text-lba-blue"></i>
-                        ${business.award}
-                    </div>
-                    <div class="flex items-center">
-                        <i class="fas fa-phone mr-2 text-lba-red"></i>
-                        ${business.phone}
-                    </div>
-                </div>
-                <div class="flex space-x-2 mt-4">
-                    <button onclick="viewBusinessDetails(${business.id})" class="flex-1 bg-lba-red text-white py-2 rounded-lg text-sm hover:bg-red-600 transition">
-                        View Details
-                    </button>
-                    <button onclick="contactBusiness(${business.id})" class="flex-1 border border-lba-blue text-lba-blue py-2 rounded-lg text-sm hover:bg-lba-blue hover:text-white transition">
-                        Contact
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
 // Update filter buttons on main page
 function updateFilterButtons(category) {
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -9720,7 +9797,6 @@ function updateFilterButtons(category) {
         btn.classList.add('bg-gray-200', 'text-gray-700');
     });
     
-    // Find and activate the clicked button
     const activeBtn = Array.from(document.querySelectorAll('.filter-btn')).find(btn => 
         btn.textContent.toLowerCase().includes(category) || (category === 'all' && btn.textContent.includes('All'))
     );
@@ -9738,7 +9814,6 @@ function updateModalFilterButtons(category) {
         btn.classList.add('bg-gray-200', 'text-gray-700');
     });
     
-    // Find and activate the clicked button
     const activeBtn = Array.from(document.querySelectorAll('.directory-filter-btn')).find(btn => 
         btn.textContent.toLowerCase().includes(category) || (category === 'all' && btn.textContent.includes('All'))
     );
@@ -9770,12 +9845,12 @@ function searchDirectory() {
     }
     
     let filteredBusinesses = businessDirectory.filter(business => 
-        business.name.toLowerCase().includes(searchTerm) ||
-        business.description.toLowerCase().includes(searchTerm) ||
-        business.category.toLowerCase().includes(searchTerm) ||
-        business.location.toLowerCase().includes(searchTerm) ||
+        (business.name && business.name.toLowerCase().includes(searchTerm)) ||
+        (business.description && business.description.toLowerCase().includes(searchTerm)) ||
+        (business.category && business.category.toLowerCase().includes(searchTerm)) ||
+        (business.location && business.location.toLowerCase().includes(searchTerm)) ||
         (business.founder && business.founder.toLowerCase().includes(searchTerm)) ||
-        business.award.toLowerCase().includes(searchTerm)
+        (business.award && business.award.toLowerCase().includes(searchTerm))
     );
     
     let html = '';
@@ -9786,7 +9861,7 @@ function searchDirectory() {
     directoryContainer.innerHTML = html || `
         <div class="col-span-3 text-center py-8">
             <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
-            <p class="text-gray-600">No businesses found matching "${searchTerm}"</p>
+            <p class="text-gray-600">No businesses found matching "${escapeHtml(searchTerm)}"</p>
             <p class="text-gray-500 text-sm mt-2">Try different keywords or browse all categories</p>
         </div>
     `;
@@ -9795,10 +9870,134 @@ function searchDirectory() {
 // Open all directory modal
 function openAllDirectoryModal() {
     openModal('allDirectoryModal');
-    // Reset search and show all
     document.getElementById('directorySearch').value = '';
     displayAllDirectory('all');
 }
+
+// ============================================
+// FIX FOR: displayDirectory is not defined
+// ============================================
+function displayDirectory(filter = 'all') {
+    console.log('✅ displayDirectory called with filter:', filter);
+    
+    const directoryItems = document.querySelectorAll('.directory-item, .category-item, [data-category]');
+    
+    directoryItems.forEach(item => {
+        if (filter === 'all' || item.dataset.category === filter) {
+            item.style.display = 'block';
+            item.classList.remove('hidden');
+        } else {
+            item.style.display = 'none';
+            item.classList.add('hidden');
+        }
+    });
+    
+    const filterButtons = document.querySelectorAll('.filter-btn, .category-btn');
+    filterButtons.forEach(btn => {
+        if (btn.dataset.filter === filter) {
+            btn.classList.add('active', 'bg-blue-600', 'text-white');
+            btn.classList.remove('bg-gray-200', 'text-gray-700');
+        } else {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white');
+            btn.classList.add('bg-gray-200', 'text-gray-700');
+        }
+    });
+    
+    return true;
+}
+
+// FIXED: This function passes the category parameter
+function filterDirectoryLegacy(category) {
+    displayDirectory(category);
+}
+
+function viewBusinessDetails(businessId) {
+    const business = businessDirectory.find(b => (b._id === businessId || b.id === businessId));
+    if (business) {
+        const modalContent = `
+            <div class="bg-white rounded-xl p-6 max-w-2xl max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-start mb-6">
+                    <h3 class="text-2xl font-bold text-lba-red">${escapeHtml(business.name)}</h3>
+                    <button onclick="this.closest('.modal').remove()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="text-lg font-bold text-lba-blue mb-3">Business Information</h4>
+                        <div class="space-y-3">
+                            <p><strong>Category:</strong> <span class="capitalize">${escapeHtml(business.category).replace('-', ' ')}</span></p>
+                            <p><strong>Location:</strong> ${escapeHtml(business.location)}</p>
+                            <p><strong>Founded:</strong> ${escapeHtml(business.year)}</p>
+                            <p><strong>Contact:</strong> ${escapeHtml(business.phone)}</p>
+                            ${business.website && business.website !== '#' ? `<p><strong>Website:</strong> <a href="${business.website}" target="_blank" class="text-lba-red hover:underline">${business.website}</a></p>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-bold text-lba-blue mb-3">Leadership & Impact</h4>
+                        <div class="space-y-3">
+                            <p><strong>${business.founder ? 'Founder' : business.president ? 'President' : business.supervisor ? 'Supervisor' : 'Leader'}:</strong> ${escapeHtml(business.founder || business.president || business.supervisor)}</p>
+                            <p><strong>Award:</strong> ${escapeHtml(business.award)}</p>
+                            ${business.impact ? `<p><strong>Impact:</strong> ${escapeHtml(business.impact)}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold text-lba-blue mb-3">Description</h4>
+                    <p class="text-gray-700">${escapeHtml(business.description)}</p>
+                </div>
+                
+                <div class="flex justify-end mt-6 pt-6 border-t border-gray-200">
+                    <button onclick="this.closest('.modal').remove()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition mr-4">
+                        Close
+                    </button>
+                    <button onclick="contactBusiness(${business._id || business.id})" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
+                        Contact Business
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal fixed inset-0 bg-black/70 flex items-center justify-center z-50';
+        modal.innerHTML = modalContent;
+        
+        document.body.appendChild(modal);
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.remove();
+            }
+        });
+    }
+}
+
+// Initialize directory when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initDirectory();
+    
+    const searchInput = document.getElementById('globalSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        searchInput.addEventListener('input', function() {
+            performSearch();
+        });
+    }
+    
+    updateAllNominationButtons();
+    initPartnersSlider();
+});
+
+console.log('✅ Dynamic Business Directory Loaded - Backend Ready');
+
 
 // ============================================
 // FIX FOR: displayDirectory is not defined
