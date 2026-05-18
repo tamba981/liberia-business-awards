@@ -3907,6 +3907,208 @@ app.post('/api/ads/:id/view', async (req, res) => {
 
 console.log('✅ Ad Management System Ready');
 
+
+// ============================================
+// BUSINESS DIRECTORY SYSTEM - ADD THIS ENTIRE SECTION
+// ============================================
+
+// Directory Business Schema
+const directoryBusinessSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    category: { type: String, required: true },
+    description: { type: String, required: true },
+    location: { type: String, required: true },
+    website: { type: String, default: '' },
+    phone: { type: String, required: true },
+    award: { type: String, default: '' },
+    founder: { type: String, default: '' },
+    year: { type: String, default: '' },
+    impact: { type: String, default: '' },
+    logo_url: { type: String, default: '' },
+    display_order: { type: Number, default: 999 },
+    is_active: { type: Boolean, default: true },
+    verified: { type: Boolean, default: false },
+    views: { type: Number, default: 0 }
+}, { timestamps: true });
+
+const DirectoryBusiness = mongoose.model('DirectoryBusiness', directoryBusinessSchema);
+
+// ============ PUBLIC DIRECTORY ROUTES ============
+
+// GET all directory businesses (PUBLIC - no auth required)
+app.get('/api/directory/businesses', async (req, res) => {
+    try {
+        const { category, limit = 200 } = req.query;
+        let query = { is_active: true };
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        const businesses = await DirectoryBusiness.find(query)
+            .sort({ display_order: 1, created_at: -1 })
+            .limit(parseInt(limit));
+        
+        console.log(`📂 Directory API: Returning ${businesses.length} businesses`);
+        
+        res.json({ 
+            success: true, 
+            businesses,
+            count: businesses.length
+        });
+    } catch (error) {
+        console.error('Directory API error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET single directory business (PUBLIC)
+app.get('/api/directory/businesses/:id', async (req, res) => {
+    try {
+        const business = await DirectoryBusiness.findById(req.params.id);
+        if (!business) {
+            return res.status(404).json({ success: false, error: 'Business not found' });
+        }
+        res.json({ success: true, business });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============ ADMIN DIRECTORY ROUTES ============
+
+// GET all directory businesses (ADMIN - includes inactive)
+app.get('/api/admin/directory/businesses', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { category, status, page = 1, limit = 20 } = req.query;
+        let query = {};
+        
+        if (category && category !== 'all') query.category = category;
+        if (status && status !== 'all') query.is_active = status === 'active';
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const businesses = await DirectoryBusiness.find(query)
+            .sort({ display_order: 1, created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await DirectoryBusiness.countDocuments(query);
+        
+        res.json({
+            success: true,
+            businesses,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// CREATE directory business (ADMIN)
+app.post('/api/admin/directory/businesses', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const business = new DirectoryBusiness(req.body);
+        await business.save();
+        res.status(201).json({ success: true, business });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// UPDATE directory business (ADMIN)
+app.put('/api/admin/directory/businesses/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const business = await DirectoryBusiness.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        if (!business) {
+            return res.status(404).json({ success: false, error: 'Business not found' });
+        }
+        res.json({ success: true, business });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// DELETE directory business (ADMIN)
+app.delete('/api/admin/directory/businesses/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const business = await DirectoryBusiness.findByIdAndDelete(req.params.id);
+        if (!business) {
+            return res.status(404).json({ success: false, error: 'Business not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// BULK IMPORT - Migrate existing businesses (ADMIN)
+app.post('/api/admin/directory/businesses/import', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { businesses } = req.body;
+        
+        if (!businesses || !Array.isArray(businesses)) {
+            return res.status(400).json({ success: false, error: 'Invalid businesses array' });
+        }
+        
+        // Transform data to match schema
+        const transformed = businesses.map(b => ({
+            name: b.name,
+            category: b.category,
+            description: b.description,
+            location: b.location,
+            website: b.website || '',
+            phone: b.phone,
+            award: b.award || '',
+            founder: b.founder || b.president || b.supervisor || '',
+            year: b.year || '',
+            impact: b.impact || '',
+            verified: b.verified === true,
+            is_active: true
+        }));
+        
+        const imported = await DirectoryBusiness.insertMany(transformed, { ordered: false });
+        
+        res.json({
+            success: true,
+            count: imported.length,
+            message: `Successfully imported ${imported.length} businesses`
+        });
+    } catch (error) {
+        console.error('Bulk import error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET directory stats (ADMIN)
+app.get('/api/admin/directory/stats', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const total = await DirectoryBusiness.countDocuments();
+        const active = await DirectoryBusiness.countDocuments({ is_active: true });
+        const byCategory = await DirectoryBusiness.aggregate([
+            { $group: { _id: '$category', count: { $sum: 1 } } }
+        ]);
+        
+        res.json({
+            success: true,
+            stats: { total, active, byCategory }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+console.log('✅ Business Directory System Ready');
+
 // ============================================
 // JUDGE MANAGEMENT SYSTEM - COMPLETE
 // ============================================
