@@ -9947,67 +9947,101 @@ function filterDirectoryLegacy(category) {
 }
 
 function viewBusinessDetails(businessId) {
-    const business = businessDirectory.find(b => (b._id === businessId || b.id === businessId));
-    if (business) {
-        const modalContent = `
-            <div class="bg-white rounded-xl p-6 max-w-2xl max-h-[80vh] overflow-y-auto">
-                <div class="flex justify-between items-start mb-6">
-                    <h3 class="text-2xl font-bold text-lba-red">${escapeHtml(business.name)}</h3>
-                    <button onclick="this.closest('.modal').remove()" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                
+    console.log('🔍 Viewing business details for ID:', businessId);
+    
+    // Convert to string for comparison (IDs could be numbers or strings)
+    const idStr = String(businessId);
+    
+    // Find business by _id, id, or numeric id
+    const business = businessDirectory.find(b => 
+        String(b._id) === idStr || 
+        String(b.id) === idStr || 
+        b.id === businessId ||
+        b._id === businessId
+    );
+    
+    if (!business) {
+        console.error('❌ Business not found with ID:', businessId);
+        showNotification('Business not found', 'error');
+        return;
+    }
+    
+    console.log('✅ Found business:', business.name);
+    
+    // Create modal container
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] opacity-0 pointer-events-none transition-opacity duration-300';
+    modalDiv.id = 'tempBusinessModal';
+    
+    // Get the contact phone (ensure it's properly escaped)
+    const contactPhone = business.phone || business.contact_phone || 'Not provided';
+    const businessEmail = business.email || business.contact_email || '';
+    
+    modalDiv.innerHTML = `
+        <div class="modal-content bg-white rounded-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-2xl p-6 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+            <div class="modal-header flex justify-between items-center mb-6 sticky top-0 bg-white py-2">
+                <h3 class="text-2xl font-bold text-lba-red">${escapeHtml(business.name)}</h3>
+                <button onclick="this.closest('.modal').remove()" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-lba-red rounded">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="modal-body">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <h4 class="text-lg font-bold text-lba-blue mb-3">Business Information</h4>
                         <div class="space-y-3">
                             <p><strong>Category:</strong> <span class="capitalize">${escapeHtml(business.category).replace('-', ' ')}</span></p>
-                            <p><strong>Location:</strong> ${escapeHtml(business.location)}</p>
-                            <p><strong>Founded:</strong> ${escapeHtml(business.year)}</p>
-                            <p><strong>Contact:</strong> ${escapeHtml(business.phone)}</p>
+                            <p><strong>Location:</strong> ${escapeHtml(business.location || 'Liberia')}</p>
+                            <p><strong>Founded:</strong> ${escapeHtml(business.year || 'N/A')}</p>
+                            <p><strong>Phone:</strong> ${escapeHtml(contactPhone)}</p>
                             ${business.website && business.website !== '#' ? `<p><strong>Website:</strong> <a href="${business.website}" target="_blank" class="text-lba-red hover:underline">${business.website}</a></p>` : ''}
+                            ${businessEmail ? `<p><strong>Email:</strong> <a href="mailto:${businessEmail}" class="text-lba-red hover:underline">${businessEmail}</a></p>` : ''}
                         </div>
                     </div>
-                    
                     <div>
                         <h4 class="text-lg font-bold text-lba-blue mb-3">Leadership & Impact</h4>
                         <div class="space-y-3">
-                            <p><strong>${business.founder ? 'Founder' : business.president ? 'President' : business.supervisor ? 'Supervisor' : 'Leader'}:</strong> ${escapeHtml(business.founder || business.president || business.supervisor)}</p>
-                            <p><strong>Award:</strong> ${escapeHtml(business.award)}</p>
+                            <p><strong>${business.founder ? 'Founder' : business.president ? 'President' : business.supervisor ? 'Supervisor' : 'Leader'}:</strong> ${escapeHtml(business.founder || business.president || business.supervisor || 'N/A')}</p>
+                            <p><strong>Award:</strong> ${escapeHtml(business.award || 'N/A')}</p>
                             ${business.impact ? `<p><strong>Impact:</strong> ${escapeHtml(business.impact)}</p>` : ''}
                         </div>
                     </div>
                 </div>
-                
                 <div class="mb-6">
                     <h4 class="text-lg font-bold text-lba-blue mb-3">Description</h4>
-                    <p class="text-gray-700">${escapeHtml(business.description)}</p>
-                </div>
-                
-                <div class="flex justify-end mt-6 pt-6 border-t border-gray-200">
-                    <button onclick="this.closest('.modal').remove()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition mr-4">
-                        Close
-                    </button>
-                    <button onclick="contactBusiness(${business._id || business.id})" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
-                        Contact Business
-                    </button>
+                    <p class="text-gray-700">${escapeHtml(business.description || 'No description available.')}</p>
                 </div>
             </div>
-        `;
-        
-        const modal = document.createElement('div');
-        modal.className = 'modal fixed inset-0 bg-black/70 flex items-center justify-center z-50';
-        modal.innerHTML = modalContent;
-        
-        document.body.appendChild(modal);
-        
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.remove();
-            }
-        });
-    }
+            <div class="modal-footer flex justify-end gap-4 mt-6 pt-6 border-t border-gray-200 sticky bottom-0 bg-white">
+                <button onclick="this.closest('.modal').remove()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    Close
+                </button>
+                <button onclick="contactBusiness('${business._id || business.id}')" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition focus:outline-none focus:ring-2 focus:ring-lba-red">
+                    <i class="fas fa-envelope mr-2"></i> Contact Business
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modalDiv);
+    
+    // Animate in
+    setTimeout(() => {
+        modalDiv.classList.remove('opacity-0', 'pointer-events-none');
+        modalDiv.classList.add('opacity-100', 'pointer-events-auto');
+        const modalContent = modalDiv.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+        }
+    }, 10);
+    
+    // Close when clicking outside
+    modalDiv.addEventListener('click', function(e) {
+        if (e.target === modalDiv) {
+            modalDiv.remove();
+        }
+    });
 }
 
 // Initialize directory when page loads
@@ -10614,14 +10648,125 @@ function animateCounters() {
 // Contact business from directory
 function contactBusiness(businessId) {
     console.log('📞 Contacting business ID:', businessId);
-    const business = businessDirectory.find(b => b.id === businessId);
-    if (business) {
-        const subject = encodeURIComponent(`Inquiry about ${business.name}`);
-        const body = encodeURIComponent(`I'm interested in learning more about ${business.name}.\n\nAward: ${business.award}\nLocation: ${business.location}`);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    } else {
-        console.warn('⚠️ Business not found:', businessId);
+    
+    // Convert to string for comparison
+    const idStr = String(businessId);
+    
+    // Find business by _id, id, or numeric id
+    const business = businessDirectory.find(b => 
+        String(b._id) === idStr || 
+        String(b.id) === idStr || 
+        b.id === businessId ||
+        b._id === businessId
+    );
+    
+    if (!business) {
+        console.error('❌ Business not found for contact:', businessId);
+        showNotification('Business not found', 'error');
+        return;
     }
+    
+    console.log('✅ Contacting business:', business.name);
+    
+    // Get business contact info
+    const businessName = business.name;
+    const businessEmail = business.email || business.contact_email || '';
+    const businessPhone = business.phone || business.contact_phone || '';
+    
+    // Create the email subject and body
+    const subject = encodeURIComponent(`Inquiry about ${businessName} - Liberia Business Awards Directory`);
+    const body = encodeURIComponent(
+        `Hello,\n\n` +
+        `I am interested in learning more about ${businessName}.\n\n` +
+        `Business Information:\n` +
+        `- Award: ${business.award || 'Not specified'}\n` +
+        `- Category: ${business.category || 'Not specified'}\n` +
+        `- Location: ${business.location || 'Liberia'}\n\n` +
+        `Please contact me with more information.\n\n` +
+        `Thank you,\n` +
+        `[Your Name]\n` +
+        `[Your Contact Information]\n\n` +
+        `-- \n` +
+        `Sent via Liberia Business Awards Directory`
+    );
+    
+    // Show contact options modal instead of direct email
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] opacity-0 pointer-events-none transition-opacity duration-300';
+    
+    modalDiv.innerHTML = `
+        <div class="modal-content bg-white rounded-xl w-11/12 md:w-1/2 max-w-md p-6 transform scale-95 transition-transform duration-300">
+            <div class="modal-header flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-lba-red">Contact ${escapeHtml(businessName)}</h3>
+                <button onclick="this.closest('.modal').remove()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-gray-600 mb-4">How would you like to contact this business?</p>
+                
+                ${businessEmail ? `
+                    <button onclick="window.location.href='mailto:${businessEmail}?subject=${subject}&body=${body}'; this.closest('.modal').remove();" 
+                            class="w-full bg-lba-blue text-white px-4 py-3 rounded-lg mb-3 hover:bg-blue-400 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-envelope"></i> Send Email
+                    </button>
+                ` : ''}
+                
+                ${businessPhone && businessPhone !== '#' && businessPhone !== 'Not provided' ? `
+                    <button onclick="window.location.href='tel:${businessPhone.replace(/[^0-9+]/g, '')}'; this.closest('.modal').remove();" 
+                            class="w-full bg-green-600 text-white px-4 py-3 rounded-lg mb-3 hover:bg-green-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-phone-alt"></i> Call ${escapeHtml(businessPhone)}
+                    </button>
+                    
+                    <button onclick="window.open('https://wa.me/${businessPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I'm interested in learning more about ${businessName} from the Liberia Business Awards Directory.`)}', '_blank'); this.closest('.modal').remove();" 
+                            class="w-full bg-[#25D366] text-white px-4 py-3 rounded-lg mb-3 hover:opacity-90 transition flex items-center justify-center gap-2">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </button>
+                ` : ''}
+                
+                ${business.website && business.website !== '#' ? `
+                    <button onclick="window.open('${business.website}', '_blank'); this.closest('.modal').remove();" 
+                            class="w-full bg-gray-600 text-white px-4 py-3 rounded-lg mb-3 hover:bg-gray-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-globe"></i> Visit Website
+                    </button>
+                ` : ''}
+                
+                ${!businessEmail && (!businessPhone || businessPhone === '#' || businessPhone === 'Not provided') ? `
+                    <p class="text-center text-gray-500 py-4">No contact information available for this business.</p>
+                    <p class="text-center text-sm text-gray-400">Please check back later or contact us directly for assistance.</p>
+                    <button onclick="window.location.href='#contact'; this.closest('.modal').remove();" 
+                            class="w-full bg-lba-red text-white px-4 py-3 rounded-lg mt-4 hover:bg-red-600 transition">
+                        Contact LBA Support
+                    </button>
+                ` : ''}
+            </div>
+            <div class="modal-footer flex justify-end mt-6 pt-4 border-t border-gray-200">
+                <button onclick="this.closest('.modal').remove()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modalDiv);
+    
+    // Animate in
+    setTimeout(() => {
+        modalDiv.classList.remove('opacity-0', 'pointer-events-none');
+        modalDiv.classList.add('opacity-100', 'pointer-events-auto');
+        const modalContent = modalDiv.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+        }
+    }, 10);
+    
+    // Close when clicking outside
+    modalDiv.addEventListener('click', function(e) {
+        if (e.target === modalDiv) {
+            modalDiv.remove();
+        }
+    });
 }
 
 // Social sharing functions for featured businesses
