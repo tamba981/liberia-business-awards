@@ -1242,6 +1242,26 @@ window.addEventListener('load', function() {
             font-size: 11px;
         }
     }
+
+    /* Verified Badge Styles */
+.verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #1a202c;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.verified-badge img {
+    width: 12px;
+    height: 12px;
+    object-fit: contain;
+}
 </style>
 
 <script type="text/javascript">
@@ -9643,11 +9663,18 @@ function updateModalFilterButtons(category) {
 // Generate business card HTML
 function generateBusinessCard(business, isModal = false) {
     const modalClass = isModal ? 'modal-business-card' : '';
+    
+    // Determine if business gets verified badge (first 10 or specific criteria)
+    const hasVerifiedBadge = business.id <= 12 || business.award?.includes('Winner') || business.award?.includes('Excellence');
+    
     return `
         <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow ${modalClass}" data-aos="fade-up">
             <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
-                    <h3 class="text-xl font-bold text-lba-red">${business.name}</h3>
+                    <h3 class="text-xl font-bold text-lba-red">
+                        ${business.name}
+                        ${hasVerifiedBadge ? `<span class="verified-badge"><img src="/images/VARIFY BATCH/LBA VARIFY BATCH.png" alt="Verified" onerror="this.style.display='none'"> VERIFIED</span>` : ''}
+                    </h3>
                     <span class="bg-lba-blue text-white text-xs px-2 py-1 rounded-full capitalize">${business.category.replace('-', ' ')}</span>
                 </div>
                 <p class="text-gray-600 mb-4">${business.description}</p>
