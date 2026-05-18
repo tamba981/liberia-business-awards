@@ -1580,6 +1580,19 @@
 </div>
 
                 
+  <!-- ============ DIRECTORY MANAGEMENT SECTION - ADD THIS ============ -->
+<div class="menu-section">
+    <h4>Directory Management</h4>
+    <a href="#" class="menu-item" onclick="showDirectoryManagementModal()">
+        <i class="fas fa-building"></i>
+        <span>Directory Businesses</span>
+        <span class="badge" id="directoryCount">0</span>
+    </a>
+    <a href="#" class="menu-item" onclick="showDirectoryCategoriesModal()">
+        <i class="fas fa-tags"></i>
+        <span>Directory Categories</span>
+    </a>
+</div>              
                 
                 <div class="menu-divider"></div>
                 
@@ -5079,6 +5092,691 @@ console.log('✅ Voting system fully integrated and ready!');
         console.log('📊 Google Sheets Integration: ACTIVE');
         console.log('🔗 Google Apps Script URL:', GOOGLE_APPS_SCRIPT_URL);
         console.log('🎯 Features: Real-time Google Sheets integration with sample data fallback');
+
+
+        // ============================================
+// DIRECTORY MANAGEMENT SYSTEM
+// ============================================
+
+let directoryBusinesses = [];
+let directoryCategories = [];
+let directoryCurrentPage = 1;
+let directoryTotalPages = 1;
+
+// Show Directory Management Modal
+async function showDirectoryManagementModal() {
+    hideAllModals();
+    
+    let modal = document.getElementById('directoryManagementModal');
+    if (!modal) {
+        createDirectoryManagementModal();
+        modal = document.getElementById('directoryManagementModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    await loadDirectoryBusinesses();
+}
+
+// Create Directory Management Modal
+function createDirectoryManagementModal() {
+    const modalHTML = `
+    <div class="modal" id="directoryManagementModal">
+        <div class="modal-content" style="max-width: 1400px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-building"></i> Business Directory Management</h2>
+                <button class="modal-close" onclick="hideModal('directoryManagementModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Stats Summary -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="stat-card" style="padding: 15px;">
+                        <h3 id="dirTotalBusinesses">0</h3>
+                        <p>Total Businesses</p>
+                    </div>
+                    <div class="stat-card" style="padding: 15px;">
+                        <h3 id="dirActiveBusinesses">0</h3>
+                        <p>Active</p>
+                    </div>
+                    <div class="stat-card" style="padding: 15px;">
+                        <h3 id="dirVerifiedBusinesses">0</h3>
+                        <p>Verified</p>
+                    </div>
+                    <div class="stat-card" style="padding: 15px;">
+                        <h3 id="dirCategoriesCount">0</h3>
+                        <p>Categories</p>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="sheet-btn" onclick="showAddDirectoryBusinessModal()">
+                            <i class="fas fa-plus"></i> Add Business
+                        </button>
+                        <button class="sheet-btn secondary" onclick="bulkImportDirectoryBusinesses()">
+                            <i class="fas fa-upload"></i> Bulk Import
+                        </button>
+                        <button class="sheet-btn secondary" onclick="exportDirectoryToCSV()">
+                            <i class="fas fa-download"></i> Export CSV
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="dirCategoryFilter" onchange="loadDirectoryBusinesses()" class="sheet-btn secondary" style="padding: 8px 12px;">
+                            <option value="all">All Categories</option>
+                            <option value="agriculture">Agriculture</option>
+                            <option value="mining">Mining</option>
+                            <option value="oil-gas">Oil & Gas</option>
+                            <option value="manufacturing">Manufacturing</option>
+                            <option value="construction">Construction</option>
+                            <option value="energy">Energy</option>
+                            <option value="technology">Technology</option>
+                            <option value="education">Education</option>
+                            <option value="health">Health</option>
+                            <option value="tourism">Tourism</option>
+                            <option value="trade">Trade</option>
+                            <option value="arts">Arts</option>
+                            <option value="sports">Sports</option>
+                            <option value="civil-society">Civil Society</option>
+                            <option value="media">Media</option>
+                        </select>
+                        <input type="text" id="dirSearch" placeholder="Search..." class="sheet-btn secondary" style="padding: 8px 12px; width: 200px;" onkeyup="filterDirectoryBusinesses()">
+                    </div>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Category</th>
+                                <th>Location</th>
+                                <th>Year</th>
+                                <th>Verified</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="directoryTableBody">
+                            <tr><td colspan="7" style="text-align: center;">Loading...<\/td><\/tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="directoryPagination"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Directory Business Modal -->
+    <div class="modal" id="addDirectoryBusinessModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2 id="dirModalTitle">Add Directory Business</h2>
+                <button class="modal-close" onclick="hideModal('addDirectoryBusinessModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="directoryBusinessForm">
+                    <input type="hidden" id="dirBusinessId">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group"><label>Business Name *</label><input type="text" id="dirName" required class="sheet-btn secondary" style="width: 100%;"></div>
+                        <div class="form-group"><label>Category *</label>
+                            <select id="dirCategory" required class="sheet-btn secondary" style="width: 100%;">
+                                <option value="">Select Category</option>
+                                <option value="agriculture">Agriculture</option>
+                                <option value="mining">Mining</option>
+                                <option value="oil-gas">Oil & Gas</option>
+                                <option value="manufacturing">Manufacturing</option>
+                                <option value="construction">Construction</option>
+                                <option value="energy">Energy</option>
+                                <option value="technology">Technology</option>
+                                <option value="education">Education</option>
+                                <option value="health">Health</option>
+                                <option value="tourism">Tourism</option>
+                                <option value="trade">Trade</option>
+                                <option value="arts">Arts</option>
+                                <option value="sports">Sports</option>
+                                <option value="civil-society">Civil Society</option>
+                                <option value="media">Media</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Description *</label><textarea id="dirDescription" rows="3" required class="sheet-btn secondary" style="width: 100%;"></textarea></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group"><label>Location</label><input type="text" id="dirLocation" class="sheet-btn secondary" style="width: 100%;"></div>
+                        <div class="form-group"><label>Phone</label><input type="text" id="dirPhone" class="sheet-btn secondary" style="width: 100%;"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group"><label>Website</label><input type="url" id="dirWebsite" class="sheet-btn secondary" style="width: 100%;"></div>
+                        <div class="form-group"><label>Year Founded</label><input type="text" id="dirYear" class="sheet-btn secondary" style="width: 100%;"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group"><label>Founder/President</label><input type="text" id="dirFounder" class="sheet-btn secondary" style="width: 100%;"></div>
+                        <div class="form-group"><label>Award</label><input type="text" id="dirAward" class="sheet-btn secondary" style="width: 100%;"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group"><label>Impact</label><input type="text" id="dirImpact" class="sheet-btn secondary" style="width: 100%;"></div>
+                        <div class="form-group"><label>Logo URL</label><input type="url" id="dirLogo" class="sheet-btn secondary" style="width: 100%;"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group"><label>Display Order</label><input type="number" id="dirOrder" class="sheet-btn secondary" style="width: 100%;" value="999"></div>
+                        <div class="form-group">
+                            <label>Verified?</label>
+                            <label style="display: flex; align-items: center; gap: 10px;"><input type="checkbox" id="dirVerified"> Show Verified Badge</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="dirStatus" class="sheet-btn secondary" style="width: 100%;">
+                            <option value="true">Active (Visible on frontend)</option>
+                            <option value="false">Inactive (Hidden)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addDirectoryBusinessModal')">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveDirectoryBusiness()">Save Business</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Load Directory Businesses from API
+async function loadDirectoryBusinesses(page = 1) {
+    directoryCurrentPage = page;
+    const category = document.getElementById('dirCategoryFilter')?.value || 'all';
+    const tbody = document.getElementById('directoryTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...<\/td><\/tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        let url = `${API_BASE}/admin/directory/businesses?page=${page}&limit=20`;
+        if (category !== 'all') url += `&category=${category}`;
+        
+        const response = await fetch(url, { 
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            directoryBusinesses = data.businesses;
+            directoryTotalPages = data.pagination?.pages || 1;
+            displayDirectoryBusinesses();
+            updateDirectoryPagination();
+            
+            // Update stats
+            document.getElementById('dirTotalBusinesses').textContent = data.total || directoryBusinesses.length;
+            document.getElementById('dirActiveBusinesses').textContent = directoryBusinesses.filter(b => b.is_active === true).length;
+            document.getElementById('dirVerifiedBusinesses').textContent = directoryBusinesses.filter(b => b.verified === true).length;
+            document.getElementById('directoryCount').textContent = data.total || directoryBusinesses.length;
+        }
+    } catch (error) {
+        console.error('Error loading directory:', error);
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error loading businesses<\/td><\/tr>';
+    }
+}
+
+function displayDirectoryBusinesses() {
+    const tbody = document.getElementById('directoryTableBody');
+    if (!tbody) return;
+    
+    if (directoryBusinesses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No businesses found<\/td><\/tr>';
+        return;
+    }
+    
+    tbody.innerHTML = directoryBusinesses.map(b => `
+        <tr>
+            <td><strong>${escapeHtml(b.name)}</strong><br><small style="font-size: 10px;">ID: ${b._id}</small></td>
+            <td><span class="status-badge" style="background: #FF000020; color: #FF0000;">${escapeHtml(b.category)}</span></td>
+            <td>${escapeHtml(b.location)}</span></td>
+            <td>${escapeHtml(b.year)}</span></td>
+            <td>${b.verified ? '<span class="status-badge status-active">✓ VERIFIED</span>' : '<span class="status-badge">No</span>'}</span></td>
+            <td><span class="status-badge ${b.is_active ? 'status-active' : 'status-pending'}">${b.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button class="sheet-btn secondary" style="padding: 6px 10px;" onclick="editDirectoryBusiness('${b._id}')"><i class="fas fa-edit"></i></button>
+                    <button class="sheet-btn danger" style="padding: 6px 10px;" onclick="deleteDirectoryBusiness('${b._id}')"><i class="fas fa-trash"></i></button>
+                    <button class="sheet-btn" style="padding: 6px 10px;" onclick="toggleDirectoryBusinessStatus('${b._id}', ${b.is_active})">${b.is_active ? 'Hide' : 'Show'}</button>
+                </div>
+             </span>
+         </span>
+    `).join('');
+}
+
+function updateDirectoryPagination() {
+    const pagination = document.getElementById('directoryPagination');
+    if (!pagination) return;
+    
+    if (directoryTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${directoryCurrentPage === 1 ? 'disabled' : ''} onclick="loadDirectoryBusinesses(${directoryCurrentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= directoryTotalPages; i++) {
+        if (i === 1 || i === directoryTotalPages || (i >= directoryCurrentPage - 2 && i <= directoryCurrentPage + 2)) {
+            html += `<button class="page-btn ${i === directoryCurrentPage ? 'active' : ''}" onclick="loadDirectoryBusinesses(${i})">${i}</button>`;
+        } else if (i === directoryCurrentPage - 3 || i === directoryCurrentPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${directoryCurrentPage === directoryTotalPages ? 'disabled' : ''} onclick="loadDirectoryBusinesses(${directoryCurrentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+function filterDirectoryBusinesses() {
+    const search = document.getElementById('dirSearch')?.value.toLowerCase() || '';
+    const filtered = directoryBusinesses.filter(b => 
+        (b.name && b.name.toLowerCase().includes(search)) ||
+        (b.category && b.category.toLowerCase().includes(search)) ||
+        (b.location && b.location.toLowerCase().includes(search))
+    );
+    
+    const tbody = document.getElementById('directoryTableBody');
+    if (tbody) {
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No matching businesses found<\/td><\/tr>';
+        } else {
+            tbody.innerHTML = filtered.map(b => `
+                <tr>
+                    <td><strong>${escapeHtml(b.name)}</strong><br><small>ID: ${b._id}</small></td>
+                    <td><span class="status-badge" style="background: #FF000020; color: #FF0000;">${escapeHtml(b.category)}</span></td>
+                    <td>${escapeHtml(b.location)}</span></td>
+                    <td>${escapeHtml(b.year)}</span></td>
+                    <td>${b.verified ? '<span class="status-badge status-active">✓ VERIFIED</span>' : '<span class="status-badge">No</span>'}</td>
+                    <td><span class="status-badge ${b.is_active ? 'status-active' : 'status-pending'}">${b.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="sheet-btn secondary" onclick="editDirectoryBusiness('${b._id}')"><i class="fas fa-edit"></i></button>
+                            <button class="sheet-btn danger" onclick="deleteDirectoryBusiness('${b._id}')"><i class="fas fa-trash"></i></button>
+                            <button class="sheet-btn" onclick="toggleDirectoryBusinessStatus('${b._id}', ${b.is_active})">${b.is_active ? 'Hide' : 'Show'}</button>
+                        </div>
+                     </span>
+                 </span>
+            `).join('');
+        }
+    }
+}
+
+function showAddDirectoryBusinessModal() {
+    document.getElementById('dirModalTitle').textContent = 'Add Directory Business';
+    document.getElementById('directoryBusinessForm').reset();
+    document.getElementById('dirBusinessId').value = '';
+    document.getElementById('dirVerified').checked = false;
+    document.getElementById('dirStatus').value = 'true';
+    document.getElementById('addDirectoryBusinessModal').classList.add('active');
+}
+
+async function editDirectoryBusiness(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/directory/businesses/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.business) {
+            const b = data.business;
+            document.getElementById('dirModalTitle').textContent = 'Edit Directory Business';
+            document.getElementById('dirBusinessId').value = b._id;
+            document.getElementById('dirName').value = b.name || '';
+            document.getElementById('dirCategory').value = b.category || '';
+            document.getElementById('dirDescription').value = b.description || '';
+            document.getElementById('dirLocation').value = b.location || '';
+            document.getElementById('dirPhone').value = b.phone || '';
+            document.getElementById('dirWebsite').value = b.website || '';
+            document.getElementById('dirYear').value = b.year || '';
+            document.getElementById('dirFounder').value = b.founder || '';
+            document.getElementById('dirAward').value = b.award || '';
+            document.getElementById('dirImpact').value = b.impact || '';
+            document.getElementById('dirLogo').value = b.logo_url || '';
+            document.getElementById('dirOrder').value = b.display_order || 999;
+            document.getElementById('dirVerified').checked = b.verified === true;
+            document.getElementById('dirStatus').value = b.is_active ? 'true' : 'false';
+            document.getElementById('addDirectoryBusinessModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Edit error:', error);
+        showNotification('Error loading business details', 'error');
+    }
+}
+
+async function saveDirectoryBusiness() {
+    const id = document.getElementById('dirBusinessId').value;
+    const businessData = {
+        name: document.getElementById('dirName').value,
+        category: document.getElementById('dirCategory').value,
+        description: document.getElementById('dirDescription').value,
+        location: document.getElementById('dirLocation').value,
+        phone: document.getElementById('dirPhone').value,
+        website: document.getElementById('dirWebsite').value,
+        year: document.getElementById('dirYear').value,
+        founder: document.getElementById('dirFounder').value,
+        award: document.getElementById('dirAward').value,
+        impact: document.getElementById('dirImpact').value,
+        logo_url: document.getElementById('dirLogo').value,
+        display_order: parseInt(document.getElementById('dirOrder').value) || 999,
+        verified: document.getElementById('dirVerified').checked,
+        is_active: document.getElementById('dirStatus').value === 'true'
+    };
+    
+    if (!businessData.name || !businessData.category || !businessData.description) {
+        showNotification('Name, Category, and Description are required', 'warning');
+        return;
+    }
+    
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const url = id ? `${API_BASE}/admin/directory/businesses/${id}` : `${API_BASE}/admin/directory/businesses`;
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(businessData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(id ? 'Business updated!' : 'Business added!', 'success');
+            hideModal('addDirectoryBusinessModal');
+            await loadDirectoryBusinesses();
+        } else {
+            showNotification(result.message || 'Error saving', 'error');
+        }
+    } catch (error) {
+        showNotification('Error saving business', 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+async function deleteDirectoryBusiness(id) {
+    if (!confirm('⚠️ Delete this business from the directory? This action cannot be undone.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/directory/businesses/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Business deleted successfully!', 'success');
+            await loadDirectoryBusinesses();
+        } else {
+            showNotification(result.message || 'Error deleting', 'error');
+        }
+    } catch (error) {
+        showNotification('Error deleting business', 'error');
+    }
+}
+
+async function toggleDirectoryBusinessStatus(id, currentStatus) {
+    const newStatus = !currentStatus;
+    const action = newStatus ? 'activate' : 'deactivate';
+    
+    if (!confirm(`Are you sure you want to ${action} this business?`)) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/directory/businesses/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ is_active: newStatus })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`Business ${newStatus ? 'activated' : 'deactivated'}!`, 'success');
+            await loadDirectoryBusinesses();
+        } else {
+            showNotification(result.message || 'Error updating status', 'error');
+        }
+    } catch (error) {
+        showNotification('Error updating status', 'error');
+    }
+}
+
+async function bulkImportDirectoryBusinesses() {
+    if (!confirm('This will import ALL existing businesses from frontend code to backend. Continue?')) return;
+    
+    // Get the fallback business data (you'll need to define this or fetch from frontend)
+    const fallbackBusinesses = window.fallbackBusinessDirectory || [];
+    
+    if (fallbackBusinesses.length === 0) {
+        showNotification('No fallback businesses found to import', 'warning');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/directory/businesses/import`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ businesses: fallbackBusinesses })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`✅ Imported ${result.count} businesses!`, 'success');
+            await loadDirectoryBusinesses();
+        } else {
+            showNotification(result.message || 'Import failed', 'error');
+        }
+    } catch (error) {
+        showNotification('Import failed: ' + error.message, 'error');
+    }
+}
+
+function exportDirectoryToCSV() {
+    if (directoryBusinesses.length === 0) {
+        showNotification('No data to export', 'warning');
+        return;
+    }
+    
+    let csv = 'Name,Category,Location,Year,Phone,Website,Founder,Award,Verified,Status\n';
+    
+    directoryBusinesses.forEach(b => {
+        csv += `"${escapeCsv(b.name)}","${escapeCsv(b.category)}","${escapeCsv(b.location)}","${escapeCsv(b.year)}","${escapeCsv(b.phone)}","${escapeCsv(b.website)}","${escapeCsv(b.founder)}","${escapeCsv(b.award)}","${b.verified ? 'Yes' : 'No'}","${b.is_active ? 'Active' : 'Inactive'}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `directory_export_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('Directory exported successfully!', 'success');
+}
+
+function escapeCsv(str) {
+    if (!str) return '';
+    return str.replace(/"/g, '""');
+}
+
+// Show Directory Categories Modal
+function showDirectoryCategoriesModal() {
+    hideAllModals();
+    
+    let modal = document.getElementById('directoryCategoriesModal');
+    if (!modal) {
+        createDirectoryCategoriesModal();
+        modal = document.getElementById('directoryCategoriesModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadDirectoryCategories();
+}
+
+function createDirectoryCategoriesModal() {
+    const modalHTML = `
+    <div class="modal" id="directoryCategoriesModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-tags"></i> Directory Categories</h2>
+                <button class="modal-close" onclick="hideModal('directoryCategoriesModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; text-align: right;">
+                    <button class="sheet-btn" onclick="showAddDirectoryCategoryModal()">
+                        <i class="fas fa-plus"></i> Add Category
+                    </button>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Category Slug</th>
+                                <th>Display Name</th>
+                                <th>Icon</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="directoryCategoriesBody">
+                            <tr><td colspan="4" style="text-align: center;">Loading...<\/td><\/tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addDirectoryCategoryModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2 id="dirCategoryModalTitle">Add Category</h2>
+                <button class="modal-close" onclick="hideModal('addDirectoryCategoryModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="directoryCategoryForm">
+                    <input type="hidden" id="dirCategoryId">
+                    <div class="form-group"><label>Category Slug *</label><input type="text" id="dirCategorySlug" required class="sheet-btn secondary" style="width: 100%;" placeholder="agriculture"></div>
+                    <div class="form-group"><label>Display Name *</label><input type="text" id="dirCategoryName" required class="sheet-btn secondary" style="width: 100%;" placeholder="Agriculture"></div>
+                    <div class="form-group"><label>Icon Class</label><input type="text" id="dirCategoryIcon" class="sheet-btn secondary" style="width: 100%;" placeholder="fa-tractor"></div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addDirectoryCategoryModal')">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveDirectoryCategory()">Save Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function loadDirectoryCategories() {
+    const categories = [
+        { slug: 'agriculture', name: 'Agriculture', icon: 'fa-tractor' },
+        { slug: 'mining', name: 'Mining', icon: 'fa-gem' },
+        { slug: 'oil-gas', name: 'Oil & Gas', icon: 'fa-oil-can' },
+        { slug: 'manufacturing', name: 'Manufacturing', icon: 'fa-industry' },
+        { slug: 'construction', name: 'Construction', icon: 'fa-hard-hat' },
+        { slug: 'energy', name: 'Energy', icon: 'fa-bolt' },
+        { slug: 'technology', name: 'Technology', icon: 'fa-laptop-code' },
+        { slug: 'education', name: 'Education', icon: 'fa-graduation-cap' },
+        { slug: 'health', name: 'Health', icon: 'fa-heartbeat' },
+        { slug: 'tourism', name: 'Tourism', icon: 'fa-hotel' },
+        { slug: 'trade', name: 'Trade', icon: 'fa-store' },
+        { slug: 'arts', name: 'Arts', icon: 'fa-palette' },
+        { slug: 'sports', name: 'Sports', icon: 'fa-running' },
+        { slug: 'civil-society', name: 'Civil Society', icon: 'fa-hand-holding-heart' },
+        { slug: 'media', name: 'Media', icon: 'fa-newspaper' }
+    ];
+    
+    const tbody = document.getElementById('directoryCategoriesBody');
+    if (tbody) {
+        tbody.innerHTML = categories.map(c => `
+            <tr>
+                <td><code>${c.slug}</code></td>
+                <td><strong>${c.name}</strong></td>
+                <td><i class="fas ${c.icon}"></i> ${c.icon}</td>
+                <td>
+                    <button class="sheet-btn secondary" onclick="editDirectoryCategory('${c.slug}')"><i class="fas fa-edit"></i></button>
+                 </span>
+             </span>
+        `).join('');
+        document.getElementById('dirCategoriesCount').textContent = categories.length;
+    }
+}
+
+function showAddDirectoryCategoryModal() {
+    document.getElementById('dirCategoryModalTitle').textContent = 'Add Category';
+    document.getElementById('directoryCategoryForm').reset();
+    document.getElementById('dirCategoryId').value = '';
+    document.getElementById('addDirectoryCategoryModal').classList.add('active');
+}
+
+function editDirectoryCategory(slug) {
+    showNotification('Edit category feature coming soon', 'info');
+}
+
+function saveDirectoryCategory() {
+    const slug = document.getElementById('dirCategorySlug').value.trim().toLowerCase();
+    const name = document.getElementById('dirCategoryName').value.trim();
+    const icon = document.getElementById('dirCategoryIcon').value.trim() || 'fa-tag';
+    
+    if (!slug || !name) {
+        showNotification('Category slug and name are required', 'warning');
+        return;
+    }
+    
+    showNotification(`Category "${name}" would be saved. This feature requires backend extension.`, 'info');
+    hideModal('addDirectoryCategoryModal');
+}
+
+// Export to global scope
+window.showDirectoryManagementModal = showDirectoryManagementModal;
+window.showDirectoryCategoriesModal = showDirectoryCategoriesModal;
+window.loadDirectoryBusinesses = loadDirectoryBusinesses;
+window.saveDirectoryBusiness = saveDirectoryBusiness;
+window.editDirectoryBusiness = editDirectoryBusiness;
+window.deleteDirectoryBusiness = deleteDirectoryBusiness;
+window.toggleDirectoryBusinessStatus = toggleDirectoryBusinessStatus;
+window.bulkImportDirectoryBusinesses = bulkImportDirectoryBusinesses;
+window.exportDirectoryToCSV = exportDirectoryToCSV;
+window.filterDirectoryBusinesses = filterDirectoryBusinesses;
+window.showAddDirectoryBusinessModal = showAddDirectoryBusinessModal;
+window.showAddDirectoryCategoryModal = showAddDirectoryCategoryModal;
+window.saveDirectoryCategory = saveDirectoryCategory;
+window.editDirectoryCategory = editDirectoryCategory;
+
+console.log('✅ Directory Management System Ready');
 
    // ============================================
 // COMPLETE FIXED BUSINESS SPOTLIGHT SYSTEM
@@ -11079,5 +11777,174 @@ window.diagnoseSpotlight = diagnoseSpotlight;
         </div>
     </div>
 </div>
+
+ <!-- ============ DIRECTORY MANAGEMENT MODAL ============ -->
+<div class="modal" id="directoryManagementModal">
+    <div class="modal-content" style="max-width: 1400px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-building"></i> Business Directory Management</h2>
+            <button class="modal-close" onclick="hideModal('directoryManagementModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                <div class="stat-card" style="padding: 15px;">
+                    <h3 id="dirTotalBusinesses">0</h3>
+                    <p>Total Businesses</p>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <h3 id="dirActiveBusinesses">0</h3>
+                    <p>Active</p>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <h3 id="dirVerifiedBusinesses">0</h3>
+                    <p>Verified</p>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <h3 id="dirCategoriesCount">0</h3>
+                    <p>Categories</p>
+                </div>
+            </div>
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="sheet-btn" onclick="showAddDirectoryBusinessModal()"><i class="fas fa-plus"></i> Add Business</button>
+                <button class="sheet-btn secondary" onclick="bulkImportDirectoryBusinesses()"><i class="fas fa-upload"></i> Bulk Import</button>
+                <button class="sheet-btn secondary" onclick="exportDirectoryToCSV()"><i class="fas fa-download"></i> Export CSV</button>
+                <div style="margin-left: auto;">
+                    <select id="dirCategoryFilter" onchange="loadDirectoryBusinesses()" class="sheet-btn secondary" style="padding: 8px 12px;">
+                        <option value="all">All Categories</option>
+                        <option value="agriculture">Agriculture</option>
+                        <option value="mining">Mining</option>
+                        <option value="oil-gas">Oil & Gas</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="construction">Construction</option>
+                        <option value="energy">Energy</option>
+                        <option value="technology">Technology</option>
+                        <option value="education">Education</option>
+                        <option value="health">Health</option>
+                        <option value="tourism">Tourism</option>
+                        <option value="trade">Trade</option>
+                        <option value="arts">Arts</option>
+                        <option value="sports">Sports</option>
+                    </select>
+                    <input type="text" id="dirSearch" placeholder="Search..." class="sheet-btn secondary" style="padding: 8px 12px; width: 200px;" onkeyup="filterDirectoryBusinesses()">
+                </div>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead><tr><th>Business Name</th><th>Category</th><th>Location</th><th>Year</th><th>Verified</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="directoryTableBody"><tr><td colspan="7" style="text-align: center;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="directoryPagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ADD/EDIT DIRECTORY BUSINESS MODAL ============ -->
+<div class="modal" id="addDirectoryBusinessModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="dirModalTitle">Add Directory Business</h2>
+            <button class="modal-close" onclick="hideModal('addDirectoryBusinessModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="directoryBusinessForm">
+                <input type="hidden" id="dirBusinessId">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Business Name *</label><input type="text" id="dirName" required class="sheet-btn secondary" style="width: 100%;"></div>
+                    <div class="form-group"><label>Category *</label>
+                        <select id="dirCategory" required class="sheet-btn secondary" style="width: 100%;">
+                            <option value="">Select Category</option>
+                            <option value="agriculture">Agriculture</option>
+                            <option value="mining">Mining</option>
+                            <option value="oil-gas">Oil & Gas</option>
+                            <option value="manufacturing">Manufacturing</option>
+                            <option value="construction">Construction</option>
+                            <option value="energy">Energy</option>
+                            <option value="technology">Technology</option>
+                            <option value="education">Education</option>
+                            <option value="health">Health</option>
+                            <option value="tourism">Tourism</option>
+                            <option value="trade">Trade</option>
+                            <option value="arts">Arts</option>
+                            <option value="sports">Sports</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group"><label>Description *</label><textarea id="dirDescription" rows="3" required class="sheet-btn secondary" style="width: 100%;"></textarea></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Location</label><input type="text" id="dirLocation" class="sheet-btn secondary" style="width: 100%;"></div>
+                    <div class="form-group"><label>Phone</label><input type="text" id="dirPhone" class="sheet-btn secondary" style="width: 100%;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Website</label><input type="url" id="dirWebsite" class="sheet-btn secondary" style="width: 100%;"></div>
+                    <div class="form-group"><label>Year Founded</label><input type="text" id="dirYear" class="sheet-btn secondary" style="width: 100%;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Founder/President</label><input type="text" id="dirFounder" class="sheet-btn secondary" style="width: 100%;"></div>
+                    <div class="form-group"><label>Award</label><input type="text" id="dirAward" class="sheet-btn secondary" style="width: 100%;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Impact</label><input type="text" id="dirImpact" class="sheet-btn secondary" style="width: 100%;"></div>
+                    <div class="form-group"><label>Logo URL</label><input type="url" id="dirLogo" class="sheet-btn secondary" style="width: 100%;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Display Order</label><input type="number" id="dirOrder" class="sheet-btn secondary" style="width: 100%;" value="999"></div>
+                    <div class="form-group"><label><input type="checkbox" id="dirVerified"> Verified Badge</label></div>
+                </div>
+                <div class="form-group"><label>Status</label><select id="dirStatus" class="sheet-btn secondary" style="width: 100%;"><option value="true">Active</option><option value="false">Inactive</option></select></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('addDirectoryBusinessModal')">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="saveDirectoryBusiness()">Save Business</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============ DIRECTORY CATEGORIES MODAL ============ -->
+<div class="modal" id="directoryCategoriesModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-tags"></i> Directory Categories</h2>
+            <button class="modal-close" onclick="hideModal('directoryCategoriesModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px; text-align: right;">
+                <button class="sheet-btn" onclick="showAddDirectoryCategoryModal()"><i class="fas fa-plus"></i> Add Category</button>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead><tr><th>Category Slug</th><th>Display Name</th><th>Icon</th><th>Actions</th></tr></thead>
+                    <tbody id="directoryCategoriesBody"><tr><td colspan="4" style="text-align: center;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ADD/EDIT DIRECTORY CATEGORY MODAL ============ -->
+<div class="modal" id="addDirectoryCategoryModal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="dirCategoryModalTitle">Add Category</h2>
+            <button class="modal-close" onclick="hideModal('addDirectoryCategoryModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="directoryCategoryForm">
+                <input type="hidden" id="dirCategoryId">
+                <div class="form-group"><label>Category Slug *</label><input type="text" id="dirCategorySlug" required class="sheet-btn secondary" style="width: 100%;" placeholder="agriculture"></div>
+                <div class="form-group"><label>Display Name *</label><input type="text" id="dirCategoryName" required class="sheet-btn secondary" style="width: 100%;" placeholder="Agriculture"></div>
+                <div class="form-group"><label>Icon Class</label><input type="text" id="dirCategoryIcon" class="sheet-btn secondary" style="width: 100%;" placeholder="fa-tractor"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('addDirectoryCategoryModal')">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="saveDirectoryCategory()">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>                           
+                            
 </body>
 </html>
