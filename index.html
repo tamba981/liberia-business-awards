@@ -1,7 +1,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+     <!-- ============ ANTI-CONSOLE SECURITY (MUST BE FIRST) ============ -->
+    <script>
+    (function() {
+        const noop = function() {};
+        const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace'];
+        methods.forEach(m => { if (window.console && window.console[m]) window.console[m] = noop; });
+        
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        let devToolsOpen = false;
+        Object.defineProperty(window, 'outerWidth', { get: function() { devToolsOpen = true; return window.innerWidth; }, set: function() {} });
+        setInterval(() => { if (devToolsOpen) { localStorage.clear(); window.location.href = '/dashboard/login.html'; } devToolsOpen = false; }, 1000);
+    })();
+    </script>
     
     <!-- PRIMARY TITLE - Most important for SEO -->
     <title>Liberia Business Awards 3.0 | Top Businesses & Investment Opportunities in Liberia</title>
@@ -798,81 +818,7 @@ html, body {
     body.menu-open {
         overflow: hidden;
     }
-} 
-
- /* ============================================ */
-/* ✅ FIX WHITE VERTICAL LINE ON MOBILE */
-/* ============================================ */
-
-/* Force no horizontal scroll on all devices */
-html, body {
-    overflow-x: clip !important;
-    max-width: 100% !important;
-}
-
-/* Ensure no element exceeds viewport width */
-body * {
-    max-width: 100vw !important;
-}
-
-/* Fix specific problematic elements */
-.lba-chat-widget,
-.whatsapp-float,
-.floating-ad {
-    max-width: 80px !important;
-}
-
-/* Fix scrolling announcement bar */
-.announcement-bar {
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-}
-
-.scrolling-wrapper {
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-}
-
-.scrolling-content {
-    max-width: 100% !important;
-}
-
-/* Fix any absolute positioned elements */
-[style*="position: absolute"],
-[style*="position: fixed"] {
-    max-width: 100vw !important;
-}
-
-/* Mobile specific overrides */
-@media (max-width: 768px) {
-    /* Fix containers */
-    .container,
-    .container-fluid,
-    [class*="container"] {
-        padding-left: 15px !important;
-        padding-right: 15px !important;
-        overflow-x: hidden !important;
-    }
-    
-    /* Fix images */
-    img {
-        max-width: 100% !important;
-        height: auto !important;
-    }
-    
-    /* Fix any elements with negative margins */
-    [style*="margin-left: -"],
-    [style*="margin-right: -"] {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-    }
-    
-    /* Fix footer and other sections */
-    footer,
-    section {
-        overflow-x: hidden !important;
-    }
-}       
+}     
         
 </style>
     
@@ -11032,38 +10978,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('✅ All missing functions added successfully!');
-
-        // ============================================
-// ✅ FIX WHITE VERTICAL LINE ON MOBILE
-// ============================================
-function fixWhiteLineIssue() {
-    // Check if body is wider than viewport
-    const bodyWidth = document.body.scrollWidth;
-    const viewportWidth = window.innerWidth;
-    
-    if (bodyWidth > viewportWidth) {
-        console.log(`⚠️ Body width (${bodyWidth}px) > viewport (${viewportWidth}px) - fixing...`);
-        
-        // Find the offending element
-        const allElements = document.querySelectorAll('*');
-        for (let el of allElements) {
-            const rect = el.getBoundingClientRect();
-            if (rect.right > viewportWidth + 5) {
-                console.log('Offending element:', el, 'Width:', rect.width, 'Right:', rect.right);
-                el.style.maxWidth = '100%';
-                el.style.overflowX = 'hidden';
-            }
-        }
-        
-        // Force fix
-        document.body.style.overflowX = 'hidden';
-        document.documentElement.style.overflowX = 'hidden';
-    }
-}
-
-// Run on load and resize
-window.addEventListener('load', fixWhiteLineIssue);
-window.addEventListener('resize', fixWhiteLineIssue);
 
     </script> 
 
