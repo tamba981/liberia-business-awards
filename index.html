@@ -10150,72 +10150,7 @@ function filterDirectory(category) {
     displayDirectory(category);
 }
 
-function viewBusinessDetails(businessId) {
-    const business = businessDirectory.find(b => b.id === businessId);
-    if (business) {
-        // Create a modal for detailed view
-        const modalContent = `
-            <div class="bg-white rounded-xl p-6 max-w-2xl max-h-[80vh] overflow-y-auto">
-                <div class="flex justify-between items-start mb-6">
-                    <h3 class="text-2xl font-bold text-lba-red">${business.name}</h3>
-                    <button onclick="this.closest('.modal').remove()" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <h4 class="text-lg font-bold text-lba-blue mb-3">Business Information</h4>
-                        <div class="space-y-3">
-                            <p><strong>Category:</strong> <span class="capitalize">${business.category.replace('-', ' ')}</span></p>
-                            <p><strong>Location:</strong> ${business.location}</p>
-                            <p><strong>Founded:</strong> ${business.year}</p>
-                            <p><strong>Contact:</strong> ${business.phone}</p>
-                            ${business.website !== '#' ? `<p><strong>Website:</strong> <a href="${business.website}" target="_blank" class="text-lba-red hover:underline">${business.website}</a></p>` : ''}
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h4 class="text-lg font-bold text-lba-blue mb-3">Leadership & Impact</h4>
-                        <div class="space-y-3">
-                            <p><strong>${business.founder ? 'Founder' : business.president ? 'President' : business.supervisor ? 'Supervisor' : 'Leader'}:</strong> ${business.founder || business.president || business.supervisor}</p>
-                            <p><strong>Award:</strong> ${business.award}</p>
-                            ${business.impact ? `<p><strong>Impact:</strong> ${business.impact}</p>` : ''}
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mb-6">
-                    <h4 class="text-lg font-bold text-lba-blue mb-3">Description</h4>
-                    <p class="text-gray-700">${business.description}</p>
-                </div>
-                
-                <div class="flex justify-end mt-6 pt-6 border-t border-gray-200">
-                    <button onclick="this.closest('.modal').remove()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition mr-4">
-                        Close
-                    </button>
-                    <button onclick="contactBusiness(${business.id})" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
-                        Contact Business
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        // Create modal container
-        const modal = document.createElement('div');
-        modal.className = 'modal fixed inset-0 bg-black/70 flex items-center justify-center z-50';
-        modal.innerHTML = modalContent;
-        
-        document.body.appendChild(modal);
-        
-        // Close modal when clicking outside
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.remove();
-            }
-        });
-    }
-}
+
 
 // Initialize directory when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -11691,6 +11626,138 @@ if (typeof initPartnersSlider === 'function' && typeof window._initPartnersSlide
 }
 
 console.log('✅ Voting system frontend fixes applied');
+
+// ============================================
+// FORCE CORRECT FUNCTIONS AT THE END
+// ============================================
+
+// Re-define viewBusinessDetails at the very end
+window.viewBusinessDetails = function(businessId) {
+    console.log('🔍 Viewing business details for ID:', businessId);
+    
+    const idStr = String(businessId);
+    const business = businessDirectory.find(b => 
+        String(b._id) === idStr || 
+        String(b.id) === idStr || 
+        b.id === businessId ||
+        b._id === businessId
+    );
+    
+    if (!business) {
+        console.error('❌ Business not found with ID:', businessId);
+        showNotification('Business not found', 'error');
+        return;
+    }
+    
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] opacity-0 pointer-events-none transition-opacity duration-300';
+    
+    const contactPhone = business.phone || business.contact_phone || 'Not provided';
+    const businessEmail = business.email || business.contact_email || '';
+    
+    modalDiv.innerHTML = `
+        <div class="modal-content bg-white rounded-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-2xl p-6 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+            <div class="modal-header flex justify-between items-center mb-6 sticky top-0 bg-white py-2">
+                <h3 class="text-2xl font-bold text-lba-red">${escapeHtml(business.name)}</h3>
+                <button onclick="this.closest('.modal').remove()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="text-lg font-bold text-lba-blue mb-3">Business Information</h4>
+                        <div class="space-y-3">
+                            <p><strong>Category:</strong> ${escapeHtml(business.category || 'N/A')}</p>
+                            <p><strong>Location:</strong> ${escapeHtml(business.location || 'Liberia')}</p>
+                            <p><strong>Founded:</strong> ${escapeHtml(business.year || 'N/A')}</p>
+                            <p><strong>Phone:</strong> ${escapeHtml(contactPhone)}</p>
+                            ${business.website && business.website !== '#' ? `<p><strong>Website:</strong> <a href="${business.website}" target="_blank" class="text-lba-red hover:underline">${business.website}</a></p>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-lba-blue mb-3">Leadership</h4>
+                        <p><strong>${business.founder ? 'Founder' : 'Leader'}:</strong> ${escapeHtml(business.founder || business.president || business.supervisor || 'N/A')}</p>
+                        <p><strong>Award:</strong> ${escapeHtml(business.award || 'N/A')}</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold text-lba-blue mb-3">Description</h4>
+                    <p>${escapeHtml(business.description || 'No description available.')}</p>
+                </div>
+            </div>
+            <div class="modal-footer flex justify-end gap-4 mt-6 pt-6 border-t border-gray-200">
+                <button onclick="this.closest('.modal').remove()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg">Close</button>
+                <button onclick="window.contactBusiness('${business._id || business.id}')" class="bg-lba-red text-white px-6 py-2 rounded-lg">
+                    <i class="fas fa-envelope mr-2"></i> Contact
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modalDiv);
+    setTimeout(() => {
+        modalDiv.classList.remove('opacity-0', 'pointer-events-none');
+        modalDiv.classList.add('opacity-100', 'pointer-events-auto');
+        const modalContent = modalDiv.querySelector('.modal-content');
+        if (modalContent) modalContent.classList.remove('scale-95');
+    }, 10);
+    modalDiv.addEventListener('click', function(e) { if (e.target === modalDiv) modalDiv.remove(); });
+};
+
+// Re-define contactBusiness at the very end
+window.contactBusiness = function(businessId) {
+    console.log('📞 Contacting business ID:', businessId);
+    
+    const idStr = String(businessId);
+    const business = businessDirectory.find(b => 
+        String(b._id) === idStr || 
+        String(b.id) === idStr || 
+        b.id === businessId ||
+        b._id === businessId
+    );
+    
+    if (!business) {
+        showNotification('Business not found', 'error');
+        return;
+    }
+    
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal fixed inset-0 bg-black/70 flex items-center justify-center z-[10000] opacity-0 pointer-events-none transition-opacity duration-300';
+    
+    const businessName = business.name;
+    const businessEmail = business.email || business.contact_email || '';
+    const businessPhone = business.phone || business.contact_phone || '';
+    const subject = encodeURIComponent(`Inquiry about ${businessName}`);
+    const body = encodeURIComponent(`Hello,\n\nI am interested in learning more about ${businessName}.\n\nPlease contact me with more information.\n\nThank you.`);
+    
+    modalDiv.innerHTML = `
+        <div class="modal-content bg-white rounded-xl w-11/12 md:w-1/2 max-w-md p-6 transform scale-95 transition-transform duration-300">
+            <div class="modal-header flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-lba-red">Contact ${escapeHtml(businessName)}</h3>
+                <button onclick="this.closest('.modal').remove()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="modal-body">
+                ${businessEmail ? `<button onclick="window.location.href='mailto:${businessEmail}?subject=${subject}&body=${body}'; this.closest('.modal').remove();" class="w-full bg-lba-blue text-white px-4 py-3 rounded-lg mb-3 hover:bg-blue-400 transition"><i class="fas fa-envelope mr-2"></i> Send Email</button>` : ''}
+                ${businessPhone && businessPhone !== '#' && businessPhone !== 'Not provided' ? `<button onclick="window.location.href='tel:${businessPhone.replace(/[^0-9+]/g, '')}'; this.closest('.modal').remove();" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg mb-3 hover:bg-green-700 transition"><i class="fas fa-phone-alt mr-2"></i> Call ${escapeHtml(businessPhone)}</button>
+                <button onclick="window.open('https://wa.me/${businessPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I'm interested in learning more about ${businessName}.`)}', '_blank'); this.closest('.modal').remove();" class="w-full bg-[#25D366] text-white px-4 py-3 rounded-lg mb-3 hover:opacity-90 transition"><i class="fab fa-whatsapp mr-2"></i> WhatsApp</button>` : ''}
+                <button onclick="this.closest('.modal').remove()" class="w-full bg-gray-200 text-gray-800 px-4 py-3 rounded-lg mt-2">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modalDiv);
+    setTimeout(() => {
+        modalDiv.classList.remove('opacity-0', 'pointer-events-none');
+        modalDiv.classList.add('opacity-100', 'pointer-events-auto');
+        const modalContent = modalDiv.querySelector('.modal-content');
+        if (modalContent) modalContent.classList.remove('scale-95');
+    }, 10);
+    modalDiv.addEventListener('click', function(e) { if (e.target === modalDiv) modalDiv.remove(); });
+};
+
+console.log('✅ Contact and View Details functions re-initialized at end of script');    
+    
 </script>
 
 <!-- ============================================ -->
