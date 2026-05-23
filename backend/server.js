@@ -5019,12 +5019,12 @@ async function callAIAssistant(messages, feature) {
             }
         });
         
-        const completion = await openrouterClient.chat.completions.create({
-    model: 'google/gemini-2.0-flash',  // ← Fast, great for chat
-    messages: [
-        { role: 'system', content: AI_SYSTEM_PROMPT },
-        ...messages
-    ],
+        // Choose model from environment variable, with fallback
+const model = process.env.AI_MODEL || 'google/gemini-2.0-flash';
+
+const completion = await openrouterClient.chat.completions.create({
+    model: model,  // Now configurable!
+    messages: [...],
     temperature: 0.7,
     max_tokens: 2000
 });
