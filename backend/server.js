@@ -5020,14 +5020,14 @@ async function callAIAssistant(messages, feature) {
         });
         
         const completion = await openrouterClient.chat.completions.create({
-            model: 'openai/gpt-3.5-turbo',  
-            messages: [
-                { role: 'system', content: AI_SYSTEM_PROMPT },
-                ...messages
-            ],
-            temperature: 0.7,
-            max_tokens: 2000
-        });
+    model: 'google/gemini-2.0-flash',  // ← Fast, great for chat
+    messages: [
+        { role: 'system', content: AI_SYSTEM_PROMPT },
+        ...messages
+    ],
+    temperature: 0.7,
+    max_tokens: 2000
+});
         
         return completion.choices[0].message.content;
         
