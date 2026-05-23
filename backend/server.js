@@ -4926,6 +4926,8 @@ const BusinessAISettings = mongoose.model('BusinessAISettings', businessAISettin
 // ============ AI SYSTEM PROMPT ============
 const AI_SYSTEM_PROMPT = `You are the Liberia Business Awards AI Business Assistant.
 
+**ABOUT YOUR KNOWLEDGE:** You have access to REAL-TIME WEB SEARCH for current information! When the user asks about current events, business leaders, recent news, or time-sensitive information, you will receive search results to answer accurately.
+
 Your role is to help Liberian businesses, startups, entrepreneurs, SMEs, and founders improve their businesses through strategic guidance, proposal writing, branding support, business planning, funding preparation, growth strategy, and entrepreneurial education.
 
 Your tone should be professional, practical, growth-oriented, and supportive.
@@ -4938,7 +4940,9 @@ Focus on:
 • Funding readiness
 • Branding and visibility
 
-Always provide structured and actionable responses. Use clear headings, bullet points, and practical advice.`;
+Always provide structured and actionable responses. Use clear headings, bullet points, and practical advice.
+
+**For current information questions:** Use the provided search results to answer accurately. Always cite your sources. If search results don't contain the answer, honestly inform the user and suggest official sources.`;
 
 // ============ AI HELPER FUNCTIONS ============
 async function checkAIAccess(businessId, feature) {
@@ -5004,10 +5008,96 @@ async function trackAIUsage(businessId, feature, tokensUsed = 0) {
     }
 }
 
+// ============ WEB SEARCH FUNCTION FOR REAL-TIME ANSWERS ============
+async function searchWeb(query) {
+    const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+    
+    if (!TAVILY_API_KEY) {
+        console.log('⚠️ TAVILY_API_KEY not set - web search disabled');
+        return [];
+    }
+    
+    try {
+        const response = await fetch('https://api.tavily.com/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                api_key: TAVILY_API_KEY,
+                query: query,
+                search_depth: 'basic',
+                max_results: 5,
+                include_answer: true,
+                include_raw_content: false
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+            console.log(`🔍 Web search for "${query}" returned ${data.results.length} results`);
+            return data.results;
+        }
+        
+        return [];
+        
+    } catch (error) {
+        console.error('❌ Web search error:', error.message);
+        return [];
+    }
+}
 
+// Function to check if user is asking for current/real-time information
+function needsCurrentInfo(query) {
+    const currentKeywords = [
+        'current', 'now', 'today', 'latest', 'recent', 'this year', 'this month',
+        'who is', 'ceo of', 'president of', 'leader of', 'director of',
+        'what is the current', 'latest news', 'breaking', 'updated'
+    ];
+    
+    const queryLower = query.toLowerCase();
+    return currentKeywords.some(keyword => queryLower.includes(keyword));
+}
+
+// ============ ENHANCED AI ASSISTANT WITH WEB SEARCH ============
 async function callAIAssistant(messages, feature) {
     try {
-        // Use OpenRouter - single API key for all models
+        // Get the user's latest message
+        const userMessage = messages[messages.length - 1]?.content || '';
+        const needsRealTime = needsCurrentInfo(userMessage);
+        
+        let searchContext = '';
+        let searchResults = [];
+        
+        // Perform web search if user needs current information
+        if (needsRealTime) {
+            console.log(`🔍 Performing web search for: "${userMessage.substring(0, 100)}"`);
+            searchResults = await searchWeb(userMessage);
+            
+            if (searchResults.length > 0) {
+                const today = new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                searchContext = `\n\n🔴 **IMPORTANT: REAL-TIME INFORMATION (${today})** 🔴\n\n`;
+                searchContext += `The user is asking for CURRENT information. Use the following search results to answer accurately:\n\n`;
+                
+                searchResults.forEach((result, i) => {
+                    searchContext += `📌 **Source ${i + 1}**\n`;
+                    searchContext += `Content: ${result.content}\n`;
+                    searchContext += `URL: ${result.url}\n\n`;
+                });
+                
+                searchContext += `⚠️ If the search results don't contain the answer, honestly say you couldn't find the information and suggest official sources.\n`;
+            } else {
+                searchContext = `\n\n⚠️ **NOTE:** The user is asking about current information, but I couldn't find relevant search results. Inform them honestly and suggest checking official sources.\n`;
+            }
+        }
+        
+        // Use OpenRouter
         const OpenAI = require('openai');
         
         const openrouterClient = new OpenAI({
@@ -5019,14 +5109,23 @@ async function callAIAssistant(messages, feature) {
             }
         });
         
-        // Choose model from environment variable, with fallback
+        // Choose model
         const model = process.env.AI_MODEL || 'google/gemini-2.0-flash';
+        
+        // Build system prompt with search context
+        let systemPrompt = AI_SYSTEM_PROMPT;
+        if (searchContext) {
+            systemPrompt += searchContext;
+        } else {
+            // Add a note about capabilities even without search
+            systemPrompt += `\n\n**Note:** Your knowledge has a cutoff date. For current events or specific business leaders, inform the user if you're unsure and suggest official sources.`;
+        }
         
         const completion = await openrouterClient.chat.completions.create({
             model: model,
             messages: [
-                { role: 'system', content: AI_SYSTEM_PROMPT },
-                ...messages  // ← This properly spreads the messages parameter
+                { role: 'system', content: systemPrompt },
+                ...messages
             ],
             temperature: 0.7,
             max_tokens: 2000
@@ -5059,7 +5158,7 @@ Our team has been notified. Please try again later or contact support for assist
 Thank you for your understanding.`;
         }
         
-        // Generic fallback for any other error
+        // Generic fallback
         return `⚠️ **Unable to Generate Content**
 
 We're experiencing technical difficulties at the moment. 
