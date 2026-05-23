@@ -5076,25 +5076,29 @@ async function callAIAssistant(messages, feature) {
             searchResults = await searchWeb(userMessage);
             
             if (searchResults.length > 0) {
-                const today = new Date().toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                });
-                
-                searchContext = `\n\n🔴 **IMPORTANT: REAL-TIME INFORMATION (${today})** 🔴\n\n`;
-                searchContext += `The user is asking for CURRENT information. Use the following search results to answer accurately:\n\n`;
-                
-                searchResults.forEach((result, i) => {
-                    searchContext += `📌 **Source ${i + 1}**\n`;
-                    searchContext += `Content: ${result.content}\n`;
-                    searchContext += `URL: ${result.url}\n\n`;
-                });
-                
-                searchContext += `⚠️ If the search results don't contain the answer, honestly say you couldn't find the information and suggest official sources.\n`;
-            } else {
-                searchContext = `\n\n⚠️ **NOTE:** The user is asking about current information, but I couldn't find relevant search results. Inform them honestly and suggest checking official sources.\n`;
-            }
+    const today = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    searchContext = `\n\n🔴 **IMPORTANT: REAL-TIME INFORMATION (${today})** 🔴\n\n`;
+    searchContext += `The user is asking for CURRENT information. Use the following search results to answer accurately:\n\n`;
+    
+    searchResults.forEach((result, i) => {
+        searchContext += `📌 **Source ${i + 1}**\n`;
+        searchContext += `Content: ${result.content}\n`;
+        searchContext += `URL: ${result.url}\n\n`;
+    });
+    
+    // ADD THIS LINE - Prioritize text sources over PDFs
+    searchContext += `⚠️ Prioritize text-based sources over PDF files when possible. If only PDF sources are available, still answer accurately but note that the source is a PDF document.\n`;
+    
+    searchContext += `⚠️ If the search results don't contain the answer, honestly say you couldn't find the information and suggest official sources.\n`;
+    
+} else {
+    searchContext = `\n\n⚠️ **NOTE:** The user is asking about current information, but I couldn't find relevant search results. Inform them honestly and suggest checking official sources.\n`;
+}
         }
         
         // Use OpenRouter
