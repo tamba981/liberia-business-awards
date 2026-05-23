@@ -5020,14 +5020,17 @@ async function callAIAssistant(messages, feature) {
         });
         
         // Choose model from environment variable, with fallback
-const model = process.env.AI_MODEL || 'google/gemini-2.0-flash';
-
-const completion = await openrouterClient.chat.completions.create({
-    model: model,  // Now configurable!
-    messages: [...],
-    temperature: 0.7,
-    max_tokens: 2000
-});
+        const model = process.env.AI_MODEL || 'google/gemini-2.0-flash';
+        
+        const completion = await openrouterClient.chat.completions.create({
+            model: model,
+            messages: [
+                { role: 'system', content: AI_SYSTEM_PROMPT },
+                ...messages  // ← This properly spreads the messages parameter
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+        });
         
         return completion.choices[0].message.content;
         
