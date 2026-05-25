@@ -5135,7 +5135,7 @@ async function callAIAssistant(messages, feature) {
                 ...messages
             ],
             temperature: 0.7,
-            max_tokens: 2000
+            max_tokens: 1000
         });
         
         return completion.choices[0].message.content;
