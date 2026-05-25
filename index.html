@@ -6258,14 +6258,14 @@ function getLastDayOfFebruary(year) {
     return isLeapYear(year) ? 29 : 28;
 }
 
-// =============== SIMPLIFIED COUNTDOWN LOGIC ===============
+// =============== FIXED COUNTDOWN LOGIC ===============
 function updateCountdown() {
     const now = new Date();
     const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth(); // 0-11 (JavaScript months)
+    const currentMonth = now.getMonth(); // 0-11 (0=Jan, 11=Dec)
     const currentDate = now.getDate();
     
-    console.log("Current date:", now);
+    console.log("Current date:", now.toISOString());
     console.log("Year:", currentYear, "Month:", currentMonth, "Date:", currentDate);
     
     // Get DOM elements
@@ -6280,25 +6280,85 @@ function updateCountdown() {
         const ceremonyTime = new Date(currentYear, 11, 19, 18, 0, 0); // 6:00 PM
         
         if (now < ceremonyTime) {
-            // Before 6:00 PM - Countdown to ceremony
             const diff = ceremonyTime - now;
             updateCountdownDisplay(diff);
             countdownTitle.textContent = "Awards Ceremony Today!";
             countdownMessage.textContent = "Starts at 6:00 PM - Watch Live";
             countdownButton.textContent = "Watch Live Stream";
             countdownButton.onclick = () => window.open('https://www.youtube.com/@LiberiaBusinessAwards', '_blank');
-            
-            // Show countdown
-            countdownContainer?.classList.remove('hidden');
-            closedState?.classList.add('hidden');
+            if (countdownContainer) countdownContainer.classList.remove('hidden');
+            if (closedState) closedState.classList.add('hidden');
         } else {
-            // After 6:00 PM - Show closed state
             showClosedState();
         }
         return;
     }
     
-    // DECEMBER 20 to END OF FEBRUARY - Countdown to March 1 (nominations open)
+    // MARCH 1 to MAY 30 - Countdown to nominations closing (PRIMARY FIX)
+    const isMar1ToMay30 = 
+        (currentMonth === 2 && currentDate >= 1) || // March 1-31
+        (currentMonth === 3) || // April
+        (currentMonth === 4 && currentDate <= 30); // May 1-30
+    
+    if (isMar1ToMay30) {
+        const may30Deadline = new Date(currentYear, 4, 30, 17, 59, 59); // May 30, 5:59 PM (as shown in your screenshot)
+        const diff = may30Deadline - now;
+        
+        if (diff > 0) {
+            updateCountdownDisplay(diff);
+            countdownTitle.textContent = "Nominations Close In";
+            countdownMessage.textContent = "Submit your business before the deadline!";
+            countdownButton.textContent = "Submit Nomination";
+            countdownButton.onclick = () => openModal('nominateModal');
+            if (countdownContainer) countdownContainer.classList.remove('hidden');
+            if (closedState) closedState.classList.add('hidden');
+            
+            console.log(`📅 Nominations closing in: ${Math.floor(diff / (1000 * 60 * 60 * 24))} days`);
+        } else {
+            // Show nominations closed for this year
+            showNominationsClosedState(countdownContainer, countdownTitle, countdownMessage, countdownButton, closedState);
+        }
+        return;
+    }
+    
+    // AFTER MAY 30 - Show countdown to next ceremony
+    const isAfterMay30 = 
+        (currentMonth === 4 && currentDate > 30) || // After May 30
+        (currentMonth === 5) || // June
+        (currentMonth === 6) || // July
+        (currentMonth === 7) || // August
+        (currentMonth === 8) || // September
+        (currentMonth === 9) || // October
+        (currentMonth === 10) || // November
+        (currentMonth === 11 && currentDate < 19); // December 1-18
+    
+    if (isAfterMay30) {
+        let ceremonyYear = currentYear;
+        // If we're past this year's ceremony date, show next year
+        if (currentMonth === 11 && currentDate > 19) {
+            ceremonyYear = currentYear + 1;
+        }
+        
+        const nextCeremony = new Date(ceremonyYear, 11, 19, 18, 0, 0);
+        const diff = nextCeremony - now;
+        
+        if (diff > 0) {
+            updateCountdownDisplay(diff);
+            countdownTitle.textContent = "Awards Ceremony In";
+            countdownMessage.textContent = "Save the date for the biggest business event!";
+            countdownButton.textContent = "Learn More";
+            countdownButton.onclick = () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+            if (countdownContainer) countdownContainer.classList.remove('hidden');
+            if (closedState) closedState.classList.add('hidden');
+        } else {
+            showClosedState();
+        }
+        return;
+    }
+    
+    // DECEMBER 20 to FEBRUARY END - Countdown to March 1 (nominations open)
     const lastDayFeb = getLastDayOfFebruary(currentYear);
     const isDec20ToFebEnd = 
         (currentMonth === 11 && currentDate >= 20) || // December 20-31
@@ -6306,7 +6366,7 @@ function updateCountdown() {
         (currentMonth === 1 && currentDate <= lastDayFeb); // February 1-last day
     
     if (isDec20ToFebEnd) {
-        const nextMar1 = new Date(currentYear, 2, 1, 0, 0, 0); // March 1 of current year
+        const nextMar1 = new Date(currentYear, 2, 1, 0, 0, 0);
         const diff = nextMar1 - now;
         updateCountdownDisplay(diff);
         countdownTitle.textContent = "Nominations Open Soon";
@@ -6316,66 +6376,12 @@ function updateCountdown() {
             const categoriesSection = document.getElementById('categories');
             categoriesSection?.scrollIntoView({ behavior: 'smooth' });
         };
-        
-        // Show countdown
-        countdownContainer?.classList.remove('hidden');
-        closedState?.classList.add('hidden');
+        if (countdownContainer) countdownContainer.classList.remove('hidden');
+        if (closedState) closedState.classList.add('hidden');
         return;
     }
     
-    // MARCH 1 to MAY 30 - Countdown to nominations closing
-    const isMar1ToMay30 = 
-        (currentMonth === 2 && currentDate >= 1) || // March 1-31
-        (currentMonth === 3) || // April
-        (currentMonth === 4 && currentDate <= 30); // May 1-30
-    
-    if (isMar1ToMay30) {
-        const may30Deadline = new Date(currentYear, 4, 30, 23, 59, 59); // May 30, 11:59 PM
-        const diff = may30Deadline - now;
-        updateCountdownDisplay(diff);
-        countdownTitle.textContent = "Nominations Close In";
-        countdownMessage.textContent = "Submit your business before the deadline!";
-        countdownButton.textContent = "Submit Nomination";
-        countdownButton.onclick = () => openModal('nominateModal');
-        
-        // Show countdown
-        countdownContainer?.classList.remove('hidden');
-        closedState?.classList.add('hidden');
-        return;
-    }
-    
-    // AFTER MAY 30 - Show "Nominations Closed" until December 19
-    // This includes: June 1 to December 18
-    const isAfterMay30 = 
-        (currentMonth === 4 && currentDate === 31) || // May 31
-        (currentMonth > 4 && currentMonth < 11) || // June-November
-        (currentMonth === 11 && currentDate < 19); // December 1-18
-    
-    if (isAfterMay30) {
-        // Show countdown to NEXT December 19 ceremony
-        let nextCeremonyYear = currentYear;
-        // If we're after this year's ceremony date, look to next year
-        if ((currentMonth === 11 && currentDate > 19) || currentMonth < 11) {
-            nextCeremonyYear = currentYear + 1;
-        }
-        
-        const nextCeremony = new Date(nextCeremonyYear, 11, 19, 18, 0, 0);
-        const diff = nextCeremony - now;
-        updateCountdownDisplay(diff);
-        countdownTitle.textContent = "Next Awards Ceremony";
-        countdownMessage.textContent = "Save the date for the biggest business event!";
-        countdownButton.textContent = "Learn More";
-        countdownButton.onclick = () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-        
-        // Show countdown
-        countdownContainer?.classList.remove('hidden');
-        closedState?.classList.add('hidden');
-        return;
-    }
-    
-    // Fallback - should never reach here
+    // Fallback
     showClosedState();
 }
 
@@ -6388,6 +6394,9 @@ function updateCountdownDisplay(diff) {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    console.log(`⏰ Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`);
     
     // Update display
     const daysElement = document.getElementById('countdown-days');
@@ -6406,7 +6415,6 @@ function showClosedState() {
     const countdownButton = document.getElementById('countdown-button');
     const closedState = document.getElementById('closed-state');
     
-    // Hide countdown, show closed state
     if (countdownContainer) countdownContainer.classList.add('hidden');
     if (countdownTitle) countdownTitle.classList.add('hidden');
     if (countdownMessage) countdownMessage.classList.add('hidden');
@@ -6423,11 +6431,32 @@ function showClosedState() {
     if (minutesElement) minutesElement.textContent = '00';
 }
 
-// Initialize and update every minute
+function showNominationsClosedState(countdownContainer, countdownTitle, countdownMessage, countdownButton, closedState) {
+    if (countdownContainer) countdownContainer.classList.add('hidden');
+    if (countdownTitle) {
+        countdownTitle.classList.add('hidden');
+        countdownTitle.textContent = "Nominations Closed";
+    }
+    if (countdownMessage) countdownMessage.classList.add('hidden');
+    if (countdownButton) countdownButton.classList.add('hidden');
+    if (closedState) closedState.classList.remove('hidden');
+}
+
+// Helper function for leap year
+function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function getLastDayOfFebruary(year) {
+    return isLeapYear(year) ? 29 : 28;
+}
+
+// Initialize countdown and update every second (more accurate)
 document.addEventListener('DOMContentLoaded', function() {
     updateCountdown();
-    setInterval(updateCountdown, 60000); // Update every minute
+    setInterval(updateCountdown, 1000); // Update every second for accuracy
 });
+
 
 // Image Slider Functionality
 function initImageSlider() {
@@ -6522,7 +6551,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             updateCountdown();
-setInterval(updateCountdown, 60000);
+setInterval(updateCountdown, 1000);
 
 // =============== NOMINATION STATUS CHECKER ===============
 function checkNominationStatus() {
