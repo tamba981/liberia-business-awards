@@ -3916,9 +3916,30 @@ async function callAIEndpoint(endpoint, data, type) {
     }
 }
 
-// Format AI Content for Display
+// Format AI Content for Display - WITH SOURCE LINK FILTERING
 function formatAIContent(content) {
     let formatted = content;
+    
+    // Check if user asked for a link/source
+    const chatInput = document.getElementById('chatInput');
+    const userAskedForLink = chatInput && chatInput.value ? 
+        chatInput.value.toLowerCase().includes('link') || 
+        chatInput.value.toLowerCase().includes('url') ||
+        chatInput.value.toLowerCase().includes('source') ||
+        chatInput.value.toLowerCase().includes('website') : false;
+    
+    // Remove source lines and URLs if user didn't ask for them
+    if (!userAskedForLink) {
+        // Remove "Source: URL" lines
+        formatted = formatted.replace(/Source:\s*https?:\/\/[^\s]+/gi, '');
+        formatted = formatted.replace(/URL:\s*https?:\/\/[^\s]+/gi, '');
+        // Remove standalone URLs
+        formatted = formatted.replace(/https?:\/\/[^\s]+/g, '');
+        // Remove markdown-style links [text](url) - keep just the text
+        formatted = formatted.replace(/\[([^\]]+)\]\(https?:\/\/[^\)]+\)/g, '$1');
+        // Remove any remaining "source" lines
+        formatted = formatted.replace(/^.*source:.*$/gim, '');
+    }
     
     // Convert markdown-style headers
     formatted = formatted.replace(/^# (.*$)/gm, '<h1>$1</h1>');
@@ -3941,6 +3962,10 @@ function formatAIContent(content) {
     // Convert line breaks
     formatted = formatted.replace(/\n\n/g, '</p><p>');
     formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Clean up empty paragraphs and extra spaces
+    formatted = formatted.replace(/<p><\/p>/g, '');
+    formatted = formatted.replace(/\s+/g, ' ').trim();
     
     return `<div style="font-family: inherit;">${formatted}</div>`;
 }
