@@ -5053,7 +5053,10 @@ function needsCurrentInfo(query) {
     const currentKeywords = [
         'current', 'now', 'today', 'latest', 'recent', 'this year', 'this month',
         'who is', 'ceo of', 'president of', 'leader of', 'director of',
-        'what is the current', 'latest news', 'breaking', 'updated'
+        'what is the current', 'latest news', 'breaking', 'updated',
+        // ADD THESE:
+        'president', 'vice president', 'minister', 'government', 'official',
+        'elected', 'appointed', 'serving', 'incumbent'
     ];
     
     const queryLower = query.toLowerCase();
