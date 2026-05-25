@@ -6260,15 +6260,32 @@ function getLastDayOfFebruary(year) {
     return isLeapYear(year) ? 29 : 28;
 }
 
-// =============== FIXED COUNTDOWN LOGIC ===============
-function updateCountdown() {
+// =============== FIXED COUNTDOWN LOGIC (Liberia Timezone) ===============
+function getLiberiaTime() {
+    // Liberia is GMT (UTC+0) - no daylight savings
+    // Create date using UTC to avoid timezone issues
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth(); // 0-11 (0=Jan, 11=Dec)
-    const currentDate = now.getDate();
+    return new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds()
+    ));
+}
+
+function updateCountdown() {
+    // Use UTC time (which is same as Liberia GMT)
+    const now = new Date();
+    const currentYear = now.getUTCFullYear();
+    const currentMonth = now.getUTCMonth(); // 0-11 (0=Jan, 11=Dec)
+    const currentDate = now.getUTCDate();
+    const currentHours = now.getUTCHours();
+    const currentMinutes = now.getUTCMinutes();
     
-    console.log("Current date:", now.toISOString());
-    console.log("Year:", currentYear, "Month:", currentMonth, "Date:", currentDate);
+    console.log("Liberia Time (GMT):", now.toUTCString());
+    console.log("Year:", currentYear, "Month:", currentMonth, "Date:", currentDate, "Hour:", currentHours);
     
     // Get DOM elements
     const countdownTitle = document.getElementById('countdown-title');
@@ -6277,15 +6294,16 @@ function updateCountdown() {
     const closedState = document.getElementById('closed-state');
     const countdownContainer = document.querySelector('.countdown-bg .grid');
     
-    // DECEMBER 19 - CEREMONY DAY
-    if (currentMonth === 11 && currentDate === 19) { // Month 11 = December
-        const ceremonyTime = new Date(currentYear, 11, 19, 18, 0, 0); // 6:00 PM
+    // DECEMBER 19 - CEREMONY DAY (Liberia time)
+    if (currentMonth === 11 && currentDate === 19) {
+        const ceremonyTime = Date.UTC(currentYear, 11, 19, 18, 0, 0);
+        const nowTime = now.getTime();
         
-        if (now < ceremonyTime) {
-            const diff = ceremonyTime - now;
+        if (nowTime < ceremonyTime) {
+            const diff = ceremonyTime - nowTime;
             updateCountdownDisplay(diff);
             countdownTitle.textContent = "Awards Ceremony Today!";
-            countdownMessage.textContent = "Starts at 6:00 PM - Watch Live";
+            countdownMessage.textContent = "Starts at 6:00 PM Liberia Time - Watch Live";
             countdownButton.textContent = "Watch Live Stream";
             countdownButton.onclick = () => window.open('https://www.youtube.com/@LiberiaBusinessAwards', '_blank');
             if (countdownContainer) countdownContainer.classList.remove('hidden');
@@ -6296,20 +6314,21 @@ function updateCountdown() {
         return;
     }
     
-    // MARCH 1 to MAY 30 - Countdown to nominations closing (PRIMARY FIX)
+    // MARCH 1 to MAY 30 - Countdown to nominations closing
     const isMar1ToMay30 = 
         (currentMonth === 2 && currentDate >= 1) || // March 1-31
         (currentMonth === 3) || // April
         (currentMonth === 4 && currentDate <= 30); // May 1-30
     
     if (isMar1ToMay30) {
-        const may30Deadline = new Date(currentYear, 4, 30, 17, 59, 59); // May 30, 5:59 PM (as shown in your screenshot)
-        const diff = may30Deadline - now;
+        // May 30, 2026 at 5:59 PM Liberia Time (GMT)
+        const may30Deadline = Date.UTC(currentYear, 4, 30, 17, 59, 59);
+        const diff = may30Deadline - now.getTime();
         
         if (diff > 0) {
             updateCountdownDisplay(diff);
             countdownTitle.textContent = "Nominations Close In";
-            countdownMessage.textContent = "Submit your business before the deadline!";
+            countdownMessage.textContent = "Submit your business before the deadline! (Liberia Time)";
             countdownButton.textContent = "Submit Nomination";
             countdownButton.onclick = () => openModal('nominateModal');
             if (countdownContainer) countdownContainer.classList.remove('hidden');
@@ -6317,7 +6336,6 @@ function updateCountdown() {
             
             console.log(`📅 Nominations closing in: ${Math.floor(diff / (1000 * 60 * 60 * 24))} days`);
         } else {
-            // Show nominations closed for this year
             showNominationsClosedState(countdownContainer, countdownTitle, countdownMessage, countdownButton, closedState);
         }
         return;
@@ -6336,18 +6354,17 @@ function updateCountdown() {
     
     if (isAfterMay30) {
         let ceremonyYear = currentYear;
-        // If we're past this year's ceremony date, show next year
         if (currentMonth === 11 && currentDate > 19) {
             ceremonyYear = currentYear + 1;
         }
         
-        const nextCeremony = new Date(ceremonyYear, 11, 19, 18, 0, 0);
-        const diff = nextCeremony - now;
+        const nextCeremony = Date.UTC(ceremonyYear, 11, 19, 18, 0, 0);
+        const diff = nextCeremony - now.getTime();
         
         if (diff > 0) {
             updateCountdownDisplay(diff);
             countdownTitle.textContent = "Awards Ceremony In";
-            countdownMessage.textContent = "Save the date for the biggest business event!";
+            countdownMessage.textContent = "Save the date for the biggest business event! (Liberia Time)";
             countdownButton.textContent = "Learn More";
             countdownButton.onclick = () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -6360,7 +6377,7 @@ function updateCountdown() {
         return;
     }
     
-    // DECEMBER 20 to FEBRUARY END - Countdown to March 1 (nominations open)
+    // DECEMBER 20 to FEBRUARY END - Countdown to March 1
     const lastDayFeb = getLastDayOfFebruary(currentYear);
     const isDec20ToFebEnd = 
         (currentMonth === 11 && currentDate >= 20) || // December 20-31
@@ -6368,8 +6385,8 @@ function updateCountdown() {
         (currentMonth === 1 && currentDate <= lastDayFeb); // February 1-last day
     
     if (isDec20ToFebEnd) {
-        const nextMar1 = new Date(currentYear, 2, 1, 0, 0, 0);
-        const diff = nextMar1 - now;
+        const nextMar1 = Date.UTC(currentYear, 2, 1, 0, 0, 0);
+        const diff = nextMar1 - now.getTime();
         updateCountdownDisplay(diff);
         countdownTitle.textContent = "Nominations Open Soon";
         countdownMessage.textContent = "Get ready to submit your business!";
@@ -6383,7 +6400,6 @@ function updateCountdown() {
         return;
     }
     
-    // Fallback
     showClosedState();
 }
 
@@ -6400,7 +6416,6 @@ function updateCountdownDisplay(diff) {
     
     console.log(`⏰ Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`);
     
-    // Update display
     const daysElement = document.getElementById('countdown-days');
     const hoursElement = document.getElementById('countdown-hours');
     const minutesElement = document.getElementById('countdown-minutes');
@@ -6423,7 +6438,6 @@ function showClosedState() {
     if (countdownButton) countdownButton.classList.add('hidden');
     if (closedState) closedState.classList.remove('hidden');
     
-    // Reset counters
     const daysElement = document.getElementById('countdown-days');
     const hoursElement = document.getElementById('countdown-hours');
     const minutesElement = document.getElementById('countdown-minutes');
@@ -6444,7 +6458,6 @@ function showNominationsClosedState(countdownContainer, countdownTitle, countdow
     if (closedState) closedState.classList.remove('hidden');
 }
 
-// Helper function for leap year
 function isLeapYear(year) {
     return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
@@ -6453,12 +6466,11 @@ function getLastDayOfFebruary(year) {
     return isLeapYear(year) ? 29 : 28;
 }
 
-// Initialize countdown and update every second (more accurate)
+// Initialize countdown
 document.addEventListener('DOMContentLoaded', function() {
     updateCountdown();
-    setInterval(updateCountdown, 1000); // Update every second for accuracy
+    setInterval(updateCountdown, 1000);
 });
-
 
 // Image Slider Functionality
 function initImageSlider() {
