@@ -331,15 +331,17 @@ gtag('consent', 'default', {
             background: #87CEEB;
         }
         
-        .timeline-connector {
-            position: absolute;
-            left: 50%;
-            top: 20px;
-            bottom: 0;
-            width: 4px;
-            background: linear-gradient(to bottom, #FF0000, #87CEEB);
-            transform: translateX(-50%);
-        }
+        /* Find this class and add overflow: hidden */
+.timeline-connector {
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    bottom: auto;  /* CHANGE: from '0' to 'auto' */
+    width: 4px;
+    background: linear-gradient(to bottom, #FF0000, #87CEEB);
+    transform: translateX(-50%);
+    height: calc(100% - 40px); /* CHANGE: Add this to limit height */
+}
         
         .bg-pattern {
             background-color: #ffffff;
