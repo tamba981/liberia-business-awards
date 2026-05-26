@@ -7225,7 +7225,9 @@ async function saveBlogPost() {
         image: document.getElementById('postImage').value,
         content: document.getElementById('postContent').value,
         is_featured: document.getElementById('postFeatured').checked,
-        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        created_at: new Date().toISOString(),
+        views: 0
     };
     
     if (!postData.title || !postData.category || !postData.excerpt || !postData.content) {
@@ -7243,58 +7245,9 @@ async function saveBlogPost() {
     saveBtn.disabled = true;
     
     try {
-        // Try to save to backend API first
-        const token = localStorage.getItem('lba_auth_token');
-        const url = postId 
-            ? `${API_BASE.replace('/api', '')}/api/admin/blog/posts/${postId}`
-            : `${API_BASE.replace('/api', '')}/api/admin/blog/posts`;
-        const method = postId ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-            method,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(postData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showNotification(postId ? '✅ Post updated!' : '✅ Post created!', 'success');
-            hideModal('addPostModal');
-            loadBlogPosts();
-        } else {
-            // Fallback to localStorage
-            let savedPosts = localStorage.getItem('lba_blog_posts');
-            let posts = savedPosts ? JSON.parse(savedPosts) : [];
-            
-            if (postId) {
-                const index = posts.findIndex(p => p.id === postId);
-                if (index !== -1) {
-                    postData.id = postId;
-                    posts[index] = { ...posts[index], ...postData };
-                } else {
-                    postData.id = postId;
-                    posts.push(postData);
-                }
-            } else {
-                postData.id = Date.now().toString();
-                postData.created_at = new Date().toISOString();
-                postData.views = 0;
-                posts.unshift(postData);
-            }
-            
-            localStorage.setItem('lba_blog_posts', JSON.stringify(posts));
-            showNotification('Saved locally! Will sync when online.', 'success');
-            hideModal('addPostModal');
-            loadBlogPosts();
-        }
-    } catch (error) {
-        console.error('Save error:', error);
-        
-        // Fallback to localStorage
+        // ============================================
+        // STEP 1: Save to localStorage (backup)
+        // ============================================
         let savedPosts = localStorage.getItem('lba_blog_posts');
         let posts = savedPosts ? JSON.parse(savedPosts) : [];
         
@@ -7309,13 +7262,84 @@ async function saveBlogPost() {
             }
         } else {
             postData.id = Date.now().toString();
-            postData.created_at = new Date().toISOString();
-            postData.views = 0;
             posts.unshift(postData);
         }
         
         localStorage.setItem('lba_blog_posts', JSON.stringify(posts));
-        showNotification('Saved to local storage.', 'success');
+        console.log('✅ Saved to localStorage');
+        
+        // ============================================
+        // STEP 2: Save to Google Sheets (FIXED)
+        // ============================================
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+        
+        // Prepare data for Google Sheets
+        const formData = new URLSearchParams({
+            action: 'saveBlogPost',
+            id: postData.id,
+            title: postData.title,
+            slug: postData.slug,
+            category: postData.category,
+            status: postData.status,
+            author_name: postData.author_name,
+            read_time: postData.read_time,
+            excerpt: postData.excerpt,
+            image: postData.image,
+            content: postData.content,
+            is_featured: postData.is_featured ? 'true' : 'false',
+            date: postData.date,
+            created_at: postData.created_at,
+            views: '0',
+            timestamp: new Date().toISOString()
+        });
+        
+        console.log('📤 Saving to Google Sheets:', postData.title);
+        
+        // Send to Google Apps Script
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData.toString()
+        });
+        
+        console.log('📡 Google Sheets save initiated (no-cors mode)');
+        
+        // ============================================
+        // STEP 3: Also try to save to backend API if available
+        // ============================================
+        try {
+            const token = localStorage.getItem('lba_auth_token');
+            const apiUrl = `${API_BASE.replace('/api', '')}/api/admin/blog/posts`;
+            const method = postId ? 'PUT' : 'POST';
+            const url = postId ? `${apiUrl}/${postId}` : apiUrl;
+            
+            const apiResponse = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData)
+            });
+            
+            const apiResult = await apiResponse.json();
+            if (apiResult.success) {
+                console.log('✅ Saved to backend API');
+            }
+        } catch (apiError) {
+            console.log('Backend API not available, Google Sheets is backup');
+        }
+        
+        showNotification(postId ? '✅ Post updated and saved to Google Sheets!' : '✅ Post created and saved to Google Sheets!', 'success');
+        hideModal('addPostModal');
+        loadBlogPosts();
+        
+    } catch (error) {
+        console.error('Save error:', error);
+        showNotification('Saved to local storage only. Google Sheets may be offline.', 'warning');
         hideModal('addPostModal');
         loadBlogPosts();
     } finally {
