@@ -7040,34 +7040,34 @@ function displayBlogPosts(posts) {
         const postSlug = post.slug;
         const postTitle = post.title || 'Untitled';
         const postCategory = post.category || 'Uncategorized';
-        const postDate = post.date || (post.created_at ? new Date(post.created_at).toLocaleDateString() : 'N/A');
+        const postDate = post.date || (post.published_at ? new Date(post.published_at).toLocaleDateString() : (post.created_at ? new Date(post.created_at).toLocaleDateString() : 'N/A'));
         const postViews = post.views || 0;
         const postStatus = post.status || 'draft';
         
         return `
             <tr>
-                <td><strong>${escapeHtml(postTitle)}</strong></td>
-                <td>${escapeHtml(postCategory)}</span></td>
-                <td>${postDate}</span></td>
-                <td>${postViews}</span></td>
-                <td><span class="status-badge status-${postStatus === 'published' ? 'active' : 'pending'}">${postStatus}</span></td>
+                <td><strong>${escapeHtml(postTitle)}</strong></strong>
+                <td>${escapeHtml(postCategory)}</span></strong>
+                <td>${postDate}</span></strong>
+                <td>${postViews}</span></strong>
+                <td><span class="status-badge status-${postStatus === 'published' ? 'active' : 'pending'}">${postStatus}</span></strong>
                 <td>
                     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                         <button class="sheet-btn secondary" onclick="editBlogPost('${postId}')" style="padding: 6px 12px;" title="Edit">
-                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-edit"></i> Edit
                         </button>
                         <button class="sheet-btn danger" onclick="deleteBlogPost('${postId}')" style="padding: 6px 12px;" title="Delete">
-                            <i class="fas fa-trash"></i>
+                            <i class="fas fa-trash"></i> Delete
                         </button>
                         <button class="sheet-btn" onclick="previewBlogPost('${postSlug}')" style="padding: 6px 12px;" title="Preview">
-                            <i class="fas fa-eye"></i>
+                            <i class="fas fa-eye"></i> Preview
                         </button>
                     </div>
                  </span>
              </span>
         `;
     }).join('');
-}        
+}
         
 // Default demo posts to show when empty
 function getDefaultDemoPosts() {
@@ -7169,46 +7169,73 @@ function showAddPostModal() {
 }
 
 async function editBlogPost(id) {
+    console.log('📝 Edit called with ID:', id, 'Type:', typeof id);
+    
     try {
-        // Load from localStorage first
+        // First try to load from localStorage
         let savedPosts = localStorage.getItem('lba_blog_posts');
+        let post = null;
+        
         if (savedPosts) {
             const posts = JSON.parse(savedPosts);
-            const post = posts.find(p => p.id === id);
-            if (post) {
-                document.getElementById('postModalTitle').textContent = 'Edit Post';
-                document.getElementById('postId').value = post.id;
-                document.getElementById('postTitle').value = post.title || '';
-                document.getElementById('postSlug').value = post.slug || '';
-                document.getElementById('postCategory').value = post.category || '';
-                document.getElementById('postStatus').value = post.status || 'draft';
-                document.getElementById('postAuthor').value = post.author_name || 'LBA Team';
-                document.getElementById('postReadTime').value = post.read_time || '8 min read';
-                document.getElementById('postExcerpt').value = post.excerpt || '';
-                document.getElementById('postImage').value = post.image || '';
-                document.getElementById('postContent').value = post.content || '';
-                document.getElementById('postFeatured').checked = post.is_featured || false;
-                
-                if (post.image) {
-                    const preview = document.getElementById('postImagePreview');
-                    const img = document.getElementById('postPreviewImg');
-                    if (preview && img) {
-                        img.src = post.image;
-                        preview.style.display = 'block';
-                    }
+            // Try to find by id (string) or _id (MongoDB)
+            post = posts.find(p => p.id === id || p._id === id);
+            console.log('🔍 Found in localStorage:', post);
+        }
+        
+        // If not found in localStorage, try backend API
+        if (!post) {
+            try {
+                const token = localStorage.getItem('lba_auth_token');
+                const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/blog/posts`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success && data.posts) {
+                    post = data.posts.find(p => p._id === id || p.id === id);
+                    console.log('🔍 Found in backend:', post);
                 }
-                
-                document.getElementById('addPostModal').classList.add('active');
-                return;
+            } catch (apiError) {
+                console.log('Backend not available');
             }
         }
         
-        // If not found in localStorage, show error
-        showNotification('Post not found', 'error');
-        
+        if (post) {
+            // Populate the form with post data
+            document.getElementById('postModalTitle').textContent = 'Edit Post';
+            document.getElementById('postId').value = post._id || post.id;
+            document.getElementById('postTitle').value = post.title || '';
+            document.getElementById('postSlug').value = post.slug || '';
+            document.getElementById('postCategory').value = post.category || '';
+            document.getElementById('postStatus').value = post.status || 'draft';
+            document.getElementById('postAuthor').value = post.author_name || 'LBA Team';
+            document.getElementById('postReadTime').value = post.read_time || '8 min read';
+            document.getElementById('postExcerpt').value = post.excerpt || '';
+            document.getElementById('postImage').value = post.image || '';
+            document.getElementById('postContent').value = post.content || '';
+            document.getElementById('postFeatured').checked = post.is_featured || false;
+            
+            // Show image preview if exists
+            if (post.image) {
+                const preview = document.getElementById('postImagePreview');
+                const img = document.getElementById('postPreviewImg');
+                if (preview && img) {
+                    img.src = post.image;
+                    preview.style.display = 'block';
+                }
+            }
+            
+            // Show the modal
+            document.getElementById('addPostModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            console.log('✅ Edit modal opened for post:', post.title);
+        } else {
+            console.error('❌ Post not found with ID:', id);
+            showNotification('Post not found. ID: ' + id, 'error');
+        }
     } catch (error) {
         console.error('Error editing post:', error);
-        showNotification('Error loading post details', 'error');
+        showNotification('Error loading post details: ' + error.message, 'error');
     }
 }
 
@@ -7388,15 +7415,22 @@ async function deleteBlogPost(id) {
         
 function previewBlogPost(slug) {
     console.log('🔍 Previewing blog post with slug:', slug);
+    
     if (!slug) {
         console.error('No slug provided for preview');
-        showNotification('Cannot preview: No slug found', 'error');
+        showNotification('Cannot preview: No slug found. Please edit the post and add a slug.', 'warning');
         return;
     }
-    const url = `blog-post.html?slug=${slug}`;
-    console.log('📂 Opening URL:', url);
-    window.open(url, '_blank');
-}   
+    
+    // Build the preview URL
+    const baseUrl = window.location.origin;
+    const previewUrl = `${baseUrl}/blog-post.html?slug=${encodeURIComponent(slug)}&preview=true`;
+    
+    console.log('📂 Opening preview URL:', previewUrl);
+    
+    // Open in new tab
+    window.open(previewUrl, '_blank');
+}
 
         
 // Add this function right after the previewBlogPost function
