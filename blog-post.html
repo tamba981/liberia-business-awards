@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Liberia Business Awards - Blog Post</title>
-    <meta name="description" id="metaDescription" content="Read inspiring business stories and insights from Liberia Business Awards">
+    <meta name="description" id="metaDescription" content="Read inspiring business stories from Liberia Business Awards">
     
     <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -31,13 +31,13 @@
         .share-twitter { background: #1da1f2; }
         .share-linkedin { background: #0077b5; }
         .share-whatsapp { background: #25d366; }
-        .loading-spinner { text-align: center; padding: 50px; color: #64748b; }
-        .error-message { text-align: center; padding: 50px; color: #EF4444; }
         .author-card { background: #f8fafc; padding: 25px; border-radius: 15px; margin: 30px 0; display: flex; gap: 20px; align-items: center; border-left: 4px solid #FF0000; }
         .author-avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #FF0000, #87CEEB); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; }
         .cta-section { background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 50px; border-radius: 20px; text-align: center; color: white; margin-top: 50px; }
         .cta-btn { background: white; color: #FF0000; padding: 15px 40px; border: none; border-radius: 50px; font-weight: 700; font-size: 18px; cursor: pointer; margin-top: 20px; transition: all 0.3s; }
         .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .loading-spinner { text-align: center; padding: 50px; color: #64748b; }
+        .error-message { text-align: center; padding: 50px; color: #EF4444; }
         @media (max-width: 768px) { .container { margin: 20px; } .content { padding: 30px 20px; } h1 { font-size: 32px; } .header-gradient { padding: 40px 20px; } .featured-image { height: 250px; } .author-card { flex-direction: column; text-align: center; } }
     </style>
 </head>
@@ -63,39 +63,34 @@
     </div>
 
     <script>
-        // API Configuration
         const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
         
-        // Get slug from URL
         function getSlugFromURL() {
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('slug');
             if (slug) return slug;
-            
-            // Try to get from path (e.g., /blog-post.html?slug=nomination-tips)
             return window.location.pathname.split('/').pop().replace('.html', '');
         }
         
         async function loadPost() {
             const slug = getSlugFromURL();
-            
-            if (!slug) {
-                showError('No post specified');
-                return;
-            }
+            if (!slug) { showError('No post specified'); return; }
             
             try {
-                // Try to fetch from API first
+                // Try to load from backend API first
                 let response = await fetch(`${API_BASE}/blog/posts?slug=${slug}`);
                 let data = await response.json();
-                
                 let post = null;
                 
                 if (data.success && data.post) {
                     post = data.post;
                 } else {
-                    // Fallback to hardcoded data if API fails
-                    post = getFallbackPost(slug);
+                    // Try localStorage fallback
+                    const savedPosts = localStorage.getItem('lba_blog_posts');
+                    if (savedPosts) {
+                        const posts = JSON.parse(savedPosts);
+                        post = posts.find(p => p.slug === slug);
+                    }
                 }
                 
                 if (post) {
@@ -105,10 +100,16 @@
                 }
             } catch (error) {
                 console.error('Error loading post:', error);
-                // Try fallback
-                const fallbackPost = getFallbackPost(slug);
-                if (fallbackPost) {
-                    renderPost(fallbackPost);
+                // Try localStorage
+                const savedPosts = localStorage.getItem('lba_blog_posts');
+                if (savedPosts) {
+                    const posts = JSON.parse(savedPosts);
+                    const post = posts.find(p => p.slug === slug);
+                    if (post) {
+                        renderPost(post);
+                    } else {
+                        showError('Failed to load post');
+                    }
                 } else {
                     showError('Failed to load post');
                 }
@@ -116,11 +117,8 @@
         }
         
         function renderPost(post) {
-            // Update page title and meta
             document.title = `${post.title} - Liberia Business Awards`;
-            document.getElementById('metaDescription').setAttribute('content', post.excerpt || post.title);
             
-            // Render header
             const headerHtml = `
                 <h1>${escapeHtml(post.title)}</h1>
                 <div class="meta-info">
@@ -132,7 +130,6 @@
             `;
             document.getElementById('postHeader').innerHTML = headerHtml;
             
-            // Render content
             const contentHtml = `
                 ${post.image ? `<img src="${post.image}" alt="${post.title}" class="featured-image" onerror="this.src='https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800'">` : ''}
                 <div class="post-body">
@@ -178,70 +175,14 @@
             document.getElementById('postContent').innerHTML = '';
         }
         
-        // Fallback hardcoded posts (for when API is down)
-        function getFallbackPost(slug) {
-            const posts = {
-                'success-stories': {
-                    title: 'How Winning an LBA Transformed These Businesses',
-                    excerpt: 'Discover the incredible journeys of past winners and learn how the Liberia Business Awards catapulted their growth.',
-                    content: '<p>Winning a Liberia Business Award is more than just receiving a trophy—it\'s a transformative experience that catapults businesses to new heights. Here are inspiring stories of businesses that leveraged their LBA recognition for unprecedented growth.</p><h2>Green Fields Agro</h2><p><strong>Agriculture Business of the Year 2024</strong><br>Before LBA: Local farmer serving Monrovia markets<br>After LBA: $2M export business to 3 countries, 150+ employees</p><div class="quote-box"><p>"The LBA award was our passport to international markets. Within 6 months, we secured contracts with European supermarkets that we\'d been pursuing for years."</p></div>',
-                    image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800',
-                    date: 'February 15, 2026',
-                    read_time: '12 min read',
-                    category: 'Success Stories',
-                    author_name: 'LBA Team',
-                    author_bio: 'Content team at Liberia Business Awards'
-                },
-                'nomination-tips': {
-                    title: '5 Expert Tips to Strengthen Your Award Nomination',
-                    excerpt: 'Learn how to make your business stand out with proven strategies from award-winning entrepreneurs.',
-                    content: '<p>Submitting a winning nomination requires more than just filling out a form. Based on insights from past winners and judges, here are 5 expert tips to make your nomination stand out.</p><h2>1. Tell a Compelling Story</h2><p>Judges remember stories, not statistics. Start with your business\'s origin story and highlight pivotal moments.</p><h2>2. Quantify Your Impact</h2><p>Use specific metrics: revenue growth percentages, job creation numbers, customer satisfaction rates.</p>',
-                    image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800',
-                    date: 'March 15, 2026',
-                    read_time: '10 min read',
-                    category: 'Nomination Tips',
-                    author_name: 'LBA Team'
-                },
-                'meet-judges': {
-                    title: 'Meet the Judges: Industry Leaders Share Insights',
-                    excerpt: 'Get to know the distinguished panel of experts evaluating this year\'s nominations.',
-                    content: '<p>The Liberia Business Awards panel comprises distinguished leaders from various sectors who bring decades of experience to the judging process.</p><h2>What Judges Look For</h2><ul><li>Innovation (25%)</li><li>Growth & Sustainability (25%)</li><li>Impact (25%)</li><li>Leadership (15%)</li><li>Presentation (10%)</li></ul>',
-                    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-                    date: 'February 28, 2026',
-                    read_time: '8 min read',
-                    category: 'Judging Insights',
-                    author_name: 'LBA Team'
-                },
-                'women-entrepreneurs': {
-                    title: 'Liberian Women Entrepreneurs Breaking Barriers',
-                    excerpt: 'Inspiring stories of female business leaders transforming industries and creating opportunities.',
-                    content: '<p>Across Liberia, women entrepreneurs are shattering glass ceilings, transforming industries, and building economic resilience. These inspiring leaders are not just running businesses—they\'re creating opportunities and empowering communities.</p>',
-                    image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800',
-                    date: 'January 25, 2026',
-                    read_time: '12 min read',
-                    category: 'Success Stories'
-                }
-            };
-            
-            return posts[slug] || null;
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
+        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         function goBack() { window.location.href = 'blog-archive.html'; }
         function goToHomepage() { window.location.href = 'index.html'; }
-        
         function shareOnFacebook() { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank'); }
         function shareOnTwitter() { window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(document.title)}&url=${encodeURIComponent(window.location.href)}`, '_blank'); }
         function shareOnLinkedIn() { window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank'); }
         function shareOnWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent(document.title + ' ' + window.location.href)}`, '_blank'); }
         
-        // Load post
         loadPost();
     </script>
 </body>
