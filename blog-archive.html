@@ -3,73 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog Archive - Liberia Business Awards Insights & Resources</title>
+    <title>Blog Archive - Liberia Business Awards</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); color: #333; line-height: 1.7; min-height: 100vh; }
+        body { font-family: 'Poppins', sans-serif; background: #f8fafc; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .blog-header { background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); padding: 60px 40px; border-radius: 25px; color: white; text-align: center; margin-bottom: 40px; }
-        .back-btn { background: white; color: #FF0000; padding: 12px 25px; border: none; border-radius: 50px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; margin-bottom: 30px; }
-        .back-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,0,0,0.3); }
-        h1 { font-family: 'Montserrat', sans-serif; font-size: 48px; font-weight: 800; margin-bottom: 15px; }
-        .search-section { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 25px rgba(0,0,0,0.08); margin-bottom: 40px; display: flex; gap: 15px; flex-wrap: wrap; }
-        .search-box { flex: 1; min-width: 300px; position: relative; }
-        .search-input { width: 100%; padding: 15px 20px 15px 50px; border: 2px solid #e2e8f0; border-radius: 15px; font-size: 16px; }
-        .search-input:focus { outline: none; border-color: #FF0000; }
-        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .blog-header { background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 60px 40px; border-radius: 25px; color: white; text-align: center; margin-bottom: 40px; }
+        .back-btn { background: white; color: #FF0000; padding: 12px 25px; border: none; border-radius: 50px; font-weight: 600; cursor: pointer; margin-bottom: 30px; }
+        h1 { font-family: 'Montserrat', sans-serif; font-size: 48px; font-weight: 800; }
+        .search-section { background: white; padding: 25px; border-radius: 20px; margin-bottom: 40px; display: flex; gap: 15px; flex-wrap: wrap; }
+        .search-box { flex: 1; position: relative; }
+        .search-input { width: 100%; padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 15px; }
         .category-filter { display: flex; gap: 10px; flex-wrap: wrap; }
-        .category-btn { padding: 10px 20px; background: #f1f5f9; border: none; border-radius: 10px; font-weight: 500; cursor: pointer; transition: all 0.3s; }
-        .category-btn:hover, .category-btn.active { background: linear-gradient(135deg, #FF0000 0%, #87CEEB 100%); color: white; }
-        .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px; margin: 40px 0; }
-        .blog-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.08); transition: all 0.4s; cursor: pointer; }
-        .blog-card:hover { transform: translateY(-10px); box-shadow: 0 25px 60px rgba(0,0,0,0.15); }
-        .blog-image { height: 220px; overflow: hidden; }
-        .blog-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
-        .blog-card:hover .blog-image img { transform: scale(1.1); }
-        .blog-content { padding: 25px; }
-        .blog-category { display: inline-block; padding: 5px 15px; background: rgba(255,0,0,0.1); color: #FF0000; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 15px; }
-        .blog-title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 12px; line-height: 1.4; color: #1a202c; }
-        .blog-excerpt { color: #64748b; margin-bottom: 15px; line-height: 1.6; }
-        .blog-meta { display: flex; gap: 15px; color: #94a3b8; font-size: 13px; margin-bottom: 15px; }
-        .read-btn { color: #FF0000; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
-        .load-more-btn { background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 15px 40px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.3s; margin: 40px auto; display: inline-block; }
-        .load-more-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(255,0,0,0.3); }
-        .no-results { text-align: center; padding: 60px; background: white; border-radius: 20px; }
-        .loading-spinner { text-align: center; padding: 50px; }
-        @media (max-width: 768px) { .blog-grid { grid-template-columns: 1fr; } h1 { font-size: 36px; } .search-section { flex-direction: column; } }
+        .category-btn { padding: 10px 20px; background: #f1f5f9; border: none; border-radius: 10px; cursor: pointer; }
+        .category-btn.active { background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; }
+        .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px; }
+        .blog-card { background: white; border-radius: 20px; overflow: hidden; cursor: pointer; transition: all 0.3s; }
+        .blog-card:hover { transform: translateY(-5px); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .blog-image { height: 200px; overflow: hidden; }
+        .blog-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .blog-card:hover .blog-image img { transform: scale(1.05); }
+        .blog-content { padding: 20px; }
+        .blog-category { display: inline-block; padding: 4px 12px; background: rgba(255,0,0,0.1); color: #FF0000; border-radius: 20px; font-size: 12px; margin-bottom: 12px; }
+        .blog-title { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .blog-excerpt { color: #64748b; font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
+        .blog-meta { display: flex; gap: 15px; color: #94a3b8; font-size: 12px; }
+        .load-more { text-align: center; margin-top: 40px; }
+        .load-more-btn { background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 12px 30px; border: none; border-radius: 50px; font-weight: 600; cursor: pointer; }
+        .no-results { text-align: center; padding: 50px; background: white; border-radius: 20px; }
+        @media (max-width: 768px) { h1 { font-size: 32px; } .blog-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="blog-header">
-            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i> Back to Main Website</button>
+            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i> Back to Home</button>
             <h1>Liberia Business Awards Blog</h1>
-            <p class="subtitle">Insights, Success Stories, and Expert Advice for Liberia's Business Community</p>
+            <p>Insights, Success Stories, and Expert Advice</p>
         </div>
 
         <div class="search-section">
             <div class="search-box">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" id="searchInput" placeholder="Search articles..." onkeyup="filterPosts()">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search articles..." onkeyup="filterPosts()">
             </div>
             <div class="category-filter" id="categoryFilter"></div>
         </div>
 
         <div id="postsGrid" class="blog-grid">
-            <div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading posts...</p></div>
+            <div class="loading-spinner" style="text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading posts...</p>
+            </div>
         </div>
 
-        <div id="loadMoreContainer" class="text-center">
-            <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()" style="display: none;">Load More Articles</button>
+        <div class="load-more">
+            <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()" style="display: none;">Load More</button>
         </div>
     </div>
 
     <script>
-        const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
-        
         let allPosts = [];
         let currentCategory = 'all';
         let currentSearch = '';
@@ -77,34 +72,45 @@
         
         async function loadPosts() {
             try {
-                const response = await fetch(`${API_BASE}/blog/posts`);
-                const data = await response.json();
-                
-                if (data.success && data.posts && data.posts.length > 0) {
-                    allPosts = data.posts;
-                } else {
-                    // Fallback hardcoded posts
-                    allPosts = getFallbackPosts();
+                // First try localStorage
+                let posts = [];
+                const savedPosts = localStorage.getItem('lba_blog_posts');
+                if (savedPosts) {
+                    posts = JSON.parse(savedPosts);
                 }
                 
+                // Try API
+                try {
+                    const response = await fetch('https://liberia-business-awards-production.up.railway.app/api/blog/posts');
+                    const data = await response.json();
+                    if (data.success && data.posts) {
+                        posts = data.posts;
+                        localStorage.setItem('lba_blog_posts', JSON.stringify(posts));
+                    }
+                } catch (apiError) {
+                    console.log('API not available, using localStorage');
+                }
+                
+                if (posts.length === 0) {
+                    posts = getDefaultPosts();
+                }
+                
+                allPosts = posts.filter(p => p.status === 'published');
                 renderCategories();
                 renderPosts();
             } catch (error) {
                 console.error('Error loading posts:', error);
-                allPosts = getFallbackPosts();
+                allPosts = getDefaultPosts();
                 renderCategories();
                 renderPosts();
             }
         }
         
-        function getFallbackPosts() {
+        function getDefaultPosts() {
             return [
-                { id: 1, title: "How Winning an LBA Transformed These Businesses", slug: "success-stories", excerpt: "Discover how past winners leveraged LBA recognition for unprecedented growth...", image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=400", category: "Success Stories", date: "February 15, 2026", read_time: "12 min read", views: "5.2K" },
-                { id: 2, title: "5 Expert Tips to Strengthen Your Award Nomination", slug: "nomination-tips", excerpt: "Learn proven strategies from award-winning entrepreneurs to make your nomination stand out...", image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=400", category: "Nomination Tips", date: "March 15, 2026", read_time: "10 min read", views: "3.8K" },
-                { id: 3, title: "Meet the Judges: Industry Leaders Share Insights", slug: "meet-judges", excerpt: "Get to know the distinguished panel of experts evaluating this year's nominations...", image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400", category: "Judging Insights", date: "February 28, 2026", read_time: "8 min read", views: "4.2K" },
-                { id: 4, title: "The Economic Impact of LBA on Liberia's Business Landscape", slug: "lba-impact", excerpt: "How the Liberia Business Awards are driving economic growth nationwide...", image: "https://images.unsplash.com/photo-1556761175-4ac5e51e1f2f?w=400", category: "Industry News", date: "February 10, 2026", read_time: "15 min read", views: "2.9K" },
-                { id: 5, title: "Liberian Women Entrepreneurs Breaking Barriers", slug: "women-entrepreneurs", excerpt: "Inspiring stories of female business leaders transforming industries...", image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400", category: "Success Stories", date: "January 25, 2026", read_time: "12 min read", views: "6.1K" },
-                { id: 6, title: "Digital Transformation in Liberian Businesses", slug: "digital-transformation", excerpt: "How local businesses are leveraging technology to innovate and scale...", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400", category: "Industry News", date: "January 15, 2026", read_time: "14 min read", views: "3.5K" }
+                { id: '1', title: 'How Winning an LBA Transformed These Businesses', slug: 'success-stories', category: 'Success Stories', excerpt: 'Discover how past winners leveraged LBA recognition...', image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600', date: 'Feb 15, 2026', read_time: '12 min read', views: '5.2K', status: 'published' },
+                { id: '2', title: '5 Expert Tips to Strengthen Your Award Nomination', slug: 'nomination-tips', category: 'Nomination Tips', excerpt: 'Learn proven strategies from award-winning entrepreneurs...', image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=600', date: 'Mar 15, 2026', read_time: '10 min read', views: '3.8K', status: 'published' },
+                { id: '3', title: 'Meet the Judges: Industry Leaders Share Insights', slug: 'meet-judges', category: 'Judging Insights', excerpt: 'Get to know the experts evaluating this year\'s nominations...', image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600', date: 'Feb 28, 2026', read_time: '8 min read', views: '4.2K', status: 'published' }
             ];
         }
         
@@ -112,16 +118,8 @@
             const categories = ['all', ...new Set(allPosts.map(p => p.category))];
             const container = document.getElementById('categoryFilter');
             container.innerHTML = categories.map(cat => `
-                <button class="category-btn ${currentCategory === cat ? 'active' : ''}" onclick="filterByCategory('${cat}')">
-                    ${cat === 'all' ? 'All' : cat}
-                </button>
+                <button class="category-btn ${currentCategory === cat ? 'active' : ''}" onclick="filterByCategory('${cat}')">${cat === 'all' ? 'All' : cat}</button>
             `).join('');
-        }
-        
-        function filterPosts() {
-            currentSearch = document.getElementById('searchInput').value.toLowerCase();
-            visibleCount = 6;
-            renderPosts();
         }
         
         function filterByCategory(category) {
@@ -131,70 +129,49 @@
             renderPosts();
         }
         
+        function filterPosts() {
+            currentSearch = document.getElementById('searchInput').value.toLowerCase();
+            visibleCount = 6;
+            renderPosts();
+        }
+        
         function renderPosts() {
             let filtered = allPosts.filter(post => {
                 const matchesCategory = currentCategory === 'all' || post.category === currentCategory;
-                const matchesSearch = currentSearch === '' || 
-                    post.title.toLowerCase().includes(currentSearch) || 
-                    post.excerpt.toLowerCase().includes(currentSearch);
+                const matchesSearch = currentSearch === '' || post.title.toLowerCase().includes(currentSearch) || post.excerpt.toLowerCase().includes(currentSearch);
                 return matchesCategory && matchesSearch;
             });
             
             const toShow = filtered.slice(0, visibleCount);
             const hasMore = filtered.length > visibleCount;
-            
             document.getElementById('loadMoreBtn').style.display = hasMore ? 'inline-block' : 'none';
             
             if (toShow.length === 0) {
-                document.getElementById('postsGrid').innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-search fa-2x" style="color: #cbd5e0;"></i>
-                        <h3 style="margin-top: 20px;">No posts found</h3>
-                        <p>Try different keywords or browse all categories</p>
-                    </div>
-                `;
+                document.getElementById('postsGrid').innerHTML = '<div class="no-results"><i class="fas fa-search fa-2x"></i><h3>No posts found</h3><p>Try different keywords</p></div>';
                 return;
             }
             
             document.getElementById('postsGrid').innerHTML = toShow.map(post => `
                 <div class="blog-card" onclick="openPost('${post.slug}')">
-                    <div class="blog-image"><img src="${post.image}" alt="${post.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=400'"></div>
+                    <div class="blog-image"><img src="${post.image}" alt="${post.title}" onerror="this.src='https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600'"></div>
                     <div class="blog-content">
-                        <span class="blog-category">${escapeHtml(post.category)}</span>
-                        <h3 class="blog-title">${escapeHtml(post.title)}</h3>
-                        <p class="blog-excerpt">${escapeHtml(post.excerpt)}</p>
+                        <span class="blog-category">${post.category}</span>
+                        <h3 class="blog-title">${post.title}</h3>
+                        <p class="blog-excerpt">${post.excerpt}</p>
                         <div class="blog-meta">
                             <span><i class="far fa-calendar"></i> ${post.date}</span>
                             <span><i class="far fa-clock"></i> ${post.read_time}</span>
                             <span><i class="fas fa-eye"></i> ${post.views} views</span>
                         </div>
-                        <a href="#" class="read-btn" onclick="event.stopPropagation(); openPost('${post.slug}')">Read Article <i class="fas fa-arrow-right"></i></a>
                     </div>
                 </div>
             `).join('');
         }
         
-        function loadMore() {
-            visibleCount += 6;
-            renderPosts();
-        }
+        function loadMore() { visibleCount += 6; renderPosts(); }
+        function openPost(slug) { window.location.href = `blog-post.html?slug=${slug}`; }
+        function goBack() { window.location.href = 'index.html'; }
         
-        function openPost(slug) {
-            window.location.href = `blog-post.html?slug=${slug}`;
-        }
-        
-        function goBack() {
-            window.location.href = 'index.html';
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Initialize
         loadPosts();
     </script>
 </body>
