@@ -5854,6 +5854,295 @@ app.put('/api/admin/ai/limits', authenticate, authorize('admin'), async (req, re
 
 console.log('✅ AI Business Assistant System Ready');
 
+// ============================================
+// BLOG MANAGEMENT SYSTEM - BACKEND ENDPOINTS
+// ============================================
+
+// Blog Post Schema
+const blogPostSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    category: { type: String, required: true },
+    status: { type: String, enum: ['published', 'draft'], default: 'draft' },
+    author_name: { type: String, default: 'LBA Team' },
+    read_time: { type: String, default: '8 min read' },
+    excerpt: { type: String, required: true },
+    image: { type: String, default: '' },
+    content: { type: String, required: true },
+    is_featured: { type: Boolean, default: false },
+    views: { type: Number, default: 0 },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+    published_at: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const BlogPost = mongoose.model('BlogPost', blogPostSchema);
+
+// ============ PUBLIC BLOG ROUTES ============
+
+// Get all published blog posts (for frontend)
+app.get('/api/blog/posts', async (req, res) => {
+    try {
+        const { category, page = 1, limit = 12, search } = req.query;
+        let query = { status: 'published' };
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { excerpt: { $regex: search, $options: 'i' } },
+                { content: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [posts, total] = await Promise.all([
+            BlogPost.find(query)
+                .select('title slug category excerpt image date read_time views created_at published_at is_featured')
+                .sort({ is_featured: -1, published_at: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            BlogPost.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            posts,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get blog posts error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single blog post by slug
+app.get('/api/blog/posts/:slug', async (req, res) => {
+    try {
+        const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' });
+        
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found' });
+        }
+        
+        // Increment view count
+        post.views += 1;
+        await post.save();
+        
+        res.json({
+            success: true,
+            post
+        });
+    } catch (error) {
+        console.error('Get single post error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get blog post by ID (for admin)
+app.get('/api/blog/posts/id/:id', async (req, res) => {
+    try {
+        const post = await BlogPost.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found' });
+        }
+        res.json({ success: true, post });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN BLOG ROUTES ============
+
+// Get all blog posts (admin)
+app.get('/api/admin/blog/posts', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status, page = 1, limit = 20 } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [posts, total] = await Promise.all([
+            BlogPost.find(query)
+                .sort({ created_at: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            BlogPost.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            posts,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Admin get posts error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create blog post (admin)
+app.post('/api/admin/blog/posts', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { title, slug, category, status, author_name, read_time, excerpt, image, content, is_featured, date } = req.body;
+        
+        if (!title || !category || !excerpt || !content) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        // Generate slug if not provided
+        let finalSlug = slug;
+        if (!finalSlug) {
+            finalSlug = title.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+        }
+        
+        // Check if slug exists
+        const existing = await BlogPost.findOne({ slug: finalSlug });
+        if (existing) {
+            finalSlug = finalSlug + '-' + Date.now();
+        }
+        
+        const post = new BlogPost({
+            title,
+            slug: finalSlug,
+            category,
+            status: status || 'draft',
+            author_name: author_name || 'LBA Team',
+            read_time: read_time || '8 min read',
+            excerpt,
+            image: image || '',
+            content,
+            is_featured: is_featured || false,
+            created_by: req.user._id,
+            published_at: status === 'published' ? new Date() : null
+        });
+        
+        await post.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Post created successfully',
+            post: {
+                _id: post._id,
+                title: post.title,
+                slug: post.slug,
+                status: post.status
+            }
+        });
+    } catch (error) {
+        console.error('Create post error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update blog post (admin)
+app.put('/api/admin/blog/posts/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const post = await BlogPost.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found' });
+        }
+        
+        const { title, slug, category, status, author_name, read_time, excerpt, image, content, is_featured } = req.body;
+        
+        if (title) post.title = title;
+        if (slug && slug !== post.slug) {
+            const existing = await BlogPost.findOne({ slug });
+            if (existing && existing._id.toString() !== post._id.toString()) {
+                return res.status(400).json({ success: false, message: 'Slug already exists' });
+            }
+            post.slug = slug;
+        }
+        if (category) post.category = category;
+        if (status) {
+            post.status = status;
+            if (status === 'published' && post.status !== 'published') {
+                post.published_at = new Date();
+            }
+        }
+        if (author_name) post.author_name = author_name;
+        if (read_time) post.read_time = read_time;
+        if (excerpt) post.excerpt = excerpt;
+        if (image !== undefined) post.image = image;
+        if (content) post.content = content;
+        if (is_featured !== undefined) post.is_featured = is_featured;
+        
+        await post.save();
+        
+        res.json({
+            success: true,
+            message: 'Post updated successfully',
+            post
+        });
+    } catch (error) {
+        console.error('Update post error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete blog post (admin)
+app.delete('/api/admin/blog/posts/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const post = await BlogPost.findByIdAndDelete(req.params.id);
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Post deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete post error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get blog stats (admin)
+app.get('/api/admin/blog/stats', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const total = await BlogPost.countDocuments();
+        const published = await BlogPost.countDocuments({ status: 'published' });
+        const drafts = await BlogPost.countDocuments({ status: 'draft' });
+        const totalViews = await BlogPost.aggregate([
+            { $group: { _id: null, total: { $sum: '$views' } } }
+        ]);
+        
+        res.json({
+            success: true,
+            stats: {
+                total,
+                published,
+                drafts,
+                totalViews: totalViews[0]?.total || 0
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+console.log('✅ Blog Management System Ready');
+
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
