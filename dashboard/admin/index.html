@@ -7362,19 +7362,18 @@ async function deleteBlogPost(id) {
 
 
         
-        
 function previewBlogPost(slug) {
-    window.open(`blog-post.html?slug=${slug}`, '_blank');
-}
+    console.log('🔍 Previewing blog post with slug:', slug);
+    if (!slug) {
+        console.error('No slug provided for preview');
+        showNotification('Cannot preview: No slug found', 'error');
+        return;
+    }
+    const url = `blog-post.html?slug=${slug}`;
+    console.log('📂 Opening URL:', url);
+    window.open(url, '_blank');
+}        
 
-function filterBlogPosts() {
-    const search = document.getElementById('blogSearch')?.value.toLowerCase() || '';
-    const rows = document.querySelectorAll('#blogPostsTableBody tr');
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(search) ? '' : 'none';
-    });
-}
 
 // Export to window
 window.showBlogManagementModal = showBlogManagementModal;
