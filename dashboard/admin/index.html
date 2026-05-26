@@ -7020,6 +7020,55 @@ async function loadBlogPosts() {
     }
 }
 
+        
+// ============================================
+// ADD THIS MISSING FUNCTION - displayBlogPosts
+// ============================================
+
+function displayBlogPosts(posts) {
+    const tbody = document.getElementById('blogPostsTableBody');
+    if (!tbody) return;
+    
+    if (!posts || posts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No posts found. Click "New Post" to create one.<\/td><\/tr>';
+        return;
+    }
+    
+    tbody.innerHTML = posts.map(post => {
+        // Get the correct ID (MongoDB uses _id, localStorage uses id)
+        const postId = post._id || post.id;
+        const postSlug = post.slug;
+        const postTitle = post.title || 'Untitled';
+        const postCategory = post.category || 'Uncategorized';
+        const postDate = post.date || (post.created_at ? new Date(post.created_at).toLocaleDateString() : 'N/A');
+        const postViews = post.views || 0;
+        const postStatus = post.status || 'draft';
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(postTitle)}</strong></td>
+                <td>${escapeHtml(postCategory)}</span></td>
+                <td>${postDate}</span></td>
+                <td>${postViews}</span></td>
+                <td><span class="status-badge status-${postStatus === 'published' ? 'active' : 'pending'}">${postStatus}</span></td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button class="sheet-btn secondary" onclick="editBlogPost('${postId}')" style="padding: 6px 12px;" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="sheet-btn danger" onclick="deleteBlogPost('${postId}')" style="padding: 6px 12px;" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="sheet-btn" onclick="previewBlogPost('${postSlug}')" style="padding: 6px 12px;" title="Preview">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                 </span>
+             </span>
+        `;
+    }).join('');
+}        
+        
 // Default demo posts to show when empty
 function getDefaultDemoPosts() {
     return [
