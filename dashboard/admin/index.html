@@ -7324,30 +7324,34 @@ async function saveBlogPost() {
     }
 }
 
+
 async function deleteBlogPost(id) {
     if (!confirm('⚠️ Are you sure you want to delete this post? This action cannot be undone.')) return;
     
     try {
-        // Remove from localStorage
+        // Remove from localStorage FIRST
         let savedPosts = localStorage.getItem('lba_blog_posts');
         if (savedPosts) {
             let posts = JSON.parse(savedPosts);
-            posts = posts.filter(p => p.id !== id);
-            localStorage.setItem('lba_blog_posts', JSON.stringify(posts));
-            showNotification('Post deleted!', 'success');
-            loadBlogPosts();
+            const filtered = posts.filter(p => p.id !== id && p._id !== id);
+            localStorage.setItem('lba_blog_posts', JSON.stringify(filtered));
+            showNotification('Post deleted from local storage!', 'success');
+            loadBlogPosts(); // Refresh the list
         }
         
-        // Also try to delete from backend (if available)
+        // Then try to delete from backend (optional - won't break if fails)
         try {
             const token = localStorage.getItem('lba_auth_token');
-            await fetch(`${API_BASE.replace('/api', '')}/api/admin/blog/posts/${id}`, {
+            const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/blog/posts/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            const result = await response.json();
+            if (result.success) {
+                console.log('Post also deleted from backend');
+            }
         } catch (apiError) {
-            // Backend not available, but local delete worked
-            console.log('Backend delete skipped');
+            console.log('Backend delete skipped (endpoint not ready yet)');
         }
         
     } catch (error) {
@@ -7356,6 +7360,9 @@ async function deleteBlogPost(id) {
     }
 }
 
+
+        
+        
 function previewBlogPost(slug) {
     window.open(`blog-post.html?slug=${slug}`, '_blank');
 }
