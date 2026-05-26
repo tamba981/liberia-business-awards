@@ -1523,6 +1523,11 @@
                         <span>Business Spotlight</span>
                         <span class="badge" id="spotlightCount">0</span>
                     </a>
+                    <a href="#" class="menu-item" onclick="showBlogManagementModal()">
+    <i class="fas fa-newspaper"></i>
+    <span>Blog Management</span>
+    <span class="badge" id="blogCount">0</span>
+</a>
                      <a href="#" class="menu-item" onclick="showAdsManagementModal()">
         <i class="fas fa-ad"></i>
         <span>Ads Management</span>
@@ -6938,6 +6943,481 @@ async function forceLoadSpotlight() {
 
 // Add to window
 window.forceLoadSpotlight = forceLoadSpotlight;
+
+// ============================================
+// BLOG MANAGEMENT SYSTEM - ADD HERE
+// ============================================
+
+// Show Blog Management Modal
+function showBlogManagementModal() {
+    hideAllModals();
+    
+    let modal = document.getElementById('blogManagementModal');
+    if (!modal) {
+        createBlogManagementModal();
+        modal = document.getElementById('blogManagementModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadBlogPosts();
+}
+
+// Create Blog Management Modal
+function createBlogManagementModal() {
+    const modalHTML = `
+    <div class="modal" id="blogManagementModal">
+        <div class="modal-content" style="max-width: 1300px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-newspaper"></i> Blog Management</h2>
+                <button class="modal-close" onclick="hideModal('blogManagementModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="stat-card" style="padding: 15px;"><h3 id="totalPostsCount">0</h3><p>Total Posts</p></div>
+                    <div class="stat-card" style="padding: 15px;"><h3 id="publishedPostsCount">0</h3><p>Published</p></div>
+                    <div class="stat-card" style="padding: 15px;"><h3 id="draftPostsCount">0</h3><p>Drafts</p></div>
+                    <div class="stat-card" style="padding: 15px;"><h3 id="totalViewsCount">0</h3><p>Total Views</p></div>
+                </div>
+                
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between;">
+                    <button class="sheet-btn" onclick="showAddPostModal()"><i class="fas fa-plus"></i> New Post</button>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="blogStatusFilter" onchange="loadBlogPosts()" class="sheet-btn secondary" style="padding: 8px 12px;">
+                            <option value="all">All Status</option>
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                        <input type="text" id="blogSearch" placeholder="Search posts..." class="sheet-btn secondary" style="padding: 8px 12px; width: 200px;" onkeyup="filterBlogPosts()">
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Views</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="blogPostsTableBody"><tr><td colspan="6" style="text-align: center;">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="blogPagination"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Post Modal -->
+    <div class="modal" id="addPostModal">
+        <div class="modal-content" style="max-width: 900px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2 id="postModalTitle">Add New Post</h2>
+                <button class="modal-close" onclick="hideModal('addPostModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="postForm">
+                    <input type="hidden" id="postId">
+                    
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" id="postTitle" class="sheet-btn secondary" style="width: 100%;" required>
+                        <small>Auto-generates slug</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Slug (URL)</label>
+                        <input type="text" id="postSlug" class="sheet-btn secondary" style="width: 100%;" placeholder="auto-generated">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="postCategory" class="sheet-btn secondary" style="width: 100%;" required>
+                                <option value="">Select Category</option>
+                                <option value="Success Stories">Success Stories</option>
+                                <option value="Nomination Tips">Nomination Tips</option>
+                                <option value="Judging Insights">Judging Insights</option>
+                                <option value="Industry News">Industry News</option>
+                                <option value="Interviews">Interviews</option>
+                                <option value="Announcements">Announcements</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="postStatus" class="sheet-btn secondary" style="width: 100%;">
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Author Name</label>
+                            <input type="text" id="postAuthor" class="sheet-btn secondary" style="width: 100%;" value="LBA Team">
+                        </div>
+                        <div class="form-group">
+                            <label>Read Time (minutes)</label>
+                            <input type="text" id="postReadTime" class="sheet-btn secondary" style="width: 100%;" value="8 min read">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Excerpt *</label>
+                        <textarea id="postExcerpt" rows="3" class="sheet-btn secondary" style="width: 100%;" required placeholder="Short summary (150-200 characters)"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Featured Image URL</label>
+                        <input type="url" id="postImage" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                        <div id="postImagePreview" style="margin-top: 10px; display: none;"><img id="postPreviewImg" style="max-width: 200px; border-radius: 8px;"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Content * (HTML supported)</label>
+                        <textarea id="postContent" rows="12" class="sheet-btn secondary" style="width: 100%; font-family: monospace;" required placeholder="Write your article here... Use HTML for formatting: <p>, <h2>, <ul>, <li>, etc."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><input type="checkbox" id="postFeatured"> ⭐ Featured Post</label>
+                    </div>
+                    
+                    <div class="error-message" id="postError" style="display: none; color: #EF4444;"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addPostModal')" style="flex: 1;">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="saveBlogPost()" style="flex: 2;">Save Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Auto-generate slug from title
+    document.getElementById('postTitle')?.addEventListener('input', function() {
+        const postId = document.getElementById('postId').value;
+        if (!postId) {
+            const slug = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            document.getElementById('postSlug').value = slug;
+        }
+    });
+    
+    // Image preview
+    document.getElementById('postImage')?.addEventListener('input', function() {
+        const preview = document.getElementById('postImagePreview');
+        const img = document.getElementById('postPreviewImg');
+        if (this.value && preview && img) {
+            img.src = this.value;
+            preview.style.display = 'block';
+        } else if (preview) {
+            preview.style.display = 'none';
+        }
+    });
+}
+
+// Load blog posts from API
+async function loadBlogPosts() {
+    const tbody = document.getElementById('blogPostsTableBody');
+    if (!tbody) return;
+    
+    const status = document.getElementById('blogStatusFilter')?.value || 'all';
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/blog/posts?status=${status}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.posts) {
+            displayBlogPosts(data.posts);
+            updateBlogStats(data.posts);
+        } else {
+            const savedPosts = localStorage.getItem('lba_blog_posts');
+            if (savedPosts) {
+                displayBlogPosts(JSON.parse(savedPosts));
+                updateBlogStats(JSON.parse(savedPosts));
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No posts found.</td></tr>';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading blog posts:', error);
+        const savedPosts = localStorage.getItem('lba_blog_posts');
+        if (savedPosts) {
+            displayBlogPosts(JSON.parse(savedPosts));
+            updateBlogStats(JSON.parse(savedPosts));
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Error loading posts</td></tr>';
+        }
+    }
+}
+
+function displayBlogPosts(posts) {
+    const tbody = document.getElementById('blogPostsTableBody');
+    if (!tbody) return;
+    
+    if (!posts || posts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No posts found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = posts.map(post => `
+        <tr>
+            <td><strong>${escapeHtml(post.title)}</strong></td>
+            <td>${escapeHtml(post.category)}</td>
+            <td>${post.date || new Date(post.created_at).toLocaleDateString()}</td>
+            <td>${post.views || 0}</td>
+            <td><span class="status-badge status-${post.status === 'published' ? 'active' : 'pending'}">${post.status || 'draft'}</span></td>
+            <td>
+                <div style="display: flex; gap: 5px;">
+                    <button class="sheet-btn secondary" onclick="editBlogPost('${post._id || post.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="sheet-btn danger" onclick="deleteBlogPost('${post._id || post.id}')"><i class="fas fa-trash"></i></button>
+                    <button class="sheet-btn" onclick="previewBlogPost('${post.slug}')"><i class="fas fa-eye"></i></button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateBlogStats(posts) {
+    const total = posts.length;
+    const published = posts.filter(p => p.status === 'published').length;
+    const drafts = posts.filter(p => p.status === 'draft').length;
+    const totalViews = posts.reduce((sum, p) => sum + (p.views || 0), 0);
+    
+    const totalEl = document.getElementById('totalPostsCount');
+    const publishedEl = document.getElementById('publishedPostsCount');
+    const draftEl = document.getElementById('draftPostsCount');
+    const viewsEl = document.getElementById('totalViewsCount');
+    const blogCountEl = document.getElementById('blogCount');
+    
+    if (totalEl) totalEl.textContent = total;
+    if (publishedEl) publishedEl.textContent = published;
+    if (draftEl) draftEl.textContent = drafts;
+    if (viewsEl) viewsEl.textContent = totalViews;
+    if (blogCountEl) blogCountEl.textContent = total;
+}
+
+function showAddPostModal() {
+    document.getElementById('postModalTitle').textContent = 'Add New Post';
+    document.getElementById('postForm').reset();
+    document.getElementById('postId').value = '';
+    document.getElementById('postStatus').value = 'draft';
+    document.getElementById('postAuthor').value = 'LBA Team';
+    document.getElementById('postReadTime').value = '8 min read';
+    document.getElementById('postImagePreview').style.display = 'none';
+    document.getElementById('postError').style.display = 'none';
+    document.getElementById('addPostModal').classList.add('active');
+}
+
+async function editBlogPost(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/blog/posts/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.post) {
+            const post = data.post;
+            document.getElementById('postModalTitle').textContent = 'Edit Post';
+            document.getElementById('postId').value = post._id;
+            document.getElementById('postTitle').value = post.title || '';
+            document.getElementById('postSlug').value = post.slug || '';
+            document.getElementById('postCategory').value = post.category || '';
+            document.getElementById('postStatus').value = post.status || 'draft';
+            document.getElementById('postAuthor').value = post.author_name || 'LBA Team';
+            document.getElementById('postReadTime').value = post.read_time || '8 min read';
+            document.getElementById('postExcerpt').value = post.excerpt || '';
+            document.getElementById('postImage').value = post.image || '';
+            document.getElementById('postContent').value = post.content || '';
+            document.getElementById('postFeatured').checked = post.is_featured || false;
+            
+            if (post.image) {
+                const preview = document.getElementById('postImagePreview');
+                const img = document.getElementById('postPreviewImg');
+                if (preview && img) {
+                    img.src = post.image;
+                    preview.style.display = 'block';
+                }
+            }
+            
+            document.getElementById('addPostModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error editing post:', error);
+        showNotification('Error loading post details', 'error');
+    }
+}
+
+async function saveBlogPost() {
+    const postId = document.getElementById('postId').value;
+    const postData = {
+        title: document.getElementById('postTitle').value,
+        slug: document.getElementById('postSlug').value,
+        category: document.getElementById('postCategory').value,
+        status: document.getElementById('postStatus').value,
+        author_name: document.getElementById('postAuthor').value,
+        read_time: document.getElementById('postReadTime').value,
+        excerpt: document.getElementById('postExcerpt').value,
+        image: document.getElementById('postImage').value,
+        content: document.getElementById('postContent').value,
+        is_featured: document.getElementById('postFeatured').checked,
+        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    };
+    
+    if (!postData.title || !postData.category || !postData.excerpt || !postData.content) {
+        showNotification('Title, Category, Excerpt, and Content are required', 'warning');
+        return;
+    }
+    
+    if (!postData.slug) {
+        postData.slug = postData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+    
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const url = postId 
+            ? `${API_BASE.replace('/api', '')}/api/admin/blog/posts/${postId}`
+            : `${API_BASE.replace('/api', '')}/api/admin/blog/posts`;
+        const method = postId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(postId ? 'Post updated!' : 'Post created!', 'success');
+            hideModal('addPostModal');
+            loadBlogPosts();
+        } else {
+            // Save to localStorage as fallback
+            let savedPosts = localStorage.getItem('lba_blog_posts');
+            savedPosts = savedPosts ? JSON.parse(savedPosts) : [];
+            
+            if (postId) {
+                const index = savedPosts.findIndex(p => p.id === postId);
+                if (index !== -1) {
+                    savedPosts[index] = { ...savedPosts[index], ...postData, id: postId };
+                }
+            } else {
+                postData.id = Date.now().toString();
+                postData.created_at = new Date().toISOString();
+                postData.views = 0;
+                savedPosts.push(postData);
+            }
+            
+            localStorage.setItem('lba_blog_posts', JSON.stringify(savedPosts));
+            showNotification('Saved locally! Sync when online.', 'success');
+            hideModal('addPostModal');
+            loadBlogPosts();
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        
+        let savedPosts = localStorage.getItem('lba_blog_posts');
+        savedPosts = savedPosts ? JSON.parse(savedPosts) : [];
+        
+        if (postId) {
+            const index = savedPosts.findIndex(p => p.id === postId);
+            if (index !== -1) {
+                savedPosts[index] = { ...savedPosts[index], ...postData, id: postId };
+            }
+        } else {
+            postData.id = Date.now().toString();
+            postData.created_at = new Date().toISOString();
+            postData.views = 0;
+            savedPosts.push(postData);
+        }
+        
+        localStorage.setItem('lba_blog_posts', JSON.stringify(savedPosts));
+        showNotification('Saved to local storage. Will sync when online.', 'success');
+        hideModal('addPostModal');
+        loadBlogPosts();
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+async function deleteBlogPost(id) {
+    if (!confirm('⚠️ Are you sure you want to delete this post? This action cannot be undone.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/blog/posts/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Post deleted!', 'success');
+            loadBlogPosts();
+        } else {
+            let savedPosts = localStorage.getItem('lba_blog_posts');
+            if (savedPosts) {
+                const posts = JSON.parse(savedPosts);
+                const filtered = posts.filter(p => p.id !== id);
+                localStorage.setItem('lba_blog_posts', JSON.stringify(filtered));
+                showNotification('Post deleted from local storage', 'success');
+                loadBlogPosts();
+            }
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        let savedPosts = localStorage.getItem('lba_blog_posts');
+        if (savedPosts) {
+            const posts = JSON.parse(savedPosts);
+            const filtered = posts.filter(p => p.id !== id);
+            localStorage.setItem('lba_blog_posts', JSON.stringify(filtered));
+            showNotification('Post deleted from local storage', 'success');
+            loadBlogPosts();
+        }
+    }
+}
+
+function previewBlogPost(slug) {
+    window.open(`blog-post.html?slug=${slug}`, '_blank');
+}
+
+function filterBlogPosts() {
+    const search = document.getElementById('blogSearch')?.value.toLowerCase() || '';
+    const rows = document.querySelectorAll('#blogPostsTableBody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(search) ? '' : 'none';
+    });
+}
+
+// Export to window
+window.showBlogManagementModal = showBlogManagementModal;
+window.loadBlogPosts = loadBlogPosts;
+window.showAddPostModal = showAddPostModal;
+window.editBlogPost = editBlogPost;
+window.saveBlogPost = saveBlogPost;
+window.deleteBlogPost = deleteBlogPost;
+window.previewBlogPost = previewBlogPost;
+window.filterBlogPosts = filterBlogPosts;        
 
 // Export functions to global scope
 window.showSpotlightModal = showSpotlightModal;
