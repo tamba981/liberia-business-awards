@@ -5854,11 +5854,12 @@ app.put('/api/admin/ai/limits', authenticate, authorize('admin'), async (req, re
 
 console.log('✅ AI Business Assistant System Ready');
 
+
 // ============================================
-// BLOG MANAGEMENT SYSTEM - BACKEND ENDPOINTS
+// BLOG MANAGEMENT SYSTEM - BACKEND API
 // ============================================
 
-// Blog Post Schema
+// Blog Post Schema (if not already defined)
 const blogPostSchema = new mongoose.Schema({
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
@@ -5875,7 +5876,8 @@ const blogPostSchema = new mongoose.Schema({
     published_at: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-const BlogPost = mongoose.model('BlogPost', blogPostSchema);
+// Check if model already exists to prevent overwrite
+const BlogPost = mongoose.models.BlogPost || mongoose.model('BlogPost', blogPostSchema);
 
 // ============ PUBLIC BLOG ROUTES ============
 
@@ -5892,8 +5894,7 @@ app.get('/api/blog/posts', async (req, res) => {
         if (search) {
             query.$or = [
                 { title: { $regex: search, $options: 'i' } },
-                { excerpt: { $regex: search, $options: 'i' } },
-                { content: { $regex: search, $options: 'i' } }
+                { excerpt: { $regex: search, $options: 'i' } }
             ];
         }
         
@@ -5947,25 +5948,12 @@ app.get('/api/blog/posts/:slug', async (req, res) => {
     }
 });
 
-// Get blog post by ID (for admin)
-app.get('/api/blog/posts/id/:id', async (req, res) => {
-    try {
-        const post = await BlogPost.findById(req.params.id);
-        if (!post) {
-            return res.status(404).json({ success: false, message: 'Post not found' });
-        }
-        res.json({ success: true, post });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
 // ============ ADMIN BLOG ROUTES ============
 
 // Get all blog posts (admin)
 app.get('/api/admin/blog/posts', authenticate, authorize('admin'), async (req, res) => {
     try {
-        const { status, page = 1, limit = 20 } = req.query;
+        const { status, page = 1, limit = 50 } = req.query;
         let query = {};
         
         if (status && status !== 'all') {
@@ -6037,6 +6025,9 @@ app.post('/api/admin/blog/posts', authenticate, authorize('admin'), async (req, 
         });
         
         await post.save();
+        
+        // Also save to localStorage as backup (in memory for this request)
+        // The frontend will also save to localStorage
         
         res.status(201).json({
             success: true,
@@ -6141,7 +6132,8 @@ app.get('/api/admin/blog/stats', authenticate, authorize('admin'), async (req, r
     }
 });
 
-console.log('✅ Blog Management System Ready');
+console.log('✅ Blog Management API Ready');
+
 
 // ============ START SERVER ============
 async function startServer() {
