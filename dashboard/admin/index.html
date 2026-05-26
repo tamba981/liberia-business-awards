@@ -7176,9 +7176,7 @@ async function saveBlogPost() {
         image: document.getElementById('postImage').value,
         content: document.getElementById('postContent').value,
         is_featured: document.getElementById('postFeatured').checked,
-        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-        created_at: new Date().toISOString(),
-        views: 0
+        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     };
     
     if (!postData.title || !postData.category || !postData.excerpt || !postData.content) {
@@ -7196,53 +7194,81 @@ async function saveBlogPost() {
     saveBtn.disabled = true;
     
     try {
-        // Get existing posts from localStorage
+        // Try to save to backend API first
+        const token = localStorage.getItem('lba_auth_token');
+        const url = postId 
+            ? `${API_BASE.replace('/api', '')}/api/admin/blog/posts/${postId}`
+            : `${API_BASE.replace('/api', '')}/api/admin/blog/posts`;
+        const method = postId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(postId ? '✅ Post updated!' : '✅ Post created!', 'success');
+            hideModal('addPostModal');
+            loadBlogPosts();
+        } else {
+            // Fallback to localStorage
+            let savedPosts = localStorage.getItem('lba_blog_posts');
+            let posts = savedPosts ? JSON.parse(savedPosts) : [];
+            
+            if (postId) {
+                const index = posts.findIndex(p => p.id === postId);
+                if (index !== -1) {
+                    postData.id = postId;
+                    posts[index] = { ...posts[index], ...postData };
+                } else {
+                    postData.id = postId;
+                    posts.push(postData);
+                }
+            } else {
+                postData.id = Date.now().toString();
+                postData.created_at = new Date().toISOString();
+                postData.views = 0;
+                posts.unshift(postData);
+            }
+            
+            localStorage.setItem('lba_blog_posts', JSON.stringify(posts));
+            showNotification('Saved locally! Will sync when online.', 'success');
+            hideModal('addPostModal');
+            loadBlogPosts();
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        
+        // Fallback to localStorage
         let savedPosts = localStorage.getItem('lba_blog_posts');
         let posts = savedPosts ? JSON.parse(savedPosts) : [];
         
         if (postId) {
-            // Update existing post
             const index = posts.findIndex(p => p.id === postId);
             if (index !== -1) {
                 postData.id = postId;
                 posts[index] = { ...posts[index], ...postData };
+            } else {
+                postData.id = postId;
+                posts.push(postData);
             }
         } else {
-            // Create new post
             postData.id = Date.now().toString();
-            posts.unshift(postData); // Add to beginning
+            postData.created_at = new Date().toISOString();
+            postData.views = 0;
+            posts.unshift(postData);
         }
         
-        // Save back to localStorage
         localStorage.setItem('lba_blog_posts', JSON.stringify(posts));
-        
-        showNotification(postId ? '✅ Post updated!' : '✅ Post created!', 'success');
+        showNotification('Saved to local storage.', 'success');
         hideModal('addPostModal');
-        loadBlogPosts(); // Refresh the list
-        
-        // Also try to sync with backend if available (optional, won't break if fails)
-        try {
-            const token = localStorage.getItem('lba_auth_token');
-            const url = postId 
-                ? `${API_BASE.replace('/api', '')}/api/admin/blog/posts/${postId}`
-                : `${API_BASE.replace('/api', '')}/api/admin/blog/posts`;
-            const method = postId ? 'PUT' : 'POST';
-            
-            await fetch(url, {
-                method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(postData)
-            });
-        } catch (apiError) {
-            console.log('Backend sync failed, but post saved locally:', apiError);
-        }
-        
-    } catch (error) {
-        console.error('Save error:', error);
-        showNotification('Error saving post', 'error');
+        loadBlogPosts();
     } finally {
         saveBtn.innerHTML = originalText;
         saveBtn.disabled = false;
