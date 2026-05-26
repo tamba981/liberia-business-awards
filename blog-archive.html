@@ -80,7 +80,7 @@
         let visibleCount = 6;
         
         // ============================================
-        // LOAD POSTS FROM BACKEND API
+        // LOAD POSTS FROM BACKEND API (FIXED)
         // ============================================
         async function loadPosts() {
             const grid = document.getElementById('postsGrid');
@@ -89,18 +89,38 @@
             }
             
             try {
-                // FIRST: Try to load from backend API
                 console.log('📡 Fetching posts from backend API...');
                 const response = await fetch(`${API_BASE}/blog/posts`);
                 const data = await response.json();
                 
+                console.log('📡 API Response:', data);
+                
                 if (data.success && data.posts && data.posts.length > 0) {
-                    // Filter only published posts
-                    allPosts = data.posts.filter(p => p.status === 'published');
+                    // Transform backend data to match what the frontend expects
+                    allPosts = data.posts.map(post => ({
+                        id: post._id,                           // MongoDB uses _id
+                        _id: post._id,                          // Keep original for reference
+                        title: post.title || 'Untitled',
+                        slug: post.slug || '',
+                        category: post.category || 'General',
+                        status: 'published',                    // Backend only returns published posts
+                        author_name: post.author_name || 'LBA Team',
+                        read_time: post.read_time || '8 min read',
+                        excerpt: post.excerpt || '',
+                        image: post.image || 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600',
+                        content: post.content || '',
+                        is_featured: post.is_featured || false,
+                        // Handle date - use published_at if available, otherwise created_at
+                        date: post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 
+                              (post.created_at ? new Date(post.created_at).toLocaleDateString() : 'N/A'),
+                        created_at: post.published_at || post.created_at || new Date().toISOString(),
+                        views: post.views || 0
+                    }));
+                    
                     console.log(`✅ Loaded ${allPosts.length} posts from backend API`);
                     
                     // Save to localStorage as backup
-                    localStorage.setItem('lba_blog_posts', JSON.stringify(data.posts));
+                    localStorage.setItem('lba_blog_posts', JSON.stringify(allPosts));
                 } else {
                     // FALLBACK: Try localStorage
                     console.log('📚 No posts from API, checking localStorage...');
@@ -142,7 +162,7 @@
         }
         
         // ============================================
-        // DEFAULT DEMO POSTS
+        // DEFAULT DEMO POSTS (Fallback)
         // ============================================
         function getDefaultPosts() {
             return [
@@ -181,42 +201,6 @@
                     read_time: '8 min read', 
                     views: 4200, 
                     status: 'published' 
-                },
-                {
-                    id: '4',
-                    title: 'Liberian Women Entrepreneurs Breaking Barriers',
-                    slug: 'women-entrepreneurs',
-                    category: 'Success Stories',
-                    excerpt: 'Inspiring stories of female business leaders transforming industries and creating opportunities.',
-                    image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600',
-                    date: 'January 25, 2026',
-                    read_time: '12 min read',
-                    views: 6100,
-                    status: 'published'
-                },
-                {
-                    id: '5',
-                    title: 'Digital Transformation: How Liberian SMEs Can Compete Globally',
-                    slug: 'digital-transformation',
-                    category: 'Industry News',
-                    excerpt: 'Leveraging technology to expand market reach and improve operational efficiency.',
-                    image: 'https://images.unsplash.com/photo-1551434678-e076c2231a32?w=600',
-                    date: 'March 5, 2026',
-                    read_time: '10 min read',
-                    views: 2900,
-                    status: 'published'
-                },
-                {
-                    id: '6',
-                    title: 'CEO Interview: Building a $10M Business from Liberia',
-                    slug: 'ceo-interview',
-                    category: 'Interviews',
-                    excerpt: 'Exclusive interview with one of Liberia\'s most successful entrepreneurs.',
-                    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600',
-                    date: 'March 10, 2026',
-                    read_time: '15 min read',
-                    views: 4500,
-                    status: 'published'
                 }
             ];
         }
@@ -279,9 +263,9 @@
                         <h3 class="blog-title">${escapeHtml(post.title)}</h3>
                         <p class="blog-excerpt">${escapeHtml(post.excerpt)}</p>
                         <div class="blog-meta">
-                            <span><i class="far fa-calendar"></i> ${post.date || new Date(post.created_at).toLocaleDateString()}</span>
-                            <span><i class="far fa-clock"></i> ${post.read_time || '8 min read'}</span>
-                            <span><i class="fas fa-eye"></i> ${post.views || 0} views</span>
+                            <span><i class="far fa-calendar"></i> ${post.date}</span>
+                            <span><i class="far fa-clock"></i> ${post.read_time}</span>
+                            <span><i class="fas fa-eye"></i> ${post.views} views</span>
                         </div>
                     </div>
                 </div>
