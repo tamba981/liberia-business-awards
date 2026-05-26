@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Liberia Business Awards - Blog Post</title>
-    <meta name="description" id="metaDescription" content="Read inspiring business stories from Liberia Business Awards">
-    
-    <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Open Sans', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); color: #333; line-height: 1.7; }
@@ -19,7 +15,6 @@
         .back-btn { background: white; color: #FF0000; padding: 12px 25px; border: none; border-radius: 50px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease; margin-bottom: 30px; }
         .back-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,0,0,0.3); }
         h1 { font-family: 'Montserrat', sans-serif; font-size: 42px; font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
-        h2 { font-family: 'Montserrat', sans-serif; font-size: 28px; font-weight: 700; color: #FF0000; margin: 40px 0 20px; border-bottom: 3px solid #87CEEB; padding-bottom: 10px; }
         .content { padding: 50px; }
         .meta-info { display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; flex-wrap: wrap; }
         .meta-item { display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 14px; }
@@ -35,9 +30,7 @@
         .author-avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #FF0000, #87CEEB); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; }
         .cta-section { background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 50px; border-radius: 20px; text-align: center; color: white; margin-top: 50px; }
         .cta-btn { background: white; color: #FF0000; padding: 15px 40px; border: none; border-radius: 50px; font-weight: 700; font-size: 18px; cursor: pointer; margin-top: 20px; transition: all 0.3s; }
-        .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
         .loading-spinner { text-align: center; padding: 50px; color: #64748b; }
-        .error-message { text-align: center; padding: 50px; color: #EF4444; }
         @media (max-width: 768px) { .container { margin: 20px; } .content { padding: 30px 20px; } h1 { font-size: 32px; } .header-gradient { padding: 40px 20px; } .featured-image { height: 250px; } .author-card { flex-direction: column; text-align: center; } }
     </style>
 </head>
@@ -77,19 +70,24 @@
             if (!slug) { showError('No post specified'); return; }
             
             try {
-                // Try to load from backend API first
-                let response = await fetch(`${API_BASE}/blog/posts?slug=${slug}`);
-                let data = await response.json();
+                // First try localStorage
                 let post = null;
+                const savedPosts = localStorage.getItem('lba_blog_posts');
+                if (savedPosts) {
+                    const posts = JSON.parse(savedPosts);
+                    post = posts.find(p => p.slug === slug);
+                }
                 
-                if (data.success && data.post) {
-                    post = data.post;
-                } else {
-                    // Try localStorage fallback
-                    const savedPosts = localStorage.getItem('lba_blog_posts');
-                    if (savedPosts) {
-                        const posts = JSON.parse(savedPosts);
-                        post = posts.find(p => p.slug === slug);
+                // If not found in localStorage, try API
+                if (!post) {
+                    try {
+                        const response = await fetch(`${API_BASE}/blog/posts?slug=${slug}`);
+                        const data = await response.json();
+                        if (data.success && data.post) {
+                            post = data.post;
+                        }
+                    } catch (apiError) {
+                        console.log('API not available, using localStorage only');
                     }
                 }
                 
@@ -100,19 +98,7 @@
                 }
             } catch (error) {
                 console.error('Error loading post:', error);
-                // Try localStorage
-                const savedPosts = localStorage.getItem('lba_blog_posts');
-                if (savedPosts) {
-                    const posts = JSON.parse(savedPosts);
-                    const post = posts.find(p => p.slug === slug);
-                    if (post) {
-                        renderPost(post);
-                    } else {
-                        showError('Failed to load post');
-                    }
-                } else {
-                    showError('Failed to load post');
-                }
+                showError('Failed to load post');
             }
         }
         
@@ -166,7 +152,7 @@
         
         function showError(message) {
             document.getElementById('postHeader').innerHTML = `
-                <div class="error-message">
+                <div class="error-message" style="text-align: center; padding: 50px; color: #EF4444;">
                     <i class="fas fa-exclamation-circle fa-2x" style="margin-bottom: 15px;"></i>
                     <p>${escapeHtml(message)}</p>
                     <button class="back-btn" onclick="goBack()" style="margin-top: 20px;">Back to Blog</button>
