@@ -7372,8 +7372,18 @@ function previewBlogPost(slug) {
     const url = `blog-post.html?slug=${slug}`;
     console.log('📂 Opening URL:', url);
     window.open(url, '_blank');
-}        
+}   
 
+        
+// Add this function right after the previewBlogPost function
+function filterBlogPosts() {
+    const search = document.getElementById('blogSearch')?.value.toLowerCase() || '';
+    const rows = document.querySelectorAll('#blogPostsTableBody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(search) ? '' : 'none';
+    });
+}
 
 // Export to window
 window.showBlogManagementModal = showBlogManagementModal;
