@@ -7720,27 +7720,6 @@ function openModal(modalId) {
 }
 
 
-// ============================================
-// ✅ NOMINATION STATUS FUNCTIONS
-// ============================================
-function checkNominationStatus() {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentDate = now.getDate();
-    
-    const isNominationOpen = 
-        (currentMonth === 2 && currentDate >= 1) || // March
-        (currentMonth === 3) || // April
-        (currentMonth === 4 && currentDate <= 30); // May
-    
-    if (isNominationOpen) {
-        openModal('nominateModal');
-        return true;
-    } else {
-        showNominationClosedNotification();
-        return false;
-    }
-}
 
 
 function showNominationClosedNotification() {
