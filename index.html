@@ -6579,16 +6579,127 @@ function checkNominationStatus() {
         (currentMonth === 3) || // April
         (currentMonth === 4 && currentDate <= 30); // May 1-30
     
+    console.log(`🔍 Checking nomination status: Month=${currentMonth}, Date=${currentDate}, Open=${isNominationOpen}`);
+    
     if (isNominationOpen) {
         // Nominations are OPEN - Open the modal
         console.log("✅ Nominations OPEN - Opening nomination form");
         openModal('nominateModal');
         return true;
     } else {
-        // Nominations are CLOSED - Show notification
-        console.log("❌ Nominations CLOSED - Showing notification");
+        // Nominations are CLOSED - Show notification and PREVENT form from opening
+        console.log("❌ Nominations CLOSED - Preventing form opening");
         showNominationClosedNotification();
+        
+        // CRITICAL: Also disable any nomination buttons visually
+        disableAllNominationButtons();
+        
         return false;
+    }
+}
+
+// NEW FUNCTION: Disable all nomination buttons when nominations are closed
+function disableAllNominationButtons() {
+    const allButtons = document.querySelectorAll('button, .btn, [onclick*="nominate"], [onclick*="Nominate"]');
+    allButtons.forEach(button => {
+        const buttonText = (button.innerText || button.textContent || '').toLowerCase();
+        const buttonId = (button.id || '').toLowerCase();
+        
+        // Check if this is a nomination-related button
+        if (buttonText.includes('nominate') || buttonId.includes('nominate')) {
+            // Disable the button
+            button.disabled = true;
+            button.classList.remove('bg-lba-red', 'hover:bg-red-600', 'bg-green-600', 'hover:bg-green-700');
+            button.classList.add('bg-gray-400', 'cursor-not-allowed', 'opacity-60');
+            
+            // Override onclick to prevent opening modal
+            const oldOnClick = button.onclick;
+            button.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showNominationClosedNotification();
+                return false;
+            };
+        }
+    });
+    console.log('🔒 All nomination buttons have been disabled');
+}
+
+// Update hero nomination button state (enhanced version)
+function updateHeroNominationButton() {
+    const heroButton = document.getElementById('heroNominateBtn');
+    if (!heroButton) return;
+    
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    const isNominationOpen = 
+        (currentMonth === 2 && currentDate >= 1) || // March
+        (currentMonth === 3) || // April
+        (currentMonth === 4 && currentDate <= 30); // May
+    
+    if (isNominationOpen) {
+        // Nominations OPEN - Active state
+        heroButton.classList.remove('bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed', 'opacity-60');
+        heroButton.classList.add('bg-lba-red', 'hover:bg-red-600');
+        heroButton.disabled = false;
+        heroButton.textContent = 'Nominate a Business';
+        heroButton.title = 'Click to submit your nomination';
+        heroButton.onclick = function() { 
+            console.log('Hero button clicked - opening nomination modal');
+            openModal('nominateModal'); 
+        };
+    } else {
+        // Nominations CLOSED - Inactive state
+        heroButton.classList.remove('bg-lba-red', 'hover:bg-red-600');
+        heroButton.classList.add('bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed', 'opacity-60');
+        heroButton.disabled = true;
+        heroButton.textContent = 'Nominations Closed';
+        heroButton.title = 'Nominations are closed. Opens March 1';
+        heroButton.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Hero button clicked - nominations closed');
+            showNominationClosedNotification();
+            return false;
+        };
+    }
+}
+
+// Update mobile button too (enhanced version)
+function updateMobileNominationButton() {
+    const mobileButton = document.getElementById('mobileNominateBtn');
+    if (!mobileButton) return;
+    
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    const isNominationOpen = 
+        (currentMonth === 2 && currentDate >= 1) || // March
+        (currentMonth === 3) || // April
+        (currentMonth === 4 && currentDate <= 30); // May
+    
+    if (isNominationOpen) {
+        mobileButton.classList.remove('bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed', 'opacity-60');
+        mobileButton.classList.add('bg-green-600', 'hover:bg-green-700');
+        mobileButton.disabled = false;
+        mobileButton.textContent = 'Nominate Now';
+        mobileButton.title = 'Nominations are OPEN!';
+        mobileButton.onclick = function() { openModal('nominateModal'); };
+    } else {
+        mobileButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+        mobileButton.classList.add('bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed', 'opacity-60');
+        mobileButton.disabled = true;
+        mobileButton.textContent = 'Nominations Closed';
+        mobileButton.title = 'Nominations are closed. Opens March 1';
+        mobileButton.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            showNominationClosedNotification();
+            return false;
+        };
     }
 }
 
@@ -6794,23 +6905,31 @@ function updateNominationButton() {
     
     if (isNominationOpen) {
         // Nominations OPEN - Green/Active state
-        button.classList.remove('bg-lba-red', 'hover:bg-red-600');
+        button.classList.remove('bg-lba-red', 'hover:bg-red-600', 'bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed', 'opacity-60');
         button.classList.add('bg-green-600', 'hover:bg-green-700');
+        button.disabled = false;
         buttonText.textContent = 'Nominate Now';
         buttonIcon.className = 'fas fa-paper-plane ml-1';
         button.title = 'Nominations are OPEN! Click to submit';
+        button.onclick = function(e) {
+            e.preventDefault();
+            openModal('nominateModal');
+        };
     } else {
         // Nominations CLOSED - Gray/Inactive state
-        button.classList.remove('bg-green-600', 'hover:bg-green-700');
-        button.classList.add('bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed');
+        button.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-lba-red', 'hover:bg-red-600');
+        button.classList.add('bg-gray-400', 'hover:bg-gray-500', 'cursor-not-allowed', 'opacity-60');
+        button.disabled = true;
         buttonText.textContent = 'Nominations Closed';
         buttonIcon.className = 'fas fa-lock ml-1';
         button.title = 'Nominations are closed. Opens March 1';
         
-        // Update onclick to show notification instead
+        // Update onclick to show notification and prevent modal opening
         button.onclick = function(e) {
             e.preventDefault();
+            e.stopPropagation();
             showNominationClosedNotification();
+            return false;
         };
     }
 }
@@ -7623,9 +7742,16 @@ function checkNominationStatus() {
     }
 }
 
+
 function showNominationClosedNotification() {
+    // Remove any existing notifications first
+    const existingNotif = document.querySelector('.nomination-notification');
+    if (existingNotif) existingNotif.remove();
+    
     const notification = document.createElement('div');
-    notification.className = 'fixed top-4 right-4 p-6 rounded-xl shadow-xl z-50 max-w-sm bg-white border-l-4 border-lba-red';
+    notification.className = 'fixed top-4 right-4 p-6 rounded-xl shadow-xl z-50 max-w-sm bg-white border-l-4 border-lba-red transform transition-all duration-300 nomination-notification';
+    notification.setAttribute('role', 'alert');
+    notification.setAttribute('aria-live', 'polite');
     
     const currentYear = new Date().getFullYear();
     const nextYear = currentYear + 1;
@@ -7639,20 +7765,45 @@ function showNominationClosedNotification() {
             </div>
             <div class="ml-4">
                 <h4 class="text-lg font-bold text-gray-800">Nominations Closed</h4>
-                <p class="text-gray-600 mt-1">Next nomination period: March 1 - May 30, ${nextYear}</p>
-                <button onclick="this.closest('.fixed').remove()" class="mt-4 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition">
-                    Close
-                </button>
+                <p class="text-gray-600 mt-1">The nomination period for ${currentYear} has ended.</p>
+                
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-700">
+                        <i class="fas fa-calendar-alt text-lba-blue mr-2"></i>
+                        <strong>Next Nomination Period:</strong><br>
+                        March 1 - May 30, ${nextYear}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        The countdown shows when nominations will reopen.
+                    </p>
+                </div>
+                
+                <div class="mt-4 flex space-x-3">
+                    <button onclick="this.closest('.nomination-notification, .fixed').remove()" class="flex-1 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition">
+                        <i class="fas fa-times mr-1"></i> Close
+                    </button>
+                    <button onclick="openModal('registerModal'); this.closest('.nomination-notification, .fixed').remove()" class="flex-1 bg-lba-blue text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-400 transition">
+                        <i class="fas fa-user-plus mr-1"></i> Register Interest
+                    </button>
+                </div>
             </div>
         </div>
     `;
     
     document.body.appendChild(notification);
     
+    // Auto-remove after 10 seconds
     setTimeout(() => {
-        if (notification.parentNode) notification.remove();
-    }, 8000);
+        if (notification.parentNode) {
+            notification.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => {
+                if (notification.parentNode) notification.parentNode.removeChild(notification);
+            }, 300);
+        }
+    }, 10000);
 }
+    
 
 // ============================================
 // ✅ PAGE INITIALIZATION
