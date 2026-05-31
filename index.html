@@ -771,6 +771,30 @@ html, body {
         font-size: 24px !important;
     }
 }
+
+@media (max-width: 768px) {
+    .lba-chat-container {
+        bottom: 70px;
+        right: -5px;
+        width: min(350px, 92vw);
+        max-height: 450px;  /* ← Smaller on mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .lba-chat-container {
+        max-height: 400px;
+    }
+    
+    .lba-chat-messages {
+        max-height: calc(400px - 140px);  /* Adjust for header/footer */
+        overflow-y: auto;
+    }
+}
+
+
+
+        
         
 /* ============================================ */
 /* ✅ FIX MOBILE STICKY/JERKY SCROLLING */
@@ -12094,25 +12118,26 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.2); } }
     
     .lba-chat-container {
-        position: absolute;
-        bottom: 80px;
-        right: 0;
-        width: min(420px, 90vw);
-        height: min(620px, 75vh);
-        max-height: calc(100vh - 100px);
-        background: white;
-        border-radius: 24px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transform: scale(0);
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        transform-origin: bottom right;
-        border: 1px solid rgba(255, 0, 0, 0.2);
-    }
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: min(420px, 90vw);
+    height: auto;
+    max-height: 520px;  /* ← CHANGE: fixed max height instead of 75vh */
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform-origin: bottom right;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+}
+    
     .lba-chat-container.open { transform: scale(1); opacity: 1; visibility: visible; }
     
     .lba-chat-header {
@@ -12154,14 +12179,16 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     .lba-chat-minimize:hover, .lba-chat-close:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.05); }
     
     .lba-chat-messages {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-        background: #f8f9fa;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 350px;  /* ← Add this */
+    min-height: 200px;
+}
     .lba-chat-messages::-webkit-scrollbar { width: 5px; }
     .lba-chat-messages::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
     .lba-chat-messages::-webkit-scrollbar-thumb { background: #FF0000; border-radius: 10px; }
