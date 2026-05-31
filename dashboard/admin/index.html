@@ -5421,36 +5421,50 @@ function showAddDirectoryBusinessModal() {
 }
 
 async function editDirectoryBusiness(id) {
+    console.log('📝 Edit directory business ID:', id);
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/admin/directory/businesses/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
         
-        if (data.success && data.business) {
-            const b = data.business;
+        // Try to get business from current loaded data first
+        let business = directoryBusinesses.find(b => b._id === id || b.id === id);
+        
+        // If not found in loaded data, try API
+        if (!business) {
+            const response = await fetch(`${API_BASE}/admin/directory/businesses/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            
+            if (data.success && data.business) {
+                business = data.business;
+            }
+        }
+        
+        if (business) {
             document.getElementById('dirModalTitle').textContent = 'Edit Directory Business';
-            document.getElementById('dirBusinessId').value = b._id;
-            document.getElementById('dirName').value = b.name || '';
-            document.getElementById('dirCategory').value = b.category || '';
-            document.getElementById('dirDescription').value = b.description || '';
-            document.getElementById('dirLocation').value = b.location || '';
-            document.getElementById('dirPhone').value = b.phone || '';
-            document.getElementById('dirWebsite').value = b.website || '';
-            document.getElementById('dirYear').value = b.year || '';
-            document.getElementById('dirFounder').value = b.founder || '';
-            document.getElementById('dirAward').value = b.award || '';
-            document.getElementById('dirImpact').value = b.impact || '';
-            document.getElementById('dirLogo').value = b.logo_url || '';
-            document.getElementById('dirOrder').value = b.display_order || 999;
-            document.getElementById('dirVerified').checked = b.verified === true;
-            document.getElementById('dirStatus').value = b.is_active ? 'true' : 'false';
+            document.getElementById('dirBusinessId').value = business._id || business.id;
+            document.getElementById('dirName').value = business.name || '';
+            document.getElementById('dirCategory').value = business.category || '';
+            document.getElementById('dirDescription').value = business.description || '';
+            document.getElementById('dirLocation').value = business.location || '';
+            document.getElementById('dirPhone').value = business.phone || '';
+            document.getElementById('dirWebsite').value = business.website || '';
+            document.getElementById('dirYear').value = business.year || '';
+            document.getElementById('dirFounder').value = business.founder || '';
+            document.getElementById('dirAward').value = business.award || '';
+            document.getElementById('dirImpact').value = business.impact || '';
+            document.getElementById('dirLogo').value = business.logo_url || '';
+            document.getElementById('dirOrder').value = business.display_order || 999;
+            document.getElementById('dirVerified').checked = business.verified === true;
+            document.getElementById('dirStatus').value = business.is_active ? 'true' : 'false';
             document.getElementById('addDirectoryBusinessModal').classList.add('active');
+        } else {
+            showNotification('Business not found', 'error');
         }
     } catch (error) {
         console.error('Edit error:', error);
-        showNotification('Error loading business details', 'error');
+        showNotification('Error loading business details: ' + error.message, 'error');
     }
 }
 
