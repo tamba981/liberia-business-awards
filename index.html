@@ -13162,5 +13162,40 @@ console.log('   - resetAdState() - Reset localStorage blocking');
 console.log('   - checkAdCache() - Check loaded ads');
 </script>
 
+ <script>
+// FORCE OVERRIDE - Ensures scrolling bar uses correct function
+(function() {
+    // Store the correct function reference in case something overrides it
+    const correctCheckNominationStatus = window.checkNominationStatus;
+    
+    // Re-assign to ensure it's the correct one
+    window.checkNominationStatus = function() {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentDate = now.getDate();
+        
+        const isNominationOpen = 
+            (currentMonth === 2 && currentDate >= 1) ||
+            (currentMonth === 3) ||
+            (currentMonth === 4 && currentDate <= 30);
+        
+        console.log("🔍 [FORCED] Nomination check - Open:", isNominationOpen);
+        
+        if (isNominationOpen) {
+            openModal('nominateModal');
+            return true;
+        } else {
+            showNominationClosedNotification();
+            if (typeof disableAllNominationButtons === 'function') {
+                disableAllNominationButtons();
+            }
+            return false;
+        }
+    };
+    
+    console.log("✅ [SAFETY] Nomination status function forced to correct version");
+})();
+</script>   
+
 </body>
 </html>
