@@ -3541,8 +3541,13 @@ function closeModal(modalId) {
 
         
 // ============================================
-// FIXED ADS MANAGEMENT FUNCTIONS FOR ADMIN DASHBOARD
+// COMPLETE FIXED ADS MANAGEMENT SYSTEM
 // ============================================
+
+// Global ads data
+let adsData = [];
+let adsCurrentPage = 1;
+let adsTotalPages = 1;
 
 async function showAdsManagementModal() {
     hideAllModals();
@@ -3555,7 +3560,7 @@ async function showAdsManagementModal() {
     
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
-    await loadAds();
+    await loadAdsList();
 }
 
 function createAdsManagementModal() {
@@ -3579,7 +3584,7 @@ function createAdsManagementModal() {
                     <div class="filter-grid">
                         <div class="filter-group">
                             <label>Filter by Status</label>
-                            <select id="adStatusFilter" onchange="loadAds()">
+                            <select id="adStatusFilter" onchange="loadAdsList()">
                                 <option value="all">All</option>
                                 <option value="pending">Pending</option>
                                 <option value="approved">Approved</option>
@@ -3588,7 +3593,7 @@ function createAdsManagementModal() {
                         </div>
                         <div class="filter-group">
                             <label>Filter by Type</label>
-                            <select id="adTypeFilter" onchange="loadAds()">
+                            <select id="adTypeFilter" onchange="loadAdsList()">
                                 <option value="all">All Types</option>
                                 <option value="top-banner">Top Banner</option>
                                 <option value="sidebar">Sidebar</option>
@@ -3604,8 +3609,7 @@ function createAdsManagementModal() {
                         <thead>
                             <tr>
                                 <th>Image</th>
-                                <th>Title</th>
-                                <th>Type</th>
+                                <th>Title / Type</th>
                                 <th>Status</th>
                                 <th>Dates</th>
                                 <th>Stats</th>
@@ -3613,7 +3617,7 @@ function createAdsManagementModal() {
                             </tr>
                         </thead>
                         <tbody id="adsTableBody">
-                            <tr><td colspan="7" style="text-align: center;">Loading...<\/td><\/tr>
+                            <tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...<\/td><\/tr>
                         </tbody>
                     </table>
                 </div>
@@ -3622,7 +3626,7 @@ function createAdsManagementModal() {
         </div>
     </div>
     
-    <!-- Create Ad Modal - FIXED VERSION -->
+    <!-- CREATE AD MODAL - FIXED VERSION -->
     <div class="modal" id="createAdModalFixed">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
@@ -3646,9 +3650,9 @@ function createAdsManagementModal() {
                     </div>
                     
                     <div class="form-group">
-                        <label>Ad Image *</label>
-                        <input type="url" id="adImageUrlFixed" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
-                        <small style="color: #64748b;">Enter a direct image URL (use imgur, cloudinary, or your server)</small>
+                        <label>Ad Image URL *</label>
+                        <input type="url" id="adImageUrlFixed" class="sheet-btn secondary" style="width: 100%;" placeholder="https://via.placeholder.com/728x90/FF0000/white?text=Ad" required>
+                        <small style="color: #64748b;">Use a direct image URL (imgur, cloudinary, or your server)</small>
                         <div id="adImagePreviewFixed" style="margin-top: 10px; display: none;">
                             <img id="adPreviewImgFixed" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
                         </div>
@@ -3707,14 +3711,16 @@ function createAdsManagementModal() {
     });
 }
 
-async function loadAds(page = 1) {
+async function loadAdsList(page = 1) {
     const tbody = document.getElementById('adsTableBody');
     if (!tbody) return;
     
     const status = document.getElementById('adStatusFilter')?.value || 'all';
     const type = document.getElementById('adTypeFilter')?.value || 'all';
     
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...<\/td><\/tr>';
+    adsCurrentPage = page;
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...<\/td><\/tr>';
     
     try {
         const token = localStorage.getItem('lba_auth_token');
@@ -3729,65 +3735,104 @@ async function loadAds(page = 1) {
         const data = await response.json();
         
         if (data.success && data.ads) {
-            displayAdsTable(data.ads);
-            updateAdsPagination(data.pagination);
+            adsData = data.ads;
+            adsTotalPages = data.pagination?.pages || 1;
+            displayAdsTable();
+            updateAdsPagination();
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No ads found.<\/td><\/tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No ads found.<\/td><\/tr>';
         }
     } catch (error) {
         console.error('Error loading ads:', error);
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error loading ads<\/td><\/tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading ads<\/td><\/tr>';
     }
 }
 
-function displayAdsTable(ads) {
+function displayAdsTable() {
     const tbody = document.getElementById('adsTableBody');
     if (!tbody) return;
     
-    if (!ads || ads.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No ads found<\/td><\/tr>';
+    if (!adsData || adsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No ads found<\/td><\/tr>';
         return;
     }
     
-    tbody.innerHTML = ads.map(ad => {
+    tbody.innerHTML = adsData.map(ad => {
         const imageUrl = ad.image_url || ad.image || '';
         const startDate = ad.start_date ? new Date(ad.start_date).toLocaleDateString() : 'N/A';
         const endDate = ad.end_date ? new Date(ad.end_date).toLocaleDateString() : 'N/A';
         
         let statusClass = '';
+        let statusText = ad.status || 'pending';
         switch(ad.status) {
-            case 'approved': statusClass = 'status-active'; break;
-            case 'pending': statusClass = 'status-pending'; break;
-            case 'rejected': statusClass = 'status-danger'; break;
+            case 'approved': statusClass = 'status-active'; statusText = 'Approved'; break;
+            case 'pending': statusClass = 'status-pending'; statusText = 'Pending'; break;
+            case 'rejected': statusClass = 'status-danger'; statusText = 'Rejected'; break;
             default: statusClass = 'status-info';
+        }
+        
+        const adType = ad.type || 'sidebar';
+        let typeClass = '';
+        switch(adType) {
+            case 'top-banner': typeClass = 'status-active'; break;
+            case 'sidebar': typeClass = 'status-info'; break;
+            case 'inline': typeClass = 'status-warning'; break;
+            case 'floating': typeClass = 'status-danger'; break;
+            default: typeClass = 'status-info';
         }
         
         return `
             <tr>
-                <td><img src="${imageUrl}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/60x40?text=No+Image'"></td>
-                <td><strong>${escapeHtml(ad.title)}</strong><br><small>${escapeHtml(ad.type || 'sidebar')}</small></td>
-                <td><span class="status-badge status-${ad.type === 'top-banner' ? 'active' : 'info'}">${ad.type || 'sidebar'}</span></td>
-                <td><span class="status-badge ${statusClass}">${ad.status || 'pending'}</span></td>
-                <td><small>${startDate}<br>to ${endDate}</small></td>
-                <td><small>👁️ ${ad.views || 0}<br>🖱️ ${ad.clicks || 0}</small></td>
+                <td>
+                    <img src="${imageUrl}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;" 
+                         onerror="this.src='https://via.placeholder.com/60x40?text=No+Image'">
+                 </span>
+                <td>
+                    <strong>${escapeHtml(ad.title)}</strong><br>
+                    <span class="status-badge ${typeClass}" style="font-size: 10px;">${adType}</span>
+                 </span>
+                <td>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                 </span>
+                <td><small>${startDate}<br>→ ${endDate}</small></span>
+                <td><small>👁️ ${ad.views || 0}<br>🖱️ ${ad.clicks || 0}</small></span>
                 <td>
                     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                         ${ad.status === 'pending' ? `
-                            <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approveAdFixed('${ad._id}')">
-                                <i class="fas fa-check"></i> Approve
+                            <button class="sheet-btn" style="background: #10B981; padding: 6px 10px;" onclick="approveAdFixed('${ad._id}')" title="Approve">
+                                <i class="fas fa-check"></i>
                             </button>
-                            <button class="sheet-btn" style="background: #EF4444; padding: 6px 12px;" onclick="rejectAdFixed('${ad._id}')">
-                                <i class="fas fa-times"></i> Reject
+                            <button class="sheet-btn" style="background: #EF4444; padding: 6px 10px;" onclick="rejectAdFixed('${ad._id}')" title="Reject">
+                                <i class="fas fa-times"></i>
                             </button>
                         ` : ''}
-                        <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteAdFixed('${ad._id}')">
+                        <button class="sheet-btn secondary" style="padding: 6px 10px;" onclick="editAdFixed('${ad._id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="sheet-btn danger" style="padding: 6px 10px;" onclick="deleteAdFixed('${ad._id}')" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                </td>
-            </tr>
+                 </span>
+             </span>
         `;
     }).join('');
+}
+
+function updateAdsPagination() {
+    const container = document.getElementById('adsPagination');
+    if (!container) return;
+    
+    if (adsTotalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    for (let i = 1; i <= adsTotalPages; i++) {
+        html += `<button class="page-btn ${i === adsCurrentPage ? 'active' : ''}" onclick="loadAdsList(${i})">${i}</button>`;
+    }
+    container.innerHTML = html;
 }
 
 function showCreateAdModalFixed() {
@@ -3812,7 +3857,7 @@ async function saveAdFixed() {
         placement: document.getElementById('adTypeFixed').value,
         start_date: document.getElementById('adStartDateFixed').value,
         end_date: document.getElementById('adEndDateFixed').value,
-        status: 'pending'  // Will need admin approval
+        status: 'pending'
     };
     
     const errorEl = document.getElementById('adErrorFixed');
@@ -3834,8 +3879,6 @@ async function saveAdFixed() {
         const url = adId ? `${API_BASE}/admin/ads/${adId}` : `${API_BASE}/admin/ads`;
         const method = adId ? 'PUT' : 'POST';
         
-        console.log('Saving ad:', { url, method, adData });
-        
         const response = await fetch(url, {
             method: method,
             headers: {
@@ -3850,7 +3893,7 @@ async function saveAdFixed() {
         if (result.success) {
             showNotification(adId ? 'Ad updated!' : 'Ad created! Pending approval.', 'success');
             hideModal('createAdModalFixed');
-            loadAds();
+            loadAdsList();
         } else {
             errorEl.textContent = result.message || 'Error saving ad';
             errorEl.style.display = 'block';
@@ -3862,6 +3905,55 @@ async function saveAdFixed() {
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
+    }
+}
+
+async function editAdFixed(adId) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.ad) {
+            const ad = result.ad;
+            
+            document.getElementById('adModalTitleFixed').textContent = 'Edit Ad';
+            document.getElementById('adIdFixed').value = ad._id;
+            document.getElementById('adTitleFixed').value = ad.title || '';
+            document.getElementById('adDescriptionFixed').value = ad.description || '';
+            document.getElementById('adImageUrlFixed').value = ad.image_url || '';
+            document.getElementById('adLinkUrlFixed').value = ad.link_url || '';
+            document.getElementById('adTypeFixed').value = ad.type || 'sidebar';
+            
+            if (ad.start_date) {
+                const startDate = new Date(ad.start_date);
+                document.getElementById('adStartDateFixed').value = startDate.toISOString().split('T')[0];
+            }
+            if (ad.end_date) {
+                const endDate = new Date(ad.end_date);
+                document.getElementById('adEndDateFixed').value = endDate.toISOString().split('T')[0];
+            }
+            
+            // Show image preview
+            if (ad.image_url) {
+                const preview = document.getElementById('adImagePreviewFixed');
+                const img = document.getElementById('adPreviewImgFixed');
+                if (preview && img) {
+                    img.src = ad.image_url;
+                    preview.style.display = 'block';
+                }
+            }
+            
+            document.getElementById('createAdModalFixed').classList.add('active');
+        } else {
+            showNotification('Ad not found', 'error');
+        }
+    } catch (error) {
+        console.error('Edit ad error:', error);
+        showNotification('Error loading ad details', 'error');
     }
 }
 
@@ -3879,7 +3971,7 @@ async function approveAdFixed(adId) {
         
         if (result.success) {
             showNotification('Ad approved!', 'success');
-            loadAds();
+            loadAdsList();
         } else {
             showNotification(result.message || 'Approval failed', 'error');
         }
@@ -3907,7 +3999,7 @@ async function rejectAdFixed(adId) {
         
         if (result.success) {
             showNotification('Ad rejected', 'warning');
-            loadAds();
+            loadAdsList();
         } else {
             showNotification(result.message || 'Rejection failed', 'error');
         }
@@ -3930,7 +4022,7 @@ async function deleteAdFixed(adId) {
         
         if (result.success) {
             showNotification('Ad deleted', 'success');
-            loadAds();
+            loadAdsList();
         } else {
             showNotification(result.message || 'Delete failed', 'error');
         }
@@ -3939,28 +4031,14 @@ async function deleteAdFixed(adId) {
     }
 }
 
-function updateAdsPagination(pagination) {
-    const container = document.getElementById('adsPagination');
-    if (!container) return;
-    
-    if (!pagination || pagination.pages <= 1) {
-        container.innerHTML = '';
-        return;
-    }
-    
-    let html = '';
-    for (let i = 1; i <= pagination.pages; i++) {
-        html += `<button class="page-btn ${i === pagination.page ? 'active' : ''}" onclick="loadAds(${i})">${i}</button>`;
-    }
-    container.innerHTML = html;
-}
-
 // Make functions global
 window.showAdsManagementModal = showAdsManagementModal;
+window.showCreateAdModalFixed = showCreateAdModalFixed;
+window.editAdFixed = editAdFixed;
 window.approveAdFixed = approveAdFixed;
 window.rejectAdFixed = rejectAdFixed;
 window.deleteAdFixed = deleteAdFixed;
-window.showCreateAdModalFixed = showCreateAdModalFixed;
+        
         
 // ============================================
 // OPPORTUNITIES MANAGEMENT FUNCTIONS
