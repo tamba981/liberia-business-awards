@@ -3379,17 +3379,16 @@ function closeModal(modalId) {
 
 
 
+
   // ============================================
-// COMPLETE WORKING ADS MANAGEMENT SYSTEM
+// COMPLETE WORKING ADS MANAGEMENT - FILE UPLOAD VERSION
 // ============================================
 
-// Global ads data
 let adsData = [];
 let adsCurrentPage = 1;
 let adsTotalPages = 1;
 
-// ============ MAIN MODAL FUNCTIONS ============
-
+// ============ SHOW ADS MANAGEMENT MODAL ============
 async function showAdsManagementModal() {
     hideAllModals();
     
@@ -3467,6 +3466,7 @@ function createAdsManagementModal() {
         </div>
     </div>
     
+    <!-- CREATE AD MODAL WITH FILE UPLOAD -->
     <div class="modal" id="createAdModal">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
@@ -3476,7 +3476,7 @@ function createAdsManagementModal() {
                 </button>
             </div>
             <div class="modal-body">
-                <form id="adForm" onsubmit="event.preventDefault(); saveAd();">
+                <form id="adForm" enctype="multipart/form-data">
                     <input type="hidden" id="adId">
                     
                     <div class="form-group">
@@ -3490,9 +3490,9 @@ function createAdsManagementModal() {
                     </div>
                     
                     <div class="form-group">
-                        <label>Ad Image URL *</label>
-                        <input type="url" id="adImageUrl" class="sheet-btn secondary" style="width: 100%;" placeholder="https://via.placeholder.com/728x90/FF0000/white?text=Ad" required>
-                        <small>Use a direct image URL (imgur, cloudinary, or placeholder)</small>
+                        <label>Ad Image *</label>
+                        <input type="file" id="adImageFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept="image/jpeg,image/png,image/gif,image/webp" required>
+                        <small style="color: #64748b;">Upload JPG, PNG, GIF, or WEBP (Max 5MB)</small>
                         <div id="adImagePreview" style="margin-top: 10px; display: none;">
                             <img id="adPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
                         </div>
@@ -3506,10 +3506,10 @@ function createAdsManagementModal() {
                     <div class="form-group">
                         <label>Ad Type *</label>
                         <select id="adType" class="sheet-btn secondary" style="width: 100%;" required>
-                            <option value="top-banner">Top Banner (728x90)</option>
-                            <option value="sidebar">Sidebar (300x250)</option>
-                            <option value="inline">Inline (600x400)</option>
-                            <option value="floating">Floating/Popup (300x250)</option>
+                            <option value="top-banner">Top Banner (728x90 recommended)</option>
+                            <option value="sidebar">Sidebar (300x250 recommended)</option>
+                            <option value="inline">Inline (600x400 recommended)</option>
+                            <option value="floating">Floating/Popup (300x250 recommended)</option>
                         </select>
                     </div>
                     
@@ -3528,7 +3528,7 @@ function createAdsManagementModal() {
                     
                     <div style="display: flex; gap: 10px; margin-top: 20px;">
                         <button type="button" class="sheet-btn warning" onclick="closeCreateAdModal()" style="flex: 1;">Cancel</button>
-                        <button type="submit" class="sheet-btn" style="flex: 2;">Save Ad</button>
+                        <button type="button" class="sheet-btn" onclick="saveAdWithFile()" style="flex: 2;">Save Ad</button>
                     </div>
                 </form>
             </div>
@@ -3539,16 +3539,20 @@ function createAdsManagementModal() {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
     // Image preview
-    const imageInput = document.getElementById('adImageUrl');
-    if (imageInput) {
-        imageInput.addEventListener('input', function() {
-            const preview = document.getElementById('adImagePreview');
-            const img = document.getElementById('adPreviewImg');
-            if (this.value && preview && img) {
-                img.src = this.value;
-                preview.style.display = 'block';
-            } else if (preview) {
-                preview.style.display = 'none';
+    const fileInput = document.getElementById('adImageFile');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const previewDiv = document.getElementById('adImagePreview');
+            const previewImg = document.getElementById('adPreviewImg');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewImg.src = evt.target.result;
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                previewDiv.style.display = 'none';
             }
         });
     }
@@ -3571,8 +3575,7 @@ function showCreateAdModal() {
     document.getElementById('createAdModal').classList.add('active');
 }
 
-// ============ LOAD ADS FROM BACKEND ============
-
+// ============ LOAD ADS ============
 async function loadAdsList(page = 1) {
     const tbody = document.getElementById('adsTableBody');
     if (!tbody) return;
@@ -3602,11 +3605,11 @@ async function loadAdsList(page = 1) {
             displayAdsTable();
             updateAdsPagination();
         } else {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No ads found.<\/td><\/tr>';
+            tbody.innerHTML = '</tr><td colspan="6" style="text-align: center;">No ads found.<\/td><\/tr>';
         }
     } catch (error) {
         console.error('Error loading ads:', error);
-        tbody.innerHTML = `<td><td colspan="6" style="text-align: center; color: #EF4444;">Error: ${error.message}<\/td><\/tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error: ${error.message}<\/td><\/tr>`;
     }
 }
 
@@ -3633,20 +3636,10 @@ function displayAdsTable() {
             default: statusClass = 'status-info';
         }
         
-        const adType = ad.type || 'sidebar';
-        let typeClass = '';
-        switch(adType) {
-            case 'top-banner': typeClass = 'status-active'; break;
-            case 'sidebar': typeClass = 'status-info'; break;
-            case 'inline': typeClass = 'status-warning'; break;
-            case 'floating': typeClass = 'status-danger'; break;
-            default: typeClass = 'status-info';
-        }
-        
         return `
             <tr>
                 <td><img src="${imageUrl}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/60x40?text=No+Image'"><\/td>
-                <td><strong>${escapeHtml(ad.title)}</strong><br><span class="status-badge ${typeClass}" style="font-size: 10px;">${adType}</span><\/td>
+                <td><strong>${escapeHtml(ad.title)}</strong><br><small>${ad.type || 'sidebar'}</small><\/td>
                 <td><span class="status-badge ${statusClass}">${statusText}</span><\/td>
                 <td><small>${startDate}<br>→ ${endDate}</small><\/td>
                 <td><small>👁️ ${ad.views || 0}<br>🖱️ ${ad.clicks || 0}</small><\/td>
@@ -3681,50 +3674,58 @@ function updateAdsPagination() {
     container.innerHTML = html;
 }
 
-// ============ SAVE, EDIT, DELETE ADS ============
-
-async function saveAd() {
+// ============ SAVE AD WITH FILE UPLOAD ============
+async function saveAdWithFile() {
     const adId = document.getElementById('adId').value;
     const token = localStorage.getItem('lba_auth_token');
     
-    const adData = {
-        title: document.getElementById('adTitle').value,
-        description: document.getElementById('adDescription').value,
-        image_url: document.getElementById('adImageUrl').value,
-        link_url: document.getElementById('adLinkUrl').value,
-        type: document.getElementById('adType').value,
-        placement: document.getElementById('adType').value,
-        start_date: document.getElementById('adStartDate').value,
-        end_date: document.getElementById('adEndDate').value,
-        status: 'pending'
-    };
+    const title = document.getElementById('adTitle').value;
+    const description = document.getElementById('adDescription').value;
+    const link_url = document.getElementById('adLinkUrl').value;
+    const type = document.getElementById('adType').value;
+    const start_date = document.getElementById('adStartDate').value;
+    const end_date = document.getElementById('adEndDate').value;
+    const file = document.getElementById('adImageFile').files[0];
     
     const errorEl = document.getElementById('adError');
     
-    if (!adData.title || !adData.image_url || !adData.start_date || !adData.end_date) {
-        errorEl.textContent = 'Title, Image URL, Start Date, and End Date are required';
+    if (!title || !start_date || !end_date) {
+        errorEl.textContent = 'Title, Start Date, and End Date are required';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    if (!file && !adId) {
+        errorEl.textContent = 'Please select an image file';
         errorEl.style.display = 'block';
         return;
     }
     
     errorEl.style.display = 'none';
     
-    const submitBtn = document.querySelector('#createAdModal button[type="submit"]');
+    const submitBtn = document.querySelector('#createAdModal button[onclick="saveAdWithFile()"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     
     try {
-        const url = adId ? `${API_BASE}/admin/ads/${adId}` : `${API_BASE}/admin/ads`;
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', description);
+        formData.append('link_url', link_url);
+        formData.append('type', type);
+        formData.append('placement', type);
+        formData.append('start_date', start_date);
+        formData.append('end_date', end_date);
+        if (file) formData.append('image', file);
+        
+        const url = adId ? `${API_BASE}/admin/ads/upload/${adId}` : `${API_BASE}/admin/ads/upload`;
         const method = adId ? 'PUT' : 'POST';
         
         const response = await fetch(url, {
             method: method,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(adData)
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
         });
         
         const result = await response.json();
@@ -3738,6 +3739,7 @@ async function saveAd() {
             errorEl.style.display = 'block';
         }
     } catch (error) {
+        console.error('Save ad error:', error);
         errorEl.textContent = error.message || 'Error saving ad';
         errorEl.style.display = 'block';
     } finally {
@@ -3746,26 +3748,25 @@ async function saveAd() {
     }
 }
 
+// ============ EDIT AD ============
 async function editAd(adId) {
+    console.log('📝 Editing ad ID:', adId);
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
-        let ad = adsData.find(a => a._id === adId);
+        const result = await response.json();
         
-        if (!ad) {
-            const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const result = await response.json();
-            if (result.success && result.ad) ad = result.ad;
-        }
-        
-        if (ad) {
+        if (result.success && result.ad) {
+            const ad = result.ad;
+            
             document.getElementById('adModalTitle').textContent = 'Edit Ad';
             document.getElementById('adId').value = ad._id;
             document.getElementById('adTitle').value = ad.title || '';
             document.getElementById('adDescription').value = ad.description || '';
-            document.getElementById('adImageUrl').value = ad.image_url || '';
             document.getElementById('adLinkUrl').value = ad.link_url || '';
             document.getElementById('adType').value = ad.type || 'sidebar';
             
@@ -3778,24 +3779,31 @@ async function editAd(adId) {
                 document.getElementById('adEndDate').value = endDate.toISOString().split('T')[0];
             }
             
+            // Show existing image
             if (ad.image_url) {
-                const preview = document.getElementById('adImagePreview');
-                const img = document.getElementById('adPreviewImg');
-                if (preview && img) {
-                    img.src = ad.image_url;
-                    preview.style.display = 'block';
+                const previewDiv = document.getElementById('adImagePreview');
+                const previewImg = document.getElementById('adPreviewImg');
+                if (previewDiv && previewImg) {
+                    previewImg.src = ad.image_url;
+                    previewDiv.style.display = 'block';
                 }
             }
+            
+            // Clear file input
+            const fileInput = document.getElementById('adImageFile');
+            if (fileInput) fileInput.value = '';
             
             document.getElementById('createAdModal').classList.add('active');
         } else {
             showNotification('Ad not found', 'error');
         }
     } catch (error) {
+        console.error('Edit ad error:', error);
         showNotification('Error loading ad: ' + error.message, 'error');
     }
 }
 
+// ============ APPROVE AD ============
 async function approveAd(adId) {
     if (!confirm('Approve this ad? It will appear on the frontend immediately.')) return;
     
@@ -3819,6 +3827,7 @@ async function approveAd(adId) {
     }
 }
 
+// ============ REJECT AD ============
 async function rejectAd(adId) {
     const reason = prompt('Enter rejection reason:');
     if (reason === null) return;
@@ -3847,6 +3856,7 @@ async function rejectAd(adId) {
     }
 }
 
+// ============ DELETE AD ============
 async function deleteAd(adId) {
     if (!confirm('Delete this ad? This action cannot be undone.')) return;
     
@@ -3870,22 +3880,69 @@ async function deleteAd(adId) {
     }
 }
 
+// ============ CREATE TEST AD DIRECTLY (FALLBACK) ============
+async function createTestAd() {
+    const token = localStorage.getItem('lba_auth_token');
+    
+    const testAd = {
+        title: "Test Banner Ad",
+        description: "This is a test advertisement",
+        image_url: "https://via.placeholder.com/728x90/FF0000/white?text=LBA+TEST+AD",
+        link_url: "https://liberiabusinessawardslr.com",
+        type: "top-banner",
+        placement: "top-banner",
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+        status: "approved"
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE}/admin/ads`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(testAd)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Test ad created successfully!');
+            showNotification('Test ad created! Refresh the page to see it.', 'success');
+            loadAdsList();
+            return true;
+        } else {
+            console.error('Test ad failed:', result);
+            showNotification('Test ad failed: ' + (result.message || 'Unknown error'), 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error('Test ad error:', error);
+        showNotification('Test ad error: ' + error.message, 'error');
+        return false;
+    }
+}
+
 // Export to window
 window.showAdsManagementModal = showAdsManagementModal;
 window.loadAdsList = loadAdsList;
 window.showCreateAdModal = showCreateAdModal;
 window.closeCreateAdModal = closeCreateAdModal;
-window.saveAd = saveAd;
+window.saveAdWithFile = saveAdWithFile;
 window.editAd = editAd;
 window.approveAd = approveAd;
 window.rejectAd = rejectAd;
 window.deleteAd = deleteAd;
+window.createTestAd = createTestAd;
 
-console.log('✅ Ads Management System Loaded');
+console.log('✅ Ads Management System Loaded (File Upload Version)');
 console.log('   - Click "Ads Management" in sidebar');
-console.log('   - Create ad with image URL');
+console.log('   - Upload an image file when creating ad');
 console.log('   - Approve ad after creation');
-console.log('   - Refresh frontend to see ad');      
+console.log('   - Or run createTestAd() in console to create a test ad');      
+
 
 
         
