@@ -3728,11 +3728,14 @@ async function loadAdsList(page = 1) {
         if (status !== 'all') url += `&status=${status}`;
         if (type !== 'all') url += `&type=${type}`;
         
+        console.log('📡 Fetching ads from:', url);
+        
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const data = await response.json();
+        console.log('📥 Ads response:', data);
         
         if (data.success && data.ads) {
             adsData = data.ads;
@@ -3744,7 +3747,7 @@ async function loadAdsList(page = 1) {
         }
     } catch (error) {
         console.error('Error loading ads:', error);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error loading ads<\/td><\/tr>';
+        tbody.innerHTML = '<td><td colspan="6" style="text-align: center; color: #EF4444;">Error loading ads: ' + error.message + '<\/td><\/tr>';
     }
 }
 
@@ -3781,6 +3784,9 @@ function displayAdsTable() {
             default: typeClass = 'status-info';
         }
         
+        // Get the correct ID (backend uses _id)
+        const adId = ad._id;
+        
         return `
             <tr>
                 <td>
@@ -3799,17 +3805,17 @@ function displayAdsTable() {
                 <td>
                     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                         ${ad.status === 'pending' ? `
-                            <button class="sheet-btn" style="background: #10B981; padding: 6px 10px;" onclick="approveAdFixed('${ad._id}')" title="Approve">
+                            <button class="sheet-btn" style="background: #10B981; padding: 6px 10px;" onclick="approveAdFixed('${adId}')" title="Approve">
                                 <i class="fas fa-check"></i>
                             </button>
-                            <button class="sheet-btn" style="background: #EF4444; padding: 6px 10px;" onclick="rejectAdFixed('${ad._id}')" title="Reject">
+                            <button class="sheet-btn" style="background: #EF4444; padding: 6px 10px;" onclick="rejectAdFixed('${adId}')" title="Reject">
                                 <i class="fas fa-times"></i>
                             </button>
                         ` : ''}
-                        <button class="sheet-btn secondary" style="padding: 6px 10px;" onclick="editAdFixed('${ad._id}')" title="Edit">
+                        <button class="sheet-btn secondary" style="padding: 6px 10px;" onclick="editAdFixed('${adId}')" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="sheet-btn danger" style="padding: 6px 10px;" onclick="deleteAdFixed('${ad._id}')" title="Delete">
+                        <button class="sheet-btn danger" style="padding: 6px 10px;" onclick="deleteAdFixed('${adId}')" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -3879,6 +3885,8 @@ async function saveAdFixed() {
         const url = adId ? `${API_BASE}/admin/ads/${adId}` : `${API_BASE}/admin/ads`;
         const method = adId ? 'PUT' : 'POST';
         
+        console.log('Saving ad:', { url, method, adData });
+        
         const response = await fetch(url, {
             method: method,
             headers: {
@@ -3891,7 +3899,7 @@ async function saveAdFixed() {
         const result = await response.json();
         
         if (result.success) {
-            showNotification(adId ? 'Ad updated!' : 'Ad created! Pending approval.', 'success');
+            showNotification(adId ? 'Ad updated! Pending approval.' : 'Ad created! Pending approval.', 'success');
             hideModal('createAdModalFixed');
             loadAdsList();
         } else {
@@ -3908,18 +3916,31 @@ async function saveAdFixed() {
     }
 }
 
+// FIXED EDIT FUNCTION
 async function editAdFixed(adId) {
+    console.log('📝 Editing ad with ID:', adId);
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
         
-        const result = await response.json();
+        // First try to get from loaded data
+        let ad = adsData.find(a => a._id === adId);
         
-        if (result.success && result.ad) {
-            const ad = result.ad;
+        // If not found, fetch from API
+        if (!ad) {
+            console.log('Fetching ad details from API...');
+            const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            console.log('API response:', result);
             
+            if (result.success && result.ad) {
+                ad = result.ad;
+            }
+        }
+        
+        if (ad) {
             document.getElementById('adModalTitleFixed').textContent = 'Edit Ad';
             document.getElementById('adIdFixed').value = ad._id;
             document.getElementById('adTitleFixed').value = ad.title || '';
@@ -3948,12 +3969,14 @@ async function editAdFixed(adId) {
             }
             
             document.getElementById('createAdModalFixed').classList.add('active');
+            console.log('✅ Edit modal opened for ad:', ad.title);
         } else {
-            showNotification('Ad not found', 'error');
+            console.error('❌ Ad not found with ID:', adId);
+            showNotification('Ad not found. ID: ' + adId, 'error');
         }
     } catch (error) {
         console.error('Edit ad error:', error);
-        showNotification('Error loading ad details', 'error');
+        showNotification('Error loading ad details: ' + error.message, 'error');
     }
 }
 
@@ -3976,7 +3999,7 @@ async function approveAdFixed(adId) {
             showNotification(result.message || 'Approval failed', 'error');
         }
     } catch (error) {
-        showNotification('Error approving ad', 'error');
+        showNotification('Error approving ad: ' + error.message, 'error');
     }
 }
 
@@ -4004,7 +4027,7 @@ async function rejectAdFixed(adId) {
             showNotification(result.message || 'Rejection failed', 'error');
         }
     } catch (error) {
-        showNotification('Error rejecting ad', 'error');
+        showNotification('Error rejecting ad: ' + error.message, 'error');
     }
 }
 
@@ -4027,7 +4050,7 @@ async function deleteAdFixed(adId) {
             showNotification(result.message || 'Delete failed', 'error');
         }
     } catch (error) {
-        showNotification('Error deleting ad', 'error');
+        showNotification('Error deleting ad: ' + error.message, 'error');
     }
 }
 
