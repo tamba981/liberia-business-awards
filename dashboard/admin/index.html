@@ -3379,9 +3379,8 @@ function closeModal(modalId) {
 
 
 
-
-  // ============================================
-// COMPLETE WORKING ADS MANAGEMENT - FILE UPLOAD VERSION
+// ============================================
+// COMPLETE WORKING ADS MANAGEMENT - MATCHES SERVER.JS
 // ============================================
 
 let adsData = [];
@@ -3466,7 +3465,6 @@ function createAdsManagementModal() {
         </div>
     </div>
     
-    <!-- CREATE AD MODAL WITH FILE UPLOAD -->
     <div class="modal" id="createAdModal">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
@@ -3492,7 +3490,7 @@ function createAdsManagementModal() {
                     <div class="form-group">
                         <label>Ad Image *</label>
                         <input type="file" id="adImageFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept="image/jpeg,image/png,image/gif,image/webp" required>
-                        <small style="color: #64748b;">Upload JPG, PNG, GIF, or WEBP (Max 5MB)</small>
+                        <small>Upload JPG, PNG, GIF, or WEBP (Max 5MB)</small>
                         <div id="adImagePreview" style="margin-top: 10px; display: none;">
                             <img id="adPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
                         </div>
@@ -3506,10 +3504,10 @@ function createAdsManagementModal() {
                     <div class="form-group">
                         <label>Ad Type *</label>
                         <select id="adType" class="sheet-btn secondary" style="width: 100%;" required>
-                            <option value="top-banner">Top Banner (728x90 recommended)</option>
-                            <option value="sidebar">Sidebar (300x250 recommended)</option>
-                            <option value="inline">Inline (600x400 recommended)</option>
-                            <option value="floating">Floating/Popup (300x250 recommended)</option>
+                            <option value="top-banner">Top Banner (728x90)</option>
+                            <option value="sidebar">Sidebar (300x250)</option>
+                            <option value="inline">Inline (600x400)</option>
+                            <option value="floating">Floating/Popup (300x250)</option>
                         </select>
                     </div>
                     
@@ -3528,7 +3526,7 @@ function createAdsManagementModal() {
                     
                     <div style="display: flex; gap: 10px; margin-top: 20px;">
                         <button type="button" class="sheet-btn warning" onclick="closeCreateAdModal()" style="flex: 1;">Cancel</button>
-                        <button type="button" class="sheet-btn" onclick="saveAdWithFile()" style="flex: 2;">Save Ad</button>
+                        <button type="button" class="sheet-btn" onclick="saveAd()" style="flex: 2;">Save Ad</button>
                     </div>
                 </form>
             </div>
@@ -3605,11 +3603,11 @@ async function loadAdsList(page = 1) {
             displayAdsTable();
             updateAdsPagination();
         } else {
-            tbody.innerHTML = '</tr><td colspan="6" style="text-align: center;">No ads found.<\/td><\/tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No ads found.<\/td><\/tr>';
         }
     } catch (error) {
         console.error('Error loading ads:', error);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error: ${error.message}<\/td><\/tr>`;
+        tbody.innerHTML = `<td><td colspan="6" style="text-align: center; color: #EF4444;">Error: ${error.message}<\/td><\/tr>`;
     }
 }
 
@@ -3638,7 +3636,7 @@ function displayAdsTable() {
         
         return `
             <tr>
-                <td><img src="${imageUrl}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/60x40?text=No+Image'"><\/td>
+                <td><img src="${imageUrl}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;" onerror="this.style.display='none'"><\/td>
                 <td><strong>${escapeHtml(ad.title)}</strong><br><small>${ad.type || 'sidebar'}</small><\/td>
                 <td><span class="status-badge ${statusClass}">${statusText}</span><\/td>
                 <td><small>${startDate}<br>→ ${endDate}</small><\/td>
@@ -3674,8 +3672,8 @@ function updateAdsPagination() {
     container.innerHTML = html;
 }
 
-// ============ SAVE AD WITH FILE UPLOAD ============
-async function saveAdWithFile() {
+// ============ SAVE AD WITH FILE UPLOAD (MATCHES SERVER.JS) ============
+async function saveAd() {
     const adId = document.getElementById('adId').value;
     const token = localStorage.getItem('lba_auth_token');
     
@@ -3703,7 +3701,7 @@ async function saveAdWithFile() {
     
     errorEl.style.display = 'none';
     
-    const submitBtn = document.querySelector('#createAdModal button[onclick="saveAdWithFile()"]');
+    const submitBtn = document.querySelector('#createAdModal button[onclick="saveAd()"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
@@ -3719,6 +3717,7 @@ async function saveAdWithFile() {
         formData.append('end_date', end_date);
         if (file) formData.append('image', file);
         
+        // This matches server.js endpoint exactly
         const url = adId ? `${API_BASE}/admin/ads/upload/${adId}` : `${API_BASE}/admin/ads/upload`;
         const method = adId ? 'PUT' : 'POST';
         
@@ -3750,8 +3749,6 @@ async function saveAdWithFile() {
 
 // ============ EDIT AD ============
 async function editAd(adId) {
-    console.log('📝 Editing ad ID:', adId);
-    
     try {
         const token = localStorage.getItem('lba_auth_token');
         const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
@@ -3779,7 +3776,6 @@ async function editAd(adId) {
                 document.getElementById('adEndDate').value = endDate.toISOString().split('T')[0];
             }
             
-            // Show existing image
             if (ad.image_url) {
                 const previewDiv = document.getElementById('adImagePreview');
                 const previewImg = document.getElementById('adPreviewImg');
@@ -3788,10 +3784,6 @@ async function editAd(adId) {
                     previewDiv.style.display = 'block';
                 }
             }
-            
-            // Clear file input
-            const fileInput = document.getElementById('adImageFile');
-            if (fileInput) fileInput.value = '';
             
             document.getElementById('createAdModal').classList.add('active');
         } else {
@@ -3880,14 +3872,15 @@ async function deleteAd(adId) {
     }
 }
 
-// ============ CREATE TEST AD DIRECTLY (FALLBACK) ============
+// ============ CREATE TEST AD WITH REAL IMAGE URL (NO UPLOAD NEEDED) ============
 async function createTestAd() {
     const token = localStorage.getItem('lba_auth_token');
     
+    // Use a real working image URL (Unsplash image that always works)
     const testAd = {
-        title: "Test Banner Ad",
-        description: "This is a test advertisement",
-        image_url: "https://via.placeholder.com/728x90/FF0000/white?text=LBA+TEST+AD",
+        title: "Test Banner Ad - LBA",
+        description: "This is a test advertisement for Liberia Business Awards",
+        image_url: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600&h=200&fit=crop",
         link_url: "https://liberiabusinessawardslr.com",
         type: "top-banner",
         placement: "top-banner",
@@ -3925,23 +3918,53 @@ async function createTestAd() {
     }
 }
 
+// ============ FIX FRONTEND AD DISPLAY ============
+// This ensures the frontend AdManager can fetch approved ads
+async function testFrontendAds() {
+    try {
+        const response = await fetch(`${API_BASE}/ads`);
+        const data = await response.json();
+        console.log('📢 Frontend ads endpoint:', data);
+        if (data.success && data.ads && data.ads.length > 0) {
+            console.log('✅ Ads found! Frontend should display them.');
+        } else {
+            console.log('⚠️ No approved ads found. Create and approve an ad first.');
+        }
+        return data;
+    } catch (error) {
+        console.error('Error fetching ads:', error);
+    }
+}
+
 // Export to window
 window.showAdsManagementModal = showAdsManagementModal;
 window.loadAdsList = loadAdsList;
 window.showCreateAdModal = showCreateAdModal;
 window.closeCreateAdModal = closeCreateAdModal;
-window.saveAdWithFile = saveAdWithFile;
+window.saveAd = saveAd;
 window.editAd = editAd;
 window.approveAd = approveAd;
 window.rejectAd = rejectAd;
 window.deleteAd = deleteAd;
 window.createTestAd = createTestAd;
+window.testFrontendAds = testFrontendAds;
 
 console.log('✅ Ads Management System Loaded (File Upload Version)');
-console.log('   - Click "Ads Management" in sidebar');
-console.log('   - Upload an image file when creating ad');
-console.log('   - Approve ad after creation');
-console.log('   - Or run createTestAd() in console to create a test ad');      
+console.log('');
+console.log('📌 HOW TO USE:');
+console.log('   1. Click "Ads Management" in sidebar');
+console.log('   2. Click "Create Ad"');
+console.log('   3. Fill in title, select an image file, set dates');
+console.log('   4. Click "Save Ad"');
+console.log('   5. Click the green check button to approve');
+console.log('   6. Refresh frontend to see ad');
+console.log('');
+console.log('📌 OR create a test ad instantly:');
+console.log('   createTestAd()');
+console.log('');
+console.log('📌 Check frontend ads:');
+console.log('   testFrontendAds()');
+
 
 
 
