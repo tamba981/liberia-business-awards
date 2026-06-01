@@ -1,12 +1,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-
-    
     
     <!-- PRIMARY TITLE - Most important for SEO -->
     <title>Liberia Business Awards 3.0 | Top Businesses & Investment Opportunities in Liberia</title>
+
     
     <!-- META DESCRIPTION - Shows in search results -->
     <meta name="description" content="Discover the top businesses in Liberia. Liberia Business Awards showcases investment opportunities, successful companies, and entrepreneurs driving economic growth in Liberia. Find the complete list of businesses in Liberia, investment guides, and business directory. Nominate or partner with us today.">
@@ -826,7 +824,67 @@ html, body {
     body.menu-open {
         overflow: hidden;
     }
-}     
+}
+
+/* ============================================ */
+/* FORCE IMAGE DISPLAY FOR ADS - FIX INVISIBLE IMAGES */
+/* ============================================ */
+
+#dynamicTopBanner img,
+#dynamicTopBanner video,
+.floating-ad img,
+.floating-ad video,
+.sidebar-ad-container img,
+.sidebar-ad-container video,
+.in-content-ad-container img,
+.in-content-ad-container video {
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    min-width: 50px !important;
+    min-height: 50px !important;
+}
+
+.floating-ad .ad-content img,
+.sidebar-ad-container .sidebar-ad-item img {
+    display: block !important;
+    margin: 0 auto !important;
+    max-height: 250px !important;
+    object-fit: contain !important;
+}
+
+/* Also ensure the containers are visible */
+#dynamicTopBanner,
+.sidebar-ad-container,
+.floating-ad {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 60px !important;
+}
+
+/* Error state for broken images */
+img[src=""],
+img:not([src]),
+img[src*="error"] {
+    background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%) !important;
+    min-height: 90px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+img[src=""]::after,
+img:not([src])::after {
+    content: "Advertisement" !important;
+    display: block !important;
+    padding: 20px !important;
+    text-align: center !important;
+    color: #666 !important;
+    font-size: 12px !important;
+}        
         
 </style>
     
@@ -11201,6 +11259,8 @@ console.log('✅ All missing functions added successfully!');
     input:checked + .slider:before {
         transform: translateX(26px);
     }
+
+    
 </style>
 
 <script>
