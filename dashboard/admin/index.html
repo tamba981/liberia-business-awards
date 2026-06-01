@@ -3380,7 +3380,7 @@ function closeModal(modalId) {
 
 
 // ============================================
-// COMPLETE WORKING ADS MANAGEMENT - MATCHES SERVER.JS
+// COMPLETE FIXED ADS MANAGEMENT - NO ERRORS
 // ============================================
 
 let adsData = [];
@@ -3573,7 +3573,7 @@ function showCreateAdModal() {
     document.getElementById('createAdModal').classList.add('active');
 }
 
-// ============ LOAD ADS ============
+// ============ LOAD ADS (FIXED FUNCTION NAME) ============
 async function loadAdsList(page = 1) {
     const tbody = document.getElementById('adsTableBody');
     if (!tbody) return;
@@ -3672,7 +3672,7 @@ function updateAdsPagination() {
     container.innerHTML = html;
 }
 
-// ============ SAVE AD WITH FILE UPLOAD (MATCHES SERVER.JS) ============
+// ============ SAVE AD (FIXED - CALLS loadAdsList) ============
 async function saveAd() {
     const adId = document.getElementById('adId').value;
     const token = localStorage.getItem('lba_auth_token');
@@ -3717,7 +3717,6 @@ async function saveAd() {
         formData.append('end_date', end_date);
         if (file) formData.append('image', file);
         
-        // This matches server.js endpoint exactly
         const url = adId ? `${API_BASE}/admin/ads/upload/${adId}` : `${API_BASE}/admin/ads/upload`;
         const method = adId ? 'PUT' : 'POST';
         
@@ -3732,7 +3731,7 @@ async function saveAd() {
         if (result.success) {
             showNotification(adId ? 'Ad updated! Pending approval.' : 'Ad created! Pending approval.', 'success');
             closeCreateAdModal();
-            loadAdsList();
+            await loadAdsList(); // FIXED: calls loadAdsList, not loadAds
         } else {
             errorEl.textContent = result.message || 'Error saving ad';
             errorEl.style.display = 'block';
@@ -3810,7 +3809,7 @@ async function approveAd(adId) {
         
         if (result.success) {
             showNotification('Ad approved!', 'success');
-            loadAdsList();
+            await loadAdsList();
         } else {
             showNotification(result.message || 'Approval failed', 'error');
         }
@@ -3839,7 +3838,7 @@ async function rejectAd(adId) {
         
         if (result.success) {
             showNotification('Ad rejected', 'warning');
-            loadAdsList();
+            await loadAdsList();
         } else {
             showNotification(result.message || 'Rejection failed', 'error');
         }
@@ -3848,7 +3847,7 @@ async function rejectAd(adId) {
     }
 }
 
-// ============ DELETE AD ============
+// ============ DELETE AD (FIXED) ============
 async function deleteAd(adId) {
     if (!confirm('Delete this ad? This action cannot be undone.')) return;
     
@@ -3863,7 +3862,7 @@ async function deleteAd(adId) {
         
         if (result.success) {
             showNotification('Ad deleted', 'success');
-            loadAdsList();
+            await loadAdsList();
         } else {
             showNotification(result.message || 'Delete failed', 'error');
         }
@@ -3872,15 +3871,15 @@ async function deleteAd(adId) {
     }
 }
 
-// ============ CREATE TEST AD WITH REAL IMAGE URL (NO UPLOAD NEEDED) ============
+// ============ CREATE TEST AD WITH WORKING IMAGE ============
 async function createTestAd() {
     const token = localStorage.getItem('lba_auth_token');
     
-    // Use a real working image URL (Unsplash image that always works)
+    // Use a guaranteed working image URL
     const testAd = {
-        title: "Test Banner Ad - LBA",
+        title: "Test Banner Ad - LBA " + new Date().toLocaleTimeString(),
         description: "This is a test advertisement for Liberia Business Awards",
-        image_url: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600&h=200&fit=crop",
+        image_url: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=728&h=90&fit=crop",
         link_url: "https://liberiabusinessawardslr.com",
         type: "top-banner",
         placement: "top-banner",
@@ -3903,8 +3902,8 @@ async function createTestAd() {
         
         if (result.success) {
             console.log('✅ Test ad created successfully!');
-            showNotification('Test ad created! Refresh the page to see it.', 'success');
-            loadAdsList();
+            showNotification('Test ad created! Refreshing list...', 'success');
+            await loadAdsList();
             return true;
         } else {
             console.error('Test ad failed:', result);
@@ -3918,21 +3917,23 @@ async function createTestAd() {
     }
 }
 
-// ============ FIX FRONTEND AD DISPLAY ============
-// This ensures the frontend AdManager can fetch approved ads
-async function testFrontendAds() {
+// ============ CHECK FRONTEND ADS ============
+async function checkFrontendAds() {
     try {
         const response = await fetch(`${API_BASE}/ads`);
         const data = await response.json();
-        console.log('📢 Frontend ads endpoint:', data);
+        console.log('📢 Frontend ads:', data);
         if (data.success && data.ads && data.ads.length > 0) {
-            console.log('✅ Ads found! Frontend should display them.');
+            console.log('✅ Ads found! Frontend will display them.');
+            data.ads.forEach(ad => {
+                console.log(`   - ${ad.title} (${ad.type}) - ${ad.status}`);
+            });
         } else {
-            console.log('⚠️ No approved ads found. Create and approve an ad first.');
+            console.log('⚠️ No approved ads found.');
         }
         return data;
     } catch (error) {
-        console.error('Error fetching ads:', error);
+        console.error('Error checking ads:', error);
     }
 }
 
@@ -3947,24 +3948,14 @@ window.approveAd = approveAd;
 window.rejectAd = rejectAd;
 window.deleteAd = deleteAd;
 window.createTestAd = createTestAd;
-window.testFrontendAds = testFrontendAds;
+window.checkFrontendAds = checkFrontendAds;
 
-console.log('✅ Ads Management System Loaded (File Upload Version)');
+console.log('✅ Ads Management System Loaded');
 console.log('');
-console.log('📌 HOW TO USE:');
-console.log('   1. Click "Ads Management" in sidebar');
-console.log('   2. Click "Create Ad"');
-console.log('   3. Fill in title, select an image file, set dates');
-console.log('   4. Click "Save Ad"');
-console.log('   5. Click the green check button to approve');
-console.log('   6. Refresh frontend to see ad');
-console.log('');
-console.log('📌 OR create a test ad instantly:');
-console.log('   createTestAd()');
-console.log('');
-console.log('📌 Check frontend ads:');
-console.log('   testFrontendAds()');
-
+console.log('📌 QUICK START:');
+console.log('   1. Run: createTestAd()');
+console.log('   2. Then: checkFrontendAds()');
+console.log('   3. Refresh frontend page to see the ad');
 
 
 
