@@ -11956,7 +11956,6 @@ window.contactBusiness = function(businessId) {
 console.log('✅ Contact and View Details functions re-initialized at end of script');    
     
 </script>
-
 <!-- ============================================ -->
 <!-- PROFESSIONAL AI LIVE CHAT WIDGET - MVP PRODUCTION -->
 <!-- ============================================ -->
@@ -12075,7 +12074,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     .whatsapp-float:hover .whatsapp-tooltip { opacity: 1; visibility: visible; }
     
     /* ============================================ */
-    /* MAIN CHAT WIDGET STYLES */
+    /* MAIN CHAT WIDGET STYLES - FIXED VERSION */
     /* ============================================ */
     .lba-chat-widget {
         position: fixed;
@@ -12084,6 +12083,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         z-index: 9999;
         font-family: 'Poppins', sans-serif;
     }
+    
     .lba-chat-button {
         width: 60px;
         height: 60px;
@@ -12117,26 +12117,27 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     .pulse { animation: pulseDot 2s infinite; }
     @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.2); } }
     
+    /* FIXED CONTAINER - FIXED HEIGHT */
     .lba-chat-container {
-    position: absolute;
-    bottom: 80px;
-    right: 0;
-    width: min(420px, 90vw);
-    height: auto;
-    max-height: 520px;  /* ← CHANGE: fixed max height instead of 75vh */
-    background: white;
-    border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transform: scale(0);
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    transform-origin: bottom right;
-    border: 1px solid rgba(255, 0, 0, 0.2);
-}
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: min(420px, 90vw);
+        height: 500px;
+        max-height: 500px;
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform: scale(0);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transform-origin: bottom right;
+        border: 1px solid rgba(255, 0, 0, 0.2);
+    }
     
     .lba-chat-container.open { transform: scale(1); opacity: 1; visibility: visible; }
     
@@ -12178,17 +12179,17 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     }
     .lba-chat-minimize:hover, .lba-chat-close:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.05); }
     
+    /* FIXED MESSAGES AREA - SCROLLABLE */
     .lba-chat-messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    background: #f8f9fa;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-height: 350px;  /* ← Add this */
-    min-height: 200px;
-}
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 0;
+    }
     .lba-chat-messages::-webkit-scrollbar { width: 5px; }
     .lba-chat-messages::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
     .lba-chat-messages::-webkit-scrollbar-thumb { background: #FF0000; border-radius: 10px; }
@@ -12286,23 +12287,25 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     .lba-reset-btn { background: none; border: none; color: #FF0000; cursor: pointer; font-size: 11px; font-weight: 500; }
     .lba-reset-btn:hover { text-decoration: underline; }
     
+    /* MOBILE RESPONSIVE */
     @media (max-width: 768px) {
         .whatsapp-float { bottom: 20px; left: 15px; width: 50px; height: 50px; font-size: 26px; }
         .lba-chat-widget { bottom: 20px; right: 15px; }
         .lba-chat-button { width: 50px; height: 50px; }
         .lba-chat-button i { font-size: 24px; }
-        .lba-chat-container { width: min(350px, 90vw); height: min(550px, 65vh); bottom: 70px; right: -5px; }
+        .lba-chat-container { width: min(350px, 90vw); height: 450px; max-height: 450px; bottom: 70px; right: -5px; }
         .lba-chat-options { padding: 10px 12px; }
         .lba-option-btn { padding: 5px 10px; font-size: 10px; }
         .whatsapp-tooltip { display: none; }
     }
+    
     @media (max-width: 480px) {
-        .lba-chat-container { width: min(320px, 92vw); height: min(500px, 60vh); right: -10px; }
+        .lba-chat-container { width: min(320px, 92vw); height: 400px; max-height: 400px; right: -10px; }
         .lba-chat-messages { padding: 15px; }
     }
 
 /* ============================================ */
-/* AD DISPLAY SYSTEM - POPUP ADS */
+/* AD DISPLAY SYSTEM - POPUP ADS (PRESERVED) */
 /* ============================================ */
 
 /* Floating Ad Container */
@@ -12477,135 +12480,40 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
 
 <script>
     // ============================================
-    // COMPREHENSIVE KNOWLEDGE BASE (Direct from your website)
+    // COMPREHENSIVE KNOWLEDGE BASE
     // ============================================
     const LBA_KNOWLEDGE = {
-        // Core Identity
-        'what is lba': '🏆 The Liberia Business Awards (LBA) is the nation\'s premier recognition platform for businesses across all 18 major economic sectors. We provide comprehensive coverage from Agriculture to Sports, ensuring every business in Liberia has the opportunity to be recognized for excellence. Our 18-sector framework encompasses the complete Liberian economy, with 72 specialized award categories designed to celebrate achievements at every level - from startups to established enterprises, fostering economic growth and inspiring the next generation of entrepreneurs.',
-        'mission': '🎯 Our mission is to recognize, celebrate, and elevate businesses and entrepreneurs that are contributing to Liberia\'s economic growth and social development.',
-        'vision': '👁️ To become Liberia\'s leading national platform for business recognition, visibility, and private sector excellence.',
-        'focus': '🇱🇷 Our primary focus is Liberia, where we recognize, support, and showcase excellence across all counties and economic sectors. Beyond borders, we maintain strategic engagement across Africa and global markets, serving as a bridge between Liberian businesses and international opportunity.',
-        
-        // The 18 Economic Sectors
+        'what is lba': '🏆 The Liberia Business Awards (LBA) is the nation\'s premier recognition platform for businesses across all 18 major economic sectors...',
+        'mission': '🎯 Our mission is to recognize, celebrate, and elevate businesses and entrepreneurs...',
+        'vision': '👁️ To become Liberia\'s leading national platform for business recognition...',
+        'focus': '🇱🇷 Our primary focus is Liberia, where we recognize, support, and showcase excellence...',
         '18 sectors': '📊 Liberia\'s 18 major economic sectors are:\n\n🌾 1. Agriculture\n⛏️ 2. Mining & Extractives\n🛢️ 3. Oil & Gas\n🏭 4. Manufacturing & Industrial\n🏗️ 5. Construction & Real Estate\n⚡ 6. Energy & Utilities\n🚚 7. Transportation & Logistics\n💻 8. Information & Communications Technology (ICT)\n💰 9. Financial Services\n📚 10. Education\n🏥 11. Health\n🏨 12. Tourism & Hospitality\n🛍️ 13. Trade & Commerce\n🏛️ 14. Public Sector & Government Services\n🤝 15. Civil Society & Nonprofit\n📺 16. Media & Communications\n🎨 17. Arts, Culture & Creative Industry\n⚽ 18. Sports & Recreation',
-        'agriculture sector': '🌾 The Agriculture Sector covers farming, livestock, fisheries, forestry, and agro-processing. Key categories: Agriculture Company of the Year, Agro-Processing Company of the Year, Fisheries & Aquaculture Excellence, Sustainable Agriculture Leadership.',
-        'mining sector': '⛏️ The Mining & Extractives Sector covers minerals, quarrying, and natural resources. Key categories: Mining Company of the Year, Diamond & Gemstone Excellence, Quarrying & Construction Materials, Environmental Stewardship in Mining.',
-        'oil and gas sector': '🛢️ The Oil & Gas Sector covers petroleum exploration, storage, and fuel distribution. Key categories: Petroleum Exploration Excellence, Fuel Distribution Company of the Year, Oil Storage & Logistics Excellence, Safety & Compliance Leadership.',
-        'manufacturing sector': '🏭 The Manufacturing & Industrial Sector covers production, processing, and industrial excellence. Key categories: Manufacturing Company of the Year, Food & Beverage Production Excellence, Construction Materials Manufacturing, Industrial Innovation Award.',
-        'construction sector': '🏗️ The Construction & Real Estate Sector covers infrastructure, building, and property development. Key categories: Construction Company of the Year, Real Estate Development Excellence, Infrastructure Project of the Year, Architectural Innovation Award.',
-        'energy sector': '⚡ The Energy & Utilities Sector covers power, water, and essential services. Key categories: Energy Company of the Year, Water & Sanitation Excellence, Renewable Energy Innovation, Utilities Management Excellence.',
-        'transportation sector': '🚚 The Transportation & Logistics Sector covers ports, shipping, and supply chain. Key categories: Logistics Company of the Year, Aviation Services Excellence, Port & Terminal Operations Excellence, Road Transport Excellence.',
-        'ict sector': '💻 The ICT sector covers digital innovation and tech solutions. Key categories: Telecom Company of the Year, IT Solutions Provider of the Year, Internet Service Excellence, Tech Startup of the Year.',
-        'financial services sector': '💰 The Financial Services sector covers banking, insurance, and investment. Key categories: Bank of the Year, Microfinance Institution of the Year, Insurance Company of the Year, Investment & Capital Markets Excellence.',
-        'education sector': '📚 The Education Sector covers learning, training, and development. Key categories: Educational Institution of the Year, Vocational Training Excellence, EdTech Innovation Award, Academic Excellence Award.',
-        'health sector': '🏥 The Health Sector covers healthcare, pharmaceuticals, and wellness. Key categories: Healthcare Provider of the Year, Pharmaceutical Company of the Year, Medical Services Excellence, Public Health Initiative of the Year.',
-        'tourism sector': '🏨 The Tourism & Hospitality sector covers travel, accommodation, and cultural experiences. Key categories: Hotel of the Year, Restaurant & Culinary Excellence, Travel Services Company of the Year, Eco-Tourism Innovation Award.',
-        'trade sector': '🛍️ The Trade & Commerce sector covers import, export, and market innovation. Key categories: Export Company of the Year, Retail Excellence Award, Wholesale Distributor of the Year, Market Innovation Award.',
-        'public sector': '🏛️ The Public Sector & Government Services covers public administration and service delivery. Key categories: Public Service Excellence Award, Government Partnership Initiative, Public Enterprise of the Year, Civic Engagement Excellence.',
-        'civil society sector': '🤝 The Civil Society & Nonprofit sector covers community development and social impact. Key categories: NGO of the Year, Community Initiative Award, International Development Partner, Social Impact Leadership.',
-        'media sector': '📺 The Media & Communications sector covers broadcasting, journalism, and digital media. Key categories: Media House of the Year, Journalism Excellence Award, Advertising & Marketing Agency of the Year, Digital Media Innovation.',
-        'arts sector': '🎨 The Arts, Culture & Creative Industry covers creative expression and cultural heritage. Key categories: Creative Arts Company of the Year, Entertainment & Performance Excellence, Fashion & Design Innovation, Film & Media Production Excellence.',
-        'sports sector': '⚽ The Sports & Recreation sector covers athletics, fitness, and sports development. Key categories: Sports Club of the Year, Sports Development Initiative, Fitness & Recreation Center of the Year, Athletic Excellence Award.',
-        
-        // Award Tiers & Categories
-        'award categories': '🏆 We have 72 specialized award categories across 5 tiers:\n\n🚀 TIER 1: STARTUP AWARDS (0-3 years) - Startup of the Year, Tech Startup of the Year, Innovative Startup Award, Rising Startup Founder.\n📈 TIER 2: SME AWARDS - SME of the Year, Fast-Growing SME, SME Innovation Award, SME Export Excellence.\n🏢 TIER 3: LARGE ENTERPRISE AWARDS - Large Enterprise of the Year, Corporate Excellence Award, Industry Leader Award.\n🌍 TIER 4: SECTOR AWARDS - 4 categories for each of the 18 economic sectors (72 total).\n👑 TIER 5: NATIONAL LEADERSHIP AWARDS - CEO of the Year, Entrepreneur of the Year, Woman Entrepreneur of the Year, Young Entrepreneur of the Year, Business Innovation Leader, Sustainability Champion, CSR Excellence Award, Overall Company of the Year.',
-        'startup awards': '🚀 Startup Awards (for businesses 0-3 years):\n• Startup of the Year\n• Tech Startup of the Year\n• Innovative Startup Award\n• Rising Startup Founder',
-        'sme awards': '📈 SME Awards:\n• SME of the Year\n• Fast-Growing SME\n• SME Innovation Award\n• SME Export Excellence',
-        'large enterprise awards': '🏢 Large Enterprise Awards:\n• Large Enterprise of the Year\n• Corporate Excellence Award\n• Industry Leader Award',
-        'national leadership awards': '👑 National Leadership Awards:\n• CEO of the Year\n• Entrepreneur of the Year\n• Woman Entrepreneur of the Year\n• Young Entrepreneur of the Year (Under 35)\n• Business Innovation Leader\n• Sustainability Champion\n• CSR Excellence Award\n• Overall Company of the Year',
-        
-        // Nominations
-        'nomination': '📋 Nominations for LBA open March 1 and close May 30 annually. You can nominate your business or another business across 72 award categories covering 18 economic sectors. There is NO FEE for nomination!',
-        'nomination process': '✅ To nominate a business:\n1. Click the "Nominate" button on our website\n2. Fill out the nomination form with business details\n3. Select the award category\n4. Submit your nomination\nOur team reviews all nominations.',
-        'nomination requirements': '📝 Businesses must be registered and operating in Liberia. Startups (0-3 years), SMEs, and Large Enterprises are all welcome. There is no fee for nomination.',
-        
-        // Registration
-        'registration': '📝 Businesses can register on our website by clicking the "Register" button. You\'ll need to provide business name, sector, contact information, and business description. Registration is FREE!',
-        'register': '🔘 Click the "Register Your Business" button on our homepage or in the navigation menu. Fill out the registration form with your business details. After submission, our team will review and approve your registration.',
-        'registration cost': '💰 Business registration is FREE! There is no cost to register your business or submit nominations.',
-        
-        // Voting
-        'voting': '🗳️ Public voting runs from June 1 to July 30 annually. You can vote for your favorite businesses using the voting section on our website. Each email can vote once per business. Votes are rated from 1-10.',
-        'vote': '✅ To vote:\n1. Go to the Voting section on our homepage\n2. Browse the businesses\n3. Click "Vote Now" on your chosen business\n4. Verify your email\n5. Submit your rating from 1-10',
-        'voting rules': '📏 Each person can vote once per business. You must verify your email before voting. Jury votes have additional weight in final scoring (3x weight).',
-        
-        // Partnership
-        'partnership': '🤝 We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor, Gold Sponsor, Category Sponsor, Media Partner, and Strategic Partner.',
-        'partner': '🔘 To become a partner, click the "Partner" button on our website, fill out the partnership inquiry form, and our team will contact you with sponsorship packages.',
-        'sponsorship benefits': '✨ Partners get national visibility, direct access to businesses, strategic positioning, ecosystem integration, speaking opportunities, and award presentation rights.',
-        
-        // Investment
-        'investment liberia': '💰 Liberia offers investment opportunities in Agriculture, Mining, Oil & Gas, Manufacturing, Energy, Technology, Tourism, and more. The country has a strategic West African location with access to the ECOWAS market of 400M+ consumers.',
-        'invest': '📞 Contact our investment team at contact@liberiabusinessawardslr.com or call +231 886 590 302. We provide business matching, due diligence support, and government liaison services.',
-        'why invest liberia': '📈 Liberia has a young workforce (60% under 25), rich natural resources (iron ore, gold, diamonds, rubber, timber, palm oil), investment incentives (tax holidays, duty exemptions), and a growing economy.',
-        
-        // Events & Timeline
-        'ceremony': '🎉 The Awards Ceremony takes place on December 19 annually at 6:00 PM. Tickets go on sale November 1 - December 15.',
-        'events': '📅 We host live sessions throughout the year with industry leaders and past winners. Check our Live Sessions section for upcoming events.',
-        'timeline': '📅 Complete Timeline:\n• Nominations: March 1 - May 30\n• Voting: June 1 - July 30\n• Finalists Announcement: August 1 - September 30\n• Business Interviews: October 1 - 30\n• Awards Ceremony: December 19 at 6:00 PM',
-        'deadlines': '⏰ Key Deadlines:\n📅 Nominations close: May 30 at 5:59 PM\n🗳️ Voting ends: July 30\n🏆 Ceremony: December 19 at 6:00 PM',
-        
-        // Contact & Support
-        'contact': '📞 You can reach us at:\nPhone: +231 886 590 302, +231 77 287 66 44\nEmail: liberiabusinessawards@gmail.com, contact@liberiabusinessawardslr.com',
-        'support': '🕐 Our support team is available Monday-Friday 9AM-5PM and Saturday 10AM-2PM.',
-        'email': '📧 Our email addresses:\n• liberiabusinessawards@gmail.com\n• contact@liberiabusinessawardslr.com\n• info@liberiabusinessawardslr.com\n• nominations@liberiabusinessawardslr.com\n• partnerships@liberiabusinessawardslr.com',
-        
-        // Liberia Information
-        'liberia': '🇱🇷 Liberia is a country on the West African coast, founded in 1822 by freed American slaves. It has 15 counties, Monrovia as its capital, and a population of about 5 million people.',
-        'liberia economy': '📊 Liberia\'s economy is based on agriculture (rubber, palm oil, cocoa, coffee), mining (iron ore, gold, diamonds), forestry, and services. The country is rich in natural resources.',
-        'monrovia': '🏙️ Monrovia is the capital city of Liberia, named after U.S. President James Monroe. It is the country\'s largest city and economic center.',
-        'counties': '🗺️ Liberia has 15 counties: Bomi, Bong, Gbarpolu, Grand Bassa, Grand Cape Mount, Grand Gedeh, Grand Kru, Lofa, Margibi, Maryland, Montserrado, Nimba, Rivercess, River Gee, and Sinoe.',
-        'ecowas': '🌍 ECOWAS (Economic Community of West African States) is a regional economic union of 15 West African countries. Liberia is a member, giving investors access to a market of over 400 million consumers.',
-        
-        // Featured Businesses
-        'j-palm liberia': '🌴 J-Palm Liberia (Kernel Fresh) - Sustainable Agriculture Award 2024. Transforming sustainable palm oil production into premium Liberian-made products while empowering local communities. Founded in 2011 by Mahmud Johnson.',
-        'annita': '🚀 Annita - Digital Innovation & Pan-African Impact Award. Liberia\'s first startup platform integrating e-commerce, fintech, and AI to help MSMEs scale across Africa. Founded in 2020 by Christopher O. Fallah.',
-        'gonet academy': '📚 Gonet Academy - Education & Professional Development Award. Empowering Liberia\'s next generation with professional development, mentorship, and digital skills training. Certified 500+ professionals across 12 cohorts.',
-        
-        // Help & Default
+        'nomination': '📋 Nominations for LBA open March 1 and close May 30 annually...',
+        'registration': '📝 Businesses can register on our website by clicking the "Register" button...',
+        'voting': '🗳️ Public voting runs from June 1 to July 30 annually...',
+        'partnership': '🤝 We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor...',
         'help': '💡 I can help you with:\n• Nominations & Awards\n• Business Registration\n• Voting Information\n• Partnership Opportunities\n• Investment in Liberia\n• Events & Timeline\n• 18 Economic Sectors\n• 72 Award Categories\n• Contact Information\n\nWhat would you like to know?',
         'default': 'Thank you for your question. I can help you with: 📋 Nominations, 📝 Registration, 🗳️ Voting, 🤝 Partnerships, 💰 Investment, 📅 Events, 🏆 Categories, 📊 Sectors, ⏰ Deadlines, 📞 Contact. Please rephrase your question or try one of the quick reply buttons above.'
     };
     
-    // Chat State & DOM Elements
+    // Chat State
     let lbaChatOpen = false;
     let lbaTypingTimeout = null;
     
-    // Helper: Get response from knowledge base
     function getLbaResponse(userMessage) {
         const lowerMsg = userMessage.toLowerCase();
-        
-        // Direct keyword matching (prioritize exact matches)
         for (const [key, response] of Object.entries(LBA_KNOWLEDGE)) {
-            if (lowerMsg.includes(key)) {
-                return response;
-            }
+            if (lowerMsg.includes(key)) return response;
         }
-        
-        // Specific keyword triggers
         if (lowerMsg.includes('nominate') || lowerMsg.includes('nomination')) return LBA_KNOWLEDGE.nomination;
-        if (lowerMsg.includes('register') || lowerMsg.includes('registration')) return LBA_KNOWLEDGE.registration;
-        if (lowerMsg.includes('vote') || lowerMsg.includes('voting')) return LBA_KNOWLEDGE.voting;
-        if (lowerMsg.includes('partner') || lowerMsg.includes('sponsor')) return LBA_KNOWLEDGE.partnership;
-        if (lowerMsg.includes('invest')) return LBA_KNOWLEDGE['investment liberia'];
-        if (lowerMsg.includes('event') || lowerMsg.includes('ceremony')) return LBA_KNOWLEDGE.ceremony;
-        if (lowerMsg.includes('contact') || lowerMsg.includes('email') || lowerMsg.includes('phone')) return LBA_KNOWLEDGE.contact;
-        if (lowerMsg.includes('deadline')) return LBA_KNOWLEDGE.deadlines;
-        if (lowerMsg.includes('category')) return LBA_KNOWLEDGE['award categories'];
-        if (lowerMsg.includes('sector')) return LBA_KNOWLEDGE['18 sectors'];
+        if (lowerMsg.includes('register')) return LBA_KNOWLEDGE.registration;
+        if (lowerMsg.includes('vote')) return LBA_KNOWLEDGE.voting;
+        if (lowerMsg.includes('partner')) return LBA_KNOWLEDGE.partnership;
         if (lowerMsg.includes('help')) return LBA_KNOWLEDGE.help;
-        if (lowerMsg.includes('about')) return LBA_KNOWLEDGE['what is lba'];
-        
-        // If message is substantial but not found, offer a web search suggestion
-        if (lowerMsg.length > 10) {
-            const searchQuery = encodeURIComponent(`Liberia Business Awards ${userMessage}`);
-            return `🔍 I couldn't find that specific information in my knowledge base.\n\n📌 <a href="https://www.google.com/search?q=${searchQuery}" target="_blank" style="color: #FF0000;">Click here to search Google</a>\n\n📞 Or contact our team directly at +231 886 590 302 for immediate assistance.\n\n💡 Tip: Try asking about "nominations", "voting", "categories", or "sectors" for quick answers!`;
-        }
-        
+        if (lowerMsg.includes('sector')) return LBA_KNOWLEDGE['18 sectors'];
         return LBA_KNOWLEDGE.default;
     }
     
-    // UI Functions
     function addLbaMessage(text, sender) {
         const container = document.getElementById('lbaChatMessages');
         if (!container) return;
@@ -12633,17 +12541,14 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         if (indicator) indicator.remove();
     }
     
-    // Core Chat Actions
     window.sendLbaChatMessage = function() {
         const input = document.getElementById('lbaChatInput');
         if (!input) return;
         const message = input.value.trim();
         if (!message) return;
-        
         addLbaMessage(message, 'user');
         input.value = '';
         showLbaTyping();
-        
         if (lbaTypingTimeout) clearTimeout(lbaTypingTimeout);
         lbaTypingTimeout = setTimeout(() => {
             const response = getLbaResponse(message);
@@ -12697,7 +12602,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         if (event.key === 'Enter') sendLbaChatMessage();
     };
     
-    // Event Listeners & Initialization
     document.addEventListener('DOMContentLoaded', function() {
         const chatButton = document.getElementById('lbaChatButton');
         const chatClose = document.getElementById('lbaChatClose');
@@ -12716,19 +12620,20 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         if (chatClose) chatClose.addEventListener('click', () => chatContainer?.classList.remove('open'));
         if (chatMinimize) chatMinimize.addEventListener('click', () => chatContainer?.classList.remove('open'));
         
-        // Optional: Close on Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && lbaChatOpen && chatContainer) {
                 chatContainer.classList.remove('open');
                 lbaChatOpen = false;
             }
         });
-        });
+    });
 </script>
 
-<script>
+
+ <script>
 // ============================================
 // DYNAMIC ADS SYSTEM - COMPLETE FIXED VERSION
+// Supports: IMAGES + VIDEOS (MP4, WebM)
 // ============================================
 
 const AdManager = {
@@ -12746,22 +12651,16 @@ const AdManager = {
     // Debug override - set to true to bypass localStorage block
     forceShowAds: false,
     
-    // Initialize ad system - FIXED ASYNC FLOW
+    // Initialize ad system
     async init() {
         console.log('📢 Initializing Dynamic Ad System...');
         
-        // FIX 1: Ensure container elements exist before fetching
         this.ensureTopBannerContainer();
         this.ensureSidebarContainer();
         this.ensureFloatingContainerCreated();
         
-        // FIX 2: Wait for data to load before rendering
         await this.fetchAllAds();
-        
-        // FIX 3: Now render with actual data
         this.renderAllAds();
-        
-        // Start auto-refresh
         this.startAutoRefresh();
         
         console.log('✅ Ad System Initialized - Ads loaded:', 
@@ -12770,6 +12669,37 @@ const AdManager = {
             this.adsCache.inline.length + 
             this.adsCache.floating.length
         );
+    },
+    
+    // Helper: Get media URL from ad (supports multiple field names)
+    getMediaUrl(ad) {
+        return ad.image_url || ad.image || ad.video_url || ad.media_url || '';
+    },
+    
+    // Helper: Check if media is a video
+    isVideo(url) {
+        if (!url) return false;
+        const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg'];
+        return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+    },
+    
+    // Helper: Generate HTML for media (image or video)
+    getMediaHtml(ad, styles = '', lazyLoad = false) {
+        const mediaUrl = this.getMediaUrl(ad);
+        if (!mediaUrl) return '';
+        
+        const isVideo = this.isVideo(mediaUrl);
+        const lazyAttr = lazyLoad ? 'loading="lazy"' : '';
+        
+        if (isVideo) {
+            return `<video autoplay muted loop playsinline ${lazyAttr} style="${styles}">
+                        <source src="${mediaUrl}" type="video/mp4">
+                        <source src="${mediaUrl}" type="video/webm">
+                        <img src="${mediaUrl}" alt="${ad.title}" style="${styles}" onerror="this.style.display='none'">
+                    </video>`;
+        } else {
+            return `<img src="${mediaUrl}" alt="${ad.title}" style="${styles}" ${lazyAttr} onerror="this.style.display='none'">`;
+        }
     },
     
     // Ensure top banner container exists
@@ -12800,7 +12730,6 @@ const AdManager = {
             sidebarContainer.className = 'sidebar-ad-container';
             sidebarContainer.style.cssText = 'margin-bottom: 30px;';
             
-            // Find suitable location
             const businessDirectory = document.getElementById('businessDirectory');
             if (businessDirectory) {
                 businessDirectory.insertBefore(sidebarContainer, businessDirectory.firstChild);
@@ -12814,7 +12743,7 @@ const AdManager = {
         }
     },
     
-    // Ensure floating container is created AND visible
+    // Ensure floating container exists
     ensureFloatingContainerCreated() {
         let floatingContainer = document.getElementById('dynamicFloatingAd');
         if (!floatingContainer) {
@@ -12896,9 +12825,11 @@ const AdManager = {
         if (!bannerContainer) return;
         
         const ad = ads[0];
+        const mediaHtml = this.getMediaHtml(ad, 'max-width: 100%; border-radius: 12px; max-height: 120px; object-fit: contain;');
+        
         bannerContainer.innerHTML = `
             <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="display: block; text-decoration: none;">
-                <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 12px; max-height: 120px; object-fit: contain;">
+                ${mediaHtml}
                 ${ad.description ? `<p style="margin-top: 5px; font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
             </a>
         `;
@@ -12916,16 +12847,19 @@ const AdManager = {
         const sidebarContainer = document.getElementById('dynamicSidebarAds');
         if (!sidebarContainer) return;
         
-        sidebarContainer.innerHTML = ads.map(ad => `
-            <div class="sidebar-ad-item" style="margin-bottom: 20px; text-align: center;">
-                <div class="sidebar-ad-label" style="font-size: 10px; color: #9ca3af; margin-bottom: 5px;">Advertisement</div>
-                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')">
-                    <img src="${ad.image_url}" alt="${ad.title}" style="width: 100%; border-radius: 8px;">
-                    <h4 style="margin-top: 8px; font-size: 14px; font-weight: 600;">${ad.title}</h4>
-                    ${ad.description ? `<p style="font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
-                </a>
-            </div>
-        `).join('');
+        sidebarContainer.innerHTML = ads.map(ad => {
+            const mediaHtml = this.getMediaHtml(ad, 'width: 100%; border-radius: 8px;', true);
+            return `
+                <div class="sidebar-ad-item" style="margin-bottom: 20px; text-align: center;">
+                    <div class="sidebar-ad-label" style="font-size: 10px; color: #9ca3af; margin-bottom: 5px;">Advertisement</div>
+                    <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')">
+                        ${mediaHtml}
+                        <h4 style="margin-top: 8px; font-size: 14px; font-weight: 600;">${ad.title}</h4>
+                        ${ad.description ? `<p style="font-size: 12px; color: #64748b;">${ad.description}</p>` : ''}
+                    </a>
+                </div>
+            `;
+        }).join('');
         
         ads.forEach(ad => this.trackView(ad._id));
         console.log(`✅ ${ads.length} sidebar ad(s) rendered`);
@@ -12938,7 +12872,6 @@ const AdManager = {
         
         if (!ads.length) return;
         
-        // Find suitable content containers
         const contentContainers = document.querySelectorAll('.category-card, .blog-card, .featured-card, .team-member');
         
         if (contentContainers.length === 0) {
@@ -12948,8 +12881,8 @@ const AdManager = {
         
         contentContainers.forEach((container, index) => {
             if (index === 2 && ads.length > 0) {
-                const adIndex = 0;
-                const ad = ads[adIndex];
+                const ad = ads[0];
+                const mediaHtml = this.getMediaHtml(ad, 'max-width: 100%; border-radius: 12px; margin-bottom: 10px; max-height: 150px;', true);
                 
                 const inlineAdDiv = document.createElement('div');
                 inlineAdDiv.className = 'in-content-ad-container';
@@ -12957,7 +12890,7 @@ const AdManager = {
                 inlineAdDiv.innerHTML = `
                     <div class="ad-label" style="font-size: 10px; color: #9ca3af; margin-bottom: 8px;">Sponsored</div>
                     <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="text-decoration: none;">
-                        <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 12px; margin-bottom: 10px; max-height: 150px;">
+                        ${mediaHtml}
                         <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${ad.title}</h4>
                         ${ad.description ? `<p style="font-size: 13px; color: #6c757d;">${ad.description}</p>` : ''}
                         <button class="ad-cta-btn" style="background: #FF0000; color: white; border: none; padding: 8px 20px; border-radius: 30px; margin-top: 10px; cursor: pointer;">Learn More</button>
@@ -12971,92 +12904,80 @@ const AdManager = {
         });
     },
     
-    // ADD THIS NEW PROPERTY TO TRACK CURRENT AD INDEX
-currentFloatingAdIndex: 0,
-floatingAdTimer: null,
-
-// Render floating/popup ad - ROTATIONAL VERSION
-renderFloatingAd() {
-    const ads = this.adsCache.floating;
-    console.log(`📢 Floating ads available: ${ads.length}`);
+    // Floating ad rotation state
+    currentFloatingAdIndex: 0,
+    floatingAdTimer: null,
     
-    if (!ads.length) return;
-    
-    // Check if we should show any ad (skip if recently closed by user)
-    const lastClosed = localStorage.getItem('floatingAdClosed');
-    if (!this.forceShowAds && lastClosed && (Date.now() - parseInt(lastClosed)) < 30 * 60 * 1000) {
-        console.log('⚠️ Floating ad blocked by localStorage (closed within 30 min)');
-        console.log(`   Time remaining: ${Math.ceil((30 * 60 * 1000 - (Date.now() - parseInt(lastClosed))) / 1000)}s`);
-        return;
-    }
-    
-    // Ensure container exists
-    const floatingContainer = this.ensureFloatingContainerCreated();
-    if (!floatingContainer) return;
-    
-    // Get current ad based on rotation index
-    const ad = ads[this.currentFloatingAdIndex];
-    console.log(`📢 Rendering floating ad ${this.currentFloatingAdIndex + 1}/${ads.length}: "${ad.title}"`);
-    
-    floatingContainer.innerHTML = `
-        <div class="ad-header" onclick="AdManager.toggleMinimize()" style="background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-            <span style="font-size: 14px; font-weight: 600;"><i class="fas fa-ad"></i> Advertisement ${this.currentFloatingAdIndex + 1}/${ads.length}</span>
-            <button class="ad-close" onclick="event.stopPropagation(); AdManager.closeFloatingAd(event)" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;">✕</button>
-        </div>
-        <div class="ad-content" style="padding: 20px; text-align: center;">
-            <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="text-decoration: none;">
-                <img src="${ad.image_url}" alt="${ad.title}" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 150px;">
-                <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${ad.title}</h4>
-                ${ad.description ? `<p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">${ad.description}</p>` : ''}
-                <button class="ad-btn" style="background: #FF0000; color: white; border: none; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: 600;">Learn More →</button>
-            </a>
-        </div>
-    `;
-    
-    floatingContainer.classList.add('active');
-    floatingContainer.style.display = 'block';
-    floatingContainer.style.zIndex = '9998';
-    floatingContainer.style.position = 'fixed';
-    floatingContainer.style.bottom = '100px';
-    floatingContainer.style.right = '20px';
-    floatingContainer.style.width = '300px';
-    floatingContainer.style.backgroundColor = 'white';
-    floatingContainer.style.borderRadius = '16px';
-    floatingContainer.style.boxShadow = '0 10px 40px rgba(0,0,0,0.2)';
-    floatingContainer.style.overflow = 'hidden';
-    
-    this.trackView(ad._id);
-    console.log('✅ Floating ad rendered and visible');
-    
-    // Clear any existing timer
-    if (this.floatingAdTimer) {
-        clearTimeout(this.floatingAdTimer);
-    }
-    
-    // Auto-hide after 15 seconds and show next ad
-    this.floatingAdTimer = setTimeout(() => {
-        if (floatingContainer && floatingContainer.classList && floatingContainer.classList.contains('active')) {
-            floatingContainer.classList.remove('active');
-            floatingContainer.style.display = 'none';
-            console.log('⏰ Floating ad auto-hidden after 15 seconds');
-            
-            // Move to next ad index (rotation)
-            this.currentFloatingAdIndex++;
-            
-            // If we've shown all ads, start over from beginning
-            if (this.currentFloatingAdIndex >= ads.length) {
-                this.currentFloatingAdIndex = 0;
-                console.log('🔄 All ads shown, restarting rotation from first ad');
-            }
-            
-            // Show next ad after a 2-second delay (or immediately if you prefer)
-            setTimeout(() => {
-                console.log('🔄 Showing next floating ad...');
-                this.renderFloatingAd();
-            }, 2000);  // 2 second gap between ads (adjust as needed)
+    // Render floating/popup ad
+    renderFloatingAd() {
+        const ads = this.adsCache.floating;
+        console.log(`📢 Floating ads available: ${ads.length}`);
+        
+        if (!ads.length) return;
+        
+        const lastClosed = localStorage.getItem('floatingAdClosed');
+        if (!this.forceShowAds && lastClosed && (Date.now() - parseInt(lastClosed)) < 30 * 60 * 1000) {
+            console.log('⚠️ Floating ad blocked by localStorage (closed within 30 min)');
+            return;
         }
-    }, 15000);
-},
+        
+        const floatingContainer = this.ensureFloatingContainerCreated();
+        if (!floatingContainer) return;
+        
+        const ad = ads[this.currentFloatingAdIndex];
+        const mediaHtml = this.getMediaHtml(ad, 'max-width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 150px;');
+        
+        floatingContainer.innerHTML = `
+            <div class="ad-header" onclick="AdManager.toggleMinimize()" style="background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <span style="font-size: 14px; font-weight: 600;"><i class="fas fa-ad"></i> Advertisement ${this.currentFloatingAdIndex + 1}/${ads.length}</span>
+                <button class="ad-close" onclick="event.stopPropagation(); AdManager.closeFloatingAd(event)" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;">✕</button>
+            </div>
+            <div class="ad-content" style="padding: 20px; text-align: center;">
+                <a href="${ad.link_url || '#'}" target="_blank" onclick="AdManager.trackClick('${ad._id}')" style="text-decoration: none;">
+                    ${mediaHtml}
+                    <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${ad.title}</h4>
+                    ${ad.description ? `<p style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">${ad.description}</p>` : ''}
+                    <button class="ad-btn" style="background: #FF0000; color: white; border: none; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: 600;">Learn More →</button>
+                </a>
+            </div>
+        `;
+        
+        floatingContainer.classList.add('active');
+        floatingContainer.style.display = 'block';
+        floatingContainer.style.zIndex = '9998';
+        floatingContainer.style.position = 'fixed';
+        floatingContainer.style.bottom = '100px';
+        floatingContainer.style.right = '20px';
+        floatingContainer.style.width = '300px';
+        floatingContainer.style.backgroundColor = 'white';
+        floatingContainer.style.borderRadius = '16px';
+        floatingContainer.style.boxShadow = '0 10px 40px rgba(0,0,0,0.2)';
+        floatingContainer.style.overflow = 'hidden';
+        
+        this.trackView(ad._id);
+        console.log(`✅ Floating ad rendered: "${ad.title}"`);
+        
+        if (this.floatingAdTimer) clearTimeout(this.floatingAdTimer);
+        
+        this.floatingAdTimer = setTimeout(() => {
+            if (floatingContainer && floatingContainer.classList && floatingContainer.classList.contains('active')) {
+                floatingContainer.classList.remove('active');
+                floatingContainer.style.display = 'none';
+                console.log('⏰ Floating ad auto-hidden after 15 seconds');
+                
+                this.currentFloatingAdIndex++;
+                if (this.currentFloatingAdIndex >= ads.length) {
+                    this.currentFloatingAdIndex = 0;
+                    console.log('🔄 All ads shown, restarting rotation');
+                }
+                
+                setTimeout(() => {
+                    console.log('🔄 Showing next floating ad...');
+                    this.renderFloatingAd();
+                }, 2000);
+            }
+        }, 15000);
+    },
     
     // Track ad click
     async trackClick(adId) {
@@ -13098,37 +13019,32 @@ renderFloatingAd() {
         }
     },
     
-   // Close floating ad - NO BLOCK (keeps rotating)
-closeFloatingAd(event) {
-    event.stopPropagation();
-    const container = document.getElementById('dynamicFloatingAd');
-    if (container) {
-        container.classList.remove('active');
-        container.style.display = 'none';
-        
-        // Clear the auto-hide timer
-        if (this.floatingAdTimer) {
-            clearTimeout(this.floatingAdTimer);
-        }
-        
-        // Move to next ad immediately
-        const ads = this.adsCache.floating;
-        if (ads && ads.length > 0) {
-            this.currentFloatingAdIndex++;
-            if (this.currentFloatingAdIndex >= ads.length) {
-                this.currentFloatingAdIndex = 0;
+    // Close floating ad - NO BLOCK (keeps rotating)
+    closeFloatingAd(event) {
+        event.stopPropagation();
+        const container = document.getElementById('dynamicFloatingAd');
+        if (container) {
+            container.classList.remove('active');
+            container.style.display = 'none';
+            
+            if (this.floatingAdTimer) clearTimeout(this.floatingAdTimer);
+            
+            const ads = this.adsCache.floating;
+            if (ads && ads.length > 0) {
+                this.currentFloatingAdIndex++;
+                if (this.currentFloatingAdIndex >= ads.length) {
+                    this.currentFloatingAdIndex = 0;
+                }
+                
+                setTimeout(() => {
+                    console.log('🔄 Showing next ad after user closed...');
+                    this.renderFloatingAd();
+                }, 1000);
             }
             
-            // Show next ad after 1 second
-            setTimeout(() => {
-                console.log('🔄 Showing next ad after user closed...');
-                this.renderFloatingAd();
-            }, 1000);
+            console.log('❌ Floating ad closed, showing next ad');
         }
-        
-        console.log('❌ Floating ad closed, showing next ad');
-    }
-},
+    },
     
     // Force show ads (debug)
     forceShowAllAds() {
@@ -13156,17 +13072,14 @@ closeFloatingAd(event) {
     }
 };
 
-// Initialize Ad Manager when page loads - WITH TIMING FIX
+// Initialize Ad Manager when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    // Small delay to ensure DOM is fully ready
     setTimeout(() => {
         AdManager.init();
     }, 100);
 });
 
-// Also run on load for safety
 window.addEventListener('load', () => {
-    // Ensure containers exist and ads are rendered
     setTimeout(() => {
         if (AdManager.adsCache.lastFetch === null) {
             console.log('🔄 Re-initializing ads on load...');
@@ -13187,7 +13100,9 @@ console.log('✅ AdManager loaded - Debug commands available:');
 console.log('   - forceShowAds() - Force show all ads');
 console.log('   - resetAdState() - Reset localStorage blocking');
 console.log('   - checkAdCache() - Check loaded ads');
-</script>
+</script>   
+
+    
 
  <script>
 // FORCE OVERRIDE - Ensures scrolling bar uses correct function
