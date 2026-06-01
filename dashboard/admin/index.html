@@ -3544,7 +3544,7 @@ function closeModal(modalId) {
 
 
 // ============================================
-// COMPLETE FIXED ADS MANAGEMENT - NO ERRORS
+// COMPLETE WORKING ADS MANAGEMENT - ONE SOLUTION
 // ============================================
 
 let adsData = [];
@@ -3629,6 +3629,7 @@ function createAdsManagementModal() {
         </div>
     </div>
     
+    <!-- CREATE AD MODAL -->
     <div class="modal" id="createAdModal">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
@@ -3737,7 +3738,7 @@ function showCreateAdModal() {
     document.getElementById('createAdModal').classList.add('active');
 }
 
-// ============ LOAD ADS (FIXED FUNCTION NAME) ============
+// ============ LOAD ADS ============
 async function loadAdsList(page = 1) {
     const tbody = document.getElementById('adsTableBody');
     if (!tbody) return;
@@ -3836,7 +3837,7 @@ function updateAdsPagination() {
     container.innerHTML = html;
 }
 
-// ============ SAVE AD (FIXED - CALLS loadAdsList) ============
+// ============ SAVE AD ============
 async function saveAd() {
     const adId = document.getElementById('adId').value;
     const token = localStorage.getItem('lba_auth_token');
@@ -3895,7 +3896,7 @@ async function saveAd() {
         if (result.success) {
             showNotification(adId ? 'Ad updated! Pending approval.' : 'Ad created! Pending approval.', 'success');
             closeCreateAdModal();
-            await loadAdsList(); // FIXED: calls loadAdsList, not loadAds
+            await loadAdsList(); // FIXED: calls loadAdsList
         } else {
             errorEl.textContent = result.message || 'Error saving ad';
             errorEl.style.display = 'block';
@@ -3912,6 +3913,8 @@ async function saveAd() {
 
 // ============ EDIT AD ============
 async function editAd(adId) {
+    console.log('📝 Editing ad ID:', adId);
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
         const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
@@ -4011,7 +4014,7 @@ async function rejectAd(adId) {
     }
 }
 
-// ============ DELETE AD (FIXED) ============
+// ============ DELETE AD ============
 async function deleteAd(adId) {
     if (!confirm('Delete this ad? This action cannot be undone.')) return;
     
@@ -4035,7 +4038,7 @@ async function deleteAd(adId) {
     }
 }
 
-// ============ CREATE TEST AD WITH WORKING IMAGE ============
+// ============ CREATE TEST AD ============
 async function createTestAd() {
     const token = localStorage.getItem('lba_auth_token');
     
