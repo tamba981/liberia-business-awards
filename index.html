@@ -838,29 +838,7 @@ html, body {
     }
 }
 
-@media (max-width: 768px) {
-    .lba-chat-container {
-        bottom: 70px;
-        right: -5px;
-        width: min(350px, 92vw);
-        max-height: 450px;  /* ← Smaller on mobile */
-    }
-}
-
-@media (max-width: 480px) {
-    .lba-chat-container {
-        max-height: 400px;
-    }
-    
-    .lba-chat-messages {
-        max-height: calc(400px - 140px);  /* Adjust for header/footer */
-        overflow-y: auto;
-    }
-}
-
-
-
-        
+   
         
 /* ============================================ */
 /* ✅ FIX MOBILE STICKY/JERKY SCROLLING */
@@ -12237,8 +12215,9 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
 </div>
 
 <style>
+
 /* ============================================ */
-/* FIXED CHAT WIDGET STYLES - NO OVERFLOW */
+/* FIXED CHAT WIDGET STYLES - STRUCTURAL LAYOUT */
 /* ============================================ */
 
 /* WhatsApp Button */
@@ -12282,10 +12261,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     visibility: visible;
 }
 
-/* ============================================ */
-/* FIXED CHAT WIDGET STYLES - STRUCTURAL LAYOUT */
-/* ============================================ */
-
 /* Main Chat Widget Container */
 .chat-widget {
     position: fixed;
@@ -12315,6 +12290,17 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     font-size: 26px;
     color: white;
 }
+.chat-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    background: #10B981;
+    border-radius: 50%;
+    border: 2px solid white;
+    animation: pulse 2s infinite;
+}
 
 /* CHAT PANEL - THE FIXED CONTAINER */
 .chat-panel {
@@ -12322,15 +12308,13 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     bottom: 70px;
     right: 0;
     width: 350px;
-    /* --- FIX #1: REMOVE DYNAMIC HEIGHT --- */
     height: 500px; /* FIXED, STABLE HEIGHT */
-    /* ------------------------------------- */
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Ensures rounded corners and no overflow */
+    overflow: hidden;
     transform: scale(0);
     opacity: 0;
     visibility: hidden;
@@ -12343,7 +12327,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     visibility: visible;
 }
 
-/* --- FIX #2: FIXED HEADER & FOOTER --- */
+/* FIXED HEADER */
 .chat-header {
     background: linear-gradient(135deg, #FF0000, #87CEEB);
     padding: 12px 16px;
@@ -12351,9 +12335,8 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     justify-content: space-between;
     align-items: center;
     color: white;
-    flex-shrink: 0; /* PREVENTS HEADER FROM SHRINKING */
+    flex-shrink: 0;
 }
-/* ... header internal styling ... */
 .chat-header-info {
     display: flex;
     align-items: center;
@@ -12367,31 +12350,69 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 20px;
 }
-.chat-header-info h3 { font-size: 14px; font-weight: 700; margin: 0; }
-.chat-header-info p { font-size: 10px; margin: 2px 0 0; opacity: 0.85; }
+.chat-header-info h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+}
+.chat-header-info p {
+    font-size: 10px;
+    margin: 2px 0 0;
+    opacity: 0.85;
+}
+.chat-minimize, .chat-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.chat-minimize:hover, .chat-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
 
-/* --- FIX #3: SCROLLING MESSAGE AREA (THE "MAGIC" IS HERE) --- */
+/* SCROLLING MESSAGE AREA - CRITICAL FIX HERE */
 .chat-messages {
-    flex: 1 1 auto; /* Takes all available space */
-    overflow-y: auto; /* Enables scrolling */
+    flex: 1 1 auto;
+    overflow-y: auto;
     padding: 15px;
     background: #f8f9fa;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    /* --- THIS IS THE CRITICAL FIX --- */
-    min-height: 0;
-    /* ------------------------------- */
+    min-height: 0; /* CRITICAL - allows shrinking */
 }
-/* ... message styling ... */
+.chat-messages::-webkit-scrollbar {
+    width: 4px;
+}
+.chat-messages::-webkit-scrollbar-track {
+    background: #e2e8f0;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #FF0000;
+    border-radius: 10px;
+}
+
+/* Message Bubbles */
 .message {
     display: flex;
     flex-direction: column;
     max-width: 85%;
 }
-.message.bot { align-self: flex-start; }
-.message.user { align-self: flex-end; }
+.message.bot {
+    align-self: flex-start;
+}
+.message.user {
+    align-self: flex-end;
+}
 .message-content {
     padding: 10px 14px;
     border-radius: 18px;
@@ -12413,10 +12434,13 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     font-size: 9px;
     color: #94a3b8;
     margin-top: 4px;
+    padding: 0 5px;
 }
-.message.user .message-time { text-align: right; }
+.message.user .message-time {
+    text-align: right;
+}
 
-/* --- FIXED OPTIONS, INPUT, FOOTER --- */
+/* Chat Options */
 .chat-options {
     padding: 10px 12px;
     display: flex;
@@ -12435,6 +12459,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     border-radius: 20px;
     font-size: 11px;
     font-weight: 500;
+    color: #1a202c;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -12443,13 +12468,14 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     color: white;
 }
 
+/* Input Area - FIXED */
 .chat-input-area {
     padding: 10px 12px;
     display: flex;
     gap: 8px;
     border-top: 1px solid #e2e8f0;
     background: white;
-    flex-shrink: 0; /* PREVENTS INPUT AREA FROM SHRINKING */
+    flex-shrink: 0;
 }
 .chat-input-area input {
     flex: 1;
@@ -12471,53 +12497,42 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     border-radius: 50%;
     color: white;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+/* Footer - FIXED */
 .chat-footer {
     padding: 6px 12px;
     background: #f8f9fa;
+    text-align: center;
     font-size: 10px;
     color: #94a3b8;
     border-top: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
-    flex-shrink: 0; /* PREVENTS FOOTER FROM SHRINKING */
+    align-items: center;
+    flex-shrink: 0;
 }
 .chat-reset {
     background: none;
     border: none;
     color: #FF0000;
     cursor: pointer;
+    font-size: 10px;
+}
+.chat-reset:hover {
+    text-decoration: underline;
 }
 
-/* Mobile Responsive Variants */
-@media (max-width: 768px) {
-    .chat-widget { bottom: 15px; right: 15px; }
-    .chat-button { width: 48px; height: 48px; }
-    .chat-button i { font-size: 22px; }
-    .chat-panel {
-        width: 320px;
-        height: 450px; /* SMALLER FIXED HEIGHT ON TABLETS */
-        bottom: 65px;
-        right: -5px;
-    }
-}
-
-@media (max-width: 480px) {
-    .chat-panel {
-        width: 290px;
-        height: 420px; /* SMALLEST FIXED HEIGHT ON PHONES */
-        right: -10px;
-    }
-}
-
-/* Utility */
+/* Animations */
 @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(1.2); }
 }
 
-/* Mobile */
+/* Mobile Responsive */
 @media (max-width: 768px) {
     .whatsapp-float-fixed {
         bottom: 15px;
@@ -12544,6 +12559,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         right: -5px;
     }
 }
+
 @media (max-width: 480px) {
     .chat-panel {
         width: 290px;
@@ -12551,6 +12567,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         right: -10px;
     }
 }
+    
 </style>
 
 <script>
