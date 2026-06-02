@@ -12237,7 +12237,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
 </div>
 
 <style>
-
 /* ============================================ */
 /* WHATSAPP BUTTON STYLES */
 /* ============================================ */
@@ -12277,11 +12276,11 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
 .whatsapp-float:hover .whatsapp-tooltip { opacity: 1; visibility: visible; }
 
 /* ============================================ */
-/* MAIN CHAT WIDGET STYLES - FIXED VERSION */
+/* MAIN CHAT WIDGET - COMPLETE REWRITE FIXED */
 /* ============================================ */
 .lba-chat-widget {
     position: fixed;
-    bottom: 30px;
+    bottom: 20px;
     right: 20px;
     z-index: 9999;
     font-family: 'Poppins', sans-serif;
@@ -12300,7 +12299,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     transition: all 0.3s ease;
     position: relative;
 }
-.lba-chat-button:hover { transform: scale(1.1); box-shadow: 0 6px 25px rgba(255, 0, 0, 0.4); }
+.lba-chat-button:hover { transform: scale(1.1); }
 .lba-chat-button i { font-size: 28px; color: white; }
 .lba-chat-badge {
     position: absolute;
@@ -12308,54 +12307,58 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     right: -3px;
     background: #10B981;
     color: white;
-    font-size: 10px;
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     border: 2px solid white;
 }
-.pulse { animation: pulseDot 2s infinite; }
-@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.2); } }
 
-/* FIXED CONTAINER - PROPER HEIGHT CONSTRAINTS */
+/* FIXED: CONTAINER WITH PROPER HEIGHT CONSTRAINTS */
 .lba-chat-container {
     position: absolute;
     bottom: 80px;
     right: 0;
-    width: min(420px, 90vw);
-    height: 520px;
+    width: 380px;
+    height: 500px;
     max-height: 70vh;
     background: white;
-    border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     transform: scale(0);
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     transform-origin: bottom right;
-    border: 1px solid rgba(255, 0, 0, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
-.lba-chat-container.open { transform: scale(1); opacity: 1; visibility: visible; }
+.lba-chat-container.open {
+    transform: scale(1);
+    opacity: 1;
+    visibility: visible;
+}
 
+/* HEADER - FIXED HEIGHT */
 .lba-chat-header {
     background: linear-gradient(135deg, #FF0000, #87CEEB);
-    padding: 16px 20px;
+    padding: 14px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: white;
     flex-shrink: 0;
+    height: 70px;
 }
-.lba-chat-header-info { display: flex; align-items: center; gap: 12px; }
+.lba-chat-header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 .lba-chat-avatar {
-    width: 45px;
-    height: 45px;
+    width: 44px;
+    height: 44px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     display: flex;
@@ -12363,9 +12366,18 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     justify-content: center;
     font-size: 22px;
 }
-.lba-chat-header-info h3 { font-size: 16px; font-weight: 700; margin: 0; color: white; }
-.lba-chat-header-info p { font-size: 11px; margin: 2px 0 0; opacity: 0.85; color: white; }
-.lba-chat-header-actions { display: flex; gap: 8px; }
+.lba-chat-header-info h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+}
+.lba-chat-header-info p {
+    font-size: 11px;
+    margin: 2px 0 0;
+    opacity: 0.85;
+    color: white;
+}
 .lba-chat-minimize, .lba-chat-close {
     background: rgba(255, 255, 255, 0.2);
     border: none;
@@ -12374,75 +12386,110 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     height: 32px;
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-.lba-chat-minimize:hover, .lba-chat-close:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.05); }
+.lba-chat-minimize:hover, .lba-chat-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
 
-/* FIXED MESSAGES AREA - SCROLLABLE WITH LIMITED HEIGHT */
+/* MESSAGES AREA - SCROLLABLE, TAKES REMAINING SPACE */
 .lba-chat-messages {
     flex: 1;
-    padding: 20px;
+    padding: 16px;
     overflow-y: auto;
     background: #f8f9fa;
     display: flex;
     flex-direction: column;
     gap: 12px;
     min-height: 0;
-    max-height: calc(100% - 160px);
 }
-.lba-chat-messages::-webkit-scrollbar { width: 5px; }
-.lba-chat-messages::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
-.lba-chat-messages::-webkit-scrollbar-thumb { background: #FF0000; border-radius: 10px; }
+.lba-chat-messages::-webkit-scrollbar {
+    width: 5px;
+}
+.lba-chat-messages::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+.lba-chat-messages::-webkit-scrollbar-thumb {
+    background: #FF0000;
+    border-radius: 10px;
+}
 
-.lba-message { display: flex; flex-direction: column; max-width: 85%; animation: fadeInUp 0.3s ease; }
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.lba-message.bot { align-self: flex-start; }
-.lba-message.user { align-self: flex-end; }
+.lba-message {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+    animation: fadeInUp 0.3s ease;
+}
+.lba-message.bot {
+    align-self: flex-start;
+}
+.lba-message.user {
+    align-self: flex-end;
+}
 .lba-message-content {
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: 18px;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.4;
     word-wrap: break-word;
 }
-.lba-message.bot .lba-message-content { background: white; color: #1a202c; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-.lba-message.user .lba-message-content { background: linear-gradient(135deg, #FF0000, #87CEEB); color: white; border-bottom-right-radius: 4px; }
-.lba-message-content a { color: #FF0000; text-decoration: underline; }
-.lba-message.user .lba-message-content a { color: white; }
-.lba-message-time { font-size: 10px; color: #94a3b8; margin-top: 4px; padding: 0 5px; }
-.lba-message.user .lba-message-time { text-align: right; }
+.lba-message.bot .lba-message-content {
+    background: white;
+    color: #1a202c;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.lba-message.user .lba-message-content {
+    background: linear-gradient(135deg, #FF0000, #87CEEB);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+.lba-message-time {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 4px;
+    padding: 0 5px;
+}
+.lba-message.user .lba-message-time {
+    text-align: right;
+}
 
+/* OPTIONS BUTTONS - WRAPPED, LIMITED HEIGHT */
 .lba-chat-options {
-    padding: 12px 15px;
+    padding: 10px 12px;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     border-top: 1px solid #e2e8f0;
     background: white;
     flex-shrink: 0;
-    max-height: 110px;
+    max-height: 100px;
     overflow-y: auto;
 }
 .lba-option-btn {
     background: #f1f5f9;
     border: none;
-    padding: 7px 14px;
-    border-radius: 25px;
+    padding: 6px 12px;
+    border-radius: 20px;
     font-size: 11px;
     font-weight: 500;
     color: #1a202c;
     cursor: pointer;
     transition: all 0.2s;
-    font-family: 'Poppins', sans-serif;
     white-space: nowrap;
 }
-.lba-option-btn:hover { background: #FF0000; color: white; transform: translateY(-2px); }
+.lba-option-btn:hover {
+    background: #FF0000;
+    color: white;
+    transform: translateY(-1px);
+}
 
+/* INPUT AREA - FIXED HEIGHT */
 .lba-chat-input-container {
-    padding: 12px 15px;
+    padding: 12px;
     display: flex;
     gap: 10px;
     border-top: 1px solid #e2e8f0;
@@ -12451,32 +12498,37 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
 }
 .lba-chat-input-container input {
     flex: 1;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border: 1px solid #e2e8f0;
     border-radius: 30px;
     font-size: 13px;
     outline: none;
-    font-family: 'Poppins', sans-serif;
     background: #f8fafc;
 }
-.lba-chat-input-container input:focus { border-color: #FF0000; background: white; box-shadow: 0 0 0 2px rgba(255,0,0,0.1); }
+.lba-chat-input-container input:focus {
+    border-color: #FF0000;
+    background: white;
+    box-shadow: 0 0 0 2px rgba(255,0,0,0.1);
+}
 .lba-chat-input-container button {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, #FF0000, #87CEEB);
     border: none;
     border-radius: 50%;
     color: white;
     cursor: pointer;
-    transition: all 0.3s;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-.lba-chat-input-container button:hover { transform: scale(1.05); }
+.lba-chat-input-container button:hover {
+    transform: scale(1.05);
+}
 
+/* FOOTER - FIXED HEIGHT */
 .lba-chat-footer {
-    padding: 8px 15px;
+    padding: 6px 12px;
     background: #f8f9fa;
     text-align: center;
     font-size: 10px;
@@ -12487,36 +12539,82 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     align-items: center;
     flex-shrink: 0;
 }
-.lba-reset-btn { background: none; border: none; color: #FF0000; cursor: pointer; font-size: 11px; font-weight: 500; }
-.lba-reset-btn:hover { text-decoration: underline; }
+.lba-reset-btn {
+    background: none;
+    border: none;
+    color: #FF0000;
+    cursor: pointer;
+    font-size: 10px;
+}
+.lba-reset-btn:hover {
+    text-decoration: underline;
+}
+
+/* ANIMATIONS */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.2); }
+}
+.pulse {
+    animation: pulseDot 2s infinite;
+}
 
 /* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
-    .whatsapp-float { bottom: 20px; left: 15px; width: 50px; height: 50px; font-size: 26px; }
-    .lba-chat-widget { bottom: 20px; right: 15px; }
-    .lba-chat-button { width: 50px; height: 50px; }
-    .lba-chat-button i { font-size: 24px; }
-    .lba-chat-container { 
-        width: min(350px, 90vw); 
-        height: 450px; 
-        max-height: 60vh;
-        bottom: 70px; 
-        right: -5px; 
+    .whatsapp-float {
+        bottom: 20px;
+        left: 15px;
+        width: 50px;
+        height: 50px;
+        font-size: 26px;
     }
-    .lba-chat-options { padding: 10px 12px; }
-    .lba-option-btn { padding: 5px 10px; font-size: 10px; }
-    .whatsapp-tooltip { display: none; }
+    .lba-chat-widget {
+        bottom: 15px;
+        right: 15px;
+    }
+    .lba-chat-button {
+        width: 50px;
+        height: 50px;
+    }
+    .lba-chat-button i {
+        font-size: 24px;
+    }
+    .lba-chat-container {
+        width: 340px;
+        height: 450px;
+        bottom: 70px;
+        right: -5px;
+    }
+    .lba-chat-options {
+        padding: 8px 10px;
+    }
+    .lba-option-btn {
+        padding: 5px 10px;
+        font-size: 10px;
+    }
 }
 
 @media (max-width: 480px) {
-    .lba-chat-container { 
-        width: min(320px, 92vw); 
-        height: 400px; 
-        max-height: 55vh;
-        right: -10px; 
+    .lba-chat-container {
+        width: 300px;
+        height: 400px;
+        right: -10px;
     }
-    .lba-chat-messages { padding: 15px; }
+    .lba-chat-messages {
+        padding: 12px;
+    }
 }
+
     
 
 /* ============================================ */
