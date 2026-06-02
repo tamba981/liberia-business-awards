@@ -12762,19 +12762,16 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 
 <!-- ============================================ -->
 <!-- PROFESSIONAL LIVE CHAT & WHATSAPP BUTTON SYSTEM -->
+<!-- WhatsApp: Bottom Left | Live Chat: Bottom Right -->
 <!-- ============================================ -->
 
 <style>
-/* Floating Action Buttons Container */
-.chat-buttons-container {
+/* WhatsApp Button Container - BOTTOM LEFT */
+.whatsapp-container {
     position: fixed;
     bottom: 30px;
-    right: 30px;
+    left: 30px;
     z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
 }
 
 /* Main WhatsApp Button */
@@ -12801,6 +12798,18 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 .whatsapp-main-btn:hover {
     transform: scale(1.1);
     box-shadow: 0 12px 30px rgba(37, 211, 102, 0.4);
+}
+
+/* Live Chat Container - BOTTOM RIGHT */
+.live-chat-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
 }
 
 /* Live Chat Button */
@@ -12840,7 +12849,7 @@ console.log('✅ Directory button fixes applied - API businesses should now work
     box-shadow: 0 10px 25px rgba(255, 0, 0, 0.4);
 }
 
-/* Chat Widget Modal */
+/* Chat Widget Modal - Still on RIGHT side (attached to live chat) */
 .chat-widget-modal {
     position: fixed;
     bottom: 110px;
@@ -13120,7 +13129,12 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 
 /* Responsive */
 @media (max-width: 640px) {
-    .chat-buttons-container {
+    .whatsapp-container {
+        bottom: 20px;
+        left: 20px;
+    }
+    
+    .live-chat-container {
         bottom: 20px;
         right: 20px;
     }
@@ -13202,19 +13216,21 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 }
 </style>
 
-<!-- Floating Chat Buttons Container -->
-<div class="chat-buttons-container">
+<!-- WhatsApp Button - BOTTOM LEFT -->
+<div class="whatsapp-container">
+    <a href="https://wa.me/231886590302" class="whatsapp-main-btn" target="_blank" rel="noopener noreferrer">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+</div>
+
+<!-- Live Chat Button & Widget - BOTTOM RIGHT -->
+<div class="live-chat-container">
     <!-- Live Chat Button -->
     <div class="live-chat-btn" onclick="toggleChatWidget()">
         <i class="fas fa-comment-dots"></i>
         <span>Live Chat</span>
         <span class="online-indicator"></span>
     </div>
-    
-    <!-- WhatsApp Button -->
-    <a href="https://wa.me/231886590302" class="whatsapp-main-btn" target="_blank" rel="noopener noreferrer">
-        <i class="fab fa-whatsapp"></i>
-    </a>
 </div>
 
 <!-- Chat Widget Modal -->
@@ -13300,6 +13316,7 @@ let messageQueue = [];
 // Initialize chat system
 document.addEventListener('DOMContentLoaded', function() {
     console.log('💬 Live Chat & WhatsApp System Initialized');
+    console.log('📍 WhatsApp: Bottom Left | Live Chat: Bottom Right');
     
     // Load saved chat messages from localStorage
     loadChatHistory();
@@ -13661,17 +13678,17 @@ function escapeHtml(text) {
 
 // Track WhatsApp clicks for analytics
 document.querySelector('.whatsapp-main-btn')?.addEventListener('click', function() {
-    console.log('📱 WhatsApp button clicked');
+    console.log('📱 WhatsApp button clicked (Bottom Left)');
     
     // Track in Google Analytics if available
     if (typeof gtag !== 'undefined') {
         gtag('event', 'whatsapp_click', {
             'event_category': 'contact',
-            'event_label': 'WhatsApp Button'
+            'event_label': 'WhatsApp Button - Bottom Left'
         });
     }
     
-    // Add to chat as system message
+    // Add to chat as system message if chat is open
     setTimeout(() => {
         if (chatOpen) {
             addMessageToChat('📱 You are being redirected to WhatsApp. Our team will respond there as well!', 'system');
@@ -13686,7 +13703,7 @@ window.toggleChatWidget = function() {
         if (typeof gtag !== 'undefined') {
             gtag('event', 'live_chat_open', {
                 'event_category': 'engagement',
-                'event_label': 'Live Chat Opened'
+                'event_label': 'Live Chat Opened - Bottom Right'
             });
         }
     }
@@ -13694,9 +13711,11 @@ window.toggleChatWidget = function() {
 };
 
 console.log('✅ Live Chat & WhatsApp System Ready');
+console.log('📍 WhatsApp: BOTTOM LEFT');
+console.log('📍 Live Chat: BOTTOM RIGHT');
 console.log('📞 WhatsApp Number:', WHATSAPP_NUMBER);
 console.log('📧 Support Email:', SUPPORT_EMAIL);
-</script>  
+</script> 
     
 </body>
 </html>
