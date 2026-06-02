@@ -3615,74 +3615,94 @@ function createAdsManagementModal() {
         </div>
     </div>
     
-    <!-- CREATE AD MODAL -->
-    <div class="modal" id="createAdModal">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
-                <h2 id="adModalTitle">Create New Ad</h2>
-                <button class="modal-close" onclick="closeCreateAdModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="adForm" enctype="multipart/form-data">
-                    <input type="hidden" id="adId">
-                    
+    <!-- CREATE AD MODAL - FIXED VERSION -->
+<div class="modal" id="createAdModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="adModalTitle">Create New Ad</h2>
+            <button class="modal-close" onclick="closeCreateAdModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="adForm" enctype="multipart/form-data">
+                <input type="hidden" id="adId">
+                
+                <div class="form-group">
+                    <label>Ad Title *</label>
+                    <input type="text" id="adTitle" class="sheet-btn secondary" style="width: 100%;" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="adDescription" rows="2" class="sheet-btn secondary" style="width: 100%;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Ad Image *</label>
+                    <input type="file" id="adImageFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept="image/jpeg,image/png,image/gif,image/webp">
+                    <small>Upload JPG, PNG, GIF, or WEBP (Max 5MB)</small>
+                    <div id="adImagePreview" style="margin-top: 10px; display: none;">
+                        <img id="adPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Image URL (or leave empty if uploading file)</label>
+                    <input type="url" id="adImageUrl" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Link URL</label>
+                    <input type="url" id="adLinkUrl" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Ad Type *</label>
+                    <select id="adType" class="sheet-btn secondary" style="width: 100%;" required>
+                        <option value="top-banner">Top Banner (728x90)</option>
+                        <option value="sidebar">Sidebar (300x250)</option>
+                        <option value="inline">Inline (600x400)</option>
+                        <option value="floating">Floating/Popup (300x250)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Placement</label>
+                    <select id="adPlacement" class="sheet-btn secondary" style="width: 100%;">
+                        <option value="top-banner">Top Banner</option>
+                        <option value="sidebar">Sidebar</option>
+                        <option value="inline">Inline</option>
+                        <option value="floating">Floating</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Business ID (optional)</label>
+                    <input type="text" id="adBusinessId" class="sheet-btn secondary" style="width: 100%;" placeholder="For business ads">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
-                        <label>Ad Title *</label>
-                        <input type="text" id="adTitle" class="sheet-btn secondary" style="width: 100%;" required>
+                        <label>Start Date *</label>
+                        <input type="date" id="adStartDate" class="sheet-btn secondary" style="width: 100%;" required>
                     </div>
-                    
                     <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="adDescription" rows="2" class="sheet-btn secondary" style="width: 100%;"></textarea>
+                        <label>End Date *</label>
+                        <input type="date" id="adEndDate" class="sheet-btn secondary" style="width: 100%;" required>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Ad Image *</label>
-                        <input type="file" id="adImageFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept="image/jpeg,image/png,image/gif,image/webp" required>
-                        <small>Upload JPG, PNG, GIF, or WEBP (Max 5MB)</small>
-                        <div id="adImagePreview" style="margin-top: 10px; display: none;">
-                            <img id="adPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Link URL</label>
-                        <input type="url" id="adLinkUrl" class="sheet-btn secondary" style="width: 100%;" placeholder="https://...">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Ad Type *</label>
-                        <select id="adType" class="sheet-btn secondary" style="width: 100%;" required>
-                            <option value="top-banner">Top Banner (728x90)</option>
-                            <option value="sidebar">Sidebar (300x250)</option>
-                            <option value="inline">Inline (600x400)</option>
-                            <option value="floating">Floating/Popup (300x250)</option>
-                        </select>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label>Start Date *</label>
-                            <input type="date" id="adStartDate" class="sheet-btn secondary" style="width: 100%;" required>
-                        </div>
-                        <div class="form-group">
-                            <label>End Date *</label>
-                            <input type="date" id="adEndDate" class="sheet-btn secondary" style="width: 100%;" required>
-                        </div>
-                    </div>
-                    
-                    <div class="error-message" id="adError" style="display: none; color: #EF4444;"></div>
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button type="button" class="sheet-btn warning" onclick="closeCreateAdModal()" style="flex: 1;">Cancel</button>
-                        <button type="button" class="sheet-btn" onclick="saveAd()" style="flex: 2;">Save Ad</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                
+                <div class="error-message" id="adError" style="display: none; color: #EF4444;"></div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="closeCreateAdModal()" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="saveAd()" style="flex: 2;">Save Ad</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
@@ -3898,9 +3918,7 @@ async function saveAd() {
 }
 
 
-        
-
-// ============ EDIT AD ============
+ // ============ EDIT AD ============
 async function editAd(adId) {
     console.log('📝 Editing ad ID:', adId);
     
@@ -3950,6 +3968,7 @@ async function editAd(adId) {
             document.getElementById('adId').value = ad._id;
             document.getElementById('adTitle').value = ad.title || '';
             document.getElementById('adDescription').value = ad.description || '';
+            document.getElementById('adImageUrl').value = ad.image_url || '';  // ← ADD THIS LINE
             document.getElementById('adLinkUrl').value = ad.link_url || '';
             document.getElementById('adType').value = ad.type || 'sidebar';
             document.getElementById('adPlacement').value = ad.placement || ad.type || 'sidebar';
@@ -3987,7 +4006,9 @@ async function editAd(adId) {
         console.error('Edit ad error:', error);
         showNotification('Error loading ad: ' + error.message, 'error');
     }
-}
+}       
+
+
 
 // ============ APPROVE AD ============
 async function approveAd(adId) {
