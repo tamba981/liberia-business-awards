@@ -12158,26 +12158,28 @@ window.contactBusiness = function(businessId) {
 console.log('✅ Contact and View Details functions re-initialized at end of script');    
     
 </script>
+
 <!-- ============================================ -->
-<!-- PROFESSIONAL AI LIVE CHAT WIDGET - MVP PRODUCTION -->
+<!-- COMPLETELY REBUILT CHAT WIDGET - FIXED -->
 <!-- ============================================ -->
 
-<!-- WhatsApp Float Button (Left Side) -->
-<a href="https://wa.me/231886590302" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
+<!-- WhatsApp Float Button -->
+<a href="https://wa.me/231886590302" class="whatsapp-float-fixed" target="_blank" rel="noopener noreferrer">
     <i class="fab fa-whatsapp"></i>
-    <span class="whatsapp-tooltip">Chat with us!</span>
+    <span class="whatsapp-tooltip-fixed">Chat with us!</span>
 </a>
 
-<!-- Chat Widget Structure -->
-<div id="lbaChatWidget" class="lba-chat-widget">
-    <div class="lba-chat-button" id="lbaChatButton">
+<!-- Chat Widget Container -->
+<div id="chatWidget" class="chat-widget">
+    <div class="chat-button" id="chatButton">
         <i class="fas fa-comment-dots"></i>
-        <span class="lba-chat-badge pulse"></span>
+        <span class="chat-badge"></span>
     </div>
-    <div class="lba-chat-container" id="lbaChatContainer">
-        <div class="lba-chat-header">
-            <div class="lba-chat-header-info">
-                <div class="lba-chat-avatar">
+    
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar">
                     <i class="fas fa-award"></i>
                 </div>
                 <div>
@@ -12185,100 +12187,103 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
                     <p>Online • Expert Support</p>
                 </div>
             </div>
-            <div class="lba-chat-header-actions">
-                <button class="lba-chat-minimize" id="lbaChatMinimize" aria-label="Minimize">
-                    <i class="fas fa-minus"></i>
-                </button>
-                <button class="lba-chat-close" id="lbaChatClose" aria-label="Close">
-                    <i class="fas fa-times"></i>
-                </button>
+            <div class="chat-header-actions">
+                <button class="chat-minimize" id="chatMinimizeBtn">−</button>
+                <button class="chat-close" id="chatCloseBtn">✕</button>
             </div>
         </div>
-        <div class="lba-chat-messages" id="lbaChatMessages">
-            <div class="lba-message bot">
-                <div class="lba-message-content">
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">
                     👋 <strong>Welcome to Liberia Business Awards Support!</strong><br><br>
-                    I'm your dedicated AI assistant, trained with complete knowledge of the Liberia Business Awards.<br><br>
                     I can help you with:<br>
-                    🏆 <strong>Awards & Nominations</strong> - Process, categories, requirements<br>
-                    📝 <strong>Business Registration</strong> - How to join our platform<br>
-                    🗳️ <strong>Voting Information</strong> - How to support Liberian businesses<br>
-                    🤝 <strong>Partnerships & Investment</strong> - Opportunities in Liberia<br>
-                    📅 <strong>Events & Timeline</strong> - Key dates and ceremonies<br>
-                    🌍 <strong>Liberia's 18 Economic Sectors</strong> - Complete coverage<br><br>
-                    <em>How can I assist you today?</em>
+                    🏆 Nominations & Awards<br>
+                    📝 Business Registration<br>
+                    🗳️ Voting Information<br>
+                    🤝 Partnerships & Investment<br>
+                    📅 Events & Timeline<br>
+                    🌍 18 Economic Sectors<br><br>
+                    How can I assist you today?
                 </div>
-                <div class="lba-message-time">Just now</div>
+                <div class="message-time">Just now</div>
             </div>
         </div>
-        <div class="lba-chat-options" id="lbaChatOptions">
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('nomination')">🏆 Nominations</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('registration')">📝 Register</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('voting')">🗳️ Voting</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('partnership')">🤝 Partnership</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('investment')">💰 Investment</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('events')">📅 Events</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('categories')">🏆 Categories</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('sectors')">📊 18 Sectors</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('contact')">📞 Contact</button>
-            <button class="lba-option-btn" onclick="sendLbaQuickReply('deadlines')">⏰ Deadlines</button>
+        
+        <div class="chat-options">
+            <button class="option-btn" data-topic="nomination">🏆 Nominations</button>
+            <button class="option-btn" data-topic="registration">📝 Register</button>
+            <button class="option-btn" data-topic="voting">🗳️ Voting</button>
+            <button class="option-btn" data-topic="partnership">🤝 Partnership</button>
+            <button class="option-btn" data-topic="investment">💰 Investment</button>
+            <button class="option-btn" data-topic="events">📅 Events</button>
+            <button class="option-btn" data-topic="categories">🏆 Categories</button>
+            <button class="option-btn" data-topic="sectors">📊 Sectors</button>
+            <button class="option-btn" data-topic="contact">📞 Contact</button>
         </div>
-        <div class="lba-chat-input-container">
-            <input type="text" id="lbaChatInput" placeholder="Type your message..." onkeypress="handleLbaChatKeyPress(event)" autocomplete="off">
-            <button id="lbaChatSendBtn" onclick="sendLbaChatMessage()">
+        
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off">
+            <button id="chatSendBtn">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
-        <div class="lba-chat-footer">
-            <span>🔒 Secure & Private | 💡 AI Knowledge Base</span>
-            <button onclick="resetLbaChatConversation()" class="lba-reset-btn">Reset Chat</button>
+        
+        <div class="chat-footer">
+            <span>🔒 Secure & Private</span>
+            <button class="chat-reset" id="chatResetBtn">Reset Chat</button>
         </div>
     </div>
 </div>
 
 <style>
 /* ============================================ */
-/* WHATSAPP BUTTON STYLES */
+/* FIXED CHAT WIDGET STYLES - NO OVERFLOW */
 /* ============================================ */
-.whatsapp-float {
+
+/* WhatsApp Button */
+.whatsapp-float-fixed {
     position: fixed;
-    bottom: 30px;
+    bottom: 20px;
     left: 20px;
-    background: linear-gradient(135deg, #25D366, #128C7E);
+    background: #25D366;
     color: white;
-    width: 60px;
-    height: 60px;
+    width: 55px;
+    height: 55px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
-    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+    font-size: 28px;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
     transition: all 0.3s ease;
-    z-index: 9997;
+    z-index: 9998;
     text-decoration: none;
 }
-.whatsapp-float:hover { transform: scale(1.1); box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5); color: white; }
-.whatsapp-tooltip {
+.whatsapp-float-fixed:hover {
+    transform: scale(1.1);
+    color: white;
+}
+.whatsapp-tooltip-fixed {
     position: absolute;
-    left: 70px;
+    left: 65px;
     background: #1a202c;
     color: white;
-    padding: 5px 12px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 11px;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
-    font-family: 'Poppins', sans-serif;
 }
-.whatsapp-float:hover .whatsapp-tooltip { opacity: 1; visibility: visible; }
+.whatsapp-float-fixed:hover .whatsapp-tooltip-fixed {
+    opacity: 1;
+    visibility: visible;
+}
 
-/* ============================================ */
-/* MAIN CHAT WIDGET - COMPLETE REWRITE FIXED */
-/* ============================================ */
-.lba-chat-widget {
+/* Main Chat Widget */
+.chat-widget {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -12286,41 +12291,45 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     font-family: 'Poppins', sans-serif;
 }
 
-.lba-chat-button {
-    width: 60px;
-    height: 60px;
+.chat-button {
+    width: 55px;
+    height: 55px;
     background: linear-gradient(135deg, #FF0000, #87CEEB);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(255, 0, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
     transition: all 0.3s ease;
     position: relative;
 }
-.lba-chat-button:hover { transform: scale(1.1); }
-.lba-chat-button i { font-size: 28px; color: white; }
-.lba-chat-badge {
-    position: absolute;
-    top: -3px;
-    right: -3px;
-    background: #10B981;
+.chat-button:hover {
+    transform: scale(1.1);
+}
+.chat-button i {
+    font-size: 26px;
     color: white;
-    width: 14px;
-    height: 14px;
+}
+.chat-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    background: #10B981;
     border-radius: 50%;
     border: 2px solid white;
+    animation: pulse 2s infinite;
 }
 
-/* FIXED: CONTAINER WITH PROPER HEIGHT CONSTRAINTS */
-.lba-chat-container {
+/* CHAT PANEL - FIXED DIMENSIONS */
+.chat-panel {
     position: absolute;
-    bottom: 80px;
+    bottom: 70px;
     right: 0;
-    width: 380px;
-    height: 500px;
-    max-height: 70vh;
+    width: 350px;
+    height: 480px;
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -12330,74 +12339,71 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     transform: scale(0);
     opacity: 0;
     visibility: hidden;
-    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition: all 0.2s ease;
     transform-origin: bottom right;
-    border: 1px solid rgba(0, 0, 0, 0.1);
 }
-.lba-chat-container.open {
+.chat-panel.open {
     transform: scale(1);
     opacity: 1;
     visibility: visible;
 }
 
-/* HEADER - FIXED HEIGHT */
-.lba-chat-header {
+/* Header - Fixed */
+.chat-header {
     background: linear-gradient(135deg, #FF0000, #87CEEB);
-    padding: 14px 16px;
+    padding: 12px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: white;
     flex-shrink: 0;
-    height: 70px;
 }
-.lba-chat-header-info {
+.chat-header-info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
-.lba-chat-avatar {
-    width: 44px;
-    height: 44px;
+.chat-avatar {
+    width: 40px;
+    height: 40px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 20px;
 }
-.lba-chat-header-info h3 {
-    font-size: 16px;
+.chat-header-info h3 {
+    font-size: 14px;
     font-weight: 700;
     margin: 0;
-    color: white;
 }
-.lba-chat-header-info p {
-    font-size: 11px;
+.chat-header-info p {
+    font-size: 10px;
     margin: 2px 0 0;
     opacity: 0.85;
-    color: white;
 }
-.lba-chat-minimize, .lba-chat-close {
+.chat-minimize, .chat-close {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     cursor: pointer;
-    display: flex;
+    font-size: 16px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 }
-.lba-chat-minimize:hover, .lba-chat-close:hover {
+.chat-minimize:hover, .chat-close:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* MESSAGES AREA - SCROLLABLE, TAKES REMAINING SPACE */
-.lba-chat-messages {
+/* Messages - Scrollable, takes remaining space */
+.chat-messages {
     flex: 1;
-    padding: 16px;
+    padding: 15px;
     overflow-y: auto;
     background: #f8f9fa;
     display: flex;
@@ -12405,60 +12411,57 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     gap: 12px;
     min-height: 0;
 }
-.lba-chat-messages::-webkit-scrollbar {
-    width: 5px;
+.chat-messages::-webkit-scrollbar {
+    width: 4px;
 }
-.lba-chat-messages::-webkit-scrollbar-track {
+.chat-messages::-webkit-scrollbar-track {
     background: #e2e8f0;
-    border-radius: 10px;
 }
-.lba-chat-messages::-webkit-scrollbar-thumb {
+.chat-messages::-webkit-scrollbar-thumb {
     background: #FF0000;
     border-radius: 10px;
 }
 
-.lba-message {
+.message {
     display: flex;
     flex-direction: column;
     max-width: 85%;
-    animation: fadeInUp 0.3s ease;
 }
-.lba-message.bot {
+.message.bot {
     align-self: flex-start;
 }
-.lba-message.user {
+.message.user {
     align-self: flex-end;
 }
-.lba-message-content {
+.message-content {
     padding: 10px 14px;
     border-radius: 18px;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.4;
-    word-wrap: break-word;
 }
-.lba-message.bot .lba-message-content {
+.message.bot .message-content {
     background: white;
     color: #1a202c;
     border-bottom-left-radius: 4px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
-.lba-message.user .lba-message-content {
+.message.user .message-content {
     background: linear-gradient(135deg, #FF0000, #87CEEB);
     color: white;
     border-bottom-right-radius: 4px;
 }
-.lba-message-time {
-    font-size: 10px;
+.message-time {
+    font-size: 9px;
     color: #94a3b8;
     margin-top: 4px;
     padding: 0 5px;
 }
-.lba-message.user .lba-message-time {
+.message.user .message-time {
     text-align: right;
 }
 
-/* OPTIONS BUTTONS - WRAPPED, LIMITED HEIGHT */
-.lba-chat-options {
+/* Options - Wrapped, limited height */
+.chat-options {
     padding: 10px 12px;
     display: flex;
     flex-wrap: wrap;
@@ -12466,51 +12469,47 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     border-top: 1px solid #e2e8f0;
     background: white;
     flex-shrink: 0;
-    max-height: 100px;
+    max-height: 90px;
     overflow-y: auto;
 }
-.lba-option-btn {
+.option-btn {
     background: #f1f5f9;
     border: none;
-    padding: 6px 12px;
+    padding: 5px 12px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 500;
     color: #1a202c;
     cursor: pointer;
     transition: all 0.2s;
-    white-space: nowrap;
 }
-.lba-option-btn:hover {
+.option-btn:hover {
     background: #FF0000;
     color: white;
-    transform: translateY(-1px);
 }
 
-/* INPUT AREA - FIXED HEIGHT */
-.lba-chat-input-container {
-    padding: 12px;
+/* Input - Fixed */
+.chat-input-area {
+    padding: 10px 12px;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     border-top: 1px solid #e2e8f0;
     background: white;
     flex-shrink: 0;
 }
-.lba-chat-input-container input {
+.chat-input-area input {
     flex: 1;
     padding: 10px 14px;
     border: 1px solid #e2e8f0;
     border-radius: 30px;
-    font-size: 13px;
+    font-size: 12px;
     outline: none;
-    background: #f8fafc;
 }
-.lba-chat-input-container input:focus {
+.chat-input-area input:focus {
     border-color: #FF0000;
-    background: white;
-    box-shadow: 0 0 0 2px rgba(255,0,0,0.1);
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.1);
 }
-.lba-chat-input-container button {
+.chat-input-area button {
     width: 40px;
     height: 40px;
     background: linear-gradient(135deg, #FF0000, #87CEEB);
@@ -12522,12 +12521,9 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     align-items: center;
     justify-content: center;
 }
-.lba-chat-input-container button:hover {
-    transform: scale(1.05);
-}
 
-/* FOOTER - FIXED HEIGHT */
-.lba-chat-footer {
+/* Footer - Fixed */
+.chat-footer {
     padding: 6px 12px;
     background: #f8f9fa;
     text-align: center;
@@ -12539,620 +12535,240 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     align-items: center;
     flex-shrink: 0;
 }
-.lba-reset-btn {
+.chat-reset {
     background: none;
     border: none;
     color: #FF0000;
     cursor: pointer;
     font-size: 10px;
 }
-.lba-reset-btn:hover {
+.chat-reset:hover {
     text-decoration: underline;
 }
 
-/* ANIMATIONS */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-@keyframes pulseDot {
+/* Animations */
+@keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.2); }
-}
-.pulse {
-    animation: pulseDot 2s infinite;
+    50% { opacity: 0.5; transform: scale(1.2); }
 }
 
-/* MOBILE RESPONSIVE */
+/* Mobile */
 @media (max-width: 768px) {
-    .whatsapp-float {
-        bottom: 20px;
+    .whatsapp-float-fixed {
+        bottom: 15px;
         left: 15px;
-        width: 50px;
-        height: 50px;
-        font-size: 26px;
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
     }
-    .lba-chat-widget {
+    .chat-widget {
         bottom: 15px;
         right: 15px;
     }
-    .lba-chat-button {
-        width: 50px;
-        height: 50px;
+    .chat-button {
+        width: 48px;
+        height: 48px;
     }
-    .lba-chat-button i {
-        font-size: 24px;
+    .chat-button i {
+        font-size: 22px;
     }
-    .lba-chat-container {
-        width: 340px;
+    .chat-panel {
+        width: 320px;
         height: 450px;
-        bottom: 70px;
+        bottom: 65px;
         right: -5px;
     }
-    .lba-chat-options {
-        padding: 8px 10px;
-    }
-    .lba-option-btn {
-        padding: 5px 10px;
-        font-size: 10px;
-    }
 }
-
 @media (max-width: 480px) {
-    .lba-chat-container {
-        width: 300px;
-        height: 400px;
+    .chat-panel {
+        width: 290px;
+        height: 420px;
         right: -10px;
     }
-    .lba-chat-messages {
-        padding: 12px;
-    }
 }
-
-    
-
-/* ============================================ */
-/* FIXED AD DISPLAY SYSTEM - CSS ONLY LAYOUT */
-/* ============================================ */
-
-/* Top Banner Ad Container */
-.top-banner-ad {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    border-radius: 16px;
-    text-align: center;
-    border: 1px solid rgba(255, 0, 0, 0.1);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-/* The anchor tag uses flexbox for horizontal layout - NO INLINE STYLES */
-.banner-ad-link {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 24px !important;
-    flex-wrap: wrap !important;
-    text-decoration: none !important;
-    padding: 10px !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-    border-radius: 12px !important;
-}
-
-.banner-ad-link:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 0, 0, 0.1);
-}
-
-/* Media elements - images and videos */
-.ad-media {
-    max-width: 300px !important;
-    max-height: 90px !important;
-    width: auto !important;
-    height: auto !important;
-    border-radius: 12px !important;
-    object-fit: contain !important;
-    display: block !important;
-}
-
-/* Description text */
-.ad-description {
-    margin: 0 !important;
-    font-size: 14px !important;
-    color: #4a5568 !important;
-    line-height: 1.4 !important;
-    max-width: 400px !important;
-    text-align: left !important;
-}
-
-/* ============================================ */
-/* Sidebar Ad Styles */
-/* ============================================ */
-.sidebar-ad-container {
-    background: white;
-    border-radius: 16px;
-    padding: 15px;
-    margin-bottom: 25px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.sidebar-ad-item {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.sidebar-ad-item:last-child {
-    margin-bottom: 0;
-}
-
-.sidebar-ad-label {
-    font-size: 10px;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-}
-
-.sidebar-ad-link {
-    display: block;
-    text-decoration: none;
-    transition: transform 0.2s ease;
-}
-
-.sidebar-ad-link:hover {
-    transform: translateY(-3px);
-}
-
-.sidebar-ad-container .ad-media {
-    max-width: 100%;
-    max-height: 200px;
-    width: auto;
-    height: auto;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    object-fit: contain;
-}
-
-.sidebar-ad-title {
-    font-size: 15px;
-    font-weight: 700;
-    margin: 10px 0 5px;
-    color: #1a202c;
-}
-
-.sidebar-ad-description {
-    font-size: 12px;
-    color: #6c757d;
-    line-height: 1.4;
-}
-
-/* ============================================ */
-/* Floating/Popup Ad Styles */
-/* ============================================ */
-.floating-ad {
-    position: fixed;
-    bottom: 100px;
-    right: 20px;
-    width: 320px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    z-index: 9998;
-    overflow: hidden;
-    border: 1px solid rgba(255, 0, 0, 0.2);
-    transition: all 0.3s ease;
-}
-
-.floating-ad.minimized {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-}
-
-.floating-ad.minimized .ad-content,
-.floating-ad.minimized .ad-header span {
-    display: none;
-}
-
-.floating-ad.minimized .ad-header {
-    justify-content: center;
-    padding: 12px;
-}
-
-.floating-ad.minimized .ad-close {
-    display: none;
-}
-
-.ad-header {
-    background: linear-gradient(135deg, #FF0000, #87CEEB);
-    color: white;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.ad-close {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s;
-}
-
-.ad-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.ad-content {
-    padding: 20px;
-    text-align: center;
-}
-
-.floating-ad-link {
-    text-decoration: none;
-    display: block;
-}
-
-.floating-ad .ad-media {
-    max-width: 100%;
-    max-height: 150px;
-    width: auto;
-    height: auto;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    object-fit: contain;
-}
-
-.floating-ad .ad-content h4 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: #1a202c;
-}
-
-.floating-ad .ad-content p {
-    font-size: 13px;
-    color: #6c757d;
-    margin-bottom: 12px;
-    line-height: 1.4;
-}
-
-.ad-btn {
-    background: #FF0000;
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 30px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-top: 5px;
-}
-
-.ad-btn:hover {
-    background: #cc0000;
-    transform: scale(1.02);
-}
-
-/* ============================================ */
-/* In-content Ad Styles */
-/* ============================================ */
-.in-content-ad-container {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-radius: 16px;
-    padding: 20px;
-    margin: 30px 0;
-    text-align: center;
-    border: 1px dashed rgba(255, 0, 0, 0.3);
-}
-
-.in-content-ad-container .ad-label {
-    font-size: 10px;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-}
-
-.in-content-ad-container .ad-media {
-    max-width: 100%;
-    max-height: 150px;
-    width: auto;
-    height: auto;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    object-fit: contain;
-}
-
-.in-content-ad-container h4 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: #1a202c;
-}
-
-.in-content-ad-container p {
-    font-size: 13px;
-    color: #6c757d;
-    margin-bottom: 12px;
-}
-
-.in-content-ad-container .ad-cta-btn {
-    background: #FF0000;
-    color: white;
-    border: none;
-    padding: 8px 24px;
-    border-radius: 30px;
-    margin-top: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s;
-}
-
-.in-content-ad-container .ad-cta-btn:hover {
-    background: #cc0000;
-    transform: scale(1.02);
-}
-
-/* ============================================ */
-/* Mobile Responsive - Stacks vertically */
-/* ============================================ */
-@media (max-width: 768px) {
-    /* Top banner stacks vertically on mobile */
-    .banner-ad-link {
-        flex-direction: column !important;
-        text-align: center !important;
-        gap: 12px !important;
-    }
-    
-    .ad-description {
-        text-align: center !important;
-        max-width: 100% !important;
-    }
-    
-    .ad-media {
-        max-width: 100% !important;
-        max-height: 80px !important;
-    }
-    
-    /* Floating ad smaller on mobile */
-    .floating-ad {
-        width: 280px !important;
-        bottom: 80px !important;
-        right: 10px !important;
-    }
-    
-    .sidebar-ad-container {
-        padding: 12px;
-    }
-    
-    .sidebar-ad-container .ad-media {
-        max-height: 150px;
-    }
-}
-
-/* For very small devices */
-@media (max-width: 480px) {
-    .top-banner-ad {
-        padding: 12px 15px;
-        margin: 15px auto;
-    }
-    
-    .banner-ad-link {
-        gap: 10px !important;
-    }
-    
-    .floating-ad {
-        width: 260px !important;
-    }
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* ============================================ */
-/* FORCE IMAGE DISPLAY FIX - ADD THIS */
-/* ============================================ */
-
-/* Force image display fix */
-.ad-media {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    min-width: 50px;
-    min-height: 50px;
-    background: #f0f0f0;
-}
-
-/* Ensure images load properly */
-.top-banner-ad .ad-media,
-.sidebar-ad-container .ad-media,
-.floating-ad .ad-media {
-    display: block !important;
-    width: auto !important;
-    max-width: 100% !important;
-    height: auto !important;
-}    
-    
 </style>
 
 <script>
-    // ============================================
-    // COMPREHENSIVE KNOWLEDGE BASE
-    // ============================================
-    const LBA_KNOWLEDGE = {
-        'what is lba': '🏆 The Liberia Business Awards (LBA) is the nation\'s premier recognition platform for businesses across all 18 major economic sectors...',
-        'mission': '🎯 Our mission is to recognize, celebrate, and elevate businesses and entrepreneurs...',
-        'vision': '👁️ To become Liberia\'s leading national platform for business recognition...',
-        'focus': '🇱🇷 Our primary focus is Liberia, where we recognize, support, and showcase excellence...',
-        '18 sectors': '📊 Liberia\'s 18 major economic sectors are:\n\n🌾 1. Agriculture\n⛏️ 2. Mining & Extractives\n🛢️ 3. Oil & Gas\n🏭 4. Manufacturing & Industrial\n🏗️ 5. Construction & Real Estate\n⚡ 6. Energy & Utilities\n🚚 7. Transportation & Logistics\n💻 8. Information & Communications Technology (ICT)\n💰 9. Financial Services\n📚 10. Education\n🏥 11. Health\n🏨 12. Tourism & Hospitality\n🛍️ 13. Trade & Commerce\n🏛️ 14. Public Sector & Government Services\n🤝 15. Civil Society & Nonprofit\n📺 16. Media & Communications\n🎨 17. Arts, Culture & Creative Industry\n⚽ 18. Sports & Recreation',
-        'nomination': '📋 Nominations for LBA open March 1 and close May 30 annually...',
-        'registration': '📝 Businesses can register on our website by clicking the "Register" button...',
-        'voting': '🗳️ Public voting runs from June 1 to July 30 annually...',
-        'partnership': '🤝 We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor...',
-        'help': '💡 I can help you with:\n• Nominations & Awards\n• Business Registration\n• Voting Information\n• Partnership Opportunities\n• Investment in Liberia\n• Events & Timeline\n• 18 Economic Sectors\n• 72 Award Categories\n• Contact Information\n\nWhat would you like to know?',
-        'default': 'Thank you for your question. I can help you with: 📋 Nominations, 📝 Registration, 🗳️ Voting, 🤝 Partnerships, 💰 Investment, 📅 Events, 🏆 Categories, 📊 Sectors, ⏰ Deadlines, 📞 Contact. Please rephrase your question or try one of the quick reply buttons above.'
+// ============================================
+// CHAT WIDGET JAVASCRIPT - COMPLETE
+// ============================================
+(function() {
+    // DOM Elements
+    const chatButton = document.getElementById('chatButton');
+    const chatPanel = document.getElementById('chatPanel');
+    const chatMinimizeBtn = document.getElementById('chatMinimizeBtn');
+    const chatCloseBtn = document.getElementById('chatCloseBtn');
+    const chatResetBtn = document.getElementById('chatResetBtn');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    const chatMessages = document.getElementById('chatMessages');
+    
+    let isOpen = false;
+    let typingTimeout = null;
+    
+    // Knowledge Base
+    const knowledge = {
+        'nomination': '📋 Nominations for LBA open March 1 and close May 30 annually. You can nominate your business or another business across 72 award categories covering 18 economic sectors. There is NO FEE for nomination!',
+        'registration': '📝 Businesses can register on our website by clicking the "Register" button. You\'ll need to provide business name, sector, contact information, and business description. Registration is FREE!',
+        'voting': '🗳️ Public voting runs from June 1 to July 30 annually. You can vote for your favorite businesses using the voting section on our website. Each email can vote once per business.',
+        'partnership': '🤝 We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor, Gold Sponsor, Category Sponsor, Media Partner, and Strategic Partner.',
+        'investment': '💰 Liberia offers investment opportunities in Agriculture, Mining, Oil & Gas, Manufacturing, Energy, Technology, Tourism, and more. Contact us for details.',
+        'events': '📅 The Awards Ceremony takes place on December 19 annually at 6:00 PM. Tickets go on sale November 1 - December 15.',
+        'categories': '🏆 We have 72 specialized award categories across 5 tiers: Startup Awards, SME Awards, Large Enterprise Awards, Sector Awards (18 sectors), and National Leadership Awards.',
+        'sectors': '📊 Liberia\'s 18 major economic sectors: Agriculture, Mining, Oil & Gas, Manufacturing, Construction, Energy, Transportation, ICT, Financial Services, Education, Health, Tourism, Trade, Public Sector, Civil Society, Media, Arts & Culture, Sports.',
+        'contact': '📞 Phone: +231 886 590 302, +231 77 287 66 44\n📧 Email: liberiabusinessawards@gmail.com, contact@liberiabusinessawardslr.com',
+        'deadlines': '⏰ Nominations close: May 30 at 5:59 PM\n🗳️ Voting ends: July 30\n🏆 Ceremony: December 19 at 6:00 PM',
+        'default': 'I can help you with: 📋 Nominations, 📝 Registration, 🗳️ Voting, 🤝 Partnerships, 💰 Investment, 📅 Events, 🏆 Categories, 📊 Sectors, 📞 Contact. What would you like to know?'
     };
     
-    // Chat State
-    let lbaChatOpen = false;
-    let lbaTypingTimeout = null;
-    
-    function getLbaResponse(userMessage) {
-        const lowerMsg = userMessage.toLowerCase();
-        for (const [key, response] of Object.entries(LBA_KNOWLEDGE)) {
-            if (lowerMsg.includes(key)) return response;
-        }
-        if (lowerMsg.includes('nominate') || lowerMsg.includes('nomination')) return LBA_KNOWLEDGE.nomination;
-        if (lowerMsg.includes('register')) return LBA_KNOWLEDGE.registration;
-        if (lowerMsg.includes('vote')) return LBA_KNOWLEDGE.voting;
-        if (lowerMsg.includes('partner')) return LBA_KNOWLEDGE.partnership;
-        if (lowerMsg.includes('help')) return LBA_KNOWLEDGE.help;
-        if (lowerMsg.includes('sector')) return LBA_KNOWLEDGE['18 sectors'];
-        return LBA_KNOWLEDGE.default;
-    }
-    
-    function addLbaMessage(text, sender) {
-        const container = document.getElementById('lbaChatMessages');
-        if (!container) return;
+    function addMessage(text, sender) {
+        if (!chatMessages) return;
         const messageDiv = document.createElement('div');
-        messageDiv.className = `lba-message ${sender}`;
+        messageDiv.className = `message ${sender}`;
         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        messageDiv.innerHTML = `<div class="lba-message-content">${text.replace(/\n/g, '<br>')}</div><div class="lba-message-time">${time}</div>`;
-        container.appendChild(messageDiv);
+        messageDiv.innerHTML = `<div class="message-content">${text.replace(/\n/g, '<br>')}</div><div class="message-time">${time}</div>`;
+        chatMessages.appendChild(messageDiv);
         messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
     
-    function showLbaTyping() {
-        const container = document.getElementById('lbaChatMessages');
-        if (!container) return;
+    function showTyping() {
+        if (!chatMessages) return;
         const typingDiv = document.createElement('div');
-        typingDiv.className = 'lba-message bot';
-        typingDiv.id = 'lbaTypingIndicator';
-        typingDiv.innerHTML = `<div class="lba-message-content"><i class="fas fa-ellipsis-h"></i> typing...</div>`;
-        container.appendChild(typingDiv);
-        container.scrollTop = container.scrollHeight;
+        typingDiv.className = 'message bot';
+        typingDiv.id = 'chatTyping';
+        typingDiv.innerHTML = `<div class="message-content"><i class="fas fa-ellipsis-h"></i> typing...</div>`;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     
-    function hideLbaTyping() {
-        const indicator = document.getElementById('lbaTypingIndicator');
-        if (indicator) indicator.remove();
+    function hideTyping() {
+        const typing = document.getElementById('chatTyping');
+        if (typing) typing.remove();
     }
     
-    window.sendLbaChatMessage = function() {
-        const input = document.getElementById('lbaChatInput');
-        if (!input) return;
-        const message = input.value.trim();
+    function getResponse(message) {
+        const lowerMsg = message.toLowerCase();
+        if (lowerMsg.includes('nominate') || lowerMsg.includes('nomination')) return knowledge.nomination;
+        if (lowerMsg.includes('register')) return knowledge.registration;
+        if (lowerMsg.includes('vote')) return knowledge.voting;
+        if (lowerMsg.includes('partner')) return knowledge.partnership;
+        if (lowerMsg.includes('invest')) return knowledge.investment;
+        if (lowerMsg.includes('event') || lowerMsg.includes('ceremony')) return knowledge.events;
+        if (lowerMsg.includes('category')) return knowledge.categories;
+        if (lowerMsg.includes('sector')) return knowledge.sectors;
+        if (lowerMsg.includes('contact') || lowerMsg.includes('email') || lowerMsg.includes('phone')) return knowledge.contact;
+        if (lowerMsg.includes('deadline')) return knowledge.deadlines;
+        if (lowerMsg.includes('help')) return knowledge.default;
+        return knowledge.default;
+    }
+    
+    function sendMessage() {
+        const message = chatInput.value.trim();
         if (!message) return;
-        addLbaMessage(message, 'user');
-        input.value = '';
-        showLbaTyping();
-        if (lbaTypingTimeout) clearTimeout(lbaTypingTimeout);
-        lbaTypingTimeout = setTimeout(() => {
-            const response = getLbaResponse(message);
-            hideLbaTyping();
-            addLbaMessage(response, 'bot');
-        }, 600);
-    };
+        
+        addMessage(message, 'user');
+        chatInput.value = '';
+        showTyping();
+        
+        if (typingTimeout) clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            const response = getResponse(message);
+            hideTyping();
+            addMessage(response, 'bot');
+        }, 500);
+    }
     
-    window.sendLbaQuickReply = function(topic) {
+    function sendQuickReply(topic) {
         const messages = {
             'nomination': 'Tell me about nominations',
             'registration': 'How to register my business',
             'voting': 'How to vote',
-            'partnership': 'Partnership opportunities',
-            'investment': 'Investment in Liberia',
-            'events': 'Upcoming events',
+            'partnership': 'Tell me about partnership opportunities',
+            'investment': 'Tell me about investment in Liberia',
+            'events': 'Tell me about upcoming events',
             'categories': 'What are the award categories',
             'sectors': 'What are the 18 economic sectors',
-            'contact': 'Contact information',
-            'deadlines': 'What are the deadlines'
+            'contact': 'Give me contact information'
         };
         const msg = messages[topic];
         if (msg) {
-            addLbaMessage(msg, 'user');
-            showLbaTyping();
-            if (lbaTypingTimeout) clearTimeout(lbaTypingTimeout);
-            lbaTypingTimeout = setTimeout(() => {
-                const response = getLbaResponse(msg);
-                hideLbaTyping();
-                addLbaMessage(response, 'bot');
+            addMessage(msg, 'user');
+            showTyping();
+            if (typingTimeout) clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                const response = getResponse(msg);
+                hideTyping();
+                addMessage(response, 'bot');
             }, 400);
         }
-    };
+    }
     
-    window.resetLbaChatConversation = function() {
-        const container = document.getElementById('lbaChatMessages');
-        if (!container) return;
-        container.innerHTML = `
-            <div class="lba-message bot">
-                <div class="lba-message-content">
-                    👋 <strong>Welcome back to Liberia Business Awards Support!</strong><br><br>
+    function resetChat() {
+        if (!chatMessages) return;
+        chatMessages.innerHTML = `
+            <div class="message bot">
+                <div class="message-content">
+                    👋 <strong>Welcome back!</strong><br><br>
                     How can I help you today?<br><br>
-                    💡 Try asking about: nominations, registration, voting, partnership, investment, events, categories, or sectors.
+                    💡 Try asking about: nominations, registration, voting, partnership, or events.
                 </div>
-                <div class="lba-message-time">Just now</div>
+                <div class="message-time">Just now</div>
             </div>
         `;
-    };
+    }
     
-    window.handleLbaChatKeyPress = function(event) {
-        if (event.key === 'Enter') sendLbaChatMessage();
-    };
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const chatButton = document.getElementById('lbaChatButton');
-        const chatClose = document.getElementById('lbaChatClose');
-        const chatMinimize = document.getElementById('lbaChatMinimize');
-        const chatContainer = document.getElementById('lbaChatContainer');
-        
-        if (chatButton) {
-            chatButton.addEventListener('click', () => {
-                if (chatContainer) {
-                    chatContainer.classList.toggle('open');
-                    lbaChatOpen = !lbaChatOpen;
-                    if (lbaChatOpen) setTimeout(() => document.getElementById('lbaChatInput')?.focus(), 300);
-                }
-            });
+    function toggleChat() {
+        if (chatPanel) {
+            chatPanel.classList.toggle('open');
+            isOpen = chatPanel.classList.contains('open');
+            if (isOpen) {
+                setTimeout(() => chatInput.focus(), 200);
+            }
         }
-        if (chatClose) chatClose.addEventListener('click', () => chatContainer?.classList.remove('open'));
-        if (chatMinimize) chatMinimize.addEventListener('click', () => chatContainer?.classList.remove('open'));
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && lbaChatOpen && chatContainer) {
-                chatContainer.classList.remove('open');
-                lbaChatOpen = false;
+    }
+    
+    function closeChat() {
+        if (chatPanel) {
+            chatPanel.classList.remove('open');
+            isOpen = false;
+        }
+    }
+    
+    // Event Listeners
+    if (chatButton) chatButton.addEventListener('click', toggleChat);
+    if (chatCloseBtn) chatCloseBtn.addEventListener('click', closeChat);
+    if (chatMinimizeBtn) chatMinimizeBtn.addEventListener('click', closeChat);
+    if (chatResetBtn) chatResetBtn.addEventListener('click', resetChat);
+    if (chatSendBtn) chatSendBtn.addEventListener('click', sendMessage);
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
+    
+    // Quick reply buttons
+    document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const topic = btn.getAttribute('data-topic');
+            if (topic) sendQuickReply(topic);
+            if (!isOpen && chatPanel) {
+                chatPanel.classList.add('open');
+                isOpen = true;
             }
         });
     });
+    
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isOpen && chatPanel) {
+            chatPanel.classList.remove('open');
+            isOpen = false;
+        }
+    });
+    
+    console.log('✅ Chat widget initialized');
+})();
 </script>
-
 
  <script>
 
