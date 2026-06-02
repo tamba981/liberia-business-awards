@@ -13005,28 +13005,39 @@ const AdManager = {
     },
     
     getMediaHtml(ad, lazyLoad = false) {
-        const mediaUrl = this.getMediaUrl(ad);
-        if (!mediaUrl) return '';
-        
-        const isVideo = this.isVideo(mediaUrl);
-        const lazyAttr = lazyLoad ? 'loading="lazy"' : '';
-        
-        let fullUrl = mediaUrl;
-        if (mediaUrl.startsWith('/')) {
-            fullUrl = window.location.origin + mediaUrl;
-        }
-        
-        if (isVideo) {
-            return `<video autoplay muted loop playsinline ${lazyAttr} class="ad-media">
-                        <source src="${fullUrl}" type="video/mp4">
-                        <source src="${fullUrl}" type="video/webm">
-                    </video>`;
-        } else {
-            return `<img src="${fullUrl}" alt="${ad.title || 'Advertisement'}" class="ad-media" ${lazyAttr}
-                        onerror="this.onerror=null; this.src='https://placehold.co/728x90/FF0000/white?text=Ad';">
-                    </img>`;
-        }
-    },
+    const mediaUrl = this.getMediaUrl(ad);
+    if (!mediaUrl) return '';
+    
+    const isVideo = this.isVideo(mediaUrl);
+    const lazyAttr = lazyLoad ? 'loading="lazy"' : '';
+    
+    let fullUrl = mediaUrl;
+    if (mediaUrl.startsWith('/')) {
+        fullUrl = window.location.origin + mediaUrl;
+    }
+    
+    // Add cache-buster to force image reload
+    const cacheBuster = `?t=${Date.now()}`;
+    
+    if (isVideo) {
+        return `<video autoplay muted loop playsinline ${lazyAttr} class="ad-media" style="display: block; width: auto; max-width: 100%;">
+                    <source src="${fullUrl}" type="video/mp4">
+                    <source src="${fullUrl}" type="video/webm">
+                </video>`;
+    } else {
+        // FIXED: Added crossorigin attribute and better error handling
+        return `<img src="${fullUrl}${cacheBuster}" 
+                    alt="${ad.title || 'Advertisement'}" 
+                    class="ad-media" 
+                    ${lazyAttr}
+                    crossorigin="anonymous"
+                    referrerpolicy="no-referrer"
+                    style="display: block; max-width: 100%; height: auto;"
+                    onerror="this.onerror=null; this.src='https://placehold.co/728x90/FF0000/white?text=Image+Load+Error'; console.log('Image failed to load:', this.src);"
+                    onload="console.log('Image loaded successfully:', this.src);">
+                </img>`;
+    }
+},
     
     async fetchAds(type) {
         try {
