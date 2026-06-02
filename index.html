@@ -37,425 +37,91 @@
     <meta name="twitter:creator" content="@LiberiaBusinessAwards">
     <meta name="msvalidate.01" content="41E28593E77AE8AD12F4976035604997" />
 
-    <!-- ============ ADVANCED ANTI-CONSOLE SECURITY (MUST BE FIRST) ============ -->
-<script>
-(function() {
-    'use strict';
-    
-    // -------------------------------------------------------------------------
-    // LAYER 1: COMPLETE CONSOLE NEUTRALIZATION
-    // -------------------------------------------------------------------------
-    const noop = function() {};
-    const consoleMethods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'assert', 'profile', 'profileEnd', 'time', 'timeEnd', 'timeStamp'];
-    
-    if (window.console) {
-        consoleMethods.forEach(method => {
-            if (window.console[method]) {
-                window.console[method] = noop;
-            }
-        });
-        // Freeze console to prevent restoration
-        Object.freeze(window.console);
-    }
-    
-    // Override global error reporting
-    window.onerror = function() { return true; };
-    window.onunhandledrejection = function() { return true; };
-    
-    // -------------------------------------------------------------------------
-    // LAYER 2: BLOCK ALL DEV TOOLS KEYBOARD SHORTCUTS
-    // -------------------------------------------------------------------------
-    const blockedKeys = {
-        'F12': true,
-        'F11': true,      // Fullscreen (can hide devtools)
-        'F5': true,       // Refresh (bypass some protections)
-        'F6': true,       // Address bar
-        'F7': true,       // Caret browsing
-        'F8': true,       // Debugger
-        'F9': true,       // Mail
-        'F10': true,      // Menu bar
-    };
-    
-    const ctrlShiftCombos = {
-        'I': true,        // DevTools
-        'J': true,        // Console
-        'C': true,        // Inspector
-        'K': true,        // Firefox Console
-        'E': true,        // Firefox Inspector
-        'S': true,        // Save (disabled)
-        'P': true,        // Print preview
-        'R': true,        // Hard refresh
-    };
-    
-    const ctrlCombos = {
-        'u': true,        // View source
-        's': true,        // Save page
-        'p': true,        // Print
-        'r': true,        // Refresh
-        'h': true,        // History
-        'j': true,        // Downloads
-        'k': true,        // Duplicate tab
-        'e': true,        // Search
-        'f': true,        // Find
-        'g': true,        // Find next
-        'o': true,        // Open file
-        't': true,        // New tab
-        'w': true,        // Close tab
-        'n': true,        // New window
-    };
-    
-    const ctrlShiftAltCombos = {
-        'I': true,        // Safari DevTools
-        'C': true,        // Safari Inspector
-        'J': true,        // Safari Console
-    };
-    
-    function blockAllShortcuts(e) {
-        // Block function keys
-        if (blockedKeys[e.key]) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
+     <!-- ============ ANTI-CONSOLE SECURITY (MUST BE FIRST) ============ -->
+    <script>
+    (function() {
+        'use strict';
         
-        // Block Ctrl+Shift combinations
-        if (e.ctrlKey && e.shiftKey && ctrlShiftCombos[e.key.toUpperCase()]) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        // Block Ctrl combinations
-        if (e.ctrlKey && !e.shiftKey && !e.altKey && ctrlCombos[e.key.toLowerCase()]) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        // Block Ctrl+Shift+Alt combinations (Mac Safari)
-        if (e.ctrlKey && e.shiftKey && e.altKey && ctrlShiftAltCombos[e.key.toUpperCase()]) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        // Block Cmd+Option combinations (Mac)
-        if (e.metaKey && e.altKey && ctrlShiftAltCombos[e.key.toUpperCase()]) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        // Block Cmd+Shift combinations (Mac)
-        if (e.metaKey && e.shiftKey && ctrlShiftCombos[e.key.toUpperCase()]) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        // Block single Cmd key combos (Mac)
-        if (e.metaKey && ctrlCombos[e.key.toLowerCase()]) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        // Block Ctrl+Shift+Number (Chrome tab switching to devtools)
-        if (e.ctrlKey && e.shiftKey && e.key >= '0' && e.key <= '9') {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        // Block F12 + Ctrl (some browsers)
-        if (e.key === 'F12' && (e.ctrlKey || e.shiftKey || e.altKey)) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        return true;
-    }
-    
-    // -------------------------------------------------------------------------
-    // LAYER 3: RIGHT-CLICK & SELECTION PROTECTION
-    // -------------------------------------------------------------------------
-    function blockContextMenu(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-    
-    function blockSelection(e) {
-        e.preventDefault();
-        return false;
-    }
-    
-    // Protect against text selection and copying
-    function blockCopy(e) {
-        e.preventDefault();
-        return false;
-    }
-    
-    // -------------------------------------------------------------------------
-    // LAYER 4: DEVTOOLS DETECTION (MULTIPLE METHODS)
-    // -------------------------------------------------------------------------
-    let devToolsDetected = false;
-    let detectionInterval = null;
-    let debuggerInterval = null;
-    
-    // Method 1: Window size detection (most common)
-    let windowWidth = window.outerWidth;
-    let windowHeight = window.outerHeight;
-    let innerWidth = window.innerWidth;
-    let innerHeight = window.innerHeight;
-    
-    Object.defineProperty(window, 'outerWidth', {
-        get: function() {
-            if (window.innerWidth !== innerWidth) {
-                devToolsDetected = true;
-            }
-            return windowWidth;
-        },
-        set: function(value) { windowWidth = value; }
-    });
-    
-    Object.defineProperty(window, 'outerHeight', {
-        get: function() {
-            if (window.innerHeight !== innerHeight) {
-                devToolsDetected = true;
-            }
-            return windowHeight;
-        },
-        set: function(value) { windowHeight = value; }
-    });
-    
-    // Method 2: Debugger statement trap
-    function registerDebuggerTrap() {
-        debuggerInterval = setInterval(function() {
-            if (devToolsDetected) return;
-            
-            try {
-                // This will pause execution ONLY if devtools is open
-                const start = performance.now();
-                debugger;
-                const end = performance.now();
-                
-                // If debugger caused a delay of more than 100ms, devtools is likely open
-                if (end - start > 100) {
-                    devToolsDetected = true;
-                }
-            } catch (e) {
-                // Silent fail
-            }
-        }, 500);
-    }
-    
-    // Method 3: Element inspection detection
-    let elementCount = document.getElementsByTagName('*').length;
-    setInterval(function() {
-        const newCount = document.getElementsByTagName('*').length;
-        if (Math.abs(newCount - elementCount) > 50) {
-            devToolsDetected = true;
-        }
-        elementCount = newCount;
-    }, 1000);
-    
-    // Method 4: Console method restoration detection
-    setInterval(function() {
-        if (window.console && (window.console.log !== noop || window.console.info !== noop)) {
-            // Someone tried to restore console methods
-            consoleMethods.forEach(method => {
+        // SAFE CONSOLE NEUTRALIZATION (NO BYPASSES)
+        const noop = function() {};
+        const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'assert', 'profile', 'profileEnd', 'time', 'timeEnd'];
+        if (window.console) {
+            methods.forEach(function(method) {
                 if (window.console[method]) {
-                    try {
-                        window.console[method] = noop;
-                    } catch(e) {}
+                    window.console[method] = noop;
                 }
             });
+            Object.freeze(window.console);
         }
-    }, 100);
-    
-    // Method 5: Performance timing detection
-    let lastPerformanceNow = performance.now();
-    setInterval(function() {
-        const now = performance.now();
-        const delta = now - lastPerformanceNow;
         
-        // If the gap is significantly larger than 100ms (the interval), devtools might be slowing things
-        if (delta > 150) {
-            devToolsDetected = true;
-        }
-        lastPerformanceNow = now;
-    }, 100);
-    
-    // -------------------------------------------------------------------------
-    // LAYER 5: RESPONSE ACTIONS (MAXIMUM SECURITY)
-    // -------------------------------------------------------------------------
-    function executeSecurityResponse() {
-        if (!devToolsDetected) return;
-        
-        try {
-            // Clear all localStorage and sessionStorage
-            localStorage.clear();
-            sessionStorage.clear();
-            
-            // Clear all cookies
-            document.cookie.split(";").forEach(function(c) {
-                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-            });
-            
-            // Block all future interactions
-            document.body.style.pointerEvents = 'none';
-            document.body.style.opacity = '0';
-            
-            // Add invisible overlay
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:black;z-index:999999;display:flex;align-items:center;justify-content:center;color:white;font-family:monospace;font-size:20px;';
-            overlay.innerHTML = '<div style="text-align:center"><h1>⚠️ Security Violation Detected</h1><p>Developer tools are not permitted on this platform.</p><p>Redirecting to login...</p></div>';
-            document.body.appendChild(overlay);
-            
-            // Force redirect after brief delay
-            setTimeout(function() {
-                window.location.href = '/dashboard/login.html';
-            }, 1000);
-            
-        } catch(e) {
-            // Fallback redirect
-            window.location.href = '/dashboard/login.html';
-        }
-    }
-    
-    // Main detection interval
-    detectionInterval = setInterval(function() {
-        if (devToolsDetected) {
-            clearInterval(detectionInterval);
-            clearInterval(debuggerInterval);
-            executeSecurityResponse();
-        }
-    }, 200);
-    
-    // -------------------------------------------------------------------------
-    // LAYER 6: PREVENT SCRIPT INJECTION & DOM MANIPULATION
-    // -------------------------------------------------------------------------
-    // Prevent new script injection
-    const originalCreateElement = document.createElement;
-    document.createElement = function(tagName) {
-        const element = originalCreateElement.call(document, tagName);
-        if (tagName && tagName.toLowerCase() === 'script') {
-            const originalSetAttribute = element.setAttribute;
-            element.setAttribute = function(name, value) {
-                if (name && name.toLowerCase() === 'src') {
-                    const allowedDomains = [
-                        window.location.origin,
-                        'https://cdnjs.cloudflare.com',
-                        'https://unpkg.com',
-                        'https://fonts.googleapis.com',
-                        'https://code.jquery.com',
-                        'https://cdn.jsdelivr.net',
-                        'https://stackpath.bootstrapcdn.com'
-                    ];
-                    
-                    let isAllowed = false;
-                    for (let i = 0; i < allowedDomains.length; i++) {
-                        if (value.indexOf(allowedDomains[i]) === 0) {
-                            isAllowed = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!isAllowed) {
-                        devToolsDetected = true;
-                        return;
-                    }
-                }
-                originalSetAttribute.call(this, name, value);
-            };
-        }
-        return element;
-    };
-    
-    // Prevent innerHTML and textContent manipulation that could inject malicious code
-    const originalInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
-    Object.defineProperty(Element.prototype, 'innerHTML', {
-        get: function() {
-            return originalInnerHTML.get.call(this);
-        },
-        set: function(value) {
-            if (typeof value === 'string' && (value.toLowerCase().includes('<script') || value.toLowerCase().includes('onerror') || value.toLowerCase().includes('onload'))) {
-                devToolsDetected = true;
-                return;
-            }
-            originalInnerHTML.set.call(this, value);
-        }
-    });
-    
-    // -------------------------------------------------------------------------
-    // LAYER 7: EVENT LISTENER REGISTRATION
-    // -------------------------------------------------------------------------
-    try {
-        // Block context menu
-        document.addEventListener('contextmenu', blockContextMenu);
-        document.addEventListener('contextmenu', blockContextMenu, true);
-        
-        // Block keyboard shortcuts
-        window.addEventListener('keydown', blockAllShortcuts);
-        window.addEventListener('keydown', blockAllShortcuts, true);
-        
-        // Block text selection
-        document.addEventListener('selectstart', blockSelection);
-        document.addEventListener('dragstart', blockSelection);
-        
-        // Block copy/paste
-        document.addEventListener('copy', blockCopy);
-        document.addEventListener('cut', blockCopy);
-        document.addEventListener('paste', blockCopy);
-        
-        // Block DOM inspection via F12 context menu
-        document.addEventListener('keyup', function(e) {
+        // BLOCK DEV TOOLS SHORTCUTS
+        function blockShortcuts(e) {
             if (e.key === 'F12') {
                 e.preventDefault();
                 return false;
             }
-        });
-        
-    } catch(err) {
-        // Silent fail - no console output
-    }
-    
-    // -------------------------------------------------------------------------
-    // LAYER 8: START ALL PROTECTIONS
-    // -------------------------------------------------------------------------
-    registerDebuggerTrap();
-    
-    // Protect against mutation observer detection
-    const originalMutationObserver = window.MutationObserver;
-    window.MutationObserver = function(callback) {
-        if (callback.toString().includes('devtools')) {
-            devToolsDetected = true;
-        }
-        return new originalMutationObserver(callback);
-    };
-    
-    // Final protection: integrity check
-    setInterval(function() {
-        // Check if our protections are still intact
-        if (!window.console || window.console.log === window.console.log) {
-            // Console might have been restored
-            if (window.console && window.console.log !== noop) {
-                consoleMethods.forEach(method => {
-                    if (window.console[method]) {
-                        try {
-                            window.console[method] = noop;
-                        } catch(e) {}
-                    }
-                });
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'K')) {
+                e.preventDefault();
+                return false;
             }
+            if (e.ctrlKey && (e.key === 'u' || e.key === 's')) {
+                e.preventDefault();
+                return false;
+            }
+            if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
         }
-    }, 500);
-    
-})();
-</script>
-<!-- ============ END ADVANCED SECURITY LAYER ============ -->
+        
+        // BLOCK RIGHT-CLICK
+        function blockContextMenu(e) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // REGISTER EVENT LISTENERS
+        document.addEventListener('contextmenu', blockContextMenu);
+        window.addEventListener('keydown', blockShortcuts);
+        
+        // PREVENT SCRIPT INJECTION (Allow your trusted domains)
+        const originalCreateElement = document.createElement;
+        document.createElement = function(tagName) {
+            const element = originalCreateElement.call(document, tagName);
+            if (tagName && tagName.toLowerCase() === 'script') {
+                const originalSetAttribute = element.setAttribute;
+                element.setAttribute = function(name, value) {
+                    if (name && name.toLowerCase() === 'src') {
+                        const allowedDomains = [
+                            window.location.origin,
+                            'https://cdnjs.cloudflare.com',
+                            'https://unpkg.com',
+                            'https://fonts.googleapis.com',
+                            'https://code.jquery.com',
+                            'https://cdn.jsdelivr.net',
+                            'https://stackpath.bootstrapcdn.com',
+                            'https://www.googletagmanager.com'
+                        ];
+                        let isAllowed = false;
+                        for (let i = 0; i < allowedDomains.length; i++) {
+                            if (value.indexOf(allowedDomains[i]) === 0) {
+                                isAllowed = true;
+                                break;
+                            }
+                        }
+                        if (!isAllowed) return;
+                    }
+                    originalSetAttribute.call(this, name, value);
+                };
+            }
+            return element;
+        };
+        
+        // NO REDIRECTS - Just blocks console access and shortcuts
+    })();
+    </script>
+    <!-- ============ END SECURITY LAYER ============ -->
     
     <!-- Dynamic SEO Optimizer Script -->
     <script>
