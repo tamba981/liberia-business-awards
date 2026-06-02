@@ -3897,20 +3897,54 @@ async function saveAd() {
     }
 }
 
+
+        
+
 // ============ EDIT AD ============
 async function editAd(adId) {
     console.log('📝 Editing ad ID:', adId);
     
+    if (!adId) {
+        showNotification('Invalid ad ID', 'error');
+        return;
+    }
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            showNotification('Authentication required', 'error');
+            return;
+        }
+        
         const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
         });
         
+        if (!response.ok) {
+            if (response.status === 404) {
+                showNotification('Ad not found. It may have been deleted.', 'error');
+                await loadAdsList();
+                return;
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const result = await response.json();
+        console.log('📥 Edit response:', result);
         
         if (result.success && result.ad) {
             const ad = result.ad;
+            
+            // Make sure the create modal exists
+            let modal = document.getElementById('createAdModal');
+            if (!modal) {
+                createAdModal();
+                modal = document.getElementById('createAdModal');
+            }
             
             document.getElementById('adModalTitle').textContent = 'Edit Ad';
             document.getElementById('adId').value = ad._id;
@@ -3918,14 +3952,18 @@ async function editAd(adId) {
             document.getElementById('adDescription').value = ad.description || '';
             document.getElementById('adLinkUrl').value = ad.link_url || '';
             document.getElementById('adType').value = ad.type || 'sidebar';
+            document.getElementById('adPlacement').value = ad.placement || ad.type || 'sidebar';
+            document.getElementById('adBusinessId').value = ad.business_id || '';
             
             if (ad.start_date) {
                 const startDate = new Date(ad.start_date);
-                document.getElementById('adStartDate').value = startDate.toISOString().split('T')[0];
+                const startDateStr = startDate.toISOString().split('T')[0];
+                document.getElementById('adStartDate').value = startDateStr;
             }
             if (ad.end_date) {
                 const endDate = new Date(ad.end_date);
-                document.getElementById('adEndDate').value = endDate.toISOString().split('T')[0];
+                const endDateStr = endDate.toISOString().split('T')[0];
+                document.getElementById('adEndDate').value = endDateStr;
             }
             
             if (ad.image_url) {
@@ -3937,9 +3975,13 @@ async function editAd(adId) {
                 }
             }
             
-            document.getElementById('createAdModal').classList.add('active');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            showNotification('Edit the ad details and click Save', 'info');
         } else {
-            showNotification('Ad not found', 'error');
+            showNotification(result.message || 'Ad not found', 'error');
+            await loadAdsList();
         }
     } catch (error) {
         console.error('Edit ad error:', error);
@@ -3950,6 +3992,11 @@ async function editAd(adId) {
 // ============ APPROVE AD ============
 async function approveAd(adId) {
     if (!confirm('Approve this ad? It will appear on the frontend immediately.')) return;
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
     
     try {
         const token = localStorage.getItem('lba_auth_token');
@@ -3968,6 +4015,9 @@ async function approveAd(adId) {
         }
     } catch (error) {
         showNotification('Error approving ad: ' + error.message, 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
 }
 
@@ -3975,6 +4025,16 @@ async function approveAd(adId) {
 async function rejectAd(adId) {
     const reason = prompt('Enter rejection reason:');
     if (reason === null) return;
+    
+    if (!reason.trim()) {
+        showNotification('Rejection reason is required', 'warning');
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
     
     try {
         const token = localStorage.getItem('lba_auth_token');
@@ -3984,7 +4044,7 @@ async function rejectAd(adId) {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ reason })
+            body: JSON.stringify({ reason: reason.trim() })
         });
         
         const result = await response.json();
@@ -3997,38 +4057,86 @@ async function rejectAd(adId) {
         }
     } catch (error) {
         showNotification('Error rejecting ad: ' + error.message, 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
 }
 
 // ============ DELETE AD ============
 async function deleteAd(adId) {
-    if (!confirm('Delete this ad? This action cannot be undone.')) return;
+    if (!adId) {
+        showNotification('Invalid ad ID', 'error');
+        return;
+    }
+    
+    if (!confirm('⚠️ Are you sure you want to delete this ad?\n\nThis action CANNOT be undone!')) {
+        showNotification('Deletion cancelled', 'info');
+        return;
+    }
+    
+    const deleteBtn = event.target;
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    deleteBtn.disabled = true;
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            showNotification('Authentication required', 'error');
+            return;
+        }
+        
         const response = await fetch(`${API_BASE}/admin/ads/${adId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
         });
         
         const result = await response.json();
+        console.log('🗑️ Delete response:', result);
         
         if (result.success) {
-            showNotification('Ad deleted', 'success');
+            showNotification('✅ Ad deleted successfully!', 'success');
             await loadAdsList();
         } else {
             showNotification(result.message || 'Delete failed', 'error');
         }
     } catch (error) {
+        console.error('Delete ad error:', error);
         showNotification('Error deleting ad: ' + error.message, 'error');
+    } finally {
+        deleteBtn.innerHTML = originalText;
+        deleteBtn.disabled = false;
     }
+}
+
+// ============ LOAD ADS (ALIAS) ============
+async function loadAds() {
+    await loadAdsList();
+}
+
+// ============ FILTER ADS ============
+function filterAds() {
+    const searchTerm = document.getElementById('adSearch')?.value.toLowerCase() || '';
+    const rows = document.querySelectorAll('#adsTableBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
 }
 
 // ============ CREATE TEST AD ============
 async function createTestAd() {
     const token = localStorage.getItem('lba_auth_token');
     
-    // Use a guaranteed working image URL
     const testAd = {
         title: "Test Banner Ad - LBA " + new Date().toLocaleTimeString(),
         description: "This is a test advertisement for Liberia Business Awards",
@@ -4093,6 +4201,7 @@ async function checkFrontendAds() {
 // Export to window
 window.showAdsManagementModal = showAdsManagementModal;
 window.loadAdsList = loadAdsList;
+window.loadAds = loadAds;
 window.showCreateAdModal = showCreateAdModal;
 window.closeCreateAdModal = closeCreateAdModal;
 window.saveAd = saveAd;
@@ -4100,6 +4209,7 @@ window.editAd = editAd;
 window.approveAd = approveAd;
 window.rejectAd = rejectAd;
 window.deleteAd = deleteAd;
+window.filterAds = filterAds;
 window.createTestAd = createTestAd;
 window.checkFrontendAds = checkFrontendAds;
 
@@ -4109,8 +4219,6 @@ console.log('📌 QUICK START:');
 console.log('   1. Run: createTestAd()');
 console.log('   2. Then: checkFrontendAds()');
 console.log('   3. Refresh frontend page to see the ad');
-
-
 
         
         
