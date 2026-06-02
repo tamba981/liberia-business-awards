@@ -12138,23 +12138,21 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
 </script>
 
 <!-- ============================================ -->
-<!-- COMPLETELY REBUILT CHAT WIDGET - FIXED -->
+<!-- SIMPLIFIED CHAT WIDGET - GUARANTEED WORKING -->
 <!-- ============================================ -->
 
 <!-- WhatsApp Float Button -->
-<a href="https://wa.me/231886590302" class="whatsapp-float-fixed" target="_blank" rel="noopener noreferrer">
+<a href="https://wa.me/231886590302" class="whatsapp-float" target="_blank">
     <i class="fab fa-whatsapp"></i>
-    <span class="whatsapp-tooltip-fixed">Chat with us!</span>
 </a>
 
 <!-- Chat Widget Container -->
 <div id="chatWidget" class="chat-widget">
     <div class="chat-button" id="chatButton">
         <i class="fas fa-comment-dots"></i>
-        <span class="chat-badge"></span>
     </div>
     
-    <div class="chat-panel" id="chatPanel">
+    <div class="chat-panel" id="chatPanel" style="display: none;">
         <div class="chat-header">
             <div class="chat-header-info">
                 <div class="chat-avatar">
@@ -12162,66 +12160,43 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
                 </div>
                 <div>
                     <h3>Liberia Business Awards</h3>
-                    <p>Online • Expert Support</p>
+                    <p>Online Support</p>
                 </div>
             </div>
-            <div class="chat-header-actions">
-                <button class="chat-minimize" id="chatMinimizeBtn">−</button>
-                <button class="chat-close" id="chatCloseBtn">✕</button>
-            </div>
+            <button class="chat-close" id="chatCloseBtn">✕</button>
         </div>
         
         <div class="chat-messages" id="chatMessages">
             <div class="message bot">
                 <div class="message-content">
-                    👋 <strong>Welcome to Liberia Business Awards Support!</strong><br><br>
-                    I can help you with:<br>
-                    🏆 Nominations & Awards<br>
-                    📝 Business Registration<br>
-                    🗳️ Voting Information<br>
-                    🤝 Partnerships & Investment<br>
-                    📅 Events & Timeline<br>
-                    🌍 18 Economic Sectors<br><br>
-                    How can I assist you today?
+                    👋 Welcome to Liberia Business Awards Support!<br><br>
+                    How can I help you today?
                 </div>
-                <div class="message-time">Just now</div>
             </div>
         </div>
         
         <div class="chat-options">
-            <button class="option-btn" data-topic="nomination">🏆 Nominations</button>
-            <button class="option-btn" data-topic="registration">📝 Register</button>
-            <button class="option-btn" data-topic="voting">🗳️ Voting</button>
-            <button class="option-btn" data-topic="partnership">🤝 Partnership</button>
-            <button class="option-btn" data-topic="investment">💰 Investment</button>
-            <button class="option-btn" data-topic="events">📅 Events</button>
-            <button class="option-btn" data-topic="categories">🏆 Categories</button>
-            <button class="option-btn" data-topic="sectors">📊 Sectors</button>
-            <button class="option-btn" data-topic="contact">📞 Contact</button>
+            <button class="option-btn" data-msg="Tell me about nominations">🏆 Nominations</button>
+            <button class="option-btn" data-msg="How to register my business">📝 Register</button>
+            <button class="option-btn" data-msg="How to vote">🗳️ Voting</button>
+            <button class="option-btn" data-msg="Partnership opportunities">🤝 Partnership</button>
+            <button class="option-btn" data-msg="Investment opportunities in Liberia">💰 Investment</button>
+            <button class="option-btn" data-msg="Tell me about events">📅 Events</button>
+            <button class="option-btn" data-msg="Contact information">📞 Contact</button>
         </div>
         
         <div class="chat-input-area">
-            <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off">
+            <input type="text" id="chatInput" placeholder="Type your message...">
             <button id="chatSendBtn">
                 <i class="fas fa-paper-plane"></i>
             </button>
-        </div>
-        
-        <div class="chat-footer">
-            <span>🔒 Secure & Private</span>
-            <button class="chat-reset" id="chatResetBtn">Reset Chat</button>
         </div>
     </div>
 </div>
 
 <style>
-
-/* ============================================ */
-/* FIXED CHAT WIDGET STYLES - STRUCTURAL LAYOUT */
-/* ============================================ */
-
-/* WhatsApp Button */
-.whatsapp-float-fixed {
+/* SIMPLIFIED CHAT WIDGET STYLES */
+.whatsapp-float {
     position: fixed;
     bottom: 20px;
     left: 20px;
@@ -12239,29 +12214,11 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     z-index: 9998;
     text-decoration: none;
 }
-.whatsapp-float-fixed:hover {
+.whatsapp-float:hover {
     transform: scale(1.1);
     color: white;
 }
-.whatsapp-tooltip-fixed {
-    position: absolute;
-    left: 65px;
-    background: #1a202c;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-.whatsapp-float-fixed:hover .whatsapp-tooltip-fixed {
-    opacity: 1;
-    visibility: visible;
-}
 
-/* Main Chat Widget Container */
 .chat-widget {
     position: fixed;
     bottom: 20px;
@@ -12270,7 +12227,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     font-family: 'Poppins', sans-serif;
 }
 
-/* Chat Button (Floating Action Button) */
 .chat-button {
     width: 55px;
     height: 55px;
@@ -12290,44 +12246,21 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     font-size: 26px;
     color: white;
 }
-.chat-badge {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 12px;
-    height: 12px;
-    background: #10B981;
-    border-radius: 50%;
-    border: 2px solid white;
-    animation: pulse 2s infinite;
-}
 
-/* CHAT PANEL - THE FIXED CONTAINER */
 .chat-panel {
     position: absolute;
     bottom: 70px;
     right: 0;
     width: 350px;
-    height: 500px; /* FIXED, STABLE HEIGHT */
+    height: 500px;
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transform: scale(0);
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-    transform-origin: bottom right;
-}
-.chat-panel.open {
-    transform: scale(1);
-    opacity: 1;
-    visibility: visible;
 }
 
-/* FIXED HEADER */
 .chat-header {
     background: linear-gradient(135deg, #FF0000, #87CEEB);
     padding: 12px 16px;
@@ -12350,7 +12283,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
 }
 .chat-header-info h3 {
     font-size: 14px;
@@ -12362,7 +12294,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     margin: 2px 0 0;
     opacity: 0.85;
 }
-.chat-minimize, .chat-close {
+.chat-close {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
@@ -12371,24 +12303,20 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     border-radius: 50%;
     cursor: pointer;
     font-size: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
 }
-.chat-minimize:hover, .chat-close:hover {
+.chat-close:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* SCROLLING MESSAGE AREA - CRITICAL FIX HERE */
 .chat-messages {
-    flex: 1 1 auto;
+    flex: 1;
     overflow-y: auto;
     padding: 15px;
     background: #f8f9fa;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    min-height: 0; /* CRITICAL - allows shrinking */
+    min-height: 0;
 }
 .chat-messages::-webkit-scrollbar {
     width: 4px;
@@ -12401,7 +12329,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     border-radius: 10px;
 }
 
-/* Message Bubbles */
 .message {
     display: flex;
     flex-direction: column;
@@ -12430,17 +12357,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     color: white;
     border-bottom-right-radius: 4px;
 }
-.message-time {
-    font-size: 9px;
-    color: #94a3b8;
-    margin-top: 4px;
-    padding: 0 5px;
-}
-.message.user .message-time {
-    text-align: right;
-}
 
-/* Chat Options */
 .chat-options {
     padding: 10px 12px;
     display: flex;
@@ -12449,7 +12366,7 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     border-top: 1px solid #e2e8f0;
     background: white;
     flex-shrink: 0;
-    max-height: 90px;
+    max-height: 100px;
     overflow-y: auto;
 }
 .option-btn {
@@ -12459,7 +12376,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     border-radius: 20px;
     font-size: 11px;
     font-weight: 500;
-    color: #1a202c;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -12468,7 +12384,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     color: white;
 }
 
-/* Input Area - FIXED */
 .chat-input-area {
     padding: 10px 12px;
     display: flex;
@@ -12487,7 +12402,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
 }
 .chat-input-area input:focus {
     border-color: #FF0000;
-    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.1);
 }
 .chat-input-area button {
     width: 40px;
@@ -12497,53 +12411,16 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
     border-radius: 50%;
     color: white;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-/* Footer - FIXED */
-.chat-footer {
-    padding: 6px 12px;
-    background: #f8f9fa;
-    text-align: center;
-    font-size: 10px;
-    color: #94a3b8;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-}
-.chat-reset {
-    background: none;
-    border: none;
-    color: #FF0000;
-    cursor: pointer;
-    font-size: 10px;
-}
-.chat-reset:hover {
-    text-decoration: underline;
-}
-
-/* Animations */
-@keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.2); }
-}
-
-/* Mobile Responsive */
+/* Mobile */
 @media (max-width: 768px) {
-    .whatsapp-float-fixed {
+    .whatsapp-float {
         bottom: 15px;
         left: 15px;
         width: 48px;
         height: 48px;
         font-size: 24px;
-    }
-    .chat-widget {
-        bottom: 15px;
-        right: 15px;
     }
     .chat-button {
         width: 48px;
@@ -12559,7 +12436,6 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         right: -5px;
     }
 }
-
 @media (max-width: 480px) {
     .chat-panel {
         width: 290px;
@@ -12567,81 +12443,50 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         right: -10px;
     }
 }
-    
 </style>
 
 <script>
-// ============================================
-// CHAT WIDGET JAVASCRIPT - COMPLETE
-// ============================================
+// SIMPLIFIED CHAT WIDGET JAVASCRIPT - GUARANTEED WORKING
 (function() {
-    // DOM Elements
     const chatButton = document.getElementById('chatButton');
     const chatPanel = document.getElementById('chatPanel');
-    const chatMinimizeBtn = document.getElementById('chatMinimizeBtn');
     const chatCloseBtn = document.getElementById('chatCloseBtn');
-    const chatResetBtn = document.getElementById('chatResetBtn');
     const chatInput = document.getElementById('chatInput');
     const chatSendBtn = document.getElementById('chatSendBtn');
     const chatMessages = document.getElementById('chatMessages');
     
     let isOpen = false;
-    let typingTimeout = null;
     
-    // Knowledge Base
-    const knowledge = {
-        'nomination': '📋 Nominations for LBA open March 1 and close May 30 annually. You can nominate your business or another business across 72 award categories covering 18 economic sectors. There is NO FEE for nomination!',
-        'registration': '📝 Businesses can register on our website by clicking the "Register" button. You\'ll need to provide business name, sector, contact information, and business description. Registration is FREE!',
-        'voting': '🗳️ Public voting runs from June 1 to July 30 annually. You can vote for your favorite businesses using the voting section on our website. Each email can vote once per business.',
-        'partnership': '🤝 We offer multiple partnership levels: Lead Sponsor, Co-Host Partner, Platinum Sponsor, Gold Sponsor, Category Sponsor, Media Partner, and Strategic Partner.',
-        'investment': '💰 Liberia offers investment opportunities in Agriculture, Mining, Oil & Gas, Manufacturing, Energy, Technology, Tourism, and more. Contact us for details.',
-        'events': '📅 The Awards Ceremony takes place on December 19 annually at 6:00 PM. Tickets go on sale November 1 - December 15.',
-        'categories': '🏆 We have 72 specialized award categories across 5 tiers: Startup Awards, SME Awards, Large Enterprise Awards, Sector Awards (18 sectors), and National Leadership Awards.',
-        'sectors': '📊 Liberia\'s 18 major economic sectors: Agriculture, Mining, Oil & Gas, Manufacturing, Construction, Energy, Transportation, ICT, Financial Services, Education, Health, Tourism, Trade, Public Sector, Civil Society, Media, Arts & Culture, Sports.',
-        'contact': '📞 Phone: +231 886 590 302, +231 77 287 66 44\n📧 Email: liberiabusinessawards@gmail.com, contact@liberiabusinessawardslr.com',
-        'deadlines': '⏰ Nominations close: May 30 at 5:59 PM\n🗳️ Voting ends: July 30\n🏆 Ceremony: December 19 at 6:00 PM',
-        'default': 'I can help you with: 📋 Nominations, 📝 Registration, 🗳️ Voting, 🤝 Partnerships, 💰 Investment, 📅 Events, 🏆 Categories, 📊 Sectors, 📞 Contact. What would you like to know?'
+    // Simple responses
+    const responses = {
+        'nomination': '📋 Nominations open March 1 - May 30. You can nominate any business for FREE across 72 categories!',
+        'register': '📝 Register your business by clicking the Register button on our website. It\'s FREE!',
+        'vote': '🗳️ Voting runs June 1 - July 30. Each email can vote once per business.',
+        'partnership': '🤝 We offer Lead Sponsor, Platinum, Gold, Category, Media, and Strategic partnership levels.',
+        'investment': '💰 Liberia offers opportunities in Agriculture, Mining, Energy, Technology, Tourism, and more!',
+        'events': '📅 Awards Ceremony: December 19 at 6:00 PM. Tickets on sale November 1 - December 15.',
+        'contact': '📞 Phone: +231 886 590 302 | Email: liberiabusinessawards@gmail.com'
     };
     
     function addMessage(text, sender) {
         if (!chatMessages) return;
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}`;
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        messageDiv.innerHTML = `<div class="message-content">${text.replace(/\n/g, '<br>')}</div><div class="message-time">${time}</div>`;
+        messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
         chatMessages.appendChild(messageDiv);
         messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
     
-    function showTyping() {
-        if (!chatMessages) return;
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'message bot';
-        typingDiv.id = 'chatTyping';
-        typingDiv.innerHTML = `<div class="message-content"><i class="fas fa-ellipsis-h"></i> typing...</div>`;
-        chatMessages.appendChild(typingDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    
-    function hideTyping() {
-        const typing = document.getElementById('chatTyping');
-        if (typing) typing.remove();
-    }
-    
     function getResponse(message) {
         const lowerMsg = message.toLowerCase();
-        if (lowerMsg.includes('nominate') || lowerMsg.includes('nomination')) return knowledge.nomination;
-        if (lowerMsg.includes('register')) return knowledge.registration;
-        if (lowerMsg.includes('vote')) return knowledge.voting;
-        if (lowerMsg.includes('partner')) return knowledge.partnership;
-        if (lowerMsg.includes('invest')) return knowledge.investment;
-        if (lowerMsg.includes('event') || lowerMsg.includes('ceremony')) return knowledge.events;
-        if (lowerMsg.includes('category')) return knowledge.categories;
-        if (lowerMsg.includes('sector')) return knowledge.sectors;
-        if (lowerMsg.includes('contact') || lowerMsg.includes('email') || lowerMsg.includes('phone')) return knowledge.contact;
-        if (lowerMsg.includes('deadline')) return knowledge.deadlines;
-        if (lowerMsg.includes('help')) return knowledge.default;
-        return knowledge.default;
+        if (lowerMsg.includes('nomination')) return responses.nomination;
+        if (lowerMsg.includes('register')) return responses.register;
+        if (lowerMsg.includes('vote')) return responses.vote;
+        if (lowerMsg.includes('partner')) return responses.partnership;
+        if (lowerMsg.includes('invest')) return responses.investment;
+        if (lowerMsg.includes('event')) return responses.events;
+        if (lowerMsg.includes('contact')) return responses.contact;
+        return 'I can help with: 📋 Nominations, 📝 Registration, 🗳️ Voting, 🤝 Partnerships, 💰 Investment, 📅 Events, 📞 Contact. What would you like to know?';
     }
     
     function sendMessage() {
@@ -12650,77 +12495,27 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         
         addMessage(message, 'user');
         chatInput.value = '';
-        showTyping();
         
-        if (typingTimeout) clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
+        setTimeout(() => {
             const response = getResponse(message);
-            hideTyping();
             addMessage(response, 'bot');
-        }, 500);
-    }
-    
-    function sendQuickReply(topic) {
-        const messages = {
-            'nomination': 'Tell me about nominations',
-            'registration': 'How to register my business',
-            'voting': 'How to vote',
-            'partnership': 'Tell me about partnership opportunities',
-            'investment': 'Tell me about investment in Liberia',
-            'events': 'Tell me about upcoming events',
-            'categories': 'What are the award categories',
-            'sectors': 'What are the 18 economic sectors',
-            'contact': 'Give me contact information'
-        };
-        const msg = messages[topic];
-        if (msg) {
-            addMessage(msg, 'user');
-            showTyping();
-            if (typingTimeout) clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                const response = getResponse(msg);
-                hideTyping();
-                addMessage(response, 'bot');
-            }, 400);
-        }
-    }
-    
-    function resetChat() {
-        if (!chatMessages) return;
-        chatMessages.innerHTML = `
-            <div class="message bot">
-                <div class="message-content">
-                    👋 <strong>Welcome back!</strong><br><br>
-                    How can I help you today?<br><br>
-                    💡 Try asking about: nominations, registration, voting, partnership, or events.
-                </div>
-                <div class="message-time">Just now</div>
-            </div>
-        `;
+        }, 300);
     }
     
     function toggleChat() {
-        if (chatPanel) {
-            chatPanel.classList.toggle('open');
-            isOpen = chatPanel.classList.contains('open');
-            if (isOpen) {
-                setTimeout(() => chatInput.focus(), 200);
-            }
-        }
-    }
-    
-    function closeChat() {
-        if (chatPanel) {
-            chatPanel.classList.remove('open');
+        if (isOpen) {
+            chatPanel.style.display = 'none';
             isOpen = false;
+        } else {
+            chatPanel.style.display = 'flex';
+            isOpen = true;
+            chatInput.focus();
         }
     }
     
-    // Event Listeners
+    // Event listeners
     if (chatButton) chatButton.addEventListener('click', toggleChat);
-    if (chatCloseBtn) chatCloseBtn.addEventListener('click', closeChat);
-    if (chatMinimizeBtn) chatMinimizeBtn.addEventListener('click', closeChat);
-    if (chatResetBtn) chatResetBtn.addEventListener('click', resetChat);
+    if (chatCloseBtn) chatCloseBtn.addEventListener('click', toggleChat);
     if (chatSendBtn) chatSendBtn.addEventListener('click', sendMessage);
     if (chatInput) {
         chatInput.addEventListener('keypress', (e) => {
@@ -12728,30 +12523,25 @@ console.log('✅ Contact and View Details functions re-initialized at end of scr
         });
     }
     
-    // Quick reply buttons
+    // Option buttons
     document.querySelectorAll('.option-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            const topic = btn.getAttribute('data-topic');
-            if (topic) sendQuickReply(topic);
-            if (!isOpen && chatPanel) {
-                chatPanel.classList.add('open');
-                isOpen = true;
+            const msg = btn.getAttribute('data-msg');
+            if (msg) {
+                addMessage(msg, 'user');
+                setTimeout(() => {
+                    const response = getResponse(msg);
+                    addMessage(response, 'bot');
+                }, 300);
             }
+            if (!isOpen) toggleChat();
         });
     });
     
-    // Close on Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isOpen && chatPanel) {
-            chatPanel.classList.remove('open');
-            isOpen = false;
-        }
-    });
-    
-    console.log('✅ Chat widget initialized');
+    console.log('✅ Simplified chat widget initialized');
 })();
 </script>
-
+    
  <script>
 
  // ============================================
