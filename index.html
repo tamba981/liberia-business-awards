@@ -12762,57 +12762,23 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 
 <!-- ============================================ -->
 <!-- PROFESSIONAL LIVE CHAT & WHATSAPP BUTTON SYSTEM -->
-<!-- WhatsApp: Bottom Left | Live Chat: Bottom Right -->
+<!-- Live Chat: Bottom Left | WhatsApp: Bottom Right -->
 <!-- ============================================ -->
 
 <style>
-/* WhatsApp Button Container - BOTTOM LEFT */
-.whatsapp-container {
+/* Live Chat Container - BOTTOM LEFT */
+.live-chat-container {
     position: fixed;
     bottom: 20px;
     left: 20px;
     z-index: 9999;
-}
-
-/* Main WhatsApp Button */
-.whatsapp-main-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 55px;
-    height: 55px;
-    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-    border-radius: 50%;
-    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    cursor: pointer;
-    text-decoration: none;
-    animation: pulse-whatsapp 2s infinite;
-}
-
-.whatsapp-main-btn i {
-    font-size: 28px;
-    color: white;
-}
-
-.whatsapp-main-btn:hover {
-    transform: scale(1.08);
-    box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
-}
-
-/* Live Chat Container - BOTTOM RIGHT */
-.live-chat-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 10px;
 }
 
-/* Live Chat Button - Smaller */
+/* Live Chat Button - Compact */
 .live-chat-btn {
     display: flex;
     align-items: center;
@@ -12845,16 +12811,50 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 }
 
 .live-chat-btn:hover {
-    transform: translateX(-3px);
+    transform: translateX(3px);
     box-shadow: 0 6px 20px rgba(255, 0, 0, 0.35);
 }
 
-/* Chat Widget Modal - Smaller and properly sized */
+/* WhatsApp Button Container - BOTTOM RIGHT */
+.whatsapp-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+/* Main WhatsApp Button */
+.whatsapp-main-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 55px;
+    height: 55px;
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    cursor: pointer;
+    text-decoration: none;
+    animation: pulse-whatsapp 2s infinite;
+}
+
+.whatsapp-main-btn i {
+    font-size: 28px;
+    color: white;
+}
+
+.whatsapp-main-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+}
+
+/* Chat Widget Modal - Opens from Left side */
 .chat-widget-modal {
     position: fixed;
     bottom: 85px;
-    right: 20px;
-    width: 340px;
+    left: 20px;
+    width: 360px;
     max-width: calc(100vw - 40px);
     background: white;
     border-radius: 16px;
@@ -12941,11 +12941,11 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 .chat-body {
     padding: 15px;
     background: #f8f9fa;
-    max-height: 380px;
+    max-height: 450px;
     overflow-y: auto;
 }
 
-/* Chat Messages - Compact */
+/* Chat Messages */
 .chat-message {
     margin-bottom: 12px;
     display: flex;
@@ -12987,7 +12987,7 @@ console.log('✅ Directory button fixes applied - API businesses should now work
     opacity: 0.6;
 }
 
-/* Chat Input Area - Compact */
+/* Chat Input Area */
 .chat-input-area {
     padding: 12px 15px;
     background: white;
@@ -13034,7 +13034,7 @@ console.log('✅ Directory button fixes applied - API businesses should now work
     transform: scale(1.05);
 }
 
-/* Quick Reply Buttons - Compact */
+/* Quick Reply Buttons */
 .quick-replies {
     display: flex;
     flex-wrap: wrap;
@@ -13053,7 +13053,6 @@ console.log('✅ Directory button fixes applied - API businesses should now work
     cursor: pointer;
     transition: all 0.3s;
     color: #333;
-    white-space: nowrap;
 }
 
 .quick-reply-btn:hover {
@@ -13062,7 +13061,7 @@ console.log('✅ Directory button fixes applied - API businesses should now work
     transform: translateY(-1px);
 }
 
-/* Chat Status - Compact */
+/* Chat Status */
 .chat-status {
     display: flex;
     align-items: center;
@@ -13123,7 +13122,7 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 .chat-notification-badge {
     position: absolute;
     top: -6px;
-    right: -6px;
+    left: -6px;
     background: #FF0000;
     color: white;
     font-size: 9px;
@@ -13180,12 +13179,12 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 
 /* Responsive */
 @media (max-width: 640px) {
-    .whatsapp-container {
+    .live-chat-container {
         bottom: 15px;
         left: 15px;
     }
     
-    .live-chat-container {
+    .whatsapp-container {
         bottom: 15px;
         right: 15px;
     }
@@ -13204,34 +13203,29 @@ console.log('✅ Directory button fixes applied - API businesses should now work
         font-size: 12px;
     }
     
-    .live-chat-btn span:not(.online-indicator) {
-        display: inline;
-    }
-    
     .chat-widget-modal {
         width: calc(100vw - 30px);
-        max-width: 320px;
+        max-width: 340px;
         bottom: 75px;
-        right: 15px;
+        left: 15px;
     }
 }
 </style>
 
-<!-- WhatsApp Button - BOTTOM LEFT -->
-<div class="whatsapp-container">
-    <a href="https://wa.me/231886590302" class="whatsapp-main-btn" target="_blank" rel="noopener noreferrer">
-        <i class="fab fa-whatsapp"></i>
-    </a>
-</div>
-
-<!-- Live Chat Button & Widget - BOTTOM RIGHT -->
+<!-- Live Chat Button & Widget - BOTTOM LEFT -->
 <div class="live-chat-container">
-    <!-- Live Chat Button -->
     <div class="live-chat-btn" onclick="toggleChatWidget()">
         <i class="fas fa-comment-dots"></i>
         <span>Chat</span>
         <span class="online-indicator"></span>
     </div>
+</div>
+
+<!-- WhatsApp Button - BOTTOM RIGHT -->
+<div class="whatsapp-container">
+    <a href="https://wa.me/231886590302" class="whatsapp-main-btn" target="_blank" rel="noopener noreferrer">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 </div>
 
 <!-- Chat Widget Modal -->
@@ -13259,28 +13253,34 @@ console.log('✅ Directory button fixes applied - API businesses should now work
         
         <div class="chat-message system">
             <div class="message-bubble">
-                👋 Hello! Welcome to LBA support.
+                👋 Hello! Welcome to Liberia Business Awards support.
                 <div class="message-time">Just now</div>
             </div>
         </div>
         
         <div class="chat-message system">
             <div class="message-bubble">
-                How can we help?
+                I can tell you all about:<br>
+                🏆 What LBA is & our mission<br>
+                📅 Events & timeline<br>
+                📋 Categories & nominations<br>
+                🤝 Partnerships & more!
                 <div class="message-time">Just now</div>
             </div>
         </div>
         
         <div class="quick-replies">
-            <button class="quick-reply-btn" onclick="sendQuickReply('Nominate')">🏆 Nominate</button>
-            <button class="quick-reply-btn" onclick="sendQuickReply('Partner')">🤝 Partner</button>
-            <button class="quick-reply-btn" onclick="sendQuickReply('List Business')">📋 List</button>
-            <button class="quick-reply-btn" onclick="sendQuickReply('Tickets')">🎟️ Tickets</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('What is Liberia Business Awards?')">❓ What is LBA?</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('Tell me about the mission')">🎯 Mission</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('How to nominate?')">🏆 Nominate</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('Tell me about categories')">📋 Categories</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('When is the ceremony?')">📅 Event Date</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('How to partner?')">🤝 Partner</button>
         </div>
     </div>
     
     <div class="chat-input-area">
-        <input type="text" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <input type="text" id="chatInput" placeholder="Ask about LBA..." onkeypress="if(event.key==='Enter') sendMessage()">
         <button onclick="sendMessage()">
             <i class="fas fa-paper-plane"></i>
         </button>
@@ -13289,7 +13289,7 @@ console.log('✅ Directory button fixes applied - API businesses should now work
 
 <script>
 // ============================================
-// COMPACT LIVE CHAT & WHATSAPP SYSTEM
+// COMPLETE LBA INFO CHAT SYSTEM
 // ============================================
 
 let chatOpen = false;
@@ -13298,8 +13298,51 @@ const WHATSAPP_NUMBER = '231886590302';
 const SUPPORT_EMAIL = 'info@liberiabusinessawardslr.com';
 let messageQueue = [];
 
+// LBA Information Database (Accurate information based on actual LBA data)
+const LBA_INFO = {
+    overview: {
+        name: "Liberia Business Awards (LBA)",
+        founded: 2019,
+        description: "The Liberia Business Awards is a flagship program of the Motiva Cooperation, a non-governmental organization focusing on impact and building institutions. It is Liberia's largest entrepreneurs event focused on the business sector and United Nations Sustainable Development Goals.[citation:1]",
+        mission: "To celebrate high-growth and startup companies and the entrepreneurs that run them, showcasing businesses that have navigated tough conditions by innovating, creating jobs, achieving growth, and supporting their communities and the planet.[citation:1]",
+        vision: "To become Liberia's leading national platform for business recognition, visibility, and private sector excellence, showcasing the entrepreneurs and enterprises driving innovation, job creation, and economic transformation.",
+        attendance: "Gathers about 1,000 entrepreneurs within Liberia and the world's most dynamic business people each year in Monrovia, Liberia.[citation:1]",
+        networking: "Focus on networking with 2,000,000 entrepreneurs and impact.[citation:1]"
+    },
+    sectors: [
+        "🌾 Agriculture", "⛏️ Mining", "🛢️ Oil & Gas", "🏭 Manufacturing", 
+        "🏗️ Construction", "⚡ Energy", "🚚 Transportation", "💻 ICT", 
+        "💰 Financial Services", "📚 Education", "🏥 Health", "🏨 Tourism", 
+        "🛍️ Trade & Commerce", "🏛️ Public Sector", "🤝 Civil Society", 
+        "📺 Media", "🎨 Arts & Culture", "⚽ Sports"
+    ],
+    categories: {
+        startup: ["Startup of the Year", "Tech Startup of the Year", "Innovative Startup Award", "Rising Startup Founder"],
+        sme: ["SME of the Year", "Fast-Growing SME", "SME Innovation Award", "SME Export Excellence"],
+        enterprise: ["Large Enterprise of the Year", "Corporate Excellence Award", "Industry Leader Award"],
+        leadership: ["CEO of the Year", "Entrepreneur of the Year", "Woman Entrepreneur of the Year", "Young Entrepreneur of the Year", "Overall Company of the Year"],
+        special: ["Lifetime Achievement Award", "Rising Star Award", "CSR Excellence Award", "Sustainability Champion"]
+    },
+    timeline: {
+        nominationsOpen: "March 1",
+        nominationsClose: "May 30 at 5:59 PM",
+        votingPeriod: "June 1 - July 30",
+        finalistsAnnouncement: "August 1 - September 30",
+        businessInterviews: "October 1 - October 30",
+        awardsCeremony: "December 19 at 6:00 PM"
+    },
+    partnership: {
+        levels: ["Lead Sponsor", "Platinum Sponsor", "Gold Sponsor", "Category Sponsor", "Media Partner", "Strategic Partner"],
+        benefits: ["National visibility", "Direct access to businesses", "Strategic positioning", "Ecosystem integration"]
+    },
+    contact: {
+        phone: ["+231886590302", "+231772876644"],
+        email: ["info@liberiabusinessawardslr.com", "nominations@liberiabusinessawardslr.com", "partnerships@liberiabusinessawardslr.com"]
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('💬 Live Chat System Ready (Compact Mode)');
+    console.log('💬 LBA Info Chat System Ready');
     loadChatHistory();
     
     const savedUnread = localStorage.getItem('chatUnreadCount');
@@ -13359,7 +13402,7 @@ function sendMessage() {
     
     setTimeout(() => {
         hideTypingIndicator();
-        processUserMessage(message);
+        processUserQuestion(message);
     }, 800);
 }
 
@@ -13377,7 +13420,7 @@ function addMessageToChat(message, sender, timestamp = null) {
     messageDiv.className = `chat-message ${sender}`;
     messageDiv.innerHTML = `
         <div class="message-bubble">
-            ${escapeHtml(message)}
+            ${formatMessageText(message)}
             <div class="message-time">${timeString}</div>
         </div>
     `;
@@ -13393,6 +13436,11 @@ function addMessageToChat(message, sender, timestamp = null) {
         updateChatBadge();
         localStorage.setItem('chatUnreadCount', unreadCount.toString());
     }
+}
+
+function formatMessageText(message) {
+    // Convert line breaks to <br> and handle basic formatting
+    return message.replace(/\n/g, '<br>');
 }
 
 function formatTime(date) {
@@ -13419,34 +13467,248 @@ function hideTypingIndicator() {
     if (indicator) indicator.remove();
 }
 
-function processUserMessage(message) {
-    const lowerMsg = message.toLowerCase();
+// Main function to process user questions about LBA
+function processUserQuestion(question) {
+    const lowerQ = question.toLowerCase();
     let response = '';
     
-    if (lowerMsg.includes('nominate')) {
-        response = `🏆 Ready to nominate? Click below to start!`;
+    // What is LBA / About LBA
+    if (lowerQ.includes('what is') || (lowerQ.includes('about') && lowerQ.includes('lba')) || lowerQ.includes('tell me about') || lowerQ.includes('what does lba do')) {
+        response = `🏆 <strong>About Liberia Business Awards (LBA)</strong><br><br>
+        ${LBA_INFO.overview.description}<br><br>
+        <strong>Founded:</strong> ${LBA_INFO.overview.founded}<br>
+        <strong>Mission:</strong> ${LBA_INFO.overview.mission}<br>
+        <strong>Attendance:</strong> ${LBA_INFO.overview.attendance}<br><br>
+        LBA focuses on recognizing businesses that are innovating, creating jobs, achieving growth, and supporting their communities.`;
         addMessageToChat(response, 'system');
-        addActionButton('Open Nomination Form', 'openNominationForm()');
-    } else if (lowerMsg.includes('partner')) {
-        response = `🤝 Interested in partnering? Email partnerships@liberiabusinessawardslr.com or click below.`;
+        addSuggestedQuestions();
+        return;
+    }
+    
+    // Mission / Vision
+    if (lowerQ.includes('mission') || lowerQ.includes('vision') || lowerQ.includes('purpose') || lowerQ.includes('goal')) {
+        response = `🎯 <strong>Our Mission & Vision</strong><br><br>
+        <strong>Mission:</strong> ${LBA_INFO.overview.mission}<br><br>
+        <strong>Vision:</strong> ${LBA_INFO.overview.vision}<br><br>
+        We celebrate high-growth companies and the entrepreneurs who run them, recognizing excellence across all 18 sectors of Liberia's economy.`;
         addMessageToChat(response, 'system');
-        addActionButton('Request Info', 'sendSupportEmail()');
-    } else if (lowerMsg.includes('list') || lowerMsg.includes('directory')) {
-        response = `📋 Want to list your business? Fill out our registration form!`;
+        return;
+    }
+    
+    // Sectors / Industries covered
+    if (lowerQ.includes('sector') || lowerQ.includes('industry') || lowerQ.includes('industries') || lowerQ.includes('what sectors')) {
+        response = `📊 <strong>Liberia's 18 Major Economic Sectors</strong><br><br>
+        ${LBA_INFO.sectors.join(' • ')}<br><br>
+        Each sector has multiple specialized award categories to recognize excellence at every level - from startups to established enterprises.`;
         addMessageToChat(response, 'system');
-        addActionButton('Register Business', 'openRegistrationForm()');
-    } else if (lowerMsg.includes('ticket')) {
-        response = `🎟️ Get your tickets for the awards ceremony!`;
+        addActionButton('View All Categories', 'viewCategories()');
+        return;
+    }
+    
+    // Categories / Award categories
+    if (lowerQ.includes('category') || lowerQ.includes('categories') || lowerQ.includes('award categories') || lowerQ.includes('what awards')) {
+        response = `🏆 <strong>Award Categories Overview</strong><br><br>
+        <strong>🚀 Startup Awards (0-3 years):</strong><br>
+        • ${LBA_INFO.categories.startup.join('<br>• ')}<br><br>
+        <strong>📈 SME Awards:</strong><br>
+        • ${LBA_INFO.categories.sme.join('<br>• ')}<br><br>
+        <strong>🏢 Large Enterprise Awards:</strong><br>
+        • ${LBA_INFO.categories.enterprise.join('<br>• ')}<br><br>
+        <strong>👑 Leadership Awards:</strong><br>
+        • ${LBA_INFO.categories.leadership.join('<br>• ')}<br><br>
+        Total of 72 award categories across all 18 sectors!`;
+        addMessageToChat(response, 'system');
+        addActionButton('See Full Category List', 'viewCategories()');
+        return;
+    }
+    
+    // Nomination process
+    if (lowerQ.includes('nominate') || lowerQ.includes('nomination') || lowerQ.includes('how to nominate')) {
+        response = `🏆 <strong>How to Nominate a Business</strong><br><br>
+        <strong>📅 Nomination Period:</strong> ${LBA_INFO.timeline.nominationsOpen} - ${LBA_INFO.timeline.nominationsClose}<br><br>
+        <strong>Steps to Nominate:</strong><br>
+        1. Select the business you want to nominate<br>
+        2. Choose the appropriate award category<br>
+        3. Provide business details and reason for nomination<br>
+        4. Submit your nomination before the deadline<br><br>
+        Nominations are open to businesses of all sizes across all 18 sectors!`;
+        addMessageToChat(response, 'system');
+        addActionButton('Start Nomination', 'openNominationForm()');
+        return;
+    }
+    
+    // Event date / Ceremony date
+    if (lowerQ.includes('date') || lowerQ.includes('ceremony') || lowerQ.includes('when is') || lowerQ.includes('event date')) {
+        response = `📅 <strong>Awards Ceremony Details</strong><br><br>
+        <strong>Date:</strong> ${LBA_INFO.timeline.awardsCeremony}<br>
+        <strong>Location:</strong> Monrovia, Liberia<br><br>
+        <strong>Event Highlights:</strong><br>
+        • 72 award categories<br>
+        • 500+ expected attendees<br>
+        • Live entertainment<br>
+        • Networking reception<br>
+        • VIP guest speakers<br><br>
+        <strong>Ticket Sales:</strong> November 1 - December 15`;
+        addMessageToChat(response, 'system');
+        addActionButton('Get Tickets', 'buyTickets()');
+        return;
+    }
+    
+    // Timeline / Schedule
+    if (lowerQ.includes('timeline') || lowerQ.includes('schedule') || lowerQ.includes('deadline')) {
+        response = `📅 <strong>LBA 3.0 Timeline</strong><br><br>
+        • <strong>Nominations Open:</strong> ${LBA_INFO.timeline.nominationsOpen}<br>
+        • <strong>Nominations Close:</strong> ${LBA_INFO.timeline.nominationsClose}<br>
+        • <strong>Voting Period:</strong> ${LBA_INFO.timeline.votingPeriod}<br>
+        • <strong>Finalists Announcement:</strong> ${LBA_INFO.timeline.finalistsAnnouncement}<br>
+        • <strong>Business Interviews:</strong> ${LBA_INFO.timeline.businessInterviews}<br>
+        • <strong>Awards Ceremony:</strong> ${LBA_INFO.timeline.awardsCeremony}`;
+        addMessageToChat(response, 'system');
+        return;
+    }
+    
+    // Partnership / Sponsor
+    if (lowerQ.includes('partner') || lowerQ.includes('sponsor') || lowerQ.includes('partnership')) {
+        response = `🤝 <strong>Partnership Opportunities</strong><br><br>
+        <strong>Partnership Levels:</strong><br>
+        • ${LBA_INFO.partnership.levels.join('<br>• ')}<br><br>
+        <strong>Benefits Include:</strong><br>
+        • ${LBA_INFO.partnership.benefits.join('<br>• ')}<br><br>
+        Contact our partnership team to request our detailed sponsorship package!`;
+        addMessageToChat(response, 'system');
+        addActionButton('Request Partnership Info', 'sendPartnershipInquiry()');
+        return;
+    }
+    
+    // Contact information
+    if (lowerQ.includes('contact') || lowerQ.includes('phone') || lowerQ.includes('email') || lowerQ.includes('reach')) {
+        response = `📞 <strong>Contact Information</strong><br><br>
+        <strong>Phone:</strong><br>
+        • ${LBA_INFO.contact.phone[0]}<br>
+        • ${LBA_INFO.contact.phone[1]}<br><br>
+        <strong>Email:</strong><br>
+        • ${LBA_INFO.contact.email[0]}<br>
+        • ${LBA_INFO.contact.email[1]}<br>
+        • ${LBA_INFO.contact.email[2]}<br><br>
+        Our team is available Monday-Friday, 9AM-5PM.`;
+        addMessageToChat(response, 'system');
+        addActionButton('Send Email', 'sendSupportEmail()');
+        return;
+    }
+    
+    // Voting / How to vote
+    if (lowerQ.includes('vote') || lowerQ.includes('voting')) {
+        response = `🗳️ <strong>Voting Process</strong><br><br>
+        <strong>Voting Period:</strong> ${LBA_INFO.timeline.votingPeriod}<br><br>
+        During the voting period, the public can vote for their favorite nominated businesses. The voting process combines public votes with jury evaluation to determine the winners in each category.<br><br>
+        Stay tuned for voting announcements!`;
+        addMessageToChat(response, 'system');
+        return;
+    }
+    
+    // Directory / Listing business
+    if (lowerQ.includes('directory') || lowerQ.includes('list business') || lowerQ.includes('add business')) {
+        response = `📋 <strong>Business Directory</strong><br><br>
+        The Liberia Business Directory features outstanding Liberian businesses across all industries!<br><br>
+        <strong>To list your business:</strong><br>
+        1. Fill out our registration form<br>
+        2. Provide your business details<br>
+        3. Get verified for premium features<br><br>
+        Listing is FREE for basic membership!`;
+        addMessageToChat(response, 'system');
+        addActionButton('Register Your Business', 'openRegistrationForm()');
+        return;
+    }
+    
+    // Tickets / Price
+    if (lowerQ.includes('ticket') || lowerQ.includes('price') || lowerQ.includes('cost')) {
+        response = `🎟️ <strong>Tickets for LBA 3.0 Ceremony</strong><br><br>
+        <strong>Ticket Categories:</strong><br>
+        • Early Bird: Coming Soon<br>
+        • Regular: Coming Soon<br>
+        • VIP: Coming Soon<br><br>
+        <strong>What's Included:</strong><br>
+        ✓ Access to awards ceremony<br>
+        ✓ Networking opportunities<br>
+        ✓ Welcome reception<br>
+        ✓ Certificate of attendance<br><br>
+        <strong>Ticket Sales:</strong> November 1 - December 15`;
         addMessageToChat(response, 'system');
         addActionButton('Buy Tickets', 'buyTickets()');
-    } else if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
-        response = `👋 Hello! Ask me about nominations, partnerships, directory listing, or tickets!`;
-        addMessageToChat(response, 'system');
-    } else {
-        response = `Thanks for your message! Our team will respond shortly. For immediate help, call ${WHATSAPP_NUMBER} or email ${SUPPORT_EMAIL}`;
-        addMessageToChat(response, 'system');
-        queueMessageForFollowUp(message);
+        return;
     }
+    
+    // Facts / Stats
+    if (lowerQ.includes('fact') || lowerQ.includes('stat') || lowerQ.includes('how many')) {
+        response = `📊 <strong>LBA Fast Facts</strong><br><br>
+        • 🏆 <strong>18</strong> Economic Sectors<br>
+        • 🎯 <strong>72</strong> Award Categories<br>
+        • 👥 <strong>1,000+</strong> Entrepreneurs annually<br>
+        • 🌍 <strong>2,000,000+</strong> Entrepreneurs in network<br>
+        • 🏅 <strong>150+</strong> Businesses Recognized<br>
+        • 🤝 <strong>6+</strong> Strategic Partners<br>
+        • 📅 Founded in <strong>2019</strong>`;
+        addMessageToChat(response, 'system');
+        return;
+    }
+    
+    // General greeting
+    if (lowerQ.includes('hello') || lowerQ.includes('hi') || lowerQ.includes('hey') || lowerQ.includes('greetings')) {
+        response = `👋 Hello! Welcome to Liberia Business Awards support.<br><br>
+        I can help you with information about:<br>
+        • 🏆 What LBA is and our mission<br>
+        • 📅 Event dates and timeline<br>
+        • 📋 Award categories and sectors<br>
+        • 🎯 How to nominate a business<br>
+        • 🤝 Partnership opportunities<br>
+        • 📞 Contact information<br><br>
+        What would you like to know about LBA?`;
+        addMessageToChat(response, 'system');
+        return;
+    }
+    
+    // Thank you response
+    if (lowerQ.includes('thank')) {
+        response = `🙏 You're very welcome!<br><br>
+        Is there anything else I can help you with about Liberia Business Awards?<br><br>
+        Feel free to ask about nominations, categories, partnerships, or event details! 🇱🇷`;
+        addMessageToChat(response, 'system');
+        return;
+    }
+    
+    // Default - helpful response
+    response = `Thank you for your interest in Liberia Business Awards! 🙏<br><br>
+    I can help you with:<br>
+    • <strong>What is LBA?</strong> - Learn about our mission and impact<br>
+    • <strong>Categories & Sectors</strong> - See the 72 award categories<br>
+    • <strong>How to Nominate</strong> - Nomination process and deadlines<br>
+    • <strong>Event Dates</strong> - Ceremony date and timeline<br>
+    • <strong>Partnerships</strong> - Become a partner or sponsor<br>
+    • <strong>Contact Info</strong> - How to reach us<br><br>
+    What specific information are you looking for about LBA?`;
+    addMessageToChat(response, 'system');
+    addSuggestedQuestions();
+}
+
+function addSuggestedQuestions() {
+    const chatBody = document.getElementById('chatBody');
+    
+    const suggestionsDiv = document.createElement('div');
+    suggestionsDiv.className = 'quick-replies';
+    suggestionsDiv.style.marginTop = '10px';
+    suggestionsDiv.style.marginBottom = '0';
+    suggestionsDiv.style.paddingBottom = '0';
+    suggestionsDiv.style.borderBottom = 'none';
+    suggestionsDiv.innerHTML = `
+        <button class="quick-reply-btn" onclick="sendQuickReply('What is Liberia Business Awards?')">❓ What is LBA?</button>
+        <button class="quick-reply-btn" onclick="sendQuickReply('Tell me about the mission')">🎯 Mission</button>
+        <button class="quick-reply-btn" onclick="sendQuickReply('How to nominate?')">🏆 Nominate</button>
+        <button class="quick-reply-btn" onclick="sendQuickReply('Tell me about categories')">📋 Categories</button>
+        <button class="quick-reply-btn" onclick="sendQuickReply('When is the ceremony?')">📅 Event Date</button>
+    `;
+    
+    chatBody.appendChild(suggestionsDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
 }
 
 function addActionButton(text, onClickAction) {
@@ -13467,6 +13729,7 @@ function addActionButton(text, onClickAction) {
     chatBody.scrollTop = chatBody.scrollHeight;
 }
 
+// Action Functions
 function openNominationForm() {
     toggleChatWidget();
     setTimeout(() => {
@@ -13496,10 +13759,28 @@ function buyTickets() {
     }, 300);
 }
 
+function viewCategories() {
+    toggleChatWidget();
+    setTimeout(() => {
+        const categoriesSection = document.getElementById('categories');
+        if (categoriesSection) {
+            categoriesSection.scrollIntoView({ behavior: 'smooth' });
+            if (typeof toggleAllCategories === 'function') {
+                setTimeout(toggleAllCategories, 500);
+            }
+        }
+    }, 300);
+}
+
 function sendSupportEmail() {
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=LBA%20Inquiry`;
 }
 
+function sendPartnershipInquiry() {
+    window.location.href = `mailto:partnerships@liberiabusinessawardslr.com?subject=Partnership%20Inquiry%20-%20LBA`;
+}
+
+// Helper functions
 function queueMessageForFollowUp(message) {
     messageQueue.push({ message, timestamp: new Date().toISOString() });
     try {
@@ -13531,12 +13812,6 @@ function markMessagesAsRead() {
     } catch(e) {}
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Track WhatsApp clicks
 document.querySelector('.whatsapp-main-btn')?.addEventListener('click', function() {
     console.log('📱 WhatsApp clicked');
@@ -13545,7 +13820,7 @@ document.querySelector('.whatsapp-main-btn')?.addEventListener('click', function
     }
 });
 
-console.log('✅ Compact Live Chat Ready');
+console.log('✅ LBA Info Chat Ready - Live Chat on LEFT, WhatsApp on RIGHT');
 </script>
     
 </body>
