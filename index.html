@@ -1023,6 +1023,234 @@ html, body {
         right: 10px !important;
     }
 }
+
+/* ============================================ */
+/* ✅ FIX MODAL DISPLAY ON MOBILE - FULL VISIBILITY */
+/* ============================================ */
+
+/* Ensure modals display properly on mobile */
+@media (max-width: 768px) {
+    .modal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        z-index: 10000 !important;
+        background: rgba(0, 0, 0, 0.85) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow-y: auto !important;
+    }
+    
+    .modal .modal-content {
+        position: relative !important;
+        width: 90% !important;
+        max-width: 90% !important;
+        max-height: 85vh !important;
+        margin: auto !important;
+        padding: 20px !important;
+        overflow-y: auto !important;
+        background: white !important;
+        border-radius: 20px !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+    }
+    
+    /* Fix for register modal specifically */
+    #registerModal .modal-content,
+    #nominateModal .modal-content,
+    #partnerModal .modal-content,
+    #liveSessionModal .modal-content,
+    #upcomingSessionModal .modal-content {
+        width: 92% !important;
+        max-width: 92% !important;
+        max-height: 80vh !important;
+        padding: 16px !important;
+    }
+    
+    /* Ensure form fields are scrollable */
+    .modal-form-container {
+        max-height: calc(80vh - 120px) !important;
+        overflow-y: auto !important;
+        padding-right: 5px !important;
+    }
+    
+    /* Make form inputs easier to tap on mobile */
+    .modal input,
+    .modal select,
+    .modal textarea {
+        font-size: 16px !important; /* Prevents zoom on focus in iOS */
+        padding: 12px !important;
+    }
+    
+    /* Fix modal header to be sticky within modal */
+    .modal .modal-header {
+        position: sticky !important;
+        top: 0 !important;
+        background: white !important;
+        z-index: 10 !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 12px !important;
+        border-bottom: 1px solid #e5e7eb !important;
+    }
+    
+    /* Fix modal footer */
+    .modal .modal-footer {
+        position: sticky !important;
+        bottom: 0 !important;
+        background: white !important;
+        z-index: 10 !important;
+        padding-top: 12px !important;
+        margin-top: 12px !important;
+        border-top: 1px solid #e5e7eb !important;
+    }
+    
+    /* Ensure the modal body is scrollable */
+    .modal .modal-body {
+        overflow-y: auto !important;
+        flex: 1 !important;
+    }
+    
+    /* Close button positioning */
+    .modal-header button {
+        position: relative !important;
+        z-index: 11 !important;
+    }
+    
+    /* Fix for very small screens (below 400px) */
+    @media (max-width: 480px) {
+        .modal .modal-content {
+            width: 95% !important;
+            max-width: 95% !important;
+            padding: 14px !important;
+        }
+        
+        .modal .modal-header h3,
+        .modal .modal-header .text-2xl {
+            font-size: 18px !important;
+        }
+        
+        .modal label {
+            font-size: 13px !important;
+        }
+        
+        .modal input,
+        .modal select,
+        .modal textarea {
+            font-size: 14px !important;
+            padding: 10px !important;
+        }
+    }
+}
+
+/* Also fix for desktop when modal is open - ensure overlay is full */
+.modal {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.modal-content {
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+}
+
+/* Ensure all modals use proper flex positioning */
+.modal {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Fix for the openModal function to ensure proper display */
+.modal.opacity-100,
+.modal.show,
+.modal[style*="opacity: 1"] {
+    display: flex !important;
+}
+
+/* Hide scrollbar on body when modal is open (prevents double scroll) */
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+}  
+
+/* ============================================ */
+/* ✅ FIX MODAL SCROLLING WHEN KEYBOARD OPENS ON MOBILE */
+/* ============================================ */
+
+/* Improved modal scrolling for mobile devices */
+@media (max-width: 768px) {
+    .modal {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        align-items: flex-start !important;
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+    
+    .modal .modal-content {
+        margin: 20px auto !important;
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Ensure the modal body is scrollable with proper padding */
+    .modal .modal-body,
+    .modal-form-container {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        max-height: none !important;
+        padding-bottom: 20px !important;
+    }
+    
+    /* Fix for when keyboard opens - ensure content stays visible */
+    .modal.opacity-100,
+    .modal.show {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Ensure focused input is visible when keyboard opens */
+    .modal input:focus,
+    .modal select:focus,
+    .modal textarea:focus {
+        scroll-margin-top: 100px;
+    }
+    
+    /* Make the modal content scrollable and position properly */
+    .modal-content {
+        position: relative !important;
+        transform: none !important;
+        margin: 20px auto !important;
+        width: 92% !important;
+        max-width: 92% !important;
+    }
+}
+
+/* For iOS specifically to handle keyboard behavior better */
+@supports (-webkit-touch-callout: none) {
+    .modal.opacity-100 {
+        position: fixed !important;
+        height: -webkit-fill-available !important;
+    }
+    
+    .modal .modal-content {
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+    }
+}     
         
 </style>
     
@@ -7194,6 +7422,7 @@ function trapFocus(modalElement) {
     modalElement._keydownHandler = keydownHandler;
 }
 
+
 function openModal(modalId) {
     console.log('🔓 Opening modal:', modalId);
     
@@ -7214,7 +7443,16 @@ function openModal(modalId) {
         modalContent.classList.add('scale-100');
     }
     
+    // Prevent body scrolling when modal is open
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+    
+    // On mobile, ensure the modal is scrollable and starts at top
+    if (window.innerWidth <= 768) {
+        modal.style.overflowY = 'auto';
+        modal.style.webkitOverflowScrolling = 'touch';
+        modal.scrollTop = 0;
+    }
     
     // Set focus to first focusable element
     setTimeout(() => {
@@ -7226,8 +7464,8 @@ function openModal(modalId) {
     }, 100);
 }
 
-// Update closeModal to remove the keydown handler
-function closeModal(modalId) {
+    
+      function closeModal(modalId) {
     console.log('🔒 Attempting to close modal:', modalId);
     
     // Try multiple possible modal IDs
@@ -7242,7 +7480,7 @@ function closeModal(modalId) {
             modal = document.getElementById(modalId.toLowerCase());
             if (!modal) {
                 // Try to find any modal that's open
-                const openModals = document.querySelectorAll('.modal.show, [data-modal].show, .modal[style*="display: block"]');
+                const openModals = document.querySelectorAll('.modal.opacity-100, .modal[style*="display: block"]');
                 if (openModals.length > 0) {
                     modal = openModals[0];
                     console.log('🔍 Found open modal:', modal.id || 'unnamed');
@@ -7260,8 +7498,18 @@ function closeModal(modalId) {
         
         if (!modal) {
             console.log(`ℹ️ Modal "${modalId}" already closed or not found`);
+            // Still re-enable body scroll
+            document.body.style.overflow = 'auto';
+            document.body.classList.remove('modal-open');
             return;
         }
+    }
+    
+    // Reset modal scroll position before closing
+    if (modal) {
+        modal.scrollTop = 0;
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent) modalContent.scrollTop = 0;
     }
     
     // Remove keydown handler if it exists
@@ -7281,12 +7529,12 @@ function closeModal(modalId) {
         modalContent.classList.add('scale-95');
     }
     
+    // Re-enable body scrolling
     document.body.style.overflow = 'auto';
-    document.body.style.paddingRight = '';
+    document.body.classList.remove('modal-open');
     
     console.log('✅ Modal closed successfully:', modal.id || 'unnamed');
-}
-        
+}  
         
         
         // Toggle nomination type fields
