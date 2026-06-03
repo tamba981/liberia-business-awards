@@ -2083,7 +2083,7 @@
             console.log('✅ Business Dashboard Ready');
         });
 
-        async function checkAuth() {
+async function checkAuth() {
     const token = localStorage.getItem('lba_auth_token');
     const userRole = localStorage.getItem('lba_user_role');
     const userDataStr = localStorage.getItem('lba_user_data');
@@ -2098,9 +2098,9 @@
             appState.user = data.user || JSON.parse(userDataStr);
             if (data.user) {
                 // CRITICAL FIX: Preserve logo URL when updating user data
-                const existingLogo = JSON.parse(userDataStr).logo;
-                if (existingLogo && !data.user.logo) {
-                    data.user.logo = existingLogo;
+                const existingUserData = JSON.parse(userDataStr);
+                if (existingUserData.logo && !data.user.logo) {
+                    data.user.logo = existingUserData.logo;
                 }
                 localStorage.setItem('lba_user_data', JSON.stringify(data.user));
             }
@@ -2250,7 +2250,7 @@
         if (data.success) {
             appState.profile = data.profile || data.business || {};
             
-            // CRITICAL FIX: Also update the user data in localStorage with the logo URL
+            // CRITICAL FIX: Save logo URL to localStorage for persistence
             const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
             if (appState.profile.logo) {
                 userData.logo = appState.profile.logo;
@@ -2274,7 +2274,8 @@
     }
 }
 
-function updateProfileDisplay() {
+
+   function updateProfileDisplay() {
     const profile = appState.profile || {};
     
     // Update text fields
@@ -2298,24 +2299,28 @@ function updateProfileDisplay() {
         verificationEl.style.background = '#EF4444'; 
     }
     
-    // FIX: Update profile page fields
-    document.getElementById('profileBusinessName').textContent = profile.business_name || profile.name || '-';
-    document.getElementById('profileEmail').textContent = appState.user?.email || profile.email || '-';
-    document.getElementById('profileContactName').textContent = profile.contact_name || '-';
-    document.getElementById('profilePhone').textContent = profile.phone || '-';
-    document.getElementById('profileIndustry').textContent = profile.industry || profile.business_type || '-';
-    document.getElementById('profileCategory').textContent = profile.business_category || '-';
-    document.getElementById('profileLocation').textContent = profile.location || '-';
-    document.getElementById('profileWebsite').textContent = profile.website || '-';
-    document.getElementById('profileDescription').textContent = profile.description || profile.business_description || '-';
-    document.getElementById('profileAddress').textContent = profile.address || profile.business_address || '-';
-    
-    // FIX: Update logo in dashboard header (user avatar) - IMPROVED
+    // FIX: Update logo in dashboard header (user avatar)
     const userAvatar = document.getElementById('userAvatar');
-    const logoUrl = profile.logo || profile.logo_url;
+    
+    // Try multiple possible logo sources
+    let logoUrl = profile.logo || profile.logo_url;
+    
+    // Also check localStorage for logo
+    if (!logoUrl) {
+        const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+        if (userData.logo) {
+            logoUrl = userData.logo;
+        }
+    }
     
     if (logoUrl && logoUrl !== '' && logoUrl !== 'null' && logoUrl !== 'undefined') {
-        userAvatar.style.backgroundImage = `url(${logoUrl})`;
+        // Ensure URL has proper protocol
+        let finalLogoUrl = logoUrl;
+        if (logoUrl.startsWith('/')) {
+            finalLogoUrl = window.location.origin + logoUrl;
+        }
+        
+        userAvatar.style.backgroundImage = `url(${finalLogoUrl})`;
         userAvatar.style.backgroundSize = 'cover';
         userAvatar.style.backgroundPosition = 'center';
         userAvatar.style.backgroundRepeat = 'no-repeat';
@@ -2333,7 +2338,11 @@ function updateProfileDisplay() {
     const profileLogoImg = document.getElementById('profileLogoImg');
     const profileLogoIcon = document.getElementById('profileLogoIcon');
     if (logoUrl && logoUrl !== '' && logoUrl !== 'null' && logoUrl !== 'undefined') {
-        profileLogoImg.src = logoUrl;
+        let finalLogoUrl = logoUrl;
+        if (logoUrl.startsWith('/')) {
+            finalLogoUrl = window.location.origin + logoUrl;
+        }
+        profileLogoImg.src = finalLogoUrl;
         profileLogoImg.style.display = 'block';
         profileLogoIcon.style.display = 'none';
     } else {
@@ -2345,7 +2354,11 @@ function updateProfileDisplay() {
     const profilePageLogo = document.getElementById('profilePageLogo');
     const profilePageLogoIcon = document.getElementById('profilePageLogoIcon');
     if (logoUrl && logoUrl !== '' && logoUrl !== 'null' && logoUrl !== 'undefined') {
-        profilePageLogo.src = logoUrl;
+        let finalLogoUrl = logoUrl;
+        if (logoUrl.startsWith('/')) {
+            finalLogoUrl = window.location.origin + logoUrl;
+        }
+        profilePageLogo.src = finalLogoUrl;
         profilePageLogo.style.display = 'block';
         profilePageLogoIcon.style.display = 'none';
     } else {
@@ -2377,7 +2390,7 @@ function updateProfileDisplay() {
         statusBadge.textContent = '✗ Not Verified'; 
         statusBadge.style.background = '#EF4444'; 
     }
-}
+}      
 
      function calculateProfileCompletion(profile) {
     const requiredFields = ['business_name', 'name', 'contact_name', 'phone', 'industry', 'business_type', 'location', 'description', 'business_description', 'address', 'business_address'];
@@ -3079,8 +3092,9 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
     document.body.style.overflow = 'hidden';
 }
          
-       
-       document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
+
+         
+document.getElementById('profileEditForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const submitBtn = document.getElementById('profileSaveBtn');
     const originalText = submitBtn.innerHTML;
@@ -3156,7 +3170,6 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         submitBtn.disabled = false; 
     }
 });
-
          
 
         function showTwoFactorSetup() { showToast('Two-factor authentication will be available soon', 'info'); }
