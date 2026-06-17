@@ -6396,70 +6396,319 @@ From selling on the streets of Monrovia</p>
         </div>
     </div>
 
-    <!-- Upcoming Session Modal -->
-    <div id="upcomingSessionModal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="modal-content bg-white rounded-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-2xl p-6 transform scale-95 transition-transform duration-300">
-            <div class="modal-header flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-lba-red">Sign Up for Upcoming Session</h3>
-                <button onclick="closeModal('upcomingSessionModal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
+
+ <!-- Upcoming Session Modal -->
+<div id="upcomingSessionModal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="modal-content bg-white rounded-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-2xl p-6 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+        <div class="modal-header flex justify-between items-center mb-6 sticky top-0 bg-white py-2">
+            <h3 class="text-2xl font-bold text-lba-red">Sign Up for Upcoming Session</h3>
+            <button onclick="closeModal('upcomingSessionModal')" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="modal-form-container">
+            <form id="upcomingSessionForm">
+                <!-- Session Topic - Now a text input -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2" for="session-topic">Session Topic</label>
+                    <input type="text" 
+                           id="session-topic" 
+                           placeholder="e.g., Mastering Social Media Marketing"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue">
+                </div>
+                
+                <!-- Session Date & Time - Now with a button to open the calendar -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2" for="session-datetime">Session Date & Time</label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" 
+                               id="session-datetime" 
+                               placeholder="Select a date and time"
+                               class="flex-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue bg-gray-50 cursor-default"
+                               readonly
+                               style="background-color: #f9fafb;">
+                        <button type="button" 
+                                onclick="openDateTimePicker()"
+                                class="bg-lba-blue text-white px-5 py-2 rounded-lg hover:bg-blue-400 transition whitespace-nowrap">
+                            <i class="fas fa-calendar-alt mr-2"></i>Select Date & Time
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Click the button to open the calendar picker.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="session-name">Your Name</label>
+                        <input type="text" id="session-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="session-email">Your Email</label>
+                        <input type="email" id="session-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2" for="session-business">Business Name (Optional)</label>
+                    <input type="text" id="session-business" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2" for="session-question">Question for Speakers (Optional)</label>
+                    <textarea id="session-question" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer flex justify-end mt-6">
+            <button type="button" onclick="closeModal('upcomingSessionModal')" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg mr-4 hover:bg-gray-300 transition">Cancel</button>
+            <button type="button" id="liveSession-submit-btn" onclick="submitLiveSessionForm()" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
+                <span class="button-text">Register for Session</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Date & Time Picker Modal (Yearly Calendar) -->
+<div id="dateTimePickerModal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center z-[10001] opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="modal-content bg-white rounded-xl w-11/12 md:w-2/3 lg:w-1/2 max-w-3xl p-6 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+        <div class="modal-header flex justify-between items-center mb-4 sticky top-0 bg-white py-2">
+            <h3 class="text-2xl font-bold text-lba-red">Select Date & Time</h3>
+            <button onclick="closeDateTimePicker()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="modal-form-container">
+            <!-- Navigation for Year -->
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="changePickerYear(-1)" class="bg-gray-200 text-gray-700 p-2 rounded-lg hover:bg-gray-300 transition">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span id="pickerYearDisplay" class="text-xl font-bold text-gray-800">2026</span>
+                <button onclick="changePickerYear(1)" class="bg-gray-200 text-gray-700 p-2 rounded-lg hover:bg-gray-300 transition">
+                    <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
-            <div class="modal-form-container">
-                <form>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2" for="session-topic">Session Topic</label>
-                        <select id="session-topic" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
-                            <option value="">Select Session Topic</option>
-                            <option value="funding">Access to Funding for Liberian Businesses</option>
-                            <option value="export">Export Strategies for Liberian Products</option>
-                            <option value="digital">Digital Transformation for SMEs</option>
-                            <option value="sustainability">Sustainable Business Practices</option>
-                            <option value="marketing">Marketing Strategies for Growth</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2" for="session-date">Session Date & Time</label>
-                        <select id="session-date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
-                            <option value="">Select Date & Time</option>
-                            <option value="april-10">April 10, 2026 - 2:00 PM GMT</option>
-                            <option value="april-17">April 17, 2026 - 10:00 AM GMT</option>
-                            <option value="april-24">April 24, 2026 - 3:00 PM GMT</option>
-                            <option value="may-1">May 1, 2026 - 11:00 AM GMT</option>
-                        </select>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="session-name">Your Name</label>
-                            <input type="text" id="session-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="session-email">Your Email</label>
-                            <input type="email" id="session-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue" required>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2" for="session-business">Business Name (Optional)</label>
-                        <input type="text" id="session-business" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue">
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-gray-700 mb-2" for="session-question">Question for Speakers (Optional)</label>
-                        <textarea id="session-question" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lba-blue"></textarea>
-                    </div>
-                </form>
+            <!-- Month Names Row -->
+            <div class="grid grid-cols-7 gap-1 text-center font-semibold text-gray-600 mb-2">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
-            <div class="modal-footer flex justify-end mt-6">
-    <button type="button" onclick="closeModal('upcomingSessionModal')" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg mr-4 hover:bg-gray-300 transition">Cancel</button>
-    <button type="button" id="liveSession-submit-btn" onclick="submitLiveSessionForm()" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
-    <span class="button-text">Register for Session</span>
-</button>
+            <!-- Calendar Days Grid -->
+            <div id="pickerDaysGrid" class="grid grid-cols-7 gap-1 mb-4">
+                <!-- Populated by JavaScript -->
+            </div>
+            
+            <!-- Time Selection -->
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <label class="block text-gray-700 mb-2 font-medium">Select Time</label>
+                <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-2 bg-gray-50 rounded-lg">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="closeDateTimePicker()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition">Cancel</button>
+                <button onclick="confirmDateTimeSelection()" class="bg-lba-red text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
+                    <i class="fas fa-check mr-2"></i>Confirm Date & Time
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
-</div>
-</div>
+
+<!-- JavaScript for the Date & Time Picker -->
+<script>
+    // --- Date & Time Picker State ---
+    let pickerCurrentYear = new Date().getFullYear();
+    let pickerCurrentMonth = new Date().getMonth(); // 0-indexed
+    let pickerSelectedDate = null; // Date object
+    let pickerSelectedTime = null; // "HH:MM" string
+
+    function openDateTimePicker() {
+        const modal = document.getElementById('dateTimePickerModal');
+        if (!modal) return;
+        
+        // Reset selection
+        pickerSelectedDate = null;
+        pickerSelectedTime = null;
+        const now = new Date();
+        pickerCurrentYear = now.getFullYear();
+        pickerCurrentMonth = now.getMonth();
+        
+        renderPicker();
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100', 'pointer-events-auto');
+        const content = modal.querySelector('.modal-content');
+        if (content) {
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
+    }
+
+    function closeDateTimePicker() {
+        const modal = document.getElementById('dateTimePickerModal');
+        if (!modal) return;
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        const content = modal.querySelector('.modal-content');
+        if (content) {
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        }
+        document.body.style.overflow = 'auto';
+        document.body.classList.remove('modal-open');
+    }
+
+    function changePickerYear(delta) {
+        pickerCurrentYear += delta;
+        renderPicker();
+    }
+
+    function renderPicker() {
+        document.getElementById('pickerYearDisplay').textContent = pickerCurrentYear;
+        const grid = document.getElementById('pickerDaysGrid');
+        if (!grid) return;
+        
+        // Clear grid
+        grid.innerHTML = '';
+        
+        // Get first day of month and number of days
+        const firstDay = new Date(pickerCurrentYear, pickerCurrentMonth, 1).getDay();
+        const daysInMonth = new Date(pickerCurrentYear, pickerCurrentMonth + 1, 0).getDate();
+        const today = new Date();
+        
+        // Add empty cells for days before the first of the month
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'p-1';
+            grid.appendChild(emptyDiv);
+        }
+        
+        // Add day cells
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateObj = new Date(pickerCurrentYear, pickerCurrentMonth, day);
+            const isToday = dateObj.toDateString() === today.toDateString();
+            const isSelected = pickerSelectedDate && dateObj.toDateString() === pickerSelectedDate.toDateString();
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = `p-1 text-center rounded-lg cursor-pointer transition-colors text-gray-800 ${isSelected ? 'bg-lba-red text-white' : 'hover:bg-gray-200'}`;
+            dayDiv.textContent = day;
+            
+            if (isToday && !isSelected) {
+                dayDiv.style.border = '2px solid #FF0000';
+            }
+            
+            dayDiv.addEventListener('click', function() {
+                // Deselect previous
+                document.querySelectorAll('#pickerDaysGrid .bg-lba-red').forEach(el => {
+                    el.classList.remove('bg-lba-red', 'text-white');
+                    el.classList.add('text-gray-800');
+                });
+                // Select this one
+                this.classList.add('bg-lba-red', 'text-white');
+                this.classList.remove('text-gray-800');
+                
+                pickerSelectedDate = new Date(pickerCurrentYear, pickerCurrentMonth, parseInt(this.textContent));
+                renderTimeSlots(); // Refresh time slots based on selected date
+            });
+            
+            grid.appendChild(dayDiv);
+        }
+        
+        // Render time slots
+        renderTimeSlots();
+    }
+
+    function renderTimeSlots() {
+        const container = document.querySelector('#dateTimePickerModal .grid-cols-4');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        const selectedTime = pickerSelectedTime;
+        
+        // Generate time slots from 8:00 AM to 8:00 PM in 1-hour increments
+        for (let hour = 8; hour <= 20; hour++) {
+            const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+            const timeDiv = document.createElement('div');
+            timeDiv.className = `text-center p-2 rounded-lg cursor-pointer transition-colors ${selectedTime === timeStr ? 'bg-lba-red text-white' : 'bg-white hover:bg-gray-200 text-gray-700'}`;
+            
+            // Format display time
+            let displayHour = hour;
+            let ampm = 'AM';
+            if (hour >= 12) {
+                ampm = 'PM';
+                if (hour > 12) displayHour = hour - 12;
+            }
+            if (hour === 0) displayHour = 12;
+            timeDiv.textContent = `${displayHour}:00 ${ampm}`;
+            
+            timeDiv.addEventListener('click', function() {
+                // Deselect previous
+                document.querySelectorAll('#dateTimePickerModal .grid-cols-4 .bg-lba-red').forEach(el => {
+                    el.classList.remove('bg-lba-red', 'text-white');
+                    el.classList.add('bg-white', 'text-gray-700');
+                });
+                // Select this one
+                this.classList.add('bg-lba-red', 'text-white');
+                this.classList.remove('bg-white', 'text-gray-700');
+                pickerSelectedTime = timeStr;
+            });
+            
+            container.appendChild(timeDiv);
+        }
+    }
+
+    function confirmDateTimeSelection() {
+        if (!pickerSelectedDate) {
+            alert('Please select a date from the calendar.');
+            return;
+        }
+        if (!pickerSelectedTime) {
+            alert('Please select a time.');
+            return;
+        }
+        
+        // Format the date for display
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const dateStr = pickerSelectedDate.toLocaleDateString('en-US', options);
+        
+        // Format time for display (convert to 12-hour)
+        let displayHour = parseInt(pickerSelectedTime.split(':')[0]);
+        let ampm = 'AM';
+        if (displayHour >= 12) {
+            ampm = 'PM';
+            if (displayHour > 12) displayHour = displayHour - 12;
+        }
+        if (displayHour === 0) displayHour = 12;
+        const timeDisplay = `${displayHour}:00 ${ampm}`;
+        
+        // Set the value in the form field
+        const datetimeInput = document.getElementById('session-datetime');
+        if (datetimeInput) {
+            datetimeInput.value = `${dateStr} at ${timeDisplay}`;
+            // Store the raw ISO string for backend processing if needed
+            datetimeInput.dataset.iso = pickerSelectedDate.toISOString().split('T')[0] + 'T' + pickerSelectedTime + ':00';
+        }
+        
+        closeDateTimePicker();
+    }
+
+    // Override closeModal to also handle the date picker if it's open
+    const originalCloseModal = window.closeModal;
+    window.closeModal = function(modalId) {
+        if (modalId === 'upcomingSessionModal') {
+            // Check if date picker is open and close it too
+            const pickerModal = document.getElementById('dateTimePickerModal');
+            if (pickerModal && !pickerModal.classList.contains('pointer-events-none')) {
+                closeDateTimePicker();
+            }
+        }
+        if (typeof originalCloseModal === 'function') {
+            originalCloseModal(modalId);
+        }
+    };
+</script>
+ 
 
 <!-- All Directory Modal -->
 <div id="allDirectoryModal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
