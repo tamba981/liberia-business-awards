@@ -191,7 +191,7 @@ loadLocalVotingBusinesses: function(page = 1) {
                 <div class="text-center py-5">
                     <i class="fas fa-building fa-2x text-muted"></i>
                     <p class="mt-3">No businesses found in this category.</p>
-                    <p class="mt-2 text-muted">Add businesses to the VotingBusinesses sheet to enable voting.</p>
+                    <p class="mt-2 text-muted">All Voting Business will be place here, when vote open to enable voting.</p>
                 </div>
             `;
             return;
