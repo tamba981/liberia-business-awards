@@ -8256,11 +8256,11 @@ function submitContactForm() {
 }
 
 
-// Live Session Form - UPDATED to work with new input fields
+// Live Session Form - FIXED to match Apps Script field names
 function submitLiveSessionForm() {
     console.log('🎥 Submitting live session form...');
     
-    // Get the form values from the new input fields
+    // Get the form values
     const topic = document.getElementById('session-topic')?.value || '';
     const datetime = document.getElementById('session-datetime')?.value || '';
     const name = document.getElementById('session-name')?.value || '';
@@ -8296,14 +8296,18 @@ function submitLiveSessionForm() {
         return false;
     }
     
-    // Prepare form data for submission
+    // ============================================
+    // FIXED: Use lowercase parameter names that match Apps Script
+    // ============================================
     const formData = {
-        'Session Topic': topic.trim(),
-        'Session Date & Time': datetime.trim(),
-        'Your Name': name.trim(),
-        'Your Email': email.trim(),
-        'Business Name': business.trim() || 'Not provided',
-        'Question': question.trim() || 'No question provided'
+        topic: topic.trim(),           // ← Changed from 'Session Topic'
+        date: datetime.trim(),         // ← Changed from 'Session Date & Time'
+        name: name.trim(),             // ← Changed from 'Your Name'
+        email: email.trim(),           // ← Changed from 'Your Email'
+        business: business.trim() || 'Not provided',  // ← Changed from 'Business Name'
+        question: question.trim() || 'No question provided',  // ← Changed from 'Question'
+        source: 'website',
+        formType: 'liveSession'
     };
     
     console.log('📤 Submitting live session data:', formData);
@@ -8317,19 +8321,14 @@ function submitLiveSessionForm() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
     }
     
-    // Submit to Google Apps Script
+    // Submit to Google Apps Script with the correct field names
     fetch(GOOGLE_APPS_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-            ...formData,
-            formType: 'liveSession',
-            timestamp: new Date().toISOString(),
-            source: 'liberia-business-awards-website'
-        })
+        body: new URLSearchParams(formData)
     })
     .then(() => {
         console.log('✅ Live session registration submitted');
@@ -8347,7 +8346,6 @@ function submitLiveSessionForm() {
         // Close modal after delay
         setTimeout(() => {
             closeModal('upcomingSessionModal');
-            // Also close the date picker if it's open
             const pickerModal = document.getElementById('dateTimePickerModal');
             if (pickerModal && !pickerModal.classList.contains('pointer-events-none')) {
                 closeDateTimePicker();
