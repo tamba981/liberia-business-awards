@@ -7943,6 +7943,7 @@ function enhancedSubmitFormDual(formData, formType) {
 // ============================================
 // ✅ MASTER FORM SUBMISSION FUNCTION
 // ============================================
+// Enhanced submitFormDual to handle liveSession properly
 function submitFormDual(formData, formType) {
     console.log(`🚀 Submitting ${formType} form to Google Sheets...`);
     
@@ -7951,17 +7952,18 @@ function submitFormDual(formData, formType) {
                  document.querySelector(`#${formType}Modal button[type="submit"]`) ||
                  document.querySelector(`button[onclick*="${formType}"]`) ||
                  document.getElementById(`contact-submit-btn`);
-let originalHtml = '';
-let originalText = '';
-
-if (submitBtn) {
-    originalHtml = submitBtn.innerHTML;
-    originalText = submitBtn.querySelector('.button-text')?.innerText || submitBtn.innerText;
     
-    // Disable button and show spinner
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i><span class="button-text">Submitting...</span>';
-}
+    let originalHtml = '';
+    let originalText = '';
+
+    if (submitBtn) {
+        originalHtml = submitBtn.innerHTML;
+        originalText = submitBtn.querySelector('.button-text')?.innerText || submitBtn.innerText;
+        
+        // Disable button and show spinner
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i><span class="button-text">Submitting...</span>';
+    }
     
     // Submit to Google Apps Script
     const googleSheetsPromise = fetch(GOOGLE_APPS_SCRIPT_URL, {
@@ -7990,11 +7992,23 @@ if (submitBtn) {
             showNotification('✅ Form submitted successfully! We will contact you soon.', 'success');
             
             setTimeout(() => {
+                // Close the modal
                 closeModal(`${formType}Modal`);
+                // Also close the date picker if it's open
+                const pickerModal = document.getElementById('dateTimePickerModal');
+                if (pickerModal && !pickerModal.classList.contains('pointer-events-none')) {
+                    closeDateTimePicker();
+                }
                 
                 // Reset form
                 const form = document.querySelector(`#${formType}Modal form`);
                 if (form) form.reset();
+                // Clear the datetime field too
+                const datetimeInput = document.getElementById('session-datetime');
+                if (datetimeInput) {
+                    datetimeInput.value = '';
+                    delete datetimeInput.dataset.iso;
+                }
             }, 1500);
         })
         .catch(error => {
@@ -8002,18 +8016,20 @@ if (submitBtn) {
             showNotification('⚠️ Form submitted! We received your information.', 'success');
             
             setTimeout(() => {
-                try { closeModal(`${formType}Modal`); } catch(e) {}
+                try { 
+                    closeModal(`${formType}Modal`); 
+                } catch(e) {}
             }, 1500);
         })
         .finally(() => {
-    if (submitBtn) {
-        setTimeout(() => {
-            submitBtn.innerHTML = originalHtml;
-            submitBtn.disabled = false;
-            console.log('🔄 Submit button reset');
-        }, 2000);
-    }
-});
+            if (submitBtn) {
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalHtml;
+                    submitBtn.disabled = false;
+                    console.log('🔄 Submit button reset');
+                }, 2000);
+            }
+        });
     
     return false;
 }
@@ -8239,28 +8255,65 @@ function submitContactForm() {
     return submitFormDual(formData, 'contact');
 }
 
-// Live Session Form
+
+// Live Session Form - UPDATED to work with new input fields
 function submitLiveSessionForm() {
     console.log('🎥 Submitting live session form...');
     
-    const formData = {
-        topic: document.getElementById('session-topic')?.value || '',
-        date: document.getElementById('session-date')?.value || '',
-        name: document.getElementById('session-name')?.value || '',
-        email: document.getElementById('session-email')?.value || '',
-        business: document.getElementById('session-business')?.value || '',
-        question: document.getElementById('session-question')?.value || ''
-    };
+    // Get the form values from the new input fields
+    const topic = document.getElementById('session-topic')?.value || '';
+    const datetime = document.getElementById('session-datetime')?.value || '';
+    const name = document.getElementById('session-name')?.value || '';
+    const email = document.getElementById('session-email')?.value || '';
+    const business = document.getElementById('session-business')?.value || '';
+    const question = document.getElementById('session-question')?.value || '';
     
-    // Validate required fields
-    if (!formData.topic || !formData.date || !formData.name || !formData.email) {
-        showNotification('⚠️ Please fill in required fields', 'error');
+    // Validate required fields (topic, datetime, name, email are required)
+    if (!topic.trim()) {
+        showNotification('⚠️ Please enter a session topic', 'error');
         return false;
     }
     
+    if (!datetime.trim()) {
+        showNotification('⚠️ Please select a date and time for the session', 'error');
+        return false;
+    }
+    
+    if (!name.trim()) {
+        showNotification('⚠️ Please enter your name', 'error');
+        return false;
+    }
+    
+    if (!email.trim()) {
+        showNotification('⚠️ Please enter your email address', 'error');
+        return false;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+        showNotification('⚠️ Please enter a valid email address', 'error');
+        return false;
+    }
+    
+    // Prepare form data for submission
+    const formData = {
+        topic: topic.trim(),
+        datetime: datetime.trim(),
+        name: name.trim(),
+        email: email.trim(),
+        business: business.trim() || 'Not provided',
+        question: question.trim() || 'No question provided'
+    };
+    
+    console.log('📤 Submitting live session data:', formData);
+    
+    // Submit to backend using the existing submitFormDual function
+    // The form type is 'liveSession' for the Google Apps Script to handle
     return submitFormDual(formData, 'liveSession');
 }
 
+     
 // ============================================
 // ✅ NOTIFICATION SYSTEM
 // ============================================
