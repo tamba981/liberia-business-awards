@@ -8268,7 +8268,7 @@ function submitLiveSessionForm() {
     const business = document.getElementById('session-business')?.value || '';
     const question = document.getElementById('session-question')?.value || '';
     
-    // Validate required fields (topic, datetime, name, email are required)
+    // Validate required fields
     if (!topic.trim()) {
         showNotification('⚠️ Please enter a session topic', 'error');
         return false;
@@ -8298,19 +8298,76 @@ function submitLiveSessionForm() {
     
     // Prepare form data for submission
     const formData = {
-        topic: topic.trim(),
-        datetime: datetime.trim(),
-        name: name.trim(),
-        email: email.trim(),
-        business: business.trim() || 'Not provided',
-        question: question.trim() || 'No question provided'
+        'Session Topic': topic.trim(),
+        'Session Date & Time': datetime.trim(),
+        'Your Name': name.trim(),
+        'Your Email': email.trim(),
+        'Business Name': business.trim() || 'Not provided',
+        'Question': question.trim() || 'No question provided'
     };
     
     console.log('📤 Submitting live session data:', formData);
     
-    // Submit to backend using the existing submitFormDual function
-    // The form type is 'liveSession' for the Google Apps Script to handle
-    return submitFormDual(formData, 'liveSession');
+    // Show loading state
+    const submitBtn = document.getElementById('liveSession-submit-btn');
+    let originalHtml = '';
+    if (submitBtn) {
+        originalHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+    }
+    
+    // Submit to Google Apps Script
+    fetch(GOOGLE_APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            ...formData,
+            formType: 'liveSession',
+            timestamp: new Date().toISOString(),
+            source: 'liberia-business-awards-website'
+        })
+    })
+    .then(() => {
+        console.log('✅ Live session registration submitted');
+        showNotification('✅ You have been registered for the session! We will contact you soon.', 'success');
+        
+        // Reset form
+        const form = document.querySelector('#upcomingSessionModal form');
+        if (form) form.reset();
+        const datetimeInput = document.getElementById('session-datetime');
+        if (datetimeInput) {
+            datetimeInput.value = '';
+            delete datetimeInput.dataset.iso;
+        }
+        
+        // Close modal after delay
+        setTimeout(() => {
+            closeModal('upcomingSessionModal');
+            // Also close the date picker if it's open
+            const pickerModal = document.getElementById('dateTimePickerModal');
+            if (pickerModal && !pickerModal.classList.contains('pointer-events-none')) {
+                closeDateTimePicker();
+            }
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('❌ Submission error:', error);
+        showNotification('⚠️ There was an error submitting your registration. Please try again.', 'error');
+    })
+    .finally(() => {
+        if (submitBtn) {
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+            }, 2000);
+        }
+    });
+    
+    return true;
 }
 
      
