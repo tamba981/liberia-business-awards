@@ -2851,15 +2851,19 @@ app.post('/api/auth/reset-password', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' });
         }
         
-        console.log(`✅ User found: ${user.email}, Name: ${user.business_name || user.name}`);
+        console.log(`✅ User found: ${user.email}`);
         
-        // ============ FIX: Hash the password explicitly ============
+        // ============ FIX: Hash the password and save ============
         const salt = await bcrypt.genSalt(12);
-        user.password = await bcrypt.hash(newPassword, salt);
-        user.reset_password_token = undefined;
-        user.reset_password_expires = undefined;
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
         
-        await user.save();
+        // Use findByIdAndUpdate to bypass middleware issues
+        const Model = userType === 'admin' ? Admin : BusinessUser;
+        await Model.findByIdAndUpdate(user._id, {
+            password: hashedPassword,
+            reset_password_token: undefined,
+            reset_password_expires: undefined
+        });
         
         console.log(`✅ Password reset successfully for ${user.email}`);
         
