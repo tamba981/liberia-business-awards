@@ -2702,12 +2702,12 @@ async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
         // The email must be from a verified sender in SendGrid
         // You need to verify liberiabusinessawards@gmail.com in SendGrid
         const msg = {
-            to: toEmail,
-            from: 'liberiabusinessawards@gmail.com',  // Must be verified in SendGrid
-            subject: subject,
-            html: htmlBody,
-            text: `Reset your password: ${resetUrl}`
-        };
+    to: toEmail,
+    from: 'contact@liberiabusinessawardslr.com',  // ← VERIFIED SENDER
+    subject: subject,
+    html: htmlBody,
+    text: `Reset your password: ${resetUrl}`
+};
 
         await sgMail.send(msg);
         console.log(`✅ Password reset email sent to ${toEmail} via SendGrid`);
@@ -2726,7 +2726,7 @@ async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
 app.post('/api/test-email', async (req, res) => {
     try {
         const { email } = req.body;
-        const testEmail = email || 'liberiabusinessawards@gmail.com';
+        const testEmail = email || 'contact@liberiabusinessawardslr.com';  
         
         const result = await sendPasswordResetEmail(
             testEmail,
