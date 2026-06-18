@@ -2642,18 +2642,23 @@ app.post('/api/auth/change-password', authenticate, async (req, res) => {
 // ============ EMAIL SENDING FUNCTION - SENDGRID ============
 const sgMail = require('@sendgrid/mail');
 
-// Get SendGrid API key from environment or use your key
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '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';
+// Get SendGrid API key from environment ONLY
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 
 if (SENDGRID_API_KEY) {
     sgMail.setApiKey(SENDGRID_API_KEY);
     console.log('✅ SendGrid configured');
 } else {
-    console.log('⚠️ SENDGRID_API_KEY not set');
+    console.log('⚠️ SENDGRID_API_KEY not set - Email sending will fail');
 }
 
 async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
     try {
+        if (!SENDGRID_API_KEY) {
+            console.error('❌ SendGrid API key not configured');
+            return false;
+        }
+
         const subject = `Password Reset Request - Liberia Business Awards`;
         
         const htmlBody = `
@@ -2692,22 +2697,20 @@ async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
         </div>
         <div class="footer">
             <p>&copy; ${new Date().getFullYear()} Liberia Business Awards. All rights reserved.</p>
-            <p><a href="mailto:liberiabusinessawards@gmail.com">liberiabusinessawards@gmail.com</a></p>
+            <p><a href="mailto:contact@liberiabusinessawardslr.com">contact@liberiabusinessawardslr.com</a></p>
         </div>
     </div>
 </body>
 </html>
         `;
 
-        // The email must be from a verified sender in SendGrid
-        // You need to verify liberiabusinessawards@gmail.com in SendGrid
         const msg = {
-    to: toEmail,
-    from: 'contact@liberiabusinessawardslr.com',  // ← VERIFIED SENDER
-    subject: subject,
-    html: htmlBody,
-    text: `Reset your password: ${resetUrl}`
-};
+            to: toEmail,
+            from: 'contact@liberiabusinessawardslr.com',  // Verified sender
+            subject: subject,
+            html: htmlBody,
+            text: `Reset your password: ${resetUrl}`
+        };
 
         await sgMail.send(msg);
         console.log(`✅ Password reset email sent to ${toEmail} via SendGrid`);
@@ -2726,7 +2729,7 @@ async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
 app.post('/api/test-email', async (req, res) => {
     try {
         const { email } = req.body;
-        const testEmail = email || 'contact@liberiabusinessawardslr.com';  
+        const testEmail = email || 'contact@liberiabusinessawardslr.com';
         
         const result = await sendPasswordResetEmail(
             testEmail,
@@ -2746,47 +2749,7 @@ app.post('/api/test-email', async (req, res) => {
     }
 });
 
-// Fallback: Try MailApp (works in Google Apps Script environment)
-async function sendMailWithMailApp(toEmail, subject, htmlBody) {
-    try {
-        // This only works in Google Apps Script environment
-        // If you're running this in Node.js, this will fail
-        const MailApp = require('google-apps-script').MailApp;
-        MailApp.sendEmail({
-            to: toEmail,
-            subject: subject,
-            htmlBody: htmlBody,
-            name: 'Liberia Business Awards'
-        });
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
 
-// Test email endpoint
-app.post('/api/test-email', async (req, res) => {
-    try {
-        const { email } = req.body;
-        const testEmail = email || 'liberiabusinessawards@gmail.com';
-        
-        const result = await sendPasswordResetEmail(
-            testEmail,
-            'Test User',
-            'https://liberiabusinessawardslr.com/reset-password.html?token=test123&type=business',
-            'business'
-        );
-        
-        res.json({
-            success: result,
-            message: result ? 'Test email sent successfully' : 'Failed to send test email',
-            email: testEmail,
-            transporter: emailTransporter ? 'Configured' : 'Not configured'
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
 
 // ============ END OF EMAIL FUNCTION ============
 
