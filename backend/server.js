@@ -2639,56 +2639,18 @@ app.post('/api/auth/change-password', authenticate, async (req, res) => {
     }
 });
 
-// ============ EMAIL SENDING FUNCTION ============
-const nodemailer = require('nodemailer');
+// ============ EMAIL SENDING FUNCTION - SENDGRID ============
+const sgMail = require('@sendgrid/mail');
 
-// Configure email transporter with Gmail
-let emailTransporter = null;
+// Get SendGrid API key from environment or use your key
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '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';
 
-// Use the password from environment or hardcoded for testing
-const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'wlrxtostwnvsiaio';
-const GMAIL_USER = 'liberiabusinessawards@gmail.com';
-
-console.log('📧 Configuring Gmail email transporter...');
-console.log(`📧 Gmail user: ${GMAIL_USER}`);
-console.log(`📧 Gmail password set: ${GMAIL_PASSWORD ? '✅ Yes' : '❌ No'}`);
-
-if (GMAIL_PASSWORD) {
-    try {
-        emailTransporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: GMAIL_USER,
-                pass: GMAIL_PASSWORD
-            },
-            // Add these options for better reliability
-            tls: {
-                rejectUnauthorized: false
-            },
-            pool: true,
-            maxConnections: 1,
-            rateDelta: 1000,
-            rateLimit: 5
-        });
-        
-        // Verify the connection
-        emailTransporter.verify(function(error, success) {
-            if (error) {
-                console.error('❌ Email transporter verification failed:', error);
-            } else {
-                console.log('✅ Email transporter verified and ready to send');
-            }
-        });
-        
-        console.log('✅ Email transporter configured for Gmail');
-    } catch (error) {
-        console.error('❌ Failed to configure email transporter:', error);
-        emailTransporter = null;
-    }
+if (SENDGRID_API_KEY) {
+    sgMail.setApiKey(SENDGRID_API_KEY);
+    console.log('✅ SendGrid configured');
 } else {
-    console.log('⚠️ GMAIL_APP_PASSWORD not set - Email sending will be simulated');
+    console.log('⚠️ SENDGRID_API_KEY not set');
 }
-
 
 async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
     try {
@@ -2736,51 +2698,53 @@ async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
 </body>
 </html>
         `;
-        
-        // ============ CREATE TRANSPORTER DIRECTLY ============
-        // ============ CREATE TRANSPORTER DIRECTLY ============
-        const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'zwzr pyqe yeiz fxji';  
-        const GMAIL_USER = 'liberiabusinessawards@gmail.com';
-        
-        console.log(`📧 Attempting to send password reset email to: ${toEmail}`);
-        console.log(`📧 Gmail password set: ${GMAIL_PASSWORD ? '✅ Yes' : '❌ No'}`);
-        
-        // Create transporter specifically for this email
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: GMAIL_USER,
-                pass: GMAIL_PASSWORD
-            },
-            tls: {
-                rejectUnauthorized: false
-            }
-        });
-        
-        // Verify connection before sending
-        await transporter.verify();
-        console.log('✅ Email transporter verified');
-        
-        const mailOptions = {
-            from: `"Liberia Business Awards" <${GMAIL_USER}>`,
+
+        // The email must be from a verified sender in SendGrid
+        // You need to verify liberiabusinessawards@gmail.com in SendGrid
+        const msg = {
             to: toEmail,
+            from: 'liberiabusinessawards@gmail.com',  // Must be verified in SendGrid
             subject: subject,
             html: htmlBody,
             text: `Reset your password: ${resetUrl}`
         };
-        
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`✅ Password reset email sent to ${toEmail}, Message ID: ${info.messageId}`);
+
+        await sgMail.send(msg);
+        console.log(`✅ Password reset email sent to ${toEmail} via SendGrid`);
         return true;
-        
+
     } catch (error) {
-        console.error('❌ Email sending failed:', error);
-        console.error('   Error details:', error.message);
-        if (error.code) console.error('   Error code:', error.code);
+        console.error('❌ Email sending failed:', error.message);
+        if (error.response) {
+            console.error('   Response body:', error.response.body);
+        }
         return false;
     }
 }
 
+// Test email endpoint
+app.post('/api/test-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const testEmail = email || 'liberiabusinessawards@gmail.com';
+        
+        const result = await sendPasswordResetEmail(
+            testEmail,
+            'Test User',
+            'https://liberiabusinessawardslr.com/reset-password.html?token=test123&type=business',
+            'business'
+        );
+        
+        res.json({
+            success: result,
+            message: result ? 'Test email sent successfully' : 'Failed to send test email',
+            email: testEmail,
+            provider: 'SendGrid'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // Fallback: Try MailApp (works in Google Apps Script environment)
 async function sendMailWithMailApp(toEmail, subject, htmlBody) {
