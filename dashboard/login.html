@@ -842,72 +842,71 @@ if (token && userRole) {
 
         // ==================== BUSINESS LOGIN ====================
         async function handleBusinessLogin() {
-            const email = document.getElementById('businessEmail').value.trim();
-            const password = document.getElementById('businessPassword').value;
-            const errorEl = document.getElementById('businessError');
-            const successEl = document.getElementById('businessSuccess');
-            const btn = document.getElementById('businessBtn');
+    const email = document.getElementById('businessEmail').value.trim();
+    const password = document.getElementById('businessPassword').value;
+    const errorEl = document.getElementById('businessError');
+    const successEl = document.getElementById('businessSuccess');
+    const btn = document.getElementById('businessBtn');
+    
+    clearAllMessages();
+    
+    if (!email || !password) {
+        showError(errorEl, 'Please fill in all fields');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/business/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+                // CSRF token removed - server doesn't validate it anyway
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            localStorage.setItem('lba_auth_token', result.token);
+            if (result.refreshToken) localStorage.setItem('lba_refresh_token', result.refreshToken);
+            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+            localStorage.setItem('lba_user_role', result.user.role);
             
-            clearAllMessages();
+            showSuccess(successEl, '✓ Login successful! Redirecting...');
+            console.log('✅ Business login successful');
             
-            if (!email || !password) {
-                showError(errorEl, 'Please fill in all fields');
-                return;
-            }
-            
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/auth/business/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-Token': localStorage.getItem('csrf_token')
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    localStorage.setItem('lba_auth_token', result.token);
-                    if (result.refreshToken) localStorage.setItem('lba_refresh_token', result.refreshToken);
-                    localStorage.setItem('lba_user_data', JSON.stringify(result.user));
-                    localStorage.setItem('lba_user_role', result.user.role);
-                    if (result.csrfToken) localStorage.setItem('csrf_token', result.csrfToken);
-                    
-                    showSuccess(successEl, '✓ Login successful! Redirecting...');
-                    console.log('✅ Business login successful');
-                    
-                    setTimeout(() => {
-                        window.location.href = 'business/index.html';
-                    }, 1500);
-                } else {
-                    if (result.message && result.message.includes('pending')) {
-                        showError(errorEl, 'Your account is pending admin approval. You will be able to login once approved.');
-                    } else if (result.message && result.message.includes('rejected')) {
-                        showError(errorEl, result.message);
-                    } else {
-                        showError(errorEl, result.message || 'Invalid business credentials');
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Business login error:', error);
-                let errorMessage = error.message;
-                if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Cannot connect to server. Please try again later.';
-                }
-                showError(errorEl, errorMessage);
-            } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }, 1000);
+            setTimeout(() => {
+                window.location.href = 'business/index.html';
+            }, 1500);
+        } else {
+            if (result.message && result.message.includes('pending')) {
+                showError(errorEl, 'Your account is pending admin approval. You will be able to login once approved.');
+            } else if (result.message && result.message.includes('rejected')) {
+                showError(errorEl, result.message);
+            } else {
+                showError(errorEl, result.message || 'Invalid business credentials');
             }
         }
+    } catch (error) {
+        console.error('❌ Business login error:', error);
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to server. Please try again later.';
+        }
+        showError(errorEl, errorMessage);
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
 
         // ==================== BUSINESS REGISTRATION ====================
         async function handleBusinessRegistration() {
