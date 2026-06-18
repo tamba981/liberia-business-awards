@@ -1139,37 +1139,36 @@ async function showJudgeForgotPassword() {
             });
         }
 
-        async function showForgotPassword() {
-            const email = prompt('Please enter your email address to reset your password:');
-            if (email && email.includes('@')) {
-                try {
-                    const response = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ email })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        showToast(result.message || 'Password reset link has been sent to your email.', 'success');
-                        if (result.resetUrl) {
-                            console.log('Reset URL:', result.resetUrl);
-                        }
-                    } else {
-                        showToast(result.message || 'Failed to send reset link. Please try again.', 'error');
-                    }
-                } catch (error) {
-                    console.error('Forgot password error:', error);
-                    showToast('Cannot connect to server. Please try again later.', 'error');
-                }
-            } else if (email) {
-                showToast('Please enter a valid email address.', 'error');
+        function showForgotPassword() {
+    const email = prompt('Please enter your email address to reset your password:');
+    if (email && email.includes('@')) {
+        // Show a loading toast
+        showToast('Sending reset link...', 'info');
+        
+        fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showToast(result.message || 'If an account exists, a password reset link has been sent to your email.', 'success');
+            } else {
+                showToast(result.message || 'Failed to send reset link. Please try again.', 'error');
             }
-        }
+        })
+        .catch(error => {
+            console.error('Forgot password error:', error);
+            showToast('Cannot connect to server. Please try again later.', 'error');
+        });
+    } else if (email) {
+        showToast('Please enter a valid email address.', 'error');
+    }
+}
 
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
