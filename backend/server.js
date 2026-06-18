@@ -2642,22 +2642,53 @@ app.post('/api/auth/change-password', authenticate, async (req, res) => {
 // ============ EMAIL SENDING FUNCTION ============
 const nodemailer = require('nodemailer');
 
-// Configure email transporter (for production)
+// Configure email transporter with Gmail
 let emailTransporter = null;
 
-// Initialize email transporter if Gmail credentials are available
-if (process.env.GMAIL_APP_PASSWORD) {
-    emailTransporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: 'liberiabusinessawards@gmail.com',
-            pass: process.env.GMAIL_APP_PASSWORD
-        }
-    });
-    console.log('✅ Email transporter configured for Gmail');
+// Use the password from environment or hardcoded for testing
+const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'wlrxtostwnvsiaio';
+const GMAIL_USER = 'liberiabusinessawards@gmail.com';
+
+console.log('📧 Configuring Gmail email transporter...');
+console.log(`📧 Gmail user: ${GMAIL_USER}`);
+console.log(`📧 Gmail password set: ${GMAIL_PASSWORD ? '✅ Yes' : '❌ No'}`);
+
+if (GMAIL_PASSWORD) {
+    try {
+        emailTransporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: GMAIL_USER,
+                pass: GMAIL_PASSWORD
+            },
+            // Add these options for better reliability
+            tls: {
+                rejectUnauthorized: false
+            },
+            pool: true,
+            maxConnections: 1,
+            rateDelta: 1000,
+            rateLimit: 5
+        });
+        
+        // Verify the connection
+        emailTransporter.verify(function(error, success) {
+            if (error) {
+                console.error('❌ Email transporter verification failed:', error);
+            } else {
+                console.log('✅ Email transporter verified and ready to send');
+            }
+        });
+        
+        console.log('✅ Email transporter configured for Gmail');
+    } catch (error) {
+        console.error('❌ Failed to configure email transporter:', error);
+        emailTransporter = null;
+    }
 } else {
     console.log('⚠️ GMAIL_APP_PASSWORD not set - Email sending will be simulated');
 }
+
 
 async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
     try {
@@ -2695,40 +2726,103 @@ async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
                 <p>If you did not request a password reset, please ignore this email.</p>
             </div>
             <p>Or copy this link: ${resetUrl}</p>
+            <p style="font-size: 12px; color: #666; margin-top: 20px;">This is an automated message from Liberia Business Awards.</p>
         </div>
         <div class="footer">
             <p>&copy; ${new Date().getFullYear()} Liberia Business Awards. All rights reserved.</p>
+            <p><a href="mailto:liberiabusinessawards@gmail.com">liberiabusinessawards@gmail.com</a></p>
         </div>
     </div>
 </body>
 </html>
         `;
         
-        // If email transporter is configured, send real email
-        if (emailTransporter) {
-            const mailOptions = {
-                from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
-                to: toEmail,
-                subject: subject,
-                html: htmlBody,
-                text: `Reset your password: ${resetUrl}`
-            };
-            
-            const info = await emailTransporter.sendMail(mailOptions);
-            console.log('✅ Email sent:', info.messageId);
-            return true;
-        } else {
-            // Development mode: just log the reset URL
-            console.log('📧 DEVELOPMENT MODE - Reset link would be sent to:', toEmail);
-            console.log('🔗 Reset URL:', resetUrl);
-            return true; // Return true in development mode
-        }
+        // ============ CREATE TRANSPORTER DIRECTLY ============
+        const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'wlrxtostwnvsiaio';
+        const GMAIL_USER = 'liberiabusinessawards@gmail.com';
+        
+        console.log(`📧 Attempting to send password reset email to: ${toEmail}`);
+        console.log(`📧 Gmail password set: ${GMAIL_PASSWORD ? '✅ Yes' : '❌ No'}`);
+        
+        // Create transporter specifically for this email
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: GMAIL_USER,
+                pass: GMAIL_PASSWORD
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        });
+        
+        // Verify connection before sending
+        await transporter.verify();
+        console.log('✅ Email transporter verified');
+        
+        const mailOptions = {
+            from: `"Liberia Business Awards" <${GMAIL_USER}>`,
+            to: toEmail,
+            subject: subject,
+            html: htmlBody,
+            text: `Reset your password: ${resetUrl}`
+        };
+        
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`✅ Password reset email sent to ${toEmail}, Message ID: ${info.messageId}`);
+        return true;
         
     } catch (error) {
         console.error('❌ Email sending failed:', error);
+        console.error('   Error details:', error.message);
+        if (error.code) console.error('   Error code:', error.code);
         return false;
     }
 }
+
+
+// Fallback: Try MailApp (works in Google Apps Script environment)
+async function sendMailWithMailApp(toEmail, subject, htmlBody) {
+    try {
+        // This only works in Google Apps Script environment
+        // If you're running this in Node.js, this will fail
+        const MailApp = require('google-apps-script').MailApp;
+        MailApp.sendEmail({
+            to: toEmail,
+            subject: subject,
+            htmlBody: htmlBody,
+            name: 'Liberia Business Awards'
+        });
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+// Test email endpoint
+app.post('/api/test-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const testEmail = email || 'liberiabusinessawards@gmail.com';
+        
+        const result = await sendPasswordResetEmail(
+            testEmail,
+            'Test User',
+            'https://liberiabusinessawardslr.com/reset-password.html?token=test123&type=business',
+            'business'
+        );
+        
+        res.json({
+            success: result,
+            message: result ? 'Test email sent successfully' : 'Failed to send test email',
+            email: testEmail,
+            transporter: emailTransporter ? 'Configured' : 'Not configured'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ============ END OF EMAIL FUNCTION ============
 
 // Forgot Password - Request reset link with REAL EMAIL
