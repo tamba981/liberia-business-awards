@@ -2738,7 +2738,8 @@ async function sendPasswordResetEmail(toEmail, userName, resetUrl, userType) {
         `;
         
         // ============ CREATE TRANSPORTER DIRECTLY ============
-        const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'wlrxtostwnvsiaio';
+        // ============ CREATE TRANSPORTER DIRECTLY ============
+        const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'zwzr pyqe yeiz fxji';  
         const GMAIL_USER = 'liberiabusinessawards@gmail.com';
         
         console.log(`📧 Attempting to send password reset email to: ${toEmail}`);
