@@ -2814,6 +2814,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     }
 });
 
+
+
 // ============ RESET PASSWORD ENDPOINT ============
 // Reset Password - Use token to set new password
 app.post('/api/auth/reset-password', async (req, res) => {
@@ -2827,6 +2829,8 @@ app.post('/api/auth/reset-password', async (req, res) => {
         if (newPassword.length < 6) {
             return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
         }
+        
+        console.log(`🔄 Reset password attempt - Token: ${token.substring(0, 20)}..., UserType: ${userType}`);
         
         // Find user by reset token
         let user;
@@ -2843,22 +2847,34 @@ app.post('/api/auth/reset-password', async (req, res) => {
         }
         
         if (!user) {
+            console.log('❌ Reset token not found or expired');
             return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' });
         }
         
-        // Update password
-        user.password = newPassword;
+        console.log(`✅ User found: ${user.email}, Name: ${user.business_name || user.name}`);
+        
+        // ============ FIX: Hash the password explicitly ============
+        const salt = await bcrypt.genSalt(12);
+        user.password = await bcrypt.hash(newPassword, salt);
         user.reset_password_token = undefined;
         user.reset_password_expires = undefined;
+        
         await user.save();
         
-        res.json({ success: true, message: 'Password has been reset successfully. You can now login with your new password.' });
+        console.log(`✅ Password reset successfully for ${user.email}`);
+        
+        res.json({ 
+            success: true, 
+            message: 'Password has been reset successfully. You can now login with your new password.' 
+        });
         
     } catch (error) {
-        console.error('Reset password error:', error);
+        console.error('❌ Reset password error:', error);
         res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
     }
 });
+
+
 
 // ============ ACCOUNT DELETION ENDPOINT  ============
 app.delete('/api/business/account', authenticate, authorize('business'), async (req, res) => {
