@@ -6298,39 +6298,79 @@ app.get('/api/admin/events/:id', authenticate, authorize('admin'), async (req, r
     }
 });
 
-// CREATE past event (admin) - WITH IMAGE UPLOAD SUPPORT
+// CREATE past event (admin) - WITH IMAGE UPLOAD SUPPORT - FIXED
 app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('featured_image'), async (req, res) => {
     try {
-        const { eventData } = req.body;
+        console.log('📝 Creating event...');
+        console.log('📦 req.body keys:', Object.keys(req.body));
+        console.log('📦 req.file:', req.file ? req.file.filename : 'No file');
+        
         let eventDataObj;
         
-        try {
-            eventDataObj = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
-        } catch (e) {
-            // If eventData is not JSON, try parsing from req.body directly
+        // ============================================
+        // FIX: Properly parse eventData from FormData
+        // ============================================
+        if (req.body.eventData) {
+            try {
+                eventDataObj = JSON.parse(req.body.eventData);
+                console.log('✅ Parsed eventData from JSON string');
+            } catch (e) {
+                console.error('❌ Failed to parse eventData JSON:', e.message);
+                console.error('Raw eventData:', (req.body.eventData || '').substring(0, 200));
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Invalid event data format: ' + e.message 
+                });
+            }
+        } else {
+            // Fallback: use req.body directly
             eventDataObj = req.body;
+            console.log('📦 Using req.body directly');
         }
         
-        // Extract data
-        const { title, edition, tagline, description, event_date, status, winner_count, category_count, partner_count, winners, gallery, id } = eventDataObj;
+        // Extract data with defaults
+        const { 
+            title, 
+            edition, 
+            tagline = '', 
+            description, 
+            event_date, 
+            status = 'draft', 
+            winner_count = 0, 
+            category_count = 0, 
+            partner_count = 0, 
+            winners = [], 
+            gallery = [],
+            id 
+        } = eventDataObj;
         
+        // Validate required fields
         if (!title || !edition || !event_date || !description) {
-            return res.status(400).json({ success: false, message: 'Missing required fields' });
+            console.error('❌ Missing required fields:', { 
+                title: !!title, 
+                edition: !!edition, 
+                event_date: !!event_date, 
+                description: !!description 
+            });
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Missing required fields: title, edition, event_date, description' 
+            });
         }
         
         // Build event object
         const event = new PastEvent({
-            title,
-            edition,
+            title: title.trim(),
+            edition: edition.trim(),
             tagline: tagline || '',
-            description,
+            description: description.trim(),
             event_date: new Date(event_date),
             status: status || 'draft',
             winner_count: parseInt(winner_count) || 0,
             category_count: parseInt(category_count) || 0,
             partner_count: parseInt(partner_count) || 0,
-            winners: winners || [],
-            gallery: gallery || [],
+            winners: Array.isArray(winners) ? winners : [],
+            gallery: Array.isArray(gallery) ? gallery : [],
             created_by: req.user._id
         });
         
@@ -6338,27 +6378,47 @@ app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('f
         if (req.file) {
             const imageUrl = `/uploads/${req.file.filename}`;
             event.image = imageUrl;
+            console.log('📸 Featured image uploaded:', imageUrl);
         }
         
-        // Handle gallery image uploads (from FormData)
-        // The files are sent as gallery_0, gallery_1, etc.
-        const galleryFiles = [];
-        const galleryCaptions = [];
-        
-        // Collect all gallery files and captions from FormData
-        for (let i = 0; i < 20; i++) {
-            const fileKey = `gallery_${i}`;
-            const captionKey = `gallery_caption_${i}`;
-            
-            // req.files doesn't work with multer.single, we need to use multer.array or multer.fields
-            // For simplicity with single file upload, we'll assume gallery images are sent as URLs
-            // If you want file upload for gallery, change to upload.array('gallery', 10)
-        }
+        // Handle gallery images from FormData
+        // Gallery files are sent as gallery_0, gallery_1, etc.
+        // Note: This requires upload.array('gallery') if you want multiple files
+        // For now, we'll skip file upload for gallery and use URLs only
         
         // Save to database
         await event.save();
+        console.log('✅ Event saved to database:', event._id);
         
-        // Also save to Google Sheets as backup (will be handled by frontend)
+        // Also try to save to Google Sheets as backup (fire and forget)
+        try {
+            const formData = new URLSearchParams({
+                formType: 'savePastEvent',
+                eventId: event._id.toString(),
+                title: event.title,
+                edition: event.edition,
+                event_date: event.event_date.toISOString(),
+                status: event.status,
+                tagline: event.tagline || '',
+                description: event.description,
+                winner_count: event.winner_count.toString(),
+                category_count: event.category_count.toString(),
+                partner_count: event.partner_count.toString(),
+                winners: JSON.stringify(event.winners),
+                gallery: JSON.stringify(event.gallery),
+                image: event.image || '',
+                timestamp: new Date().toISOString()
+            });
+            
+            // Don't await, just fire and forget
+            fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            }).catch(err => console.log('Google Sheets backup failed:', err.message));
+        } catch (backupError) {
+            console.log('Google Sheets backup error:', backupError.message);
+        }
         
         res.status(201).json({
             success: true,
@@ -6368,57 +6428,91 @@ app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('f
                 title: event.title,
                 edition: event.edition,
                 status: event.status,
-                event_date: event.event_date
+                event_date: event.event_date,
+                image: event.image
             }
         });
         
     } catch (error) {
-        console.error('Create event error:', error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('❌ Create event error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Failed to create event',
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
-// UPDATE past event (admin) - WITH IMAGE UPLOAD SUPPORT
+// UPDATE past event (admin) - WITH IMAGE UPLOAD SUPPORT - FIXED
 app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single('featured_image'), async (req, res) => {
     try {
+        console.log('📝 Updating event:', req.params.id);
+        
         const event = await PastEvent.findById(req.params.id);
         if (!event) {
             return res.status(404).json({ success: false, message: 'Event not found' });
         }
         
-        const { eventData } = req.body;
         let eventDataObj;
         
-        try {
-            eventDataObj = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
-        } catch (e) {
+        // ============================================
+        // FIX: Properly parse eventData from FormData
+        // ============================================
+        if (req.body.eventData) {
+            try {
+                eventDataObj = JSON.parse(req.body.eventData);
+                console.log('✅ Parsed eventData from JSON string');
+            } catch (e) {
+                console.error('❌ Failed to parse eventData JSON:', e.message);
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Invalid event data format: ' + e.message 
+                });
+            }
+        } else {
             eventDataObj = req.body;
+            console.log('📦 Using req.body directly');
         }
         
-        const { title, edition, tagline, description, event_date, status, winner_count, category_count, partner_count, winners, gallery } = eventDataObj;
+        const { 
+            title, 
+            edition, 
+            tagline, 
+            description, 
+            event_date, 
+            status, 
+            winner_count, 
+            category_count, 
+            partner_count, 
+            winners, 
+            gallery 
+        } = eventDataObj;
         
-        if (title) event.title = title;
-        if (edition) event.edition = edition;
+        // Update fields
+        if (title) event.title = title.trim();
+        if (edition) event.edition = edition.trim();
         if (tagline !== undefined) event.tagline = tagline;
-        if (description) event.description = description;
+        if (description) event.description = description.trim();
         if (event_date) event.event_date = new Date(event_date);
         if (status) event.status = status;
         if (winner_count !== undefined) event.winner_count = parseInt(winner_count) || 0;
         if (category_count !== undefined) event.category_count = parseInt(category_count) || 0;
         if (partner_count !== undefined) event.partner_count = parseInt(partner_count) || 0;
-        if (winners) event.winners = winners;
-        if (gallery) event.gallery = gallery;
+        if (winners) event.winners = Array.isArray(winners) ? winners : [];
+        if (gallery) event.gallery = Array.isArray(gallery) ? gallery : [];
         
         // Handle featured image upload
         if (req.file) {
             const imageUrl = `/uploads/${req.file.filename}`;
             event.image = imageUrl;
+            console.log('📸 Featured image updated:', imageUrl);
         }
         
         event.updated_by = req.user._id;
         event.updated_at = new Date();
         
         await event.save();
+        console.log('✅ Event updated:', event._id);
         
         res.json({
             success: true,
@@ -6427,8 +6521,12 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single
         });
         
     } catch (error) {
-        console.error('Update event error:', error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('❌ Update event error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Failed to update event',
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
