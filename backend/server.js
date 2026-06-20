@@ -112,6 +112,7 @@ const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@liberiabusinessawardslr.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const GOOGLE_APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
 
 // ============ AI CONFIGURATION ============
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -6298,6 +6299,7 @@ app.get('/api/admin/events/:id', authenticate, authorize('admin'), async (req, r
     }
 });
 
+
 // CREATE past event (admin) - WITH IMAGE UPLOAD SUPPORT - FIXED
 app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('featured_image'), async (req, res) => {
     try {
@@ -6316,7 +6318,7 @@ app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('f
                 console.log('✅ Parsed eventData from JSON string');
             } catch (e) {
                 console.error('❌ Failed to parse eventData JSON:', e.message);
-                console.error('Raw eventData:', (req.body.eventData || '').substring(0, 200));
+                console.error('Raw eventData preview:', (req.body.eventData || '').substring(0, 200));
                 return res.status(400).json({ 
                     success: false, 
                     message: 'Invalid event data format: ' + e.message 
@@ -6381,11 +6383,6 @@ app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('f
             console.log('📸 Featured image uploaded:', imageUrl);
         }
         
-        // Handle gallery images from FormData
-        // Gallery files are sent as gallery_0, gallery_1, etc.
-        // Note: This requires upload.array('gallery') if you want multiple files
-        // For now, we'll skip file upload for gallery and use URLs only
-        
         // Save to database
         await event.save();
         console.log('✅ Event saved to database:', event._id);
@@ -6442,6 +6439,7 @@ app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('f
         });
     }
 });
+
 
 // UPDATE past event (admin) - WITH IMAGE UPLOAD SUPPORT - FIXED
 app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single('featured_image'), async (req, res) => {
@@ -6529,6 +6527,7 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single
         });
     }
 });
+
 
 // DELETE past event (admin)
 app.delete('/api/admin/events/:id', authenticate, authorize('admin'), async (req, res) => {
