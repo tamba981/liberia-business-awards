@@ -12792,222 +12792,6 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                 </div>
             </div>
 
-            <!-- ============ PAST WINNERS / EVENTS MANAGEMENT SECTION ============ -->
-<div class="menu-section">
-    <h4>Event Management</h4>
-    <a href="#" class="menu-item" onclick="showPastEventsModal()">
-        <i class="fas fa-trophy"></i>
-        <span>Past Events & Winners</span>
-        <span class="badge" id="pastEventsCount">0</span>
-    </a>
-</div>
-
-<!-- ============ PAST EVENTS MODAL ============ -->
-<div class="modal" id="pastEventsModal">
-    <div class="modal-content" style="max-width: 1400px;">
-        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
-            <h2><i class="fas fa-trophy"></i> Past Events & Winners Management</h2>
-            <button class="modal-close" onclick="hideModal('pastEventsModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <!-- Stats -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
-                <div class="stat-card" style="padding: 15px;">
-                    <h3 id="totalEvents">0</h3>
-                    <p>Total Events</p>
-                </div>
-                <div class="stat-card" style="padding: 15px;">
-                    <h3 id="publishedEvents">0</h3>
-                    <p>Published</p>
-                </div>
-                <div class="stat-card" style="padding: 15px;">
-                    <h3 id="draftEvents">0</h3>
-                    <p>Drafts</p>
-                </div>
-                <div class="stat-card" style="padding: 15px;">
-                    <h3 id="totalWinners">0</h3>
-                    <p>Total Winners</p>
-                </div>
-            </div>
-
-            <!-- Action Bar -->
-            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                <div style="display: flex; gap: 10px;">
-                    <button class="sheet-btn" onclick="openAddEventModal()" style="background: linear-gradient(135deg, #FF0000, #cc0000);">
-                        <i class="fas fa-plus"></i> Add New Event
-                    </button>
-                    <button class="sheet-btn secondary" onclick="refreshPastEvents()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <select id="eventStatusFilter" onchange="filterPastEvents()" style="padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
-                        <option value="all">All Status</option>
-                        <option value="published">Published</option>
-                        <option value="draft">Draft</option>
-                    </select>
-                    <input type="text" id="eventSearch" placeholder="Search events..." style="padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; width: 200px;" onkeyup="filterPastEvents()">
-                </div>
-            </div>
-
-            <!-- Events List -->
-            <div class="sheets-viewer">
-                <div class="sheets-viewer-header">
-                    <h4><i class="fas fa-list"></i> All Events</h4>
-                </div>
-                <div id="pastEventsList" style="padding: 20px; min-height: 400px; max-height: 500px; overflow-y: auto;"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ============ ADD/EDIT EVENT MODAL ============ -->
-<div class="modal" id="addEventModal">
-    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
-            <h2 id="eventModalTitle">Add New Event</h2>
-            <button class="modal-close" onclick="hideModal('addEventModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form id="eventForm" onsubmit="event.preventDefault(); saveEvent();">
-                <input type="hidden" id="eventId">
-
-                <!-- Event Basic Info -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label style="font-weight: 600;">Event Title *</label>
-                        <input type="text" id="eventTitle" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="LBA 1.0">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-weight: 600;">Edition *</label>
-                        <input type="text" id="eventEdition" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="1.0">
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div class="form-group">
-                        <label style="font-weight: 600;">Event Date *</label>
-                        <input type="date" id="eventDate" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
-                    </div>
-                    <div class="form-group">
-                        <label style="font-weight: 600;">Status</label>
-                        <select id="eventStatus" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
-                            <option value="published">Published</option>
-                            <option value="draft">Draft</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="font-weight: 600;">Tagline / Subtitle</label>
-                    <input type="text" id="eventTagline" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" placeholder="The Beginning: Celebrating Liberia's entrepreneurial spirit">
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="font-weight: 600;">Description *</label>
-                    <textarea id="eventDescription" rows="3" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="Describe this event..."></textarea>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="font-weight: 600;">Featured Image URL</label>
-                    <input type="text" id="eventImage" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" placeholder="/images/gallery/event-cover.jpg">
-                    <div id="eventImagePreview" style="margin-top: 10px; display: none;">
-                        <img id="eventPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
-                    </div>
-                </div>
-
-                <!-- Winners Section -->
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
-                    <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-award" style="color: #FF0000;"></i> Winners for this Event</h3>
-                    <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">Add each winner as a separate entry. You can add multiple winners.</p>
-
-                    <div id="winnersContainer">
-                        <!-- Winner entries will be added here dynamically -->
-                        <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                <div class="form-group">
-                                    <label style="font-size: 13px;">Winner Name *</label>
-                                    <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-size: 13px;">Award Category *</label>
-                                    <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
-                                </div>
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                                <div class="form-group">
-                                    <label style="font-size: 13px;">Founder/Representative</label>
-                                    <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-size: 13px;">Winner Image URL</label>
-                                    <input type="text" class="winner-image sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="/images/gallery/winner.jpg">
-                                </div>
-                            </div>
-                            <div style="margin-top: 10px;">
-                                <label style="font-size: 13px;">Story / Achievement</label>
-                                <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
-                            </div>
-                            <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
-                        </div>
-                    </div>
-
-                    <button type="button" class="sheet-btn secondary" onclick="addWinnerEntry()" style="margin-top: 10px;">
-                        <i class="fas fa-plus"></i> Add Another Winner
-                    </button>
-                </div>
-
-                <!-- Gallery Images Section -->
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
-                    <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-images" style="color: #FF0000;"></i> Event Gallery Images</h3>
-                    <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">Add image URLs to create a photo gallery for this event.</p>
-
-                    <div id="galleryContainer">
-                        <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center;">
-                            <input type="text" class="gallery-image sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Image URL">
-                            <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
-                            <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
-                        </div>
-                    </div>
-
-                    <button type="button" class="sheet-btn secondary" onclick="addGalleryImage()" style="margin-top: 10px;">
-                        <i class="fas fa-plus"></i> Add Gallery Image
-                    </button>
-                </div>
-
-                <!-- Key Achievements / Stats -->
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
-                    <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-chart-bar" style="color: #FF0000;"></i> Key Statistics</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label style="font-size: 13px;">Number of Winners</label>
-                            <input type="number" id="eventWinnerCount" class="sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="0">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size: 13px;">Number of Categories</label>
-                            <input type="number" id="eventCategoryCount" class="sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="0">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size: 13px;">Number of Partners</label>
-                            <input type="number" id="eventPartnerCount" class="sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="0">
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
-                    <button type="button" class="sheet-btn warning" onclick="hideModal('addEventModal')" style="flex: 1; padding: 12px;">Cancel</button>
-                    <button type="button" class="sheet-btn" onclick="saveEvent()" style="flex: 2; padding: 12px; background: linear-gradient(135deg, #10B981, #059669);">
-                        <i class="fas fa-save"></i> Save Event
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
             <!-- Action Bar - ADD NEW STORY BUTTON IS HERE -->
             <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -13251,6 +13035,223 @@ window.diagnoseSpotlight = diagnoseSpotlight;
     </div>
 </div>
 
+    <!-- ============ PAST WINNERS / EVENTS MANAGEMENT SECTION ============ -->
+<div class="menu-section">
+    <h4>Event Management</h4>
+    <a href="#" class="menu-item" onclick="showPastEventsModal()">
+        <i class="fas fa-trophy"></i>
+        <span>Past Events & Winners</span>
+        <span class="badge" id="pastEventsCount">0</span>
+    </a>
+</div>
+
+<!-- ============ PAST EVENTS MODAL ============ -->
+<div class="modal" id="pastEventsModal">
+    <div class="modal-content" style="max-width: 1400px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-trophy"></i> Past Events & Winners Management</h2>
+            <button class="modal-close" onclick="hideModal('pastEventsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Stats -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                <div class="stat-card" style="padding: 15px;">
+                    <h3 id="totalEvents">0</h3>
+                    <p>Total Events</p>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <h3 id="publishedEvents">0</h3>
+                    <p>Published</p>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <h3 id="draftEvents">0</h3>
+                    <p>Drafts</p>
+                </div>
+                <div class="stat-card" style="padding: 15px;">
+                    <h3 id="totalWinners">0</h3>
+                    <p>Total Winners</p>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="sheet-btn" onclick="openAddEventModal()" style="background: linear-gradient(135deg, #FF0000, #cc0000);">
+                        <i class="fas fa-plus"></i> Add New Event
+                    </button>
+                    <button class="sheet-btn secondary" onclick="refreshPastEvents()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="eventStatusFilter" onchange="filterPastEvents()" style="padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                        <option value="all">All Status</option>
+                        <option value="published">Published</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                    <input type="text" id="eventSearch" placeholder="Search events..." style="padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; width: 200px;" onkeyup="filterPastEvents()">
+                </div>
+            </div>
+
+            <!-- Events List -->
+            <div class="sheets-viewer">
+                <div class="sheets-viewer-header">
+                    <h4><i class="fas fa-list"></i> All Events</h4>
+                </div>
+                <div id="pastEventsList" style="padding: 20px; min-height: 400px; max-height: 500px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ADD/EDIT EVENT MODAL ============ -->
+<div class="modal" id="addEventModal">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="eventModalTitle">Add New Event</h2>
+            <button class="modal-close" onclick="hideModal('addEventModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="eventForm" onsubmit="event.preventDefault(); saveEvent();">
+                <input type="hidden" id="eventId">
+
+                <!-- Event Basic Info -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Event Title *</label>
+                        <input type="text" id="eventTitle" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="LBA 1.0">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Edition *</label>
+                        <input type="text" id="eventEdition" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="1.0">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Event Date *</label>
+                        <input type="date" id="eventDate" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Status</label>
+                        <select id="eventStatus" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Tagline / Subtitle</label>
+                    <input type="text" id="eventTagline" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" placeholder="The Beginning: Celebrating Liberia's entrepreneurial spirit">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Description *</label>
+                    <textarea id="eventDescription" rows="3" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="Describe this event..."></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600;">Featured Image URL</label>
+                    <input type="text" id="eventImage" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" placeholder="/images/gallery/event-cover.jpg">
+                    <div id="eventImagePreview" style="margin-top: 10px; display: none;">
+                        <img id="eventPreviewImg" style="max-width: 200px; max-height: 100px; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <!-- Winners Section -->
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                    <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-award" style="color: #FF0000;"></i> Winners for this Event</h3>
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">Add each winner as a separate entry. You can add multiple winners.</p>
+
+                    <div id="winnersContainer">
+                        <!-- Winner entries will be added here dynamically -->
+                        <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label style="font-size: 13px;">Winner Name *</label>
+                                    <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 13px;">Award Category *</label>
+                                    <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                <div class="form-group">
+                                    <label style="font-size: 13px;">Founder/Representative</label>
+                                    <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 13px;">Winner Image URL</label>
+                                    <input type="text" class="winner-image sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="/images/gallery/winner.jpg">
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <label style="font-size: 13px;">Story / Achievement</label>
+                                <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
+                            </div>
+                            <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="sheet-btn secondary" onclick="addWinnerEntry()" style="margin-top: 10px;">
+                        <i class="fas fa-plus"></i> Add Another Winner
+                    </button>
+                </div>
+
+                <!-- Gallery Images Section -->
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                    <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-images" style="color: #FF0000;"></i> Event Gallery Images</h3>
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">Add image URLs to create a photo gallery for this event.</p>
+
+                    <div id="galleryContainer">
+                        <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center;">
+                            <input type="text" class="gallery-image sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Image URL">
+                            <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
+                            <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="sheet-btn secondary" onclick="addGalleryImage()" style="margin-top: 10px;">
+                        <i class="fas fa-plus"></i> Add Gallery Image
+                    </button>
+                </div>
+
+                <!-- Key Achievements / Stats -->
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                    <h3 style="font-size: 18px; margin-bottom: 15px;"><i class="fas fa-chart-bar" style="color: #FF0000;"></i> Key Statistics</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label style="font-size: 13px;">Number of Winners</label>
+                            <input type="number" id="eventWinnerCount" class="sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size: 13px;">Number of Categories</label>
+                            <input type="number" id="eventCategoryCount" class="sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size: 13px;">Number of Partners</label>
+                            <input type="number" id="eventPartnerCount" class="sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('addEventModal')" style="flex: 1; padding: 12px;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="saveEvent()" style="flex: 2; padding: 12px; background: linear-gradient(135deg, #10B981, #059669);">
+                        <i class="fas fa-save"></i> Save Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+    
     <!-- Ads Management Modal -->
 <div class="modal" id="adsManagementModal">
     <div class="modal-content" style="max-width: 1200px;">
