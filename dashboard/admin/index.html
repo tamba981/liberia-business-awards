@@ -7057,6 +7057,8 @@ async function loadPastEvents() {
     }
 }
 
+        
+
 // Default fallback events
 function getDefaultPastEvents() {
     return {
@@ -7218,6 +7220,141 @@ function refreshPastEvents() {
     loadPastEvents();
 }
 
+// ============================================
+// MISSING WINNER/GALLERY FUNCTIONS
+// ============================================
+
+// Remove a winner entry from the form
+function removeWinner(button) {
+    const entry = button.closest('.winner-entry');
+    if (entry) {
+        const container = entry.parentElement;
+        // Don't remove if it's the last one
+        const entries = container.querySelectorAll('.winner-entry');
+        if (entries.length > 1) {
+            entry.remove();
+        } else {
+            // Clear the fields instead of removing
+            entry.querySelectorAll('input, textarea').forEach(field => {
+                if (field.type !== 'file' && field.type !== 'hidden') {
+                    field.value = '';
+                } else if (field.type === 'file') {
+                    field.value = '';
+                }
+            });
+            showNotification('Cannot remove the last winner entry. Clear fields instead.', 'info');
+        }
+    }
+}
+
+// Remove a gallery image entry from the form
+function removeGalleryImage(button) {
+    const entry = button.closest('.gallery-entry');
+    if (entry) {
+        const container = entry.parentElement;
+        const entries = container.querySelectorAll('.gallery-entry');
+        if (entries.length > 1) {
+            entry.remove();
+        } else {
+            entry.querySelectorAll('input').forEach(field => {
+                field.value = '';
+            });
+            showNotification('Cannot remove the last gallery entry. Clear fields instead.', 'info');
+        }
+    }
+}
+
+// Add winner entry (already exists in your code, but let's ensure it's defined)
+function addWinnerEntry() {
+    const container = document.getElementById('winnersContainer');
+    if (!container) return;
+    
+    const entry = document.createElement('div');
+    entry.className = 'winner-entry';
+    entry.style.cssText = 'background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;';
+    entry.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label style="font-size: 13px;">Winner Name *</label>
+                <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
+            </div>
+            <div class="form-group">
+                <label style="font-size: 13px;">Award Category *</label>
+                <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div class="form-group">
+                <label style="font-size: 13px;">Founder/Representative</label>
+                <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
+            </div>
+            <div class="form-group">
+                <label style="font-size: 13px;">Winner Image</label>
+                <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
+                <input type="hidden" class="winner-image" value="">
+                <small style="font-size: 10px;">Upload image or use URL below</small>
+                <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL">
+            </div>
+        </div>
+        <div style="margin-top: 10px;">
+            <label style="font-size: 13px;">Story / Achievement</label>
+            <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
+        </div>
+        <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+    `;
+    container.appendChild(entry);
+}
+
+// Add gallery image entry
+function addGalleryImage() {
+    const container = document.getElementById('galleryContainer');
+    if (!container) return;
+    
+    const entry = document.createElement('div');
+    entry.className = 'gallery-entry';
+    entry.style.cssText = 'background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;';
+    entry.innerHTML = `
+        <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
+        <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL">
+        <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
+        <input type="hidden" class="gallery-image" value="">
+        <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(entry);
+}
+
+// Clear featured image preview
+function clearFeaturedImage() {
+    const preview = document.getElementById('eventImagePreview');
+    const fileInput = document.getElementById('eventImageFile');
+    const img = document.getElementById('eventPreviewImg');
+    const urlInput = document.getElementById('eventImageUrl');
+    
+    if (preview) preview.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+    if (img) img.src = '';
+    if (urlInput) urlInput.value = '';
+}
+
+// Setup image preview for event featured image
+function setupImagePreview() {
+    const fileInput = document.getElementById('eventImageFile');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const preview = document.getElementById('eventImagePreview');
+            const img = document.getElementById('eventPreviewImg');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+}        
+        
 // Open Add Event Modal
 function openAddEventModal() {
     const modal = document.getElementById('addEventModal');
