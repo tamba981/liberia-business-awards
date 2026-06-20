@@ -6177,6 +6177,309 @@ app.get('/api/admin/blog/stats', authenticate, authorize('admin'), async (req, r
 console.log('✅ Blog Management API Ready');
 
 
+// ============================================
+// PAST EVENTS & WINNERS MANAGEMENT SYSTEM
+// ============================================
+
+// Past Events Schema
+const pastEventSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    edition: { type: String, required: true },
+    tagline: { type: String, default: '' },
+    description: { type: String, required: true },
+    event_date: { type: Date, required: true },
+    status: { type: String, enum: ['published', 'draft'], default: 'draft' },
+    image: { type: String, default: '' },
+    winner_count: { type: Number, default: 0 },
+    category_count: { type: Number, default: 0 },
+    partner_count: { type: Number, default: 0 },
+    winners: { type: Array, default: [] },  // Array of { name, category, founder, image, story }
+    gallery: { type: Array, default: [] },   // Array of { url, caption }
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+    views: { type: Number, default: 0 }
+}, { timestamps: true });
+
+const PastEvent = mongoose.models.PastEvent || mongoose.model('PastEvent', pastEventSchema);
+
+// ============ PUBLIC PAST EVENTS ROUTES ============
+
+// Get all published past events (for frontend)
+app.get('/api/past-events', async (req, res) => {
+    try {
+        const { limit = 50 } = req.query;
+        
+        const events = await PastEvent.find({ status: 'published' })
+            .sort({ event_date: -1 })
+            .limit(parseInt(limit));
+        
+        // Get total winners count for stats
+        let totalWinners = 0;
+        events.forEach(e => {
+            totalWinners += (e.winners ? e.winners.length : 0) + (e.winner_count || 0);
+        });
+        
+        res.json({
+            success: true,
+            events,
+            stats: {
+                totalEvents: events.length,
+                totalWinners: totalWinners,
+                totalPartners: events.reduce((sum, e) => sum + (e.partner_count || 0), 0)
+            }
+        });
+    } catch (error) {
+        console.error('Get past events error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single past event by ID
+app.get('/api/past-events/:id', async (req, res) => {
+    try {
+        const event = await PastEvent.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        res.json({ success: true, event });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ ADMIN PAST EVENTS ROUTES ============
+
+// Get all past events (admin)
+app.get('/api/admin/events', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status, page = 1, limit = 50 } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [events, total] = await Promise.all([
+            PastEvent.find(query)
+                .sort({ event_date: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            PastEvent.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            events,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Admin get events error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single past event (admin)
+app.get('/api/admin/events/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const event = await PastEvent.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        res.json({ success: true, event });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// CREATE past event (admin) - WITH IMAGE UPLOAD SUPPORT
+app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('featured_image'), async (req, res) => {
+    try {
+        const { eventData } = req.body;
+        let eventDataObj;
+        
+        try {
+            eventDataObj = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
+        } catch (e) {
+            // If eventData is not JSON, try parsing from req.body directly
+            eventDataObj = req.body;
+        }
+        
+        // Extract data
+        const { title, edition, tagline, description, event_date, status, winner_count, category_count, partner_count, winners, gallery, id } = eventDataObj;
+        
+        if (!title || !edition || !event_date || !description) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        // Build event object
+        const event = new PastEvent({
+            title,
+            edition,
+            tagline: tagline || '',
+            description,
+            event_date: new Date(event_date),
+            status: status || 'draft',
+            winner_count: parseInt(winner_count) || 0,
+            category_count: parseInt(category_count) || 0,
+            partner_count: parseInt(partner_count) || 0,
+            winners: winners || [],
+            gallery: gallery || [],
+            created_by: req.user._id
+        });
+        
+        // Handle featured image upload
+        if (req.file) {
+            const imageUrl = `/uploads/${req.file.filename}`;
+            event.image = imageUrl;
+        }
+        
+        // Handle gallery image uploads (from FormData)
+        // The files are sent as gallery_0, gallery_1, etc.
+        const galleryFiles = [];
+        const galleryCaptions = [];
+        
+        // Collect all gallery files and captions from FormData
+        for (let i = 0; i < 20; i++) {
+            const fileKey = `gallery_${i}`;
+            const captionKey = `gallery_caption_${i}`;
+            
+            // req.files doesn't work with multer.single, we need to use multer.array or multer.fields
+            // For simplicity with single file upload, we'll assume gallery images are sent as URLs
+            // If you want file upload for gallery, change to upload.array('gallery', 10)
+        }
+        
+        // Save to database
+        await event.save();
+        
+        // Also save to Google Sheets as backup (will be handled by frontend)
+        
+        res.status(201).json({
+            success: true,
+            message: 'Event created successfully!',
+            event: {
+                _id: event._id,
+                title: event.title,
+                edition: event.edition,
+                status: event.status,
+                event_date: event.event_date
+            }
+        });
+        
+    } catch (error) {
+        console.error('Create event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// UPDATE past event (admin) - WITH IMAGE UPLOAD SUPPORT
+app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single('featured_image'), async (req, res) => {
+    try {
+        const event = await PastEvent.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        
+        const { eventData } = req.body;
+        let eventDataObj;
+        
+        try {
+            eventDataObj = typeof eventData === 'string' ? JSON.parse(eventData) : eventData;
+        } catch (e) {
+            eventDataObj = req.body;
+        }
+        
+        const { title, edition, tagline, description, event_date, status, winner_count, category_count, partner_count, winners, gallery } = eventDataObj;
+        
+        if (title) event.title = title;
+        if (edition) event.edition = edition;
+        if (tagline !== undefined) event.tagline = tagline;
+        if (description) event.description = description;
+        if (event_date) event.event_date = new Date(event_date);
+        if (status) event.status = status;
+        if (winner_count !== undefined) event.winner_count = parseInt(winner_count) || 0;
+        if (category_count !== undefined) event.category_count = parseInt(category_count) || 0;
+        if (partner_count !== undefined) event.partner_count = parseInt(partner_count) || 0;
+        if (winners) event.winners = winners;
+        if (gallery) event.gallery = gallery;
+        
+        // Handle featured image upload
+        if (req.file) {
+            const imageUrl = `/uploads/${req.file.filename}`;
+            event.image = imageUrl;
+        }
+        
+        event.updated_by = req.user._id;
+        event.updated_at = new Date();
+        
+        await event.save();
+        
+        res.json({
+            success: true,
+            message: 'Event updated successfully!',
+            event
+        });
+        
+    } catch (error) {
+        console.error('Update event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// DELETE past event (admin)
+app.delete('/api/admin/events/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const event = await PastEvent.findByIdAndDelete(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Event deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get past events stats (admin)
+app.get('/api/admin/events/stats', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const total = await PastEvent.countDocuments();
+        const published = await PastEvent.countDocuments({ status: 'published' });
+        const drafts = await PastEvent.countDocuments({ status: 'draft' });
+        
+        // Get total winners across all events
+        const allEvents = await PastEvent.find();
+        let totalWinners = 0;
+        allEvents.forEach(e => {
+            totalWinners += (e.winners ? e.winners.length : 0) + (e.winner_count || 0);
+        });
+        
+        res.json({
+            success: true,
+            stats: {
+                total,
+                published,
+                drafts,
+                totalWinners
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+console.log('✅ Past Events Management API Ready');
+
 // ============ START SERVER ============
 async function startServer() {
     console.log('='.repeat(70));
