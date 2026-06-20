@@ -67,12 +67,6 @@
             font-size: 24px;
             letter-spacing: 3px;
             opacity: 0.9;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.9; }
-            50% { opacity: 0.7; }
         }
         
         .photo-grid {
@@ -252,14 +246,22 @@
             transform: scale(1);
         }
         
-        /* Animation delays */
-        .delay-100 { animation-delay: 0.1s; }
-        .delay-200 { animation-delay: 0.2s; }
-        .delay-300 { animation-delay: 0.3s; }
-        .delay-400 { animation-delay: 0.4s; }
-        .delay-500 { animation-delay: 0.5s; }
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #FF0000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
         
-        /* Responsive adjustments */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 768px) {
             .timeline-track::before {
                 left: 30px;
@@ -287,7 +289,6 @@
     <nav class="bg-white shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <!-- UPDATED: Local logo -->
                 <img src="images/LBA-cover.png" alt="LBA Logo" class="w-10 h-10 object-contain">
                 <span class="title-font font-bold text-2xl text-gray-800">LBA Gallery</span>
             </div>
@@ -301,24 +302,24 @@
     <section class="hero-gradient text-white py-20">
         <div class="container mx-auto px-4 text-center">
             <h1 class="title-font text-5xl md:text-6xl font-bold mb-6 floating">Our Journey Through Excellence</h1>
-            <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Celebrating Liberia's Business Heroes from LBA 1.0 to the Future</p>
+            <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">Celebrating Liberia's Business Heroes Across All Editions</p>
             
             <!-- Stats Counter -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto mt-12">
                 <div class="bg-white/20 backdrop-blur-sm p-6 rounded-2xl">
-                    <div class="counter" data-count="2">2</div>
+                    <div class="counter" id="totalEventsCount">0</div>
                     <p class="text-lg">Completed Editions</p>
                 </div>
                 <div class="bg-white/20 backdrop-blur-sm p-6 rounded-2xl">
-                    <div class="counter" data-count="50">50+</div>
+                    <div class="counter" id="totalWinnersCount">0</div>
                     <p class="text-lg">Businesses Recognized</p>
                 </div>
                 <div class="bg-white/20 backdrop-blur-sm p-6 rounded-2xl">
-                    <div class="counter" data-count="30">30+</div>
+                    <div class="counter" id="totalPartnersCount">0</div>
                     <p class="text-lg">Partnerships Forged</p>
                 </div>
                 <div class="bg-white/20 backdrop-blur-sm p-6 rounded-2xl">
-                    <div class="counter" data-count="2">2</div>
+                    <div class="counter" id="upcomingEventsCount">0</div>
                     <p class="text-lg">Future Editions</p>
                 </div>
             </div>
@@ -330,209 +331,15 @@
         <div class="container mx-auto px-4">
             <h2 class="title-font text-4xl md:text-5xl font-bold text-center mb-16">Our Legacy Timeline</h2>
             
-            <div class="timeline-track">
-                <!-- LBA 1.0 -->
-                <div class="timeline-item fade-in delay-100">
-                    <div class="lba-card p-8">
-                        <div class="badge">Pioneer Edition</div>
-                        <h3 class="title-font text-3xl font-bold text-gray-800 mb-4">LBA 1.0</h3>
-                        <p class="text-gray-600 mb-6">The Beginning: Celebrating Liberia's entrepreneurial spirit through exclusive interviews and business showcases.</p>
-                        
-                        <div class="photo-grid">
-                            <!-- Interview Photos -->
-                            <!-- UPDATED: Local image -->
-                            <div class="photo-item" onclick="openModal('lba1-steel')">
-                                <img src="images/gallery/lba1-steel.jpg" alt="STEBEL CLASSIC SHOES Interview">
-                                <div class="photo-overlay">
-                                    <h4 class="font-bold">STEBEL CLASSIC SHOES</h4>
-                                    <p class="text-sm">Handcrafted Liberian Footwear</p>
-                                </div>
-                            </div>
-                            
-                            <!-- UPDATED: Local image -->
-                            <div class="photo-item" onclick="openModal('lba1-makos')">
-                                <img src="images/gallery/lba1-makos.jpg" alt="MAKOS FRUITS JUICE">
-                                <div class="photo-overlay">
-                                    <h4 class="font-bold">MAKOS FRUITS JUICE</h4>
-                                    <p class="text-sm">100% Natural Fruit Juices</p>
-                                </div>
-                            </div>
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-20">
+                <div class="spinner"></div>
+                <p class="text-gray-600 mt-4">Loading events from our gallery...</p>
+            </div>
 
-                            <!-- UPDATED: Local image -->
-                            <div class="photo-item" onclick="openModal('lba1-patience')">
-                                <img src="images/gallery/lba1-patience.jpg" alt="PATIENCE COCOA">
-                                <div class="photo-overlay">
-                                    <h4 class="font-bold">PATIENCE COCOA</h4>
-                                    <p class="text-sm">Agricultural Innovation</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 pt-6 border-t border-gray-100">
-                            <h4 class="font-bold text-gray-700 mb-3">Featured Interviews:</h4>
-                            <div class="flex flex-wrap gap-2">
-                                <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-sm">STEBEL CLASSIC SHOES</span>
-                                <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm">MAKOS FRUITS JUICE</span>
-                                <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-sm">EZEE MARKET</span>
-                                <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm">AGRORETTI</span>
-                                <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-sm">Evergreen Enterprise</span>
-                                <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm">LIBERIA PURE HONEY</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- LBA 2.0 -->
-                <div class="timeline-item fade-in delay-300">
-                    <div class="lba-card p-8">
-                        <div class="badge" style="background: linear-gradient(45deg, #87CEEB, #0055FF);">Growth Edition</div>
-                        <h3 class="title-font text-3xl font-bold text-gray-800 mb-4">LBA 2.0</h3>
-                        <p class="text-gray-600 mb-6">"Honoring Pioneering Organizations in Liberia's Economic Renaissance" - Recognition of organizations transforming Liberia's economic landscape.</p>
-                        
-                        <div class="mb-6">
-                            <h4 class="font-bold text-gray-700 mb-3">Certificate of Appreciation Recipients:</h4>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg text-center">
-                                    <i class="fas fa-hands-helping text-blue-500 text-2xl mb-2"></i>
-                                    <p class="text-sm font-medium">Growth Accelerator Liberia</p>
-                                </div>
-                                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg text-center">
-                                    <i class="fas fa-globe-africa text-blue-500 text-2xl mb-2"></i>
-                                    <p class="text-sm font-medium">UNDP Liberia</p>
-                                </div>
-                                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg text-center">
-                                    <i class="fas fa-heart text-blue-500 text-2xl mb-2"></i>
-                                    <p class="text-sm font-medium">Mercy Corps Liberia</p>
-                                </div>
-                                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg text-center">
-                                    <i class="fas fa-flag text-blue-500 text-2xl mb-2"></i>
-                                    <p class="text-sm font-medium">Embassy of Sweden</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="photo-grid">
-                            <!-- LBA 2.0 Event Photos -->
-                            <!-- UPDATED: Local image -->
-                            <div class="photo-item" onclick="openModal('lba2-ceremony')">
-                                <img src="images/gallery/lba2-ceremony.jpg" alt="LBA 2.0 Awards Ceremony">
-                                <div class="photo-overlay">
-                                    <h4 class="font-bold">Awards Ceremony</h4>
-                                    <p class="text-sm">Grand Recognition Event</p>
-                                </div>
-                            </div>
-                            
-                            <!-- UPDATED: Local image (using about-slider image) -->
-                            <div class="photo-item" onclick="openModal('lba2-winners')">
-                                <img src="images/about-slider/slide-1.jpg" alt="LBA 2.0 Winners">
-                                <div class="photo-overlay">
-                                    <h4 class="font-bold">Proud Winners</h4>
-                                    <p class="text-sm">Business Champions</p>
-                                </div>
-                            </div>
-                            
-                            <!-- UPDATED: Local image (using about-slider image) -->
-                            <div class="photo-item" onclick="openModal('lba2-networking')">
-                                <img src="images/about-slider/slide-2.jpg" alt="LBA 2.0 Networking">
-                                <div class="photo-overlay">
-                                    <h4 class="font-bold">Networking Session</h4>
-                                    <p class="text-sm">Building Connections</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 pt-6 border-t border-gray-100">
-                            <h4 class="font-bold text-gray-700 mb-3">Recognized Businesses:</h4>
-                            <div class="flex flex-wrap gap-2">
-                                <span class="bg-gradient-to-r from-red-50 to-pink-50 text-red-600 px-3 py-1 rounded-full text-sm">Kernel Fresh</span>
-                                <span class="bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-600 px-3 py-1 rounded-full text-sm">Wungkos Farm</span>
-                                <span class="bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 px-3 py-1 rounded-full text-sm">Liberian Girls Lunchbox</span>
-                                <span class="bg-gradient-to-r from-purple-50 to-violet-50 text-purple-600 px-3 py-1 rounded-full text-sm">Patience Cocoa Inc.</span>
-                                <span class="bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-600 px-3 py-1 rounded-full text-sm">Stebel's Classic Shoes</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- LBA 3.0 -->
-                <div class="timeline-item fade-in delay-500">
-                    <div class="lba-card p-8 coming-soon">
-                        <div class="badge" style="background: linear-gradient(45deg, #FF6B6B, #FF0000);">Coming Soon</div>
-                        <h3 class="title-font text-3xl font-bold text-gray-800 mb-4">LBA 3.0</h3>
-                        <p class="text-gray-600 mb-6">"Recognizing Local Excellence, Celebrating National Impact" - The most anticipated business awards ceremony in Liberia's history.</p>
-                        
-                        <div class="bg-gradient-to-r from-red-50 to-pink-50 p-8 rounded-xl text-center mb-6">
-                            <i class="fas fa-calendar-star text-5xl text-red-500 mb-4"></i>
-                            <h4 class="text-2xl font-bold text-gray-800 mb-2">Save the Date</h4>
-                            <p class="text-gray-600">May 30, 2026</p>
-                        </div>
-                        
-                        <div class="photo-grid">
-                            <!-- UPDATED: Local placeholder images -->
-                            <div class="photo-item">
-                                <img src="images/gallery/coming-soon-1.jpg" alt="LBA 3.0 Coming Soon">
-                            </div>
-                            <div class="photo-item">
-                                <img src="images/gallery/coming-soon-2.jpg" alt="LBA 3.0 Coming Soon">
-                            </div>
-                            <div class="photo-item">
-                                <img src="images/gallery/coming-soon-3.jpg" alt="LBA 3.0 Coming Soon">
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 pt-6 border-t border-gray-100">
-                            <h4 class="font-bold text-gray-700 mb-3">Expected Categories:</h4>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-sm font-medium text-center">Agriculture Excellence</p>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-sm font-medium text-center">Technology Innovation</p>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-sm font-medium text-center">SME Growth</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- LBA 4.0 -->
-                <div class="timeline-item fade-in delay-700">
-                    <div class="lba-card p-8 coming-soon">
-                        <div class="badge" style="background: linear-gradient(45deg, #4A00E0, #8E2DE2);">Future Vision</div>
-                        <h3 class="title-font text-3xl font-bold text-gray-800 mb-4">LBA 4.0</h3>
-                        <p class="text-gray-600 mb-6">The Future of Business Recognition in Liberia - Expanding horizons and setting new standards for excellence.</p>
-                        
-                        <div class="bg-gradient-to-r from-purple-50 to-indigo-50 p-8 rounded-xl text-center mb-6">
-                            <i class="fas fa-rocket text-5xl text-purple-500 mb-4"></i>
-                            <h4 class="text-2xl font-bold text-gray-800 mb-2">Beyond Recognition</h4>
-                            <p class="text-gray-600">Expanding to Regional Impact</p>
-                        </div>
-                        
-                        <div class="photo-grid">
-                            <!-- UPDATED: Local placeholder images -->
-                            <div class="photo-item">
-                                <img src="images/gallery/future-1.jpg" alt="LBA 4.0 Future Vision">
-                            </div>
-                            <div class="photo-item">
-                                <img src="images/gallery/future-2.jpg" alt="LBA 4.0 Future Vision">
-                            </div>
-                            <div class="photo-item">
-                                <img src="images/gallery/future-3.jpg" alt="LBA 4.0 Future Vision">
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 pt-6 border-t border-gray-100">
-                            <h4 class="font-bold text-gray-700 mb-3">Vision 2027:</h4>
-                            <ul class="space-y-2 text-gray-600">
-                                <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Regional Business Partnerships</li>
-                                <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> International Recognition</li>
-                                <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Digital Innovation Awards</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+            <!-- Timeline Container -->
+            <div id="timelineContainer" class="timeline-track" style="display: none;">
+                <!-- Will be populated by JavaScript -->
             </div>
         </div>
     </section>
@@ -542,27 +349,27 @@
         <div class="container mx-auto px-4">
             <h2 class="title-font text-4xl font-bold text-center mb-16">Impact by Numbers</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div id="impactStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="bg-white p-8 rounded-2xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl font-bold text-red-600 mb-4">50+</div>
+                    <div class="text-5xl font-bold text-red-600 mb-4" id="statBusinesses">0</div>
                     <h4 class="text-xl font-bold text-gray-800 mb-2">Businesses Supported</h4>
                     <p class="text-gray-600">Across all sectors of Liberia's economy</p>
                 </div>
                 
                 <div class="bg-white p-8 rounded-2xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl font-bold text-blue-600 mb-4">30+</div>
+                    <div class="text-5xl font-bold text-blue-600 mb-4" id="statPartners">0</div>
                     <h4 class="text-xl font-bold text-gray-800 mb-2">Strategic Partners</h4>
                     <p class="text-gray-600">International and local organizations</p>
                 </div>
                 
                 <div class="bg-white p-8 rounded-2xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl font-bold text-green-600 mb-4">1000+</div>
+                    <div class="text-5xl font-bold text-green-600 mb-4" id="statJobs">0</div>
                     <h4 class="text-xl font-bold text-gray-800 mb-2">Jobs Impacted</h4>
                     <p class="text-gray-600">Through business growth and support</p>
                 </div>
                 
                 <div class="bg-white p-8 rounded-2xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl font-bold text-purple-600 mb-4">4</div>
+                    <div class="text-5xl font-bold text-purple-600 mb-4" id="statEvents">0</div>
                     <h4 class="text-xl font-bold text-gray-800 mb-2">Editions Planned</h4>
                     <p class="text-gray-600">Building a legacy of excellence</p>
                 </div>
@@ -592,7 +399,6 @@
         <div class="container mx-auto px-4">
             <div class="text-center">
                 <div class="flex justify-center items-center mb-6">
-                    <!-- UPDATED: Local logo -->
                     <img src="images/LBA-cover.png" alt="LBA Logo" class="w-12 h-12 object-contain mr-3">
                     <span class="title-font text-2xl font-bold">Liberia Business Awards</span>
                 </div>
@@ -627,120 +433,358 @@
     </div>
 
     <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
+
+        let eventsData = [];
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        // ============================================
+        // INITIALIZE PAGE
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEvents();
+            loadStats();
+        });
+
+        // ============================================
+        // LOAD EVENTS FROM API / GOOGLE SHEETS
+        // ============================================
+        async function loadEvents() {
+            const loadingState = document.getElementById('loadingState');
+            const timelineContainer = document.getElementById('timelineContainer');
+            
+            loadingState.style.display = 'block';
+            timelineContainer.style.display = 'none';
+
+            try {
+                // Try to load from backend API first
+                let response = await fetch(`${API_BASE}/events?status=published&limit=50`);
+                let data = await response.json();
+
+                // If API fails, try Google Sheets
+                if (!data.success || !data.events || data.events.length === 0) {
+                    console.log('🔄 Falling back to Google Sheets for events...');
+                    
+                    // Try to get events from Google Sheets
+                    const sheetsResponse = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getEvents`);
+                    const sheetsData = await sheetsResponse.json();
+                    
+                    if (sheetsData.success && sheetsData.events) {
+                        data = sheetsData;
+                    } else {
+                        // Use fallback default events
+                        data = getDefaultEvents();
+                    }
+                }
+
+                if (data.success && data.events) {
+                    eventsData = data.events;
+                    renderEvents(eventsData);
+                    updateStats(eventsData);
+                } else {
+                    // Use fallback data
+                    eventsData = getDefaultEvents();
+                    renderEvents(eventsData);
+                    updateStats(eventsData);
+                }
+
+            } catch (error) {
+                console.error('Error loading events:', error);
+                // Use fallback data
+                eventsData = getDefaultEvents();
+                renderEvents(eventsData);
+                updateStats(eventsData);
+            }
+
+            loadingState.style.display = 'none';
+            timelineContainer.style.display = 'block';
+        }
+
+        // ============================================
+        // LOAD STATS
+        // ============================================
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/events/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('statBusinesses').textContent = data.totalBusinesses || '0';
+                    document.getElementById('statPartners').textContent = data.totalPartners || '0';
+                    document.getElementById('statJobs').textContent = data.totalJobs || '0';
+                    document.getElementById('statEvents').textContent = data.totalEvents || '0';
+                }
+            } catch (error) {
+                console.log('Stats from Google Sheets not available, using fallback');
+            }
+        }
+
+        // ============================================
+        // RENDER EVENTS
+        // ============================================
+        function renderEvents(events) {
+            const container = document.getElementById('timelineContainer');
+            
+            if (!events || events.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20">
+                        <i class="fas fa-trophy text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-xl text-gray-600">No events found. Check back soon for our gallery!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort events by date (oldest first for timeline)
+            const sortedEvents = [...events].sort((a, b) => {
+                return new Date(a.event_date) - new Date(b.event_date);
+            });
+
+            // Separate into past events and future
+            const now = new Date();
+            const pastEvents = sortedEvents.filter(e => new Date(e.event_date) <= now);
+            const futureEvents = sortedEvents.filter(e => new Date(e.event_date) > now);
+
+            // Combine: past events first, then future (for "coming soon")
+            const displayEvents = [...pastEvents, ...futureEvents];
+
+            // Update counters
+            document.getElementById('totalEventsCount').textContent = pastEvents.length;
+            document.getElementById('upcomingEventsCount').textContent = futureEvents.length;
+
+            let html = '';
+            
+            displayEvents.forEach((event, index) => {
+                const isFuture = new Date(event.event_date) > now;
+                const eventDate = new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                
+                // Count winners
+                const winners = event.winners || [];
+                const winnerCount = winners.length;
+                
+                // Get stats
+                const winnerCountStat = event.winner_count || winnerCount || '0';
+                const categoryCount = event.category_count || '0';
+                const partnerCount = event.partner_count || '0';
+
+                // Determine badge style
+                let badgeText = event.edition || 'LBA';
+                let badgeStyle = 'background: linear-gradient(45deg, #FF0000, #87CEEB);';
+                if (isFuture) {
+                    badgeText = 'COMING SOON';
+                    badgeStyle = 'background: linear-gradient(45deg, #FF6B6B, #FF0000);';
+                }
+
+                // Build winners list
+                let winnersHTML = '';
+                if (winners.length > 0) {
+                    winnersHTML = `
+                        <div class="mt-6 pt-6 border-t border-gray-100">
+                            <h4 class="font-bold text-gray-700 mb-3">🏆 Winners:</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${winners.slice(0, 8).map(w => `
+                                    <span class="bg-gradient-to-r from-yellow-50 to-amber-50 text-amber-700 px-3 py-1 rounded-full text-sm border border-amber-200">
+                                        ${escapeHtml(w.name)}
+                                    </span>
+                                `).join('')}
+                                ${winners.length > 8 ? `<span class="text-gray-500 text-sm">+${winners.length - 8} more</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Build gallery images
+                let galleryHTML = '';
+                const galleryImages = event.gallery || [];
+                if (galleryImages.length > 0) {
+                    galleryHTML = `
+                        <div class="photo-grid">
+                            ${galleryImages.slice(0, 3).map(img => `
+                                <div class="photo-item" onclick="openModal('${img.url || img}')">
+                                    <img src="${img.url || img}" alt="${img.caption || event.title}" loading="lazy" onerror="this.src='https://placehold.co/600x400/FF0000/white?text=No+Image'">
+                                    ${img.caption ? `<div class="photo-overlay"><h4 class="font-bold">${escapeHtml(img.caption)}</h4></div>` : ''}
+                                </div>
+                            `).join('')}
+                            ${galleryImages.length > 3 ? `<div class="photo-item" style="background: #f8fafc; display: flex; align-items: center; justify-content: center; cursor: default;">
+                                <span class="text-gray-500 text-2xl font-bold">+${galleryImages.length - 3} more</span>
+                            </div>` : ''}
+                        </div>
+                    `;
+                }
+
+                // Determine which side of timeline (odd/even)
+                const side = (index % 2 === 0) ? 'odd' : 'even';
+                
+                html += `
+                    <div class="timeline-item fade-in delay-${(index + 1) * 100}" style="animation-delay: ${(index + 1) * 0.2}s;">
+                        <div class="lba-card ${isFuture ? 'coming-soon' : ''} p-8">
+                            ${isFuture ? `<div class="badge" style="${badgeStyle}">${badgeText}</div>` : `<div class="badge" style="${badgeStyle}">${badgeText}</div>`}
+                            
+                            <h3 class="title-font text-3xl font-bold text-gray-800 mb-2">${escapeHtml(event.title)}</h3>
+                            <p class="text-gray-500 mb-2"><i class="far fa-calendar-alt mr-2 text-lba-red"></i> ${eventDate}</p>
+                            ${event.tagline ? `<p class="text-gray-600 italic mb-4">${escapeHtml(event.tagline)}</p>` : ''}
+                            
+                            <p class="text-gray-600 mb-6">${escapeHtml(event.description || 'An inspiring event celebrating Liberian business excellence.')}</p>
+                            
+                            ${galleryHTML}
+                            
+                            ${winnersHTML}
+                            
+                            <div class="mt-6 pt-6 border-t border-gray-100">
+                                <div class="flex flex-wrap gap-4">
+                                    <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm">
+                                        🏆 ${winnerCountStat} Winners
+                                    </span>
+                                    <span class="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-sm">
+                                        📋 ${categoryCount} Categories
+                                    </span>
+                                    <span class="bg-green-50 text-green-600 px-3 py-1 rounded-full text-sm">
+                                        🤝 ${partnerCount} Partners
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // UPDATE STATS
+        // ============================================
+        function updateStats(events) {
+            let totalWinners = 0;
+            let totalPartners = 0;
+            let totalBusinesses = 0;
+
+            events.forEach(event => {
+                const winners = event.winners || [];
+                totalWinners += winners.length;
+                totalPartners += parseInt(event.partner_count) || 0;
+                totalBusinesses += parseInt(event.winner_count) || winners.length;
+            });
+
+            document.getElementById('totalWinnersCount').textContent = totalWinners || '0';
+            document.getElementById('totalPartnersCount').textContent = totalPartners || '0';
+            document.getElementById('statBusinesses').textContent = totalBusinesses || '0';
+            document.getElementById('statPartners').textContent = totalPartners || '0';
+        }
+
+        // ============================================
+        // DEFAULT FALLBACK EVENTS
+        // ============================================
+        function getDefaultEvents() {
+            return [
+                {
+                    id: 'default_1',
+                    title: 'Liberia Business Awards 1.0',
+                    edition: '1.0',
+                    tagline: 'The Beginning: Celebrating Liberia\'s entrepreneurial spirit',
+                    description: 'The inaugural edition featuring exclusive interviews and business showcases that celebrated Liberia\'s entrepreneurial spirit.',
+                    event_date: '2023-12-15',
+                    status: 'published',
+                    winner_count: 12,
+                    category_count: 8,
+                    partner_count: 10,
+                    winners: [
+                        { name: 'STEBEL CLASSIC SHOES', category: 'Manufacturing Excellence' },
+                        { name: 'MAKOS FRUITS JUICE', category: 'Beverage Innovation' },
+                        { name: 'PATIENCE COCOA', category: 'Agricultural Excellence' }
+                    ],
+                    gallery: [
+                        { url: 'images/gallery/lba1-steel.jpg', caption: 'STEBEL CLASSIC SHOES Interview' },
+                        { url: 'images/gallery/lba1-makos.jpg', caption: 'MAKOS FRUITS JUICE Showcase' },
+                        { url: 'images/gallery/lba1-patience.jpg', caption: 'PATIENCE COCOA Feature' }
+                    ]
+                },
+                {
+                    id: 'default_2',
+                    title: 'Liberia Business Awards 2.0',
+                    edition: '2.0',
+                    tagline: 'Honoring Pioneering Organizations in Liberia\'s Economic Renaissance',
+                    description: 'A grand recognition event honoring organizations transforming Liberia\'s economic landscape.',
+                    event_date: '2024-12-19',
+                    status: 'published',
+                    winner_count: 25,
+                    category_count: 12,
+                    partner_count: 15,
+                    winners: [
+                        { name: 'Kernel Fresh', category: 'Sustainable Agriculture' },
+                        { name: 'Wungkos Farm', category: 'Agricultural Innovation' },
+                        { name: 'Liberian Girls Lunchbox', category: 'Social Enterprise' },
+                        { name: 'Patience Cocoa Inc.', category: 'Manufacturing Excellence' }
+                    ],
+                    gallery: [
+                        { url: 'images/gallery/lba2-ceremony.jpg', caption: 'Awards Ceremony' },
+                        { url: 'images/about-slider/slide-1.jpg', caption: 'Proud Winners' },
+                        { url: 'images/about-slider/slide-2.jpg', caption: 'Networking Session' }
+                    ]
+                }
+            ];
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function goBack() {
-            if (window.opener && !window.opener.closed) {
-                window.close();
+            if (document.referrer && document.referrer.includes(window.location.hostname)) {
+                window.history.back();
             } else {
                 window.location.href = 'index.html';
             }
         }
-        
-        function openModal(imageId) {
+
+        function openModal(imageUrl) {
             const modal = document.getElementById('imageModal');
             const modalImage = document.getElementById('modalImage');
             const modalTitle = document.getElementById('modalTitle');
             const modalDescription = document.getElementById('modalDescription');
             
-            // Set modal content based on image ID
-            switch(imageId) {
-                case 'lba1-steel':
-                    modalTitle.textContent = 'STEBEL CLASSIC SHOES - LBA 1.0';
-                    modalImage.src = 'images/gallery/lba1-steel.jpg';
-                    modalDescription.innerHTML = '<p class="font-bold mb-2">Liberian Handcrafted Footwear Excellence</p><p>Stebel Classic Shoes showcased traditional Liberian shoe-making craftsmanship during LBA 1.0 interviews, highlighting sustainable local manufacturing.</p>';
-                    break;
-                case 'lba1-makos':
-                    modalTitle.textContent = 'MAKOS FRUITS JUICE - LBA 1.0';
-                    modalImage.src = 'images/gallery/lba1-makos.jpg';
-                    modalDescription.innerHTML = '<p class="font-bold mb-2">100% Natural Liberian Fruit Juices</p><p>Mako\'s Fruits Juice demonstrated their commitment to health and local agriculture through their range of natural fruit beverages.</p>';
-                    break;
-                case 'lba1-agroretti':
-                    modalTitle.textContent = 'AGRORETTI - LBA 1.0';
-                    modalImage.src = 'images/gallery/lba1-agroretti.jpg';
-                    modalDescription.innerHTML = '<p class="font-bold mb-2">Agricultural Innovation in Liberia</p><p>AgroRetti showcased their innovative farming techniques and sustainable agricultural practices during LBA 1.0 interviews.</p>';
-                    break;
-                case 'lba2-ceremony':
-                    modalTitle.textContent = 'LBA 2.0 Awards Ceremony';
-                    modalImage.src = 'images/gallery/lba2-ceremony.jpg';
-                    modalDescription.innerHTML = '<p class="font-bold mb-2">Grand Recognition Event</p><p>The LBA 2.0 awards ceremony celebrated pioneering organizations contributing to Liberia\'s economic renaissance.</p>';
-                    break;
-                case 'lba2-winners':
-                    modalTitle.textContent = 'LBA 2.0 Proud Winners';
-                    modalImage.src = 'images/about-slider/slide-1.jpg';
-                    modalDescription.innerHTML = '<p class="font-bold mb-2">Business Champions Celebration</p><p>Recognized businesses celebrating their achievements at LBA 2.0, showcasing Liberia\'s entrepreneurial excellence.</p>';
-                    break;
-                case 'lba2-networking':
-                    modalTitle.textContent = 'LBA 2.0 Networking Session';
-                    modalImage.src = 'images/about-slider/slide-2.jpg';
-                    modalDescription.innerHTML = '<p class="font-bold mb-2">Building Strategic Connections</p><p>Business leaders and entrepreneurs networking during LBA 2.0, forging partnerships for Liberia\'s economic growth.</p>';
-                    break;
-            }
+            modalImage.src = imageUrl;
+            modalTitle.textContent = 'Event Gallery Image';
+            modalDescription.innerHTML = '<p>Click anywhere outside to close</p>';
             
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeModal() {
             const modal = document.getElementById('imageModal');
             modal.classList.remove('active');
             document.body.style.overflow = 'auto';
         }
-        
-        // Close modal when clicking outside
+
         document.getElementById('imageModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
             }
         });
-        
-        // Animate counters
-        function animateCounters() {
-            const counters = document.querySelectorAll('.counter[data-count]');
-            counters.forEach(counter => {
-                const target = parseInt(counter.getAttribute('data-count'));
-                const current = parseInt(counter.textContent);
-                if (current < target) {
-                    const increment = Math.ceil(target / 100);
-                    let currentValue = current;
-                    const timer = setInterval(() => {
-                        currentValue += increment;
-                        if (currentValue >= target) {
-                            counter.textContent = target + (counter.textContent.includes('+') ? '+' : '');
-                            clearInterval(timer);
-                        } else {
-                            counter.textContent = currentValue;
-                        }
-                    }, 20);
-                }
-            });
-        }
-        
-        // Initialize animations when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add fade-in animations to timeline items
-            const timelineItems = document.querySelectorAll('.timeline-item');
-            timelineItems.forEach((item, index) => {
-                item.style.animationDelay = (index * 0.2) + 's';
-            });
-            
-            // Animate counters when they come into view
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        animateCounters();
-                        observer.unobserve(entry.target);
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.counter').forEach(counter => {
-                observer.observe(counter);
-            });
-            
-            // Add floating animation to hero
-            setTimeout(() => {
-                document.querySelector('.floating').classList.add('floating');
-            }, 100);
+
+        // ============================================
+        // KEYBOARD SHORTCUTS
+        // ============================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
         });
+
+        console.log('🏆 LBA Past Winners Gallery Loaded');
+        console.log('📊 Events loaded:', eventsData.length);
     </script>
 </body>
 </html>
