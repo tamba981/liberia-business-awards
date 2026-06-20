@@ -7136,6 +7136,656 @@ window.editDirectoryCategory = editDirectoryCategory;
 
 console.log('✅ Directory Management System Ready');
 
+ // ============================================
+// PAST EVENTS & WINNERS MANAGEMENT - COMPLETE FIX
+// ============================================
+
+let pastEventsData = [];
+let pastEventsCurrentPage = 1;
+let pastEventsTotalPages = 1;
+
+// Show Past Events Modal
+function showPastEventsModal() {
+    hideAllModals();
+    
+    let modal = document.getElementById('pastEventsModal');
+    if (!modal) {
+        console.error('Past Events Modal not found!');
+        showNotification('Error: Past Events modal not found', 'error');
+        return;
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadPastEvents();
+}
+
+// Load Past Events from Google Sheets / Backend
+async function loadPastEvents() {
+    const list = document.getElementById('pastEventsList');
+    if (!list) return;
+    
+    list.innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading events...</p></div>';
+    
+    try {
+        // Try loading from Google Apps Script
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getPastEvents&_=${Date.now()}`);
+        let data = await response.json();
+        
+        // If no data from Google Sheets, use fallback
+        if (!data.success || !data.events || data.events.length === 0) {
+            console.log('📂 No events from Google Sheets, using fallback');
+            data = getDefaultPastEvents();
+        }
+        
+        if (data.success && data.events) {
+            pastEventsData = data.events;
+            displayPastEvents(pastEventsData);
+            updatePastEventsStats(pastEventsData);
+        } else {
+            // Use fallback
+            pastEventsData = getDefaultPastEvents().events;
+            displayPastEvents(pastEventsData);
+            updatePastEventsStats(pastEventsData);
+        }
+        
+    } catch (error) {
+        console.error('Error loading past events:', error);
+        // Use fallback
+        pastEventsData = getDefaultPastEvents().events;
+        displayPastEvents(pastEventsData);
+        updatePastEventsStats(pastEventsData);
+    }
+}
+
+// Default fallback events
+function getDefaultPastEvents() {
+    return {
+        success: true,
+        events: [
+            {
+                id: 'default_1',
+                title: 'Liberia Business Awards 1.0',
+                edition: '1.0',
+                tagline: 'The Beginning: Celebrating Liberia\'s entrepreneurial spirit',
+                description: 'The inaugural edition featuring exclusive interviews and business showcases that celebrated Liberia\'s entrepreneurial spirit.',
+                event_date: '2023-12-15',
+                status: 'published',
+                winner_count: 12,
+                category_count: 8,
+                partner_count: 10,
+                winners: [
+                    { name: 'STEBEL CLASSIC SHOES', category: 'Manufacturing Excellence', founder: 'John Doe', story: 'Handcrafted Liberian Footwear' },
+                    { name: 'MAKOS FRUITS JUICE', category: 'Beverage Innovation', founder: 'Jane Smith', story: '100% Natural Fruit Juices' },
+                    { name: 'PATIENCE COCOA', category: 'Agricultural Excellence', founder: 'Patience K.', story: 'Agricultural Innovation' }
+                ],
+                gallery: [
+                    { url: 'images/gallery/lba1-steel.jpg', caption: 'STEBEL CLASSIC SHOES Interview' },
+                    { url: 'images/gallery/lba1-makos.jpg', caption: 'MAKOS FRUITS JUICE Showcase' },
+                    { url: 'images/gallery/lba1-patience.jpg', caption: 'PATIENCE COCOA Feature' }
+                ]
+            },
+            {
+                id: 'default_2',
+                title: 'Liberia Business Awards 2.0',
+                edition: '2.0',
+                tagline: 'Honoring Pioneering Organizations in Liberia\'s Economic Renaissance',
+                description: 'A grand recognition event honoring organizations transforming Liberia\'s economic landscape.',
+                event_date: '2024-12-19',
+                status: 'published',
+                winner_count: 25,
+                category_count: 12,
+                partner_count: 15,
+                winners: [
+                    { name: 'Kernel Fresh', category: 'Sustainable Agriculture', founder: 'Mahmud Johnson', story: 'Sustainable palm oil production' },
+                    { name: 'Wungkos Farm', category: 'Agricultural Innovation', founder: 'Paul Wungko', story: 'Export-ready agricultural products' },
+                    { name: 'Liberian Girls Lunchbox', category: 'Social Enterprise', founder: 'Christollie Ade Suah', story: 'Empowering young women' }
+                ],
+                gallery: [
+                    { url: 'images/gallery/lba2-ceremony.jpg', caption: 'Awards Ceremony' },
+                    { url: 'images/about-slider/slide-1.jpg', caption: 'Proud Winners' },
+                    { url: 'images/about-slider/slide-2.jpg', caption: 'Networking Session' }
+                ]
+            }
+        ]
+    };
+}
+
+// Display Past Events
+function displayPastEvents(events) {
+    const container = document.getElementById('pastEventsList');
+    if (!container) return;
+    
+    const statusFilter = document.getElementById('eventStatusFilter')?.value || 'all';
+    const searchTerm = document.getElementById('eventSearch')?.value?.toLowerCase() || '';
+    
+    let filtered = events;
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+        filtered = filtered.filter(e => e.status === statusFilter);
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+        filtered = filtered.filter(e => 
+            (e.title && e.title.toLowerCase().includes(searchTerm)) ||
+            (e.edition && e.edition.toLowerCase().includes(searchTerm)) ||
+            (e.description && e.description.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #64748b;">
+                <i class="fas fa-trophy" style="font-size: 48px; margin-bottom: 20px;"></i>
+                <p>No events found</p>
+                <button class="sheet-btn" onclick="openAddEventModal()" style="margin-top: 15px;">
+                    <i class="fas fa-plus"></i> Create Your First Event
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = filtered.map(event => {
+        const date = new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const winnerCount = event.winners ? event.winners.length : 0;
+        const totalWinners = event.winner_count || winnerCount;
+        const galleryCount = event.gallery ? event.gallery.length : 0;
+        
+        return `
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; padding: 18px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
+                    <img src="${event.image || '/images/LBA-cover.png'}" style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/70x50?text=Event'">
+                    <div>
+                        <h4 style="font-weight: 600; margin-bottom: 5px; font-size: 16px;">${escapeHtml(event.title)} <span style="font-size: 12px; color: #64748b;">(v${escapeHtml(event.edition)})</span></h4>
+                        <div style="display: flex; gap: 15px; font-size: 12px; color: #64748b; flex-wrap: wrap;">
+                            <span><i class="fas fa-calendar"></i> ${date}</span>
+                            <span><i class="fas fa-award"></i> ${totalWinners} Winners</span>
+                            <span><i class="fas fa-images"></i> ${galleryCount} Images</span>
+                            <span><i class="fas fa-tag"></i> ${event.status || 'draft'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <span class="status-badge status-${event.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${event.status}</span>
+                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editEvent('${event.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteEvent('${event.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Update stats
+    document.getElementById('pastEventsCount').textContent = events.length;
+    document.getElementById('totalEvents').textContent = events.length;
+    document.getElementById('publishedEvents').textContent = events.filter(e => e.status === 'published').length;
+    document.getElementById('draftEvents').textContent = events.filter(e => e.status === 'draft').length;
+    
+    // Total winners across all events
+    let totalWinners = 0;
+    events.forEach(e => {
+        totalWinners += (e.winners ? e.winners.length : 0) + (e.winner_count || 0);
+    });
+    document.getElementById('totalWinners').textContent = totalWinners;
+}
+
+// Update stats
+function updatePastEventsStats(events) {
+    const total = events.length;
+    const published = events.filter(e => e.status === 'published').length;
+    const drafts = events.filter(e => e.status === 'draft').length;
+    let totalWinners = 0;
+    events.forEach(e => {
+        totalWinners += (e.winners ? e.winners.length : 0) + (e.winner_count || 0);
+    });
+    
+    document.getElementById('totalEvents').textContent = total;
+    document.getElementById('publishedEvents').textContent = published;
+    document.getElementById('draftEvents').textContent = drafts;
+    document.getElementById('totalWinners').textContent = totalWinners;
+    document.getElementById('pastEventsCount').textContent = total;
+}
+
+// Filter events
+function filterPastEvents() {
+    displayPastEvents(pastEventsData);
+}
+
+// Refresh events
+function refreshPastEvents() {
+    showNotification('Refreshing events...', 'info');
+    loadPastEvents();
+}
+
+// Open Add Event Modal
+function openAddEventModal() {
+    const modal = document.getElementById('addEventModal');
+    if (!modal) {
+        console.error('Add Event Modal not found!');
+        showNotification('Error: Add Event modal not found', 'error');
+        return;
+    }
+    
+    document.getElementById('eventModalTitle').textContent = 'Add New Event';
+    document.getElementById('eventForm').reset();
+    document.getElementById('eventId').value = '';
+    document.getElementById('eventImagePreview').style.display = 'none';
+    
+    // Reset winners container to one empty entry
+    const winnersContainer = document.getElementById('winnersContainer');
+    if (winnersContainer) {
+        winnersContainer.innerHTML = `
+            <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Name *</label>
+                        <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Award Category *</label>
+                        <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Founder/Representative</label>
+                        <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Image URL</label>
+                        <input type="text" class="winner-image sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="/images/gallery/winner.jpg">
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 13px;">Story / Achievement</label>
+                    <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
+                </div>
+                <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+            </div>
+        `;
+    }
+    
+    // Reset gallery to one empty entry
+    const galleryContainer = document.getElementById('galleryContainer');
+    if (galleryContainer) {
+        galleryContainer.innerHTML = `
+            <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center;">
+                <input type="text" class="gallery-image sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Image URL">
+                <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
+                <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('eventDate').value = today;
+}
+
+// Add winner entry
+function addWinnerEntry() {
+    const container = document.getElementById('winnersContainer');
+    if (!container) return;
+    
+    const entry = document.createElement('div');
+    entry.className = 'winner-entry';
+    entry.style.cssText = 'background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;';
+    entry.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label style="font-size: 13px;">Winner Name *</label>
+                <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
+            </div>
+            <div class="form-group">
+                <label style="font-size: 13px;">Award Category *</label>
+                <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div class="form-group">
+                <label style="font-size: 13px;">Founder/Representative</label>
+                <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
+            </div>
+            <div class="form-group">
+                <label style="font-size: 13px;">Winner Image URL</label>
+                <input type="text" class="winner-image sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="/images/gallery/winner.jpg">
+            </div>
+        </div>
+        <div style="margin-top: 10px;">
+            <label style="font-size: 13px;">Story / Achievement</label>
+            <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
+        </div>
+        <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+    `;
+    container.appendChild(entry);
+}
+
+// Remove winner entry
+function removeWinner(btn) {
+    const entries = document.querySelectorAll('.winner-entry');
+    if (entries.length <= 1) {
+        showNotification('You need at least one winner', 'warning');
+        return;
+    }
+    btn.closest('.winner-entry').remove();
+}
+
+// Add gallery image
+function addGalleryImage() {
+    const container = document.getElementById('galleryContainer');
+    if (!container) return;
+    
+    const entry = document.createElement('div');
+    entry.className = 'gallery-entry';
+    entry.style.cssText = 'background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center;';
+    entry.innerHTML = `
+        <input type="text" class="gallery-image sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Image URL">
+        <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
+        <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(entry);
+}
+
+// Remove gallery image
+function removeGalleryImage(btn) {
+    const entries = document.querySelectorAll('.gallery-entry');
+    if (entries.length <= 1) {
+        showNotification('You need at least one gallery image', 'warning');
+        return;
+    }
+    btn.closest('.gallery-entry').remove();
+}
+
+// Edit Event
+function editEvent(id) {
+    const event = pastEventsData.find(e => e.id === id);
+    if (!event) {
+        showNotification('Event not found', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('addEventModal');
+    if (!modal) {
+        showNotification('Modal not found', 'error');
+        return;
+    }
+    
+    document.getElementById('eventModalTitle').textContent = 'Edit Event';
+    document.getElementById('eventId').value = event.id;
+    document.getElementById('eventTitle').value = event.title || '';
+    document.getElementById('eventEdition').value = event.edition || '';
+    document.getElementById('eventDate').value = event.event_date || '';
+    document.getElementById('eventStatus').value = event.status || 'draft';
+    document.getElementById('eventTagline').value = event.tagline || '';
+    document.getElementById('eventDescription').value = event.description || '';
+    document.getElementById('eventImage').value = event.image || '';
+    document.getElementById('eventWinnerCount').value = event.winner_count || '';
+    document.getElementById('eventCategoryCount').value = event.category_count || '';
+    document.getElementById('eventPartnerCount').value = event.partner_count || '';
+    
+    // Show image preview
+    if (event.image) {
+        const preview = document.getElementById('eventImagePreview');
+        const img = document.getElementById('eventPreviewImg');
+        if (preview && img) {
+            img.src = event.image;
+            preview.style.display = 'block';
+        }
+    }
+    
+    // Load winners
+    const winnersContainer = document.getElementById('winnersContainer');
+    if (winnersContainer && event.winners && event.winners.length > 0) {
+        winnersContainer.innerHTML = event.winners.map((winner, index) => `
+            <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Name *</label>
+                        <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.name)}" placeholder="Business Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Award Category *</label>
+                        <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.category)}" placeholder="e.g., Agriculture Business of the Year">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Founder/Representative</label>
+                        <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.founder || '')}" placeholder="Founder's Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Image URL</label>
+                        <input type="text" class="winner-image sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.image || '')}" placeholder="/images/gallery/winner.jpg">
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 13px;">Story / Achievement</label>
+                    <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement...">${escapeHtml(winner.story || '')}</textarea>
+                </div>
+                <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+            </div>
+        `).join('');
+    } else {
+        // Reset to one empty winner entry
+        winnersContainer.innerHTML = `
+            <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Name *</label>
+                        <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Award Category *</label>
+                        <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Founder/Representative</label>
+                        <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Image URL</label>
+                        <input type="text" class="winner-image sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="/images/gallery/winner.jpg">
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 13px;">Story / Achievement</label>
+                    <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
+                </div>
+                <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+            </div>
+        `;
+    }
+    
+    // Load gallery
+    const galleryContainer = document.getElementById('galleryContainer');
+    if (galleryContainer && event.gallery && event.gallery.length > 0) {
+        galleryContainer.innerHTML = event.gallery.map(item => `
+            <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center;">
+                <input type="text" class="gallery-image sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(item.url)}" placeholder="Image URL">
+                <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(item.caption || '')}" placeholder="Caption (optional)">
+                <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+            </div>
+        `).join('');
+    } else {
+        galleryContainer.innerHTML = `
+            <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center;">
+                <input type="text" class="gallery-image sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Image URL">
+                <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
+                <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Save Event
+async function saveEvent() {
+    const eventId = document.getElementById('eventId').value;
+    
+    // Collect basic event data
+    const eventData = {
+        title: document.getElementById('eventTitle').value.trim(),
+        edition: document.getElementById('eventEdition').value.trim(),
+        event_date: document.getElementById('eventDate').value,
+        status: document.getElementById('eventStatus').value,
+        tagline: document.getElementById('eventTagline').value.trim(),
+        description: document.getElementById('eventDescription').value.trim(),
+        image: document.getElementById('eventImage').value.trim(),
+        winner_count: parseInt(document.getElementById('eventWinnerCount').value) || 0,
+        category_count: parseInt(document.getElementById('eventCategoryCount').value) || 0,
+        partner_count: parseInt(document.getElementById('eventPartnerCount').value) || 0,
+        winners: [],
+        gallery: []
+    };
+    
+    // Validate required fields
+    if (!eventData.title || !eventData.edition || !eventData.event_date || !eventData.description) {
+        showNotification('Title, Edition, Date, and Description are required', 'warning');
+        return;
+    }
+    
+    // Collect winners
+    const winnerEntries = document.querySelectorAll('.winner-entry');
+    winnerEntries.forEach(entry => {
+        const name = entry.querySelector('.winner-name')?.value.trim();
+        const category = entry.querySelector('.winner-category')?.value.trim();
+        if (name && category) {
+            eventData.winners.push({
+                name: name,
+                category: category,
+                founder: entry.querySelector('.winner-founder')?.value.trim() || '',
+                image: entry.querySelector('.winner-image')?.value.trim() || '',
+                story: entry.querySelector('.winner-story')?.value.trim() || ''
+            });
+        }
+    });
+    
+    // Collect gallery
+    const galleryEntries = document.querySelectorAll('.gallery-entry');
+    galleryEntries.forEach(entry => {
+        const url = entry.querySelector('.gallery-image')?.value.trim();
+        if (url) {
+            eventData.gallery.push({
+                url: url,
+                caption: entry.querySelector('.gallery-caption')?.value.trim() || ''
+            });
+        }
+    });
+    
+    // If no winners, use the count from stats
+    if (eventData.winners.length === 0 && eventData.winner_count > 0) {
+        // We'll keep the count as is
+    }
+    
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
+    
+    try {
+        // Save to Google Sheets
+        const formData = new URLSearchParams({
+            formType: 'savePastEvent',
+            eventId: eventId || '',
+            title: eventData.title,
+            edition: eventData.edition,
+            event_date: eventData.event_date,
+            status: eventData.status,
+            tagline: eventData.tagline,
+            description: eventData.description,
+            image: eventData.image,
+            winner_count: eventData.winner_count,
+            category_count: eventData.category_count,
+            partner_count: eventData.partner_count,
+            winners: JSON.stringify(eventData.winners),
+            gallery: JSON.stringify(eventData.gallery),
+            timestamp: new Date().toISOString()
+        });
+        
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData.toString()
+        });
+        
+        showNotification(eventId ? '✅ Event updated!' : '✅ Event created!', 'success');
+        hideModal('addEventModal');
+        
+        // Refresh the events list
+        await loadPastEvents();
+        
+    } catch (error) {
+        console.error('Save error:', error);
+        showNotification('Error saving event: ' + error.message, 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+// Delete Event
+function deleteEvent(id) {
+    if (!confirm('⚠️ Are you sure you want to delete this event? This will remove all winners and gallery images. This action cannot be undone.')) {
+        return;
+    }
+    
+    // Remove from local data
+    pastEventsData = pastEventsData.filter(e => e.id !== id);
+    displayPastEvents(pastEventsData);
+    updatePastEventsStats(pastEventsData);
+    
+    // Also try to delete from Google Sheets
+    try {
+        const formData = new URLSearchParams({
+            formType: 'deletePastEvent',
+            eventId: id,
+            timestamp: new Date().toISOString()
+        });
+        
+        fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData.toString()
+        });
+    } catch (error) {
+        console.error('Error deleting from Google Sheets:', error);
+    }
+    
+    showNotification('✅ Event deleted!', 'success');
+}
+
+// Export to global scope
+window.showPastEventsModal = showPastEventsModal;
+window.loadPastEvents = loadPastEvents;
+window.displayPastEvents = displayPastEvents;
+window.filterPastEvents = filterPastEvents;
+window.refreshPastEvents = refreshPastEvents;
+window.openAddEventModal = openAddEventModal;
+window.addWinnerEntry = addWinnerEntry;
+window.removeWinner = removeWinner;
+window.addGalleryImage = addGalleryImage;
+window.removeGalleryImage = removeGalleryImage;
+window.editEvent = editEvent;
+window.saveEvent = saveEvent;
+window.deleteEvent = deleteEvent;
+
+console.log('✅ Past Events & Winners Management Loaded');       
+        
    // ============================================
 // COMPLETE FIXED BUSINESS SPOTLIGHT SYSTEM
 // USING YOUR BACKEND API - NO GOOGLE SHEETS
