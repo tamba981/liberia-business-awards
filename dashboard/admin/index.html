@@ -7019,7 +7019,9 @@ function showPastEventsModal() {
     loadPastEvents();
 }
 
-// Load Past Events from Google Sheets / Backend
+// ============================================
+// LOAD PAST EVENTS - FIXED (from Backend API)
+// ============================================
 async function loadPastEvents() {
     const list = document.getElementById('pastEventsList');
     if (!list) return;
@@ -7027,36 +7029,71 @@ async function loadPastEvents() {
     list.innerHTML = '<div style="text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading events...</p></div>';
     
     try {
-        // Try loading from Google Apps Script
-        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getPastEvents&_=${Date.now()}`);
-        let data = await response.json();
+        // ============================================
+        // STEP 1: Try loading from Backend API FIRST
+        // ============================================
+        const token = localStorage.getItem('lba_auth_token');
+        let events = [];
         
-        // If no data from Google Sheets, use fallback
-        if (!data.success || !data.events || data.events.length === 0) {
-            console.log('📂 No events from Google Sheets, using fallback');
-            data = getDefaultPastEvents();
+        try {
+            const response = await fetch(`${API_BASE}/admin/events?status=all`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.events) {
+                    events = data.events;
+                    console.log(`✅ Loaded ${events.length} events from Backend API`);
+                }
+            }
+        } catch (apiError) {
+            console.log('⚠️ Backend API not available, trying Google Sheets...');
         }
         
-        if (data.success && data.events) {
-            pastEventsData = data.events;
-            displayPastEvents(pastEventsData);
-            updatePastEventsStats(pastEventsData);
-        } else {
-            // Use fallback
-            pastEventsData = getDefaultPastEvents().events;
-            displayPastEvents(pastEventsData);
-            updatePastEventsStats(pastEventsData);
+        // ============================================
+        // STEP 2: Fallback to Google Sheets if no events
+        // ============================================
+        if (events.length === 0) {
+            try {
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getPastEvents&_=${Date.now()}`);
+                const data = await response.json();
+                
+                if (data.success && data.events && data.events.length > 0) {
+                    events = data.events;
+                    console.log(`✅ Loaded ${events.length} events from Google Sheets`);
+                }
+            } catch (sheetsError) {
+                console.log('⚠️ Google Sheets not available, using fallback data');
+            }
         }
+        
+        // ============================================
+        // STEP 3: Use fallback if still no events
+        // ============================================
+        if (events.length === 0) {
+            console.log('📂 No events found, using fallback data');
+            const fallback = getDefaultPastEvents();
+            events = fallback.events || fallback;
+        }
+        
+        // Display events
+        pastEventsData = events;
+        displayPastEvents(events);
+        updatePastEventsStats(events);
         
     } catch (error) {
-        console.error('Error loading past events:', error);
+        console.error('❌ Error loading past events:', error);
         // Use fallback
-        pastEventsData = getDefaultPastEvents().events;
+        const fallback = getDefaultPastEvents();
+        pastEventsData = fallback.events || fallback;
         displayPastEvents(pastEventsData);
         updatePastEventsStats(pastEventsData);
     }
 }
-
         
 
 // Default fallback events
@@ -7660,11 +7697,17 @@ function editEvent(id) {
     document.body.style.overflow = 'hidden';
 }
 
+
 // ============================================
-// SAVE EVENT - WITH IMAGE UPLOAD SUPPORT
+// SAVE EVENT - WITH PROPER BACKEND SAVE
 // ============================================
 async function saveEvent() {
     const eventId = document.getElementById('eventId').value;
+    
+    // Find the save button
+    const saveBtn = document.querySelector('#addEventModal .modal-footer .sheet-btn:last-child') || 
+                    document.querySelector('#addEventModal button[onclick*="saveEvent"]');
+    const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
     
     // Collect basic event data
     const eventData = {
@@ -7687,49 +7730,59 @@ async function saveEvent() {
         return;
     }
     
-    // Collect winners
+    // Collect winners with image files
     const winnerEntries = document.querySelectorAll('.winner-entry');
-    winnerEntries.forEach(entry => {
+    const winnerFiles = [];
+    
+    winnerEntries.forEach((entry, index) => {
         const name = entry.querySelector('.winner-name')?.value.trim();
         const category = entry.querySelector('.winner-category')?.value.trim();
         if (name && category) {
-            eventData.winners.push({
+            const fileInput = entry.querySelector('.winner-image-file');
+            const file = fileInput?.files[0] || null;
+            const urlInput = entry.querySelector('.winner-image-url');
+            const imageUrl = urlInput?.value.trim() || '';
+            
+            const winner = {
                 name: name,
                 category: category,
                 founder: entry.querySelector('.winner-founder')?.value.trim() || '',
-                image: entry.querySelector('.winner-image')?.value.trim() || '',
+                image: imageUrl,
                 story: entry.querySelector('.winner-story')?.value.trim() || ''
-            });
+            };
+            
+            eventData.winners.push(winner);
+            if (file) winnerFiles.push({ file: file, index: index });
         }
     });
     
-    // Collect gallery - NOW SUPPORTS BOTH URL AND FILE UPLOAD
+    // Collect gallery with image files
     const galleryEntries = document.querySelectorAll('.gallery-entry');
-    galleryEntries.forEach(entry => {
-        const url = entry.querySelector('.gallery-image')?.value.trim();
+    const galleryFiles = [];
+    
+    galleryEntries.forEach((entry, index) => {
         const fileInput = entry.querySelector('.gallery-file');
-        const file = fileInput?.files[0];
+        const file = fileInput?.files[0] || null;
+        const urlInput = entry.querySelector('.gallery-image-url');
+        const imageUrl = urlInput?.value.trim() || '';
         const caption = entry.querySelector('.gallery-caption')?.value.trim() || '';
         
-        if (url) {
-            eventData.gallery.push({ url: url, caption: caption });
-        } else if (file) {
-            // We'll handle file upload separately
-            eventData._galleryFiles = eventData._galleryFiles || [];
-            eventData._galleryFiles.push({ file: file, caption: caption });
+        if (imageUrl || file) {
+            eventData.gallery.push({ url: imageUrl, caption: caption });
+            if (file) galleryFiles.push({ file: file, index: index });
         }
     });
     
-    const saveBtn = event.target;
-    const originalText = saveBtn.innerHTML;
-    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    saveBtn.disabled = true;
+    if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
         const formData = new FormData();
         
-        // Add all event data as JSON
+        // Add event data as JSON
         formData.append('eventData', JSON.stringify({
             title: eventData.title,
             edition: eventData.edition,
@@ -7741,18 +7794,20 @@ async function saveEvent() {
             category_count: eventData.category_count,
             partner_count: eventData.partner_count,
             winners: eventData.winners,
-            id: eventId || undefined
+            gallery: eventData.gallery
         }));
         
-        // Add gallery files
-        if (eventData._galleryFiles && eventData._galleryFiles.length > 0) {
-            eventData._galleryFiles.forEach((item, index) => {
-                formData.append(`gallery_${index}`, item.file);
-                formData.append(`gallery_caption_${index}`, item.caption);
-            });
-        }
+        // Add files - use 'gallery_images' for all gallery files (backend expects this)
+        galleryFiles.forEach((item) => {
+            formData.append('gallery_images', item.file);
+        });
         
-        // Add featured image if uploaded
+        // Add winner files - use 'winner_images' for all winner files
+        winnerFiles.forEach((item) => {
+            formData.append('winner_images', item.file);
+        });
+        
+        // Add featured image
         const featuredImageInput = document.getElementById('eventImageFile');
         if (featuredImageInput && featuredImageInput.files[0]) {
             formData.append('featured_image', featuredImageInput.files[0]);
@@ -7764,6 +7819,9 @@ async function saveEvent() {
             : `${API_BASE}/admin/events`;
         const method = eventId ? 'PUT' : 'POST';
         
+        console.log('📤 Saving event to Backend API...');
+        console.log(`   Winners: ${eventData.winners.length}, Gallery: ${eventData.gallery.length}`);
+        
         // Save to backend API
         const response = await fetch(url, {
             method: method,
@@ -7773,7 +7831,14 @@ async function saveEvent() {
             body: formData
         });
         
+        if (!response.ok) {
+            const text = await response.text();
+            console.error('❌ Server error:', text.substring(0, 200));
+            throw new Error(`Server returned ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log('📥 Response:', result);
         
         if (result.success) {
             showNotification(eventId ? '✅ Event updated!' : '✅ Event created!', 'success');
@@ -7782,35 +7847,26 @@ async function saveEvent() {
             // Refresh the events list
             await loadPastEvents();
             
-            // Also try to save to Google Sheets as backup
-            try {
-                await saveEventToGoogleSheets(eventData, eventId);
-            } catch (gsError) {
-                console.log('Google Sheets backup not available, but event saved to backend');
-            }
+            // Reset form
+            document.getElementById('eventForm').reset();
+            document.getElementById('eventId').value = '';
+            document.getElementById('eventImagePreview').style.display = 'none';
         } else {
             showNotification(result.message || 'Error saving event', 'error');
         }
         
     } catch (error) {
-        console.error('Save error:', error);
+        console.error('❌ Save error:', error);
         showNotification('Error saving event: ' + error.message, 'error');
-        
-        // Fallback: Save to Google Sheets if backend fails
-        try {
-            await saveEventToGoogleSheets(eventData, eventId);
-            showNotification('✅ Event saved to Google Sheets as backup!', 'success');
-            hideModal('addEventModal');
-            await loadPastEvents();
-        } catch (fallbackError) {
-            showNotification('Could not save event. Please try again.', 'error');
-        }
     } finally {
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
+        if (saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
     }
 }
 
+        
 // ============================================
 // SAVE EVENT TO GOOGLE SHEETS (BACKUP)
 // ============================================
