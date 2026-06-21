@@ -155,21 +155,77 @@ try {
     console.error('Could not check uploads directory permissions:', err);
 }
 
-// Add CORS headers for static files
-app.use('/uploads', express.static(uploadDir, {
+// ============================================
+// FIXED: STATIC FILE SERVING WITH PROPER CORS AND DOMAIN SUPPORT
+// ============================================
+app.use('/uploads', (req, res, next) => {
+    // Log the request for debugging
+    console.log(`📸 Static file request: ${req.url} from ${req.get('host')}`);
+    next();
+}, express.static(uploadDir, {
     setHeaders: (res, filePath) => {
         const ext = path.extname(filePath).toLowerCase();
-        if (ext === '.pdf') res.setHeader('Content-Type', 'application/pdf');
-        if (ext === '.jpg' || ext === '.jpeg') res.setHeader('Content-Type', 'image/jpeg');
-        if (ext === '.png') res.setHeader('Content-Type', 'image/png');
+        const contentType = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp',
+            '.pdf': 'application/pdf'
+        }[ext] || 'application/octet-stream';
         
-        // Add these CORS headers
+        res.setHeader('Content-Type', contentType);
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
     }
 }));
+
+// Handle OPTIONS for static files
+app.options('/uploads/*', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    res.sendStatus(200);
+});
+
+// ============================================
+// ADD A FALLBACK ROUTE FOR IMAGES
+// ============================================
+app.get('/uploads/:filename', async (req, res) => {
+    try {
+        const filename = req.params.filename;
+        const filePath = path.join(uploadDir, filename);
+        
+        console.log(`📸 Serving file: ${filename} from ${filePath}`);
+        
+        if (!fs.existsSync(filePath)) {
+            console.log(`❌ File not found: ${filePath}`);
+            return res.status(404).json({ error: 'File not found' });
+        }
+        
+        const ext = path.extname(filename).toLowerCase();
+        const contentType = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp'
+        }[ext] || 'application/octet-stream';
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.sendFile(filePath);
+        
+    } catch (error) {
+        console.error('Upload serve error:', error);
+        res.status(500).json({ error: 'Failed to serve file' });
+    }
+});
 
 // Handle preflight OPTIONS request for static files
 app.options('/uploads/*', (req, res) => {
