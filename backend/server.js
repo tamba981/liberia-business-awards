@@ -236,6 +236,33 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
+// ============================================
+// MULTER ERROR HANDLING HELPER
+// ============================================
+function handleUpload(uploadMiddleware) {
+    return function(req, res, next) {
+        uploadMiddleware(req, res, function(err) {
+            if (err instanceof multer.MulterError) {
+                console.error('❌ Multer Error:', err.message);
+                console.error('   Field:', err.field);
+                console.error('   Code:', err.code);
+                return res.status(400).json({
+                    success: false,
+                    message: `Upload error: ${err.message}`,
+                    code: err.code
+                });
+            } else if (err) {
+                console.error('❌ Upload Error:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'File upload failed: ' + err.message
+                });
+            }
+            next();
+        });
+    };
+}
+
 // ============ DATABASE CONNECTION ============
 async function connectToMongoDB() {
     try {
@@ -6301,287 +6328,271 @@ app.get('/api/admin/events/:id', authenticate, authorize('admin'), async (req, r
 
 
 // ============================================
-// PAST EVENTS - CREATE WITH MULTIPLE FILE UPLOADS
+// PAST EVENTS - CREATE WITH ERROR HANDLING
 // ============================================
-app.post('/api/admin/events', authenticate, authorize('admin'), upload.fields([
-    { name: 'featured_image', maxCount: 1 },
-    { name: 'winner_images', maxCount: 50 },
-    { name: 'gallery_images', maxCount: 50 }
-]), async (req, res) => {
-    try {
-        console.log('📝 Creating event with file uploads...');
-        console.log('📦 req.body keys:', Object.keys(req.body));
-        console.log('📦 req.files:', req.files ? Object.keys(req.files) : 'No files');
-        
-        let eventDataObj;
-        
-        // Parse eventData from FormData
-        if (req.body.eventData) {
-            try {
-                eventDataObj = JSON.parse(req.body.eventData);
-                console.log('✅ Parsed eventData from JSON string');
-            } catch (e) {
-                console.error('❌ Failed to parse eventData JSON:', e.message);
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Invalid event data format: ' + e.message 
+app.post('/api/admin/events', authenticate, authorize('admin'), 
+    handleUpload(upload.fields([
+        { name: 'featured_image', maxCount: 1 },
+        { name: 'winner_images', maxCount: 50 },
+        { name: 'gallery_images', maxCount: 50 }
+    ])),
+    async (req, res) => {
+        try {
+            console.log('📝 CREATE EVENT - Request received');
+            console.log('📦 Body keys:', Object.keys(req.body));
+            console.log('📦 Files:', req.files ? Object.keys(req.files) : 'No files');
+            
+            let eventData;
+            
+            // Handle both JSON and FormData
+            if (req.body.eventData) {
+                try {
+                    eventData = typeof req.body.eventData === 'string' 
+                        ? JSON.parse(req.body.eventData) 
+                        : req.body.eventData;
+                    console.log('✅ Parsed eventData from FormData');
+                } catch (e) {
+                    console.error('❌ Failed to parse eventData:', e.message);
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Invalid event data format: ' + e.message
+                    });
+                }
+            } else {
+                eventData = req.body;
+                console.log('📦 Using req.body directly');
+            }
+            
+            // Extract and validate
+            const {
+                title = '',
+                edition = '',
+                tagline = '',
+                description = '',
+                event_date,
+                status = 'draft',
+                winner_count = 0,
+                category_count = 0,
+                partner_count = 0,
+                winners = [],
+                gallery = []
+            } = eventData;
+            
+            // Validate required fields
+            if (!title || !edition || !description || !event_date) {
+                console.error('❌ Missing required fields');
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required fields: title, edition, description, event_date'
                 });
             }
-        } else {
-            eventDataObj = req.body;
-            console.log('📦 Using req.body directly');
-        }
-        
-        // Extract data
-        const { 
-            title, 
-            edition, 
-            tagline = '', 
-            description, 
-            event_date, 
-            status = 'draft', 
-            winner_count = 0, 
-            category_count = 0, 
-            partner_count = 0, 
-            winners = [], 
-            gallery = [],
-            id 
-        } = eventDataObj;
-        
-        // Validate required fields
-        if (!title || !edition || !event_date || !description) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Missing required fields: title, edition, event_date, description' 
+            
+            // Build event object with proper types
+            const event = new PastEvent({
+                title: String(title).trim(),
+                edition: String(edition).trim(),
+                tagline: String(tagline || '').trim(),
+                description: String(description).trim(),
+                event_date: new Date(event_date),
+                status: String(status || 'draft'),
+                winner_count: parseInt(winner_count) || 0,
+                category_count: parseInt(category_count) || 0,
+                partner_count: parseInt(partner_count) || 0,
+                winners: Array.isArray(winners) ? winners.map(w => ({
+                    name: String(w.name || '').trim(),
+                    category: String(w.category || '').trim(),
+                    founder: String(w.founder || '').trim(),
+                    image: String(w.image || '').trim(),
+                    story: String(w.story || '').trim()
+                })) : [],
+                gallery: Array.isArray(gallery) ? gallery.map(g => ({
+                    url: String(g.url || '').trim(),
+                    caption: String(g.caption || '').trim()
+                })) : [],
+                created_by: req.user._id
             });
-        }
-        
-        // Process winner images
-        let processedWinners = [];
-        if (Array.isArray(winners) && winners.length > 0) {
-            processedWinners = winners.map((winner, index) => {
-                // Check if there's an uploaded image for this winner
-                const winnerImageField = `winner_image_${index}`;
-                const uploadedFile = req.files && req.files[winnerImageField] ? req.files[winnerImageField][0] : null;
+            
+            // Process uploaded files
+            if (req.files) {
+                // Featured image
+                if (req.files.featured_image && req.files.featured_image[0]) {
+                    event.image = `/uploads/${req.files.featured_image[0].filename}`;
+                    console.log('📸 Featured image:', event.image);
+                }
                 
-                // Also check if there's a file in the general winner_images array
-                const generalFile = req.files && req.files.winner_images && req.files.winner_images[index] 
-                    ? req.files.winner_images[index] 
-                    : null;
+                // Winner images - map to winners
+                if (req.files.winner_images && req.files.winner_images.length > 0) {
+                    req.files.winner_images.forEach((file, index) => {
+                        if (event.winners[index]) {
+                            event.winners[index].image = `/uploads/${file.filename}`;
+                        }
+                    });
+                    console.log(`📸 ${req.files.winner_images.length} winner images processed`);
+                }
                 
-                const file = uploadedFile || generalFile;
-                
-                return {
-                    name: winner.name || '',
-                    category: winner.category || '',
-                    founder: winner.founder || '',
-                    story: winner.story || '',
-                    image: file ? `/uploads/${file.filename}` : (winner.image || '')
-                };
-            });
-        }
-        
-        // Process gallery images
-        let processedGallery = [];
-        if (Array.isArray(gallery) && gallery.length > 0) {
-            processedGallery = gallery.map((item, index) => {
-                // Check if there's an uploaded image for this gallery item
-                const galleryFileField = `gallery_image_${index}`;
-                const uploadedFile = req.files && req.files[galleryFileField] ? req.files[galleryFileField][0] : null;
-                
-                // Also check if there's a file in the general gallery_images array
-                const generalFile = req.files && req.files.gallery_images && req.files.gallery_images[index] 
-                    ? req.files.gallery_images[index] 
-                    : null;
-                
-                const file = uploadedFile || generalFile;
-                
-                return {
-                    url: file ? `/uploads/${file.filename}` : (item.url || ''),
-                    caption: item.caption || ''
-                };
-            });
-        }
-        
-        // Handle featured image
-        let featuredImageUrl = '';
-        if (req.files && req.files.featured_image && req.files.featured_image[0]) {
-            featuredImageUrl = `/uploads/${req.files.featured_image[0].filename}`;
-            console.log('📸 Featured image uploaded:', featuredImageUrl);
-        }
-        
-        // Build event object
-        const event = new PastEvent({
-            title: title.trim(),
-            edition: edition.trim(),
-            tagline: tagline || '',
-            description: description.trim(),
-            event_date: new Date(event_date),
-            status: status || 'draft',
-            winner_count: parseInt(winner_count) || processedWinners.length,
-            category_count: parseInt(category_count) || 0,
-            partner_count: parseInt(partner_count) || 0,
-            winners: processedWinners,
-            gallery: processedGallery,
-            image: featuredImageUrl,
-            created_by: req.user._id
-        });
-        
-        // Save to database
-        await event.save();
-        console.log('✅ Event saved to database:', event._id);
-        
-        res.status(201).json({
-            success: true,
-            message: 'Event created successfully with images!',
-            event: {
-                _id: event._id,
-                title: event.title,
-                edition: event.edition,
-                status: event.status,
-                event_date: event.event_date,
-                image: event.image,
-                winners_count: event.winners.length,
-                gallery_count: event.gallery.length
+                // Gallery images
+                if (req.files.gallery_images && req.files.gallery_images.length > 0) {
+                    req.files.gallery_images.forEach((file, index) => {
+                        if (event.gallery[index]) {
+                            event.gallery[index].url = `/uploads/${file.filename}`;
+                        } else {
+                            event.gallery.push({
+                                url: `/uploads/${file.filename}`,
+                                caption: ''
+                            });
+                        }
+                    });
+                    console.log(`📸 ${req.files.gallery_images.length} gallery images processed`);
+                }
             }
-        });
-        
-    } catch (error) {
-        console.error('❌ Create event error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message || 'Failed to create event'
-        });
+            
+            // Save to database
+            await event.save();
+            console.log('✅ Event saved! ID:', event._id);
+            
+            res.status(201).json({
+                success: true,
+                message: 'Event created successfully!',
+                event: {
+                    _id: event._id,
+                    title: event.title,
+                    edition: event.edition,
+                    status: event.status,
+                    event_date: event.event_date,
+                    image: event.image,
+                    winner_count: event.winners.length,
+                    gallery_count: event.gallery.length
+                }
+            });
+            
+        } catch (error) {
+            console.error('❌ CREATE EVENT ERROR:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Failed to create event'
+            });
+        }
     }
-});
-
+);
 
 // ============================================
-// PAST EVENTS - UPDATE WITH MULTIPLE FILE UPLOADS
+// PAST EVENTS - UPDATE WITH ERROR HANDLING
 // ============================================
-app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.fields([
-    { name: 'featured_image', maxCount: 1 },
-    { name: 'winner_images', maxCount: 50 },
-    { name: 'gallery_images', maxCount: 50 }
-]), async (req, res) => {
-    try {
-        console.log('📝 Updating event:', req.params.id);
-        
-        const event = await PastEvent.findById(req.params.id);
-        if (!event) {
-            return res.status(404).json({ success: false, message: 'Event not found' });
-        }
-        
-        let eventDataObj;
-        
-        if (req.body.eventData) {
-            try {
-                eventDataObj = JSON.parse(req.body.eventData);
-                console.log('✅ Parsed eventData from JSON string');
-            } catch (e) {
-                console.error('❌ Failed to parse eventData JSON:', e.message);
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Invalid event data format: ' + e.message 
-                });
+app.put('/api/admin/events/:id', authenticate, authorize('admin'),
+    handleUpload(upload.fields([
+        { name: 'featured_image', maxCount: 1 },
+        { name: 'winner_images', maxCount: 50 },
+        { name: 'gallery_images', maxCount: 50 }
+    ])),
+    async (req, res) => {
+        try {
+            const event = await PastEvent.findById(req.params.id);
+            if (!event) {
+                return res.status(404).json({ success: false, message: 'Event not found' });
             }
-        } else {
-            eventDataObj = req.body;
-        }
-        
-        const { 
-            title, 
-            edition, 
-            tagline, 
-            description, 
-            event_date, 
-            status, 
-            winner_count, 
-            category_count, 
-            partner_count, 
-            winners, 
-            gallery 
-        } = eventDataObj;
-        
-        // Update basic fields
-        if (title) event.title = title.trim();
-        if (edition) event.edition = edition.trim();
-        if (tagline !== undefined) event.tagline = tagline;
-        if (description) event.description = description.trim();
-        if (event_date) event.event_date = new Date(event_date);
-        if (status) event.status = status;
-        if (winner_count !== undefined) event.winner_count = parseInt(winner_count) || 0;
-        if (category_count !== undefined) event.category_count = parseInt(category_count) || 0;
-        if (partner_count !== undefined) event.partner_count = parseInt(partner_count) || 0;
-        
-        // Process winner images
-        let processedWinners = [];
-        if (Array.isArray(winners) && winners.length > 0) {
-            processedWinners = winners.map((winner, index) => {
-                const winnerImageField = `winner_image_${index}`;
-                const uploadedFile = req.files && req.files[winnerImageField] ? req.files[winnerImageField][0] : null;
-                const generalFile = req.files && req.files.winner_images && req.files.winner_images[index] 
-                    ? req.files.winner_images[index] 
-                    : null;
-                const file = uploadedFile || generalFile;
+            
+            let eventData;
+            
+            if (req.body.eventData) {
+                try {
+                    eventData = typeof req.body.eventData === 'string' 
+                        ? JSON.parse(req.body.eventData) 
+                        : req.body.eventData;
+                } catch (e) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Invalid event data format: ' + e.message
+                    });
+                }
+            } else {
+                eventData = req.body;
+            }
+            
+            const {
+                title, edition, tagline, description, event_date,
+                status, winner_count, category_count, partner_count,
+                winners, gallery
+            } = eventData;
+            
+            // Update fields
+            if (title) event.title = String(title).trim();
+            if (edition) event.edition = String(edition).trim();
+            if (tagline !== undefined) event.tagline = String(tagline || '').trim();
+            if (description) event.description = String(description).trim();
+            if (event_date) event.event_date = new Date(event_date);
+            if (status) event.status = status;
+            if (winner_count !== undefined) event.winner_count = parseInt(winner_count) || 0;
+            if (category_count !== undefined) event.category_count = parseInt(category_count) || 0;
+            if (partner_count !== undefined) event.partner_count = parseInt(partner_count) || 0;
+            
+            // Update winners if provided
+            if (winners && Array.isArray(winners)) {
+                event.winners = winners.map(w => ({
+                    name: String(w.name || '').trim(),
+                    category: String(w.category || '').trim(),
+                    founder: String(w.founder || '').trim(),
+                    image: String(w.image || '').trim(),
+                    story: String(w.story || '').trim()
+                }));
+            }
+            
+            // Update gallery if provided
+            if (gallery && Array.isArray(gallery)) {
+                event.gallery = gallery.map(g => ({
+                    url: String(g.url || '').trim(),
+                    caption: String(g.caption || '').trim()
+                }));
+            }
+            
+            // Handle uploaded files
+            if (req.files) {
+                if (req.files.featured_image && req.files.featured_image[0]) {
+                    event.image = `/uploads/${req.files.featured_image[0].filename}`;
+                }
                 
-                return {
-                    name: winner.name || '',
-                    category: winner.category || '',
-                    founder: winner.founder || '',
-                    story: winner.story || '',
-                    image: file ? `/uploads/${file.filename}` : (winner.image || '')
-                };
+                if (req.files.winner_images && req.files.winner_images.length > 0) {
+                    req.files.winner_images.forEach((file, index) => {
+                        if (event.winners[index]) {
+                            event.winners[index].image = `/uploads/${file.filename}`;
+                        }
+                    });
+                }
+                
+                if (req.files.gallery_images && req.files.gallery_images.length > 0) {
+                    req.files.gallery_images.forEach((file, index) => {
+                        if (event.gallery[index]) {
+                            event.gallery[index].url = `/uploads/${file.filename}`;
+                        } else {
+                            event.gallery.push({
+                                url: `/uploads/${file.filename}`,
+                                caption: ''
+                            });
+                        }
+                    });
+                }
+            }
+            
+            event.updated_by = req.user._id;
+            event.updated_at = new Date();
+            
+            await event.save();
+            console.log('✅ Event updated:', event._id);
+            
+            res.json({
+                success: true,
+                message: 'Event updated successfully!',
+                event
+            });
+            
+        } catch (error) {
+            console.error('❌ UPDATE EVENT ERROR:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Failed to update event'
             });
         }
-        if (processedWinners.length > 0) event.winners = processedWinners;
-        
-        // Process gallery images
-        let processedGallery = [];
-        if (Array.isArray(gallery) && gallery.length > 0) {
-            processedGallery = gallery.map((item, index) => {
-                const galleryFileField = `gallery_image_${index}`;
-                const uploadedFile = req.files && req.files[galleryFileField] ? req.files[galleryFileField][0] : null;
-                const generalFile = req.files && req.files.gallery_images && req.files.gallery_images[index] 
-                    ? req.files.gallery_images[index] 
-                    : null;
-                const file = uploadedFile || generalFile;
-                
-                return {
-                    url: file ? `/uploads/${file.filename}` : (item.url || ''),
-                    caption: item.caption || ''
-                };
-            });
-        }
-        if (processedGallery.length > 0) event.gallery = processedGallery;
-        
-        // Handle featured image
-        if (req.files && req.files.featured_image && req.files.featured_image[0]) {
-            event.image = `/uploads/${req.files.featured_image[0].filename}`;
-            console.log('📸 Featured image updated:', event.image);
-        }
-        
-        event.updated_by = req.user._id;
-        event.updated_at = new Date();
-        
-        await event.save();
-        console.log('✅ Event updated:', event._id);
-        
-        res.json({
-            success: true,
-            message: 'Event updated successfully!',
-            event
-        });
-        
-    } catch (error) {
-        console.error('❌ Update event error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message || 'Failed to update event' 
-        });
     }
-});
-
+);
 
 // DELETE past event (admin)
 app.delete('/api/admin/events/:id', authenticate, authorize('admin'), async (req, res) => {
@@ -6601,15 +6612,17 @@ app.delete('/api/admin/events/:id', authenticate, authorize('admin'), async (req
     }
 });
 
-// Get past events stats (admin)
+// ============================================
+// PAST EVENTS - STATS (FIXED)
+// ============================================
 app.get('/api/admin/events/stats', authenticate, authorize('admin'), async (req, res) => {
     try {
         const total = await PastEvent.countDocuments();
         const published = await PastEvent.countDocuments({ status: 'published' });
         const drafts = await PastEvent.countDocuments({ status: 'draft' });
         
-        // Get total winners across all events
-        const allEvents = await PastEvent.find();
+        // Get total winners across all events safely
+        const allEvents = await PastEvent.find().select('winners winner_count');
         let totalWinners = 0;
         allEvents.forEach(e => {
             totalWinners += (e.winners ? e.winners.length : 0) + (e.winner_count || 0);
@@ -6625,7 +6638,11 @@ app.get('/api/admin/events/stats', authenticate, authorize('admin'), async (req,
             }
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error('❌ Stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to get stats'
+        });
     }
 });
 
