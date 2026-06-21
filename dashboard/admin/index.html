@@ -7149,14 +7149,31 @@ function getDefaultPastEvents() {
     };
 }
 
-// ============================================
-// FIXED DISPLAY PAST EVENTS - WITH IMAGE HANDLING
-// ============================================
+// Display Past Events
 function displayPastEvents(events) {
     const container = document.getElementById('pastEventsList');
     if (!container) return;
     
-    if (!events || events.length === 0) {
+    const statusFilter = document.getElementById('eventStatusFilter')?.value || 'all';
+    const searchTerm = document.getElementById('eventSearch')?.value?.toLowerCase() || '';
+    
+    let filtered = events;
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+        filtered = filtered.filter(e => e.status === statusFilter);
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+        filtered = filtered.filter(e => 
+            (e.title && e.title.toLowerCase().includes(searchTerm)) ||
+            (e.edition && e.edition.toLowerCase().includes(searchTerm)) ||
+            (e.description && e.description.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    if (filtered.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 50px; color: #64748b;">
                 <i class="fas fa-trophy" style="font-size: 48px; margin-bottom: 20px;"></i>
@@ -7166,53 +7183,33 @@ function displayPastEvents(events) {
                 </button>
             </div>
         `;
-        // Update stats to zero
-        document.getElementById('pastEventsCount').textContent = '0';
-        document.getElementById('totalEvents').textContent = '0';
-        document.getElementById('publishedEvents').textContent = '0';
-        document.getElementById('draftEvents').textContent = '0';
-        document.getElementById('totalWinners').textContent = '0';
         return;
     }
     
-    // Normalize image URLs
-    const normalizedEvents = events.map(event => ({
-        ...event,
-        image: normalizeImageUrl(event.image)
-    }));
-    
-    container.innerHTML = normalizedEvents.map(event => {
-        const date = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBD';
-        const winnerCount = event.winners ? event.winners.length : (event.winner_count || 0);
+    container.innerHTML = filtered.map(event => {
+        const date = new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const winnerCount = event.winners ? event.winners.length : 0;
+        const totalWinners = event.winner_count || winnerCount;
         const galleryCount = event.gallery ? event.gallery.length : 0;
-        const eventId = event._id || event.id;
-        const status = event.status || 'draft';
-        
-        // Build image HTML with error handling
-        const imageHtml = `
-            <img src="${event.image || '/images/LBA-cover.png'}" 
-                 style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px; background: #f1f5f9;" 
-                 onerror="this.onerror=null; this.src='/images/LBA-cover.png'; this.style.padding='5px';">
-        `;
         
         return `
             <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; padding: 18px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
                 <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
-                    ${imageHtml}
+                    <img src="${event.image || '/images/LBA-cover.png'}" style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/70x50?text=Event'">
                     <div>
                         <h4 style="font-weight: 600; margin-bottom: 5px; font-size: 16px;">${escapeHtml(event.title)} <span style="font-size: 12px; color: #64748b;">(v${escapeHtml(event.edition)})</span></h4>
                         <div style="display: flex; gap: 15px; font-size: 12px; color: #64748b; flex-wrap: wrap;">
                             <span><i class="fas fa-calendar"></i> ${date}</span>
-                            <span><i class="fas fa-award"></i> ${winnerCount} Winners</span>
+                            <span><i class="fas fa-award"></i> ${totalWinners} Winners</span>
                             <span><i class="fas fa-images"></i> ${galleryCount} Images</span>
-                            <span><i class="fas fa-tag"></i> ${status}</span>
+                            <span><i class="fas fa-tag"></i> ${event.status || 'draft'}</span>
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <span class="status-badge status-${status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${status}</span>
-                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editEvent('${eventId}')"><i class="fas fa-edit"></i></button>
-                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteEvent('${eventId}')"><i class="fas fa-trash"></i></button>
+                <div style="display: flex; gap: 8px;">
+                    <span class="status-badge status-${event.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${event.status}</span>
+                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editEvent('${event.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteEvent('${event.id}')"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
         `;
@@ -7221,8 +7218,8 @@ function displayPastEvents(events) {
     // Update stats
     document.getElementById('pastEventsCount').textContent = events.length;
     document.getElementById('totalEvents').textContent = events.length;
-    document.getElementById('publishedEvents').textContent = events.filter(e => (e.status || '').toLowerCase() === 'published').length;
-    document.getElementById('draftEvents').textContent = events.filter(e => (e.status || '').toLowerCase() === 'draft').length;
+    document.getElementById('publishedEvents').textContent = events.filter(e => e.status === 'published').length;
+    document.getElementById('draftEvents').textContent = events.filter(e => e.status === 'draft').length;
     
     // Total winners across all events
     let totalWinners = 0;
@@ -7230,31 +7227,6 @@ function displayPastEvents(events) {
         totalWinners += (e.winners ? e.winners.length : 0) + (e.winner_count || 0);
     });
     document.getElementById('totalWinners').textContent = totalWinners;
-}
-
-// ============================================
-// HELPER: Normalize Image URL
-// ============================================
-function normalizeImageUrl(url) {
-    if (!url) return null;
-    
-    // If it's already a full URL, return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-        return url;
-    }
-    
-    // If it starts with /uploads, ensure it's served correctly
-    if (url.startsWith('/uploads')) {
-        return url;
-    }
-    
-    // If it's a relative path, make it absolute
-    if (url.startsWith('uploads/') || url.startsWith('./uploads/')) {
-        return '/' + url.replace(/^\.\//, '');
-    }
-    
-    // Otherwise, assume it's in the uploads directory
-    return '/uploads/' + url.replace(/^\/+/, '');
 }
 
 // Update stats
@@ -7274,112 +7246,11 @@ function updatePastEventsStats(events) {
     document.getElementById('pastEventsCount').textContent = total;
 }
 
-
-// ============================================
-// FIXED EVENT STATUS FILTER
-// ============================================
+// Filter events
 function filterPastEvents() {
-    const statusFilter = document.getElementById('eventStatusFilter')?.value || 'all';
-    const searchTerm = document.getElementById('eventSearch')?.value?.toLowerCase() || '';
-    
-    let filtered = [...pastEventsData];
-    
-    // Apply status filter - case-insensitive
-    if (statusFilter !== 'all') {
-        filtered = filtered.filter(e => {
-            const status = (e.status || 'draft').toLowerCase();
-            return status === statusFilter.toLowerCase();
-        });
-    }
-    
-    // Apply search filter
-    if (searchTerm) {
-        filtered = filtered.filter(e => {
-            const title = (e.title || '').toLowerCase();
-            const edition = (e.edition || '').toLowerCase();
-            const description = (e.description || '').toLowerCase();
-            return title.includes(searchTerm) || 
-                   edition.includes(searchTerm) || 
-                   description.includes(searchTerm);
-        });
-    }
-    
-    // Update display - pass filtered data without re-filtering
-    displayPastEventsDirect(filtered);
+    displayPastEvents(pastEventsData);
 }
 
-// ============================================
-// NEW: Direct display without re-filtering
-// ============================================
-function displayPastEventsDirect(events) {
-    const container = document.getElementById('pastEventsList');
-    if (!container) return;
-    
-    if (!events || events.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 50px; color: #64748b;">
-                <i class="fas fa-trophy" style="font-size: 48px; margin-bottom: 20px;"></i>
-                <p>No events found matching your filters</p>
-                <button class="sheet-btn" onclick="openAddEventModal()" style="margin-top: 15px;">
-                    <i class="fas fa-plus"></i> Create Your First Event
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    // Normalize image URLs
-    const normalizedEvents = events.map(event => ({
-        ...event,
-        image: normalizeImageUrl(event.image)
-    }));
-    
-    container.innerHTML = normalizedEvents.map(event => {
-        const date = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBD';
-        const winnerCount = event.winners ? event.winners.length : (event.winner_count || 0);
-        const galleryCount = event.gallery ? event.gallery.length : 0;
-        const eventId = event._id || event.id;
-        const status = event.status || 'draft';
-        
-        const imageHtml = `
-            <img src="${event.image || '/images/LBA-cover.png'}" 
-                 style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px; background: #f1f5f9;" 
-                 onerror="this.onerror=null; this.src='/images/LBA-cover.png'; this.style.padding='5px';">
-        `;
-        
-        return `
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; padding: 18px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
-                <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
-                    ${imageHtml}
-                    <div>
-                        <h4 style="font-weight: 600; margin-bottom: 5px; font-size: 16px;">${escapeHtml(event.title)} <span style="font-size: 12px; color: #64748b;">(v${escapeHtml(event.edition)})</span></h4>
-                        <div style="display: flex; gap: 15px; font-size: 12px; color: #64748b; flex-wrap: wrap;">
-                            <span><i class="fas fa-calendar"></i> ${date}</span>
-                            <span><i class="fas fa-award"></i> ${winnerCount} Winners</span>
-                            <span><i class="fas fa-images"></i> ${galleryCount} Images</span>
-                            <span><i class="fas fa-tag"></i> ${status}</span>
-                        </div>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <span class="status-badge status-${status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${status}</span>
-                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editEvent('${eventId}')"><i class="fas fa-edit"></i></button>
-                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteEvent('${eventId}')"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    // Update stats with filtered count
-    document.getElementById('pastEventsCount').textContent = events.length;
-}
-
-// Update the original displayPastEvents to use the direct display
-function displayPastEvents(events) {
-    displayPastEventsDirect(events);
-}
-
-        
 // Refresh events
 function refreshPastEvents() {
     showNotification('Refreshing events...', 'info');
@@ -7687,234 +7558,145 @@ function setupImagePreview() {
 }
 
 // ============================================
-// FIXED EDIT EVENT FUNCTION - WITH BACKEND SUPPORT
+// EDIT EVENT - WITH FILE SUPPORT
 // ============================================
-async function editEvent(id) {
-    console.log('📝 Editing event with ID:', id);
-    
-    // Normalize ID - handle both _id and id
-    const eventId = id || '';
-    
-    if (!eventId) {
-        showNotification('Invalid event ID', 'error');
+function editEvent(id) {
+    const event = pastEventsData.find(e => e.id === id);
+    if (!event) {
+        showNotification('Event not found', 'error');
         return;
     }
     
-    try {
-        // First try to find in local data
-        let event = pastEventsData.find(e => {
-            const eid = e._id || e.id;
-            return eid === eventId;
-        });
-        
-        // If not found in local data, try to fetch from API
-        if (!event) {
-            const token = localStorage.getItem('lba_auth_token');
-            if (!token) {
-                showNotification('Authentication required', 'error');
-                return;
-            }
-            
-            const response = await fetch(`${API_BASE}/admin/events/${eventId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            const data = await response.json();
-            console.log('📥 API response for event:', data);
-            
-            if (data.success && data.event) {
-                event = data.event;
-                // Add to local data for future use
-                const existingIndex = pastEventsData.findIndex(e => {
-                    const eid = e._id || e.id;
-                    return eid === eventId;
-                });
-                if (existingIndex === -1) {
-                    pastEventsData.push(event);
-                }
-            }
-        }
-        
-        if (!event) {
-            showNotification('Event not found. Please refresh and try again.', 'error');
-            return;
-        }
-        
-        const modal = document.getElementById('addEventModal');
-        if (!modal) {
-            showNotification('Error: Modal not found', 'error');
-            return;
-        }
-        
-        // Get the correct ID field
-        const eventIdValue = event._id || event.id || id;
-        
-        document.getElementById('eventModalTitle').textContent = 'Edit Event';
-        document.getElementById('eventId').value = eventIdValue;
-        document.getElementById('eventTitle').value = event.title || '';
-        document.getElementById('eventEdition').value = event.edition || '';
-        document.getElementById('eventDate').value = event.event_date || '';
-        document.getElementById('eventStatus').value = event.status || 'draft';
-        document.getElementById('eventTagline').value = event.tagline || '';
-        document.getElementById('eventDescription').value = event.description || '';
-        document.getElementById('eventWinnerCount').value = event.winner_count || '';
-        document.getElementById('eventCategoryCount').value = event.category_count || '';
-        document.getElementById('eventPartnerCount').value = event.partner_count || '';
-        
-        // Show image preview if exists
-        if (event.image) {
-            const preview = document.getElementById('eventImagePreview');
-            const img = document.getElementById('eventPreviewImg');
-            if (preview && img) {
-                img.src = event.image;
-                preview.style.display = 'block';
-                const urlInput = document.getElementById('eventImageUrl');
-                if (urlInput) urlInput.value = event.image;
-            }
-        }
-        
-        // Load winners with the helper function
-        populateWinners(event.winners || []);
-        
-        // Load gallery with the helper function
-        populateGallery(event.gallery || []);
-        
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        showNotification('Edit the event details and click Save', 'info');
-        
-    } catch (error) {
-        console.error('❌ Edit event error:', error);
-        showNotification('Error loading event: ' + error.message, 'error');
-    }
-}
-
-// ============================================
-// HELPER: Populate Winners
-// ============================================
-function populateWinners(winners) {
-    const container = document.getElementById('winnersContainer');
-    if (!container) return;
-    
-    if (!winners || winners.length === 0) {
-        container.innerHTML = getEmptyWinnerHTML();
+    const modal = document.getElementById('addEventModal');
+    if (!modal) {
+        showNotification('Modal not found', 'error');
         return;
     }
     
-    container.innerHTML = winners.map((winner, index) => `
-        <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-group">
-                    <label style="font-size: 13px;">Winner Name *</label>
-                    <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.name || '')}" placeholder="Business Name">
-                </div>
-                <div class="form-group">
-                    <label style="font-size: 13px;">Award Category *</label>
-                    <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.category || '')}" placeholder="e.g., Agriculture Business of the Year">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                <div class="form-group">
-                    <label style="font-size: 13px;">Founder/Representative</label>
-                    <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.founder || '')}" placeholder="Founder's Name">
-                </div>
-                <div class="form-group">
-                    <label style="font-size: 13px;">Winner Image</label>
-                    <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
-                    <input type="hidden" class="winner-image" value="${escapeHtml(winner.image || '')}">
-                    <small style="font-size: 10px;">Upload image or use URL below</small>
-                    <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL" value="${escapeHtml(winner.image || '')}">
-                    ${winner.image ? `<div style="margin-top: 4px;"><img src="${winner.image}" style="max-width: 60px; max-height: 40px; border-radius: 4px;"></div>` : ''}
-                </div>
-            </div>
-            <div style="margin-top: 10px;">
-                <label style="font-size: 13px;">Story / Achievement</label>
-                <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement...">${escapeHtml(winner.story || '')}</textarea>
-            </div>
-            <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
-        </div>
-    `).join('');
-}
-
-// ============================================
-// HELPER: Populate Gallery
-// ============================================
-function populateGallery(gallery) {
-    const container = document.getElementById('galleryContainer');
-    if (!container) return;
+    document.getElementById('eventModalTitle').textContent = 'Edit Event';
+    document.getElementById('eventId').value = event.id;
+    document.getElementById('eventTitle').value = event.title || '';
+    document.getElementById('eventEdition').value = event.edition || '';
+    document.getElementById('eventDate').value = event.event_date || '';
+    document.getElementById('eventStatus').value = event.status || 'draft';
+    document.getElementById('eventTagline').value = event.tagline || '';
+    document.getElementById('eventDescription').value = event.description || '';
+    document.getElementById('eventWinnerCount').value = event.winner_count || '';
+    document.getElementById('eventCategoryCount').value = event.category_count || '';
+    document.getElementById('eventPartnerCount').value = event.partner_count || '';
     
-    if (!gallery || gallery.length === 0) {
-        container.innerHTML = getEmptyGalleryHTML();
-        return;
+    // Show image preview if exists
+    if (event.image) {
+        const preview = document.getElementById('eventImagePreview');
+        const img = document.getElementById('eventPreviewImg');
+        if (preview && img) {
+            img.src = event.image;
+            preview.style.display = 'block';
+            // Store the URL for editing
+            document.getElementById('eventImageUrl').value = event.image;
+        }
     }
     
-    container.innerHTML = gallery.map((item, index) => `
-        <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
-            <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL" value="${escapeHtml(item.url || '')}">
-            <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)" value="${escapeHtml(item.caption || '')}">
-            <input type="hidden" class="gallery-image" value="${escapeHtml(item.url || '')}">
-            <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
-        </div>
-    `).join('');
+    // Load winners
+    const winnersContainer = document.getElementById('winnersContainer');
+    if (winnersContainer && event.winners && event.winners.length > 0) {
+        winnersContainer.innerHTML = event.winners.map((winner, index) => `
+            <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Name *</label>
+                        <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.name)}" placeholder="Business Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Award Category *</label>
+                        <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.category)}" placeholder="e.g., Agriculture Business of the Year">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Founder/Representative</label>
+                        <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.founder || '')}" placeholder="Founder's Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Image</label>
+                        <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
+                        <input type="hidden" class="winner-image" value="${escapeHtml(winner.image || '')}">
+                        <small style="font-size: 10px;">Upload image or use URL below</small>
+                        <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL" value="${escapeHtml(winner.image || '')}">
+                        ${winner.image ? `<div style="margin-top: 4px;"><img src="${winner.image}" style="max-width: 60px; max-height: 40px; border-radius: 4px;"></div>` : ''}
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 13px;">Story / Achievement</label>
+                    <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement...">${escapeHtml(winner.story || '')}</textarea>
+                </div>
+                <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+            </div>
+        `).join('');
+    } else {
+        // Reset to one empty winner entry
+        winnersContainer.innerHTML = `
+            <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Name *</label>
+                        <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Award Category *</label>
+                        <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Founder/Representative</label>
+                        <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 13px;">Winner Image</label>
+                        <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
+                        <input type="hidden" class="winner-image" value="">
+                        <small style="font-size: 10px;">Upload image or use URL below</small>
+                        <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL">
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 13px;">Story / Achievement</label>
+                    <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
+                </div>
+                <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+            </div>
+        `;
+    }
+    
+    // Load gallery
+    const galleryContainer = document.getElementById('galleryContainer');
+    if (galleryContainer && event.gallery && event.gallery.length > 0) {
+        galleryContainer.innerHTML = event.gallery.map(item => `
+            <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
+                <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL" value="${escapeHtml(item.url)}">
+                <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)" value="${escapeHtml(item.caption || '')}">
+                <input type="hidden" class="gallery-image" value="${escapeHtml(item.url)}">
+                <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+            </div>
+        `).join('');
+    } else {
+        galleryContainer.innerHTML = `
+            <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
+                <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL">
+                <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
+                <input type="hidden" class="gallery-image" value="">
+                <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
-// ============================================
-// HELPER: Empty Winner HTML
-// ============================================
-function getEmptyWinnerHTML() {
-    return `
-        <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-group">
-                    <label style="font-size: 13px;">Winner Name *</label>
-                    <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
-                </div>
-                <div class="form-group">
-                    <label style="font-size: 13px;">Award Category *</label>
-                    <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                <div class="form-group">
-                    <label style="font-size: 13px;">Founder/Representative</label>
-                    <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
-                </div>
-                <div class="form-group">
-                    <label style="font-size: 13px;">Winner Image</label>
-                    <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
-                    <input type="hidden" class="winner-image" value="">
-                    <small style="font-size: 10px;">Upload image or use URL below</small>
-                    <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL">
-                </div>
-            </div>
-            <div style="margin-top: 10px;">
-                <label style="font-size: 13px;">Story / Achievement</label>
-                <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
-            </div>
-            <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
-        </div>
-    `;
-}
-
-// ============================================
-// HELPER: Empty Gallery HTML
-// ============================================
-function getEmptyGalleryHTML() {
-    return `
-        <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
-            <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL">
-            <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
-            <input type="hidden" class="gallery-image" value="">
-            <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
-        </div>
-    `;
-}
 
 // ============================================
 // SAVE EVENT - WITH PROPER BACKEND SAVE
@@ -8031,13 +7813,11 @@ async function saveEvent() {
             formData.append('featured_image', featuredImageInput.files[0]);
         }
         
-// Determine URL and method - use the correct event ID
-const url = eventId 
-    ? `${API_BASE}/admin/events/${eventId}`
-    : `${API_BASE}/admin/events`;
-const method = eventId ? 'PUT' : 'POST';
-
-console.log(`📤 ${method} request to: ${url}`);
+        // Determine URL and method
+        const url = eventId 
+            ? `${API_BASE}/admin/events/${eventId}`
+            : `${API_BASE}/admin/events`;
+        const method = eventId ? 'PUT' : 'POST';
         
         console.log('📤 Saving event to Backend API...');
         console.log(`   Winners: ${eventData.winners.length}, Gallery: ${eventData.gallery.length}`);
@@ -8058,22 +7838,35 @@ console.log(`📤 ${method} request to: ${url}`);
         }
         
         const result = await response.json();
-console.log('📥 Save response:', result);
+        console.log('📥 Response:', result);
+        
+        if (result.success) {
+            showNotification(eventId ? '✅ Event updated!' : '✅ Event created!', 'success');
+            hideModal('addEventModal');
+            
+            // Refresh the events list
+            await loadPastEvents();
+            
+            // Reset form
+            document.getElementById('eventForm').reset();
+            document.getElementById('eventId').value = '';
+            document.getElementById('eventImagePreview').style.display = 'none';
+        } else {
+            showNotification(result.message || 'Error saving event', 'error');
+        }
+        
+    } catch (error) {
+        console.error('❌ Save error:', error);
+        showNotification('Error saving event: ' + error.message, 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    }
+}
 
-if (result.success) {
-    showNotification(eventId ? '✅ Event updated!' : '✅ Event created!', 'success');
-    hideModal('addEventModal');
-    
-    // Refresh the events list
-    await loadPastEvents();
-    
-    // Reset form
-    document.getElementById('eventForm').reset();
-    document.getElementById('eventId').value = '';
-    document.getElementById('eventImagePreview').style.display = 'none';
-} else {
-    showNotification(result.message || 'Error saving event', 'error');
-}  
+        
 // ============================================
 // SAVE EVENT TO GOOGLE SHEETS (BACKUP)
 // ============================================
@@ -8105,7 +7898,39 @@ async function saveEventToGoogleSheets(eventData, eventId) {
     });
 }
 
-
+// Delete Event
+function deleteEvent(id) {
+    if (!confirm('⚠️ Are you sure you want to delete this event? This will remove all winners and gallery images. This action cannot be undone.')) {
+        return;
+    }
+    
+    // Remove from local data
+    pastEventsData = pastEventsData.filter(e => e.id !== id);
+    displayPastEvents(pastEventsData);
+    updatePastEventsStats(pastEventsData);
+    
+    // Also try to delete from Google Sheets
+    try {
+        const formData = new URLSearchParams({
+            formType: 'deletePastEvent',
+            eventId: id,
+            timestamp: new Date().toISOString()
+        });
+        
+        fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData.toString()
+        });
+    } catch (error) {
+        console.error('Error deleting from Google Sheets:', error);
+    }
+    
+    showNotification('✅ Event deleted!', 'success');
+}
 
 // Export to global scope
 window.showPastEventsModal = showPastEventsModal;
