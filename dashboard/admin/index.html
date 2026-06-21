@@ -7270,6 +7270,10 @@ function displayPastEvents(events) {
             </div>
         `;
     }).join('');
+    // ============================================
+    // IMPORTANT: The stats update is now handled by updatePastEventsStats()
+    // Do NOT put stats update code here - it causes a syntax error!
+    // ============================================
 }
 
 // ============================================
@@ -7300,21 +7304,6 @@ function normalizeImageUrl(url) {
     
     // Otherwise, assume it's already a path
     return url;
-}
-
-    
-    // Update stats
-    document.getElementById('pastEventsCount').textContent = events.length;
-    document.getElementById('totalEvents').textContent = events.length;
-    document.getElementById('publishedEvents').textContent = events.filter(e => e.status === 'published').length;
-    document.getElementById('draftEvents').textContent = events.filter(e => e.status === 'draft').length;
-    
-    // Total winners across all events
-    let totalWinners = 0;
-    events.forEach(e => {
-        totalWinners += (e.winners ? e.winners.length : 0) + (e.winner_count || 0);
-    });
-    document.getElementById('totalWinners').textContent = totalWinners;
 }
 
 // Update stats
