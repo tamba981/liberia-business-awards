@@ -6331,16 +6331,12 @@ app.get('/api/admin/events/:id', authenticate, authorize('admin'), async (req, r
 // PAST EVENTS - CREATE WITH ERROR HANDLING
 // ============================================
 app.post('/api/admin/events', authenticate, authorize('admin'), 
-    handleUpload(upload.fields([
-        { name: 'featured_image', maxCount: 1 },
-        { name: 'winner_images', maxCount: 50 },
-        { name: 'gallery_images', maxCount: 50 }
-    ])),
+    handleUpload(upload.any()),
     async (req, res) => {
         try {
             console.log('📝 CREATE EVENT - Request received');
             console.log('📦 Body keys:', Object.keys(req.body));
-            console.log('📦 Files:', req.files ? Object.keys(req.files) : 'No files');
+            console.log('📦 Files:', req.files ? req.files.map(f => f.fieldname) : 'No files');
             
             let eventData;
             
@@ -6413,26 +6409,38 @@ app.post('/api/admin/events', authenticate, authorize('admin'),
             });
             
             // Process uploaded files
-            if (req.files) {
+            // upload.any() gives req.files as a flat array; normalise into named buckets
+            if (req.files && req.files.length > 0) {
+                const featuredFiles = req.files.filter(f => f.fieldname === 'featured_image');
+                const winnerFiles   = req.files.filter(f => f.fieldname === 'winner_images');
+                // Accept both gallery_images (legacy) and gallery_0, gallery_1, … (frontend)
+                const galleryFiles  = req.files
+                    .filter(f => f.fieldname === 'gallery_images' || /^gallery_\d+$/.test(f.fieldname))
+                    .sort((a, b) => {
+                        const idxA = parseInt((a.fieldname.match(/\d+$/) || [0])[0]);
+                        const idxB = parseInt((b.fieldname.match(/\d+$/) || [0])[0]);
+                        return idxA - idxB;
+                    });
+
                 // Featured image
-                if (req.files.featured_image && req.files.featured_image[0]) {
-                    event.image = `/uploads/${req.files.featured_image[0].filename}`;
+                if (featuredFiles.length > 0) {
+                    event.image = `/uploads/${featuredFiles[0].filename}`;
                     console.log('📸 Featured image:', event.image);
                 }
                 
-                // Winner images - map to winners
-                if (req.files.winner_images && req.files.winner_images.length > 0) {
-                    req.files.winner_images.forEach((file, index) => {
+                // Winner images - map to winners by position
+                if (winnerFiles.length > 0) {
+                    winnerFiles.forEach((file, index) => {
                         if (event.winners[index]) {
                             event.winners[index].image = `/uploads/${file.filename}`;
                         }
                     });
-                    console.log(`📸 ${req.files.winner_images.length} winner images processed`);
+                    console.log(`📸 ${winnerFiles.length} winner images processed`);
                 }
                 
-                // Gallery images
-                if (req.files.gallery_images && req.files.gallery_images.length > 0) {
-                    req.files.gallery_images.forEach((file, index) => {
+                // Gallery images (gallery_images OR gallery_0 … gallery_N)
+                if (galleryFiles.length > 0) {
+                    galleryFiles.forEach((file, index) => {
                         if (event.gallery[index]) {
                             event.gallery[index].url = `/uploads/${file.filename}`;
                         } else {
@@ -6442,7 +6450,7 @@ app.post('/api/admin/events', authenticate, authorize('admin'),
                             });
                         }
                     });
-                    console.log(`📸 ${req.files.gallery_images.length} gallery images processed`);
+                    console.log(`📸 ${galleryFiles.length} gallery images processed`);
                 }
             }
             
@@ -6475,15 +6483,12 @@ app.post('/api/admin/events', authenticate, authorize('admin'),
     }
 );
 
+
 // ============================================
 // PAST EVENTS - UPDATE WITH ERROR HANDLING
 // ============================================
 app.put('/api/admin/events/:id', authenticate, authorize('admin'),
-    handleUpload(upload.fields([
-        { name: 'featured_image', maxCount: 1 },
-        { name: 'winner_images', maxCount: 50 },
-        { name: 'gallery_images', maxCount: 50 }
-    ])),
+    handleUpload(upload.any()),
     async (req, res) => {
         try {
             const event = await PastEvent.findById(req.params.id);
@@ -6545,21 +6550,33 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'),
             }
             
             // Handle uploaded files
-            if (req.files) {
-                if (req.files.featured_image && req.files.featured_image[0]) {
-                    event.image = `/uploads/${req.files.featured_image[0].filename}`;
+            // upload.any() gives req.files as a flat array; normalise into named buckets
+            if (req.files && req.files.length > 0) {
+                const featuredFiles = req.files.filter(f => f.fieldname === 'featured_image');
+                const winnerFiles   = req.files.filter(f => f.fieldname === 'winner_images');
+                // Accept both gallery_images (legacy) and gallery_0, gallery_1, … (frontend)
+                const galleryFiles  = req.files
+                    .filter(f => f.fieldname === 'gallery_images' || /^gallery_\d+$/.test(f.fieldname))
+                    .sort((a, b) => {
+                        const idxA = parseInt((a.fieldname.match(/\d+$/) || [0])[0]);
+                        const idxB = parseInt((b.fieldname.match(/\d+$/) || [0])[0]);
+                        return idxA - idxB;
+                    });
+
+                if (featuredFiles.length > 0) {
+                    event.image = `/uploads/${featuredFiles[0].filename}`;
                 }
                 
-                if (req.files.winner_images && req.files.winner_images.length > 0) {
-                    req.files.winner_images.forEach((file, index) => {
+                if (winnerFiles.length > 0) {
+                    winnerFiles.forEach((file, index) => {
                         if (event.winners[index]) {
                             event.winners[index].image = `/uploads/${file.filename}`;
                         }
                     });
                 }
                 
-                if (req.files.gallery_images && req.files.gallery_images.length > 0) {
-                    req.files.gallery_images.forEach((file, index) => {
+                if (galleryFiles.length > 0) {
+                    galleryFiles.forEach((file, index) => {
                         if (event.gallery[index]) {
                             event.gallery[index].url = `/uploads/${file.filename}`;
                         } else {
@@ -6594,6 +6611,7 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'),
     }
 );
 
+
 // DELETE past event (admin)
 app.delete('/api/admin/events/:id', authenticate, authorize('admin'), async (req, res) => {
     try {
@@ -6611,6 +6629,8 @@ app.delete('/api/admin/events/:id', authenticate, authorize('admin'), async (req
         res.status(500).json({ success: false, message: error.message });
     }
 });
+
+
 
 // ============================================
 // PAST EVENTS - STATS (FIXED)
