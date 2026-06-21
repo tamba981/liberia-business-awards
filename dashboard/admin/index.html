@@ -7020,7 +7020,7 @@ function showPastEventsModal() {
 }
 
 // ============================================
-// LOAD PAST EVENTS - FIXED (from Backend API)
+// FIXED: LOAD PAST EVENTS - PROPER DATA NORMALIZATION
 // ============================================
 async function loadPastEvents() {
     const list = document.getElementById('pastEventsList');
@@ -7035,23 +7035,32 @@ async function loadPastEvents() {
         const token = localStorage.getItem('lba_auth_token');
         let events = [];
         
-        try {
-            const response = await fetch(`${API_BASE}/admin/events?status=all`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+        if (token) {
+            try {
+                console.log('📡 Fetching events from Backend API...');
+                const response = await fetch(`${API_BASE}/admin/events?status=all`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.events && data.events.length > 0) {
+                        // Normalize events - ensure both _id and id are available
+                        events = data.events.map(event => ({
+                            ...event,
+                            id: event._id || event.id
+                        }));
+                        console.log(`✅ Loaded ${events.length} events from Backend API`);
+                    }
+                } else {
+                    console.log(`⚠️ API returned ${response.status}`);
                 }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.events) {
-                    events = data.events;
-                    console.log(`✅ Loaded ${events.length} events from Backend API`);
-                }
+            } catch (apiError) {
+                console.log('⚠️ Backend API error:', apiError.message);
             }
-        } catch (apiError) {
-            console.log('⚠️ Backend API not available, trying Google Sheets...');
         }
         
         // ============================================
@@ -7059,15 +7068,19 @@ async function loadPastEvents() {
         // ============================================
         if (events.length === 0) {
             try {
+                console.log('📡 Trying Google Sheets...');
                 const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getPastEvents&_=${Date.now()}`);
                 const data = await response.json();
                 
                 if (data.success && data.events && data.events.length > 0) {
-                    events = data.events;
+                    events = data.events.map(event => ({
+                        ...event,
+                        id: event._id || event.id
+                    }));
                     console.log(`✅ Loaded ${events.length} events from Google Sheets`);
                 }
             } catch (sheetsError) {
-                console.log('⚠️ Google Sheets not available, using fallback data');
+                console.log('⚠️ Google Sheets error:', sheetsError.message);
             }
         }
         
@@ -7077,24 +7090,35 @@ async function loadPastEvents() {
         if (events.length === 0) {
             console.log('📂 No events found, using fallback data');
             const fallback = getDefaultPastEvents();
-            events = fallback.events || fallback;
+            const fallbackEvents = Array.isArray(fallback) ? fallback : (fallback.events || []);
+            events = fallbackEvents.map(event => ({
+                ...event,
+                id: event._id || event.id
+            }));
         }
         
-        // Display events
+        // ============================================
+        // STEP 4: Store and display
+        // ============================================
         pastEventsData = events;
         displayPastEvents(events);
         updatePastEventsStats(events);
+        
+        console.log(`📊 Total events loaded: ${events.length}`);
         
     } catch (error) {
         console.error('❌ Error loading past events:', error);
         // Use fallback
         const fallback = getDefaultPastEvents();
-        pastEventsData = fallback.events || fallback;
+        const fallbackEvents = Array.isArray(fallback) ? fallback : (fallback.events || []);
+        pastEventsData = fallbackEvents.map(event => ({
+            ...event,
+            id: event._id || event.id
+        }));
         displayPastEvents(pastEventsData);
         updatePastEventsStats(pastEventsData);
     }
 }
-        
 
 // Default fallback events
 function getDefaultPastEvents() {
@@ -7149,7 +7173,9 @@ function getDefaultPastEvents() {
     };
 }
 
-// Display Past Events
+// ============================================
+// FIXED: DISPLAY PAST EVENTS - PROPER ID HANDLING
+// ============================================
 function displayPastEvents(events) {
     const container = document.getElementById('pastEventsList');
     if (!container) return;
@@ -7157,11 +7183,17 @@ function displayPastEvents(events) {
     const statusFilter = document.getElementById('eventStatusFilter')?.value || 'all';
     const searchTerm = document.getElementById('eventSearch')?.value?.toLowerCase() || '';
     
-    let filtered = events;
+    // Ensure we have an array
+    const eventsArray = Array.isArray(events) ? events : [];
     
-    // Apply status filter
+    let filtered = eventsArray;
+    
+    // Apply status filter - case INSENSITIVE
     if (statusFilter !== 'all') {
-        filtered = filtered.filter(e => e.status === statusFilter);
+        filtered = filtered.filter(e => {
+            const status = (e.status || 'draft').toLowerCase();
+            return status === statusFilter.toLowerCase();
+        });
     }
     
     // Apply search filter
@@ -7187,17 +7219,37 @@ function displayPastEvents(events) {
     }
     
     container.innerHTML = filtered.map(event => {
-        const date = new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        // ============================================
+        // CRITICAL FIX: Normalize ID - handle both _id and id
+        // ============================================
+        const eventId = event._id || event.id;
+        
+        const eventDate = event.event_date ? new Date(event.event_date) : null;
+        const date = eventDate && !isNaN(eventDate.getTime()) 
+            ? eventDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) 
+            : 'Date TBD';
+        
         const winnerCount = event.winners ? event.winners.length : 0;
         const totalWinners = event.winner_count || winnerCount;
         const galleryCount = event.gallery ? event.gallery.length : 0;
         
+        // Normalize image URL
+        const imageUrl = normalizeImageUrl(event.image);
+        
+        // Determine status class
+        const statusClass = event.status === 'published' ? 'active' : 'pending';
+        
         return `
             <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; padding: 18px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
-                <div style="display: flex; gap: 15px; align-items: center; flex: 1;">
-                    <img src="${event.image || '/images/LBA-cover.png'}" style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/70x50?text=Event'">
-                    <div>
-                        <h4 style="font-weight: 600; margin-bottom: 5px; font-size: 16px;">${escapeHtml(event.title)} <span style="font-size: 12px; color: #64748b;">(v${escapeHtml(event.edition)})</span></h4>
+                <div style="display: flex; gap: 15px; align-items: center; flex: 1; min-width: 0;">
+                    <img src="${imageUrl}" 
+                         style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px; background: #f1f5f9; flex-shrink: 0;" 
+                         onerror="this.onerror=null; this.src='/images/LBA-cover.png'; this.style.background='#f1f5f9'; this.style.padding='5px';">
+                    <div style="min-width: 0;">
+                        <h4 style="font-weight: 600; margin-bottom: 5px; font-size: 16px; word-break: break-word;">
+                            ${escapeHtml(event.title)} 
+                            <span style="font-size: 12px; color: #64748b;">(v${escapeHtml(event.edition || '')})</span>
+                        </h4>
                         <div style="display: flex; gap: 15px; font-size: 12px; color: #64748b; flex-wrap: wrap;">
                             <span><i class="fas fa-calendar"></i> ${date}</span>
                             <span><i class="fas fa-award"></i> ${totalWinners} Winners</span>
@@ -7206,14 +7258,50 @@ function displayPastEvents(events) {
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <span class="status-badge status-${event.status === 'published' ? 'active' : 'pending'}" style="padding: 4px 12px;">${event.status}</span>
-                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editEvent('${event.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteEvent('${event.id}')"><i class="fas fa-trash"></i></button>
+                <div style="display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap;">
+                    <span class="status-badge status-${statusClass}" style="padding: 4px 12px;">${event.status || 'draft'}</span>
+                    <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editEvent('${eventId}')" title="Edit Event">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deleteEvent('${eventId}')" title="Delete Event">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+// ============================================
+// HELPER: Normalize Image URL
+// ============================================
+function normalizeImageUrl(url) {
+    if (!url) return '/images/LBA-cover.png';
+    
+    // If it's already a full URL, return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+    
+    // If it starts with /uploads, ensure it's correct
+    if (url.startsWith('/uploads')) {
+        return url;
+    }
+    
+    // If it's a relative path, make it absolute
+    if (url.startsWith('uploads/') || url.startsWith('./uploads/')) {
+        return '/' + url.replace(/^\.\//, '');
+    }
+    
+    // If it's just a filename, add /uploads/
+    if (!url.includes('/')) {
+        return '/uploads/' + url;
+    }
+    
+    // Otherwise, assume it's already a path
+    return url;
+}
+
     
     // Update stats
     document.getElementById('pastEventsCount').textContent = events.length;
@@ -7246,16 +7334,196 @@ function updatePastEventsStats(events) {
     document.getElementById('pastEventsCount').textContent = total;
 }
 
-// Filter events
+// ============================================
+// FIXED: FILTER EVENTS - CASE INSENSITIVE
+// ============================================
 function filterPastEvents() {
-    displayPastEvents(pastEventsData);
+    const statusFilter = document.getElementById('eventStatusFilter')?.value || 'all';
+    const searchTerm = document.getElementById('eventSearch')?.value?.toLowerCase() || '';
+    
+    let filtered = [...pastEventsData];
+    
+    // Apply status filter - case INSENSITIVE
+    if (statusFilter !== 'all') {
+        filtered = filtered.filter(e => {
+            const status = (e.status || 'draft').toLowerCase();
+            return status === statusFilter.toLowerCase();
+        });
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+        filtered = filtered.filter(e => {
+            const title = (e.title || '').toLowerCase();
+            const edition = (e.edition || '').toLowerCase();
+            const description = (e.description || '').toLowerCase();
+            return title.includes(searchTerm) || 
+                   edition.includes(searchTerm) || 
+                   description.includes(searchTerm);
+        });
+    }
+    
+    // Update display
+    displayPastEvents(filtered);
+    
+    // Update count
+    const countEl = document.getElementById('filteredCount');
+    if (countEl) {
+        countEl.textContent = `${filtered.length} events`;
+    }
 }
+
+
+        
 
 // Refresh events
 function refreshPastEvents() {
     showNotification('Refreshing events...', 'info');
     loadPastEvents();
 }
+
+
+  // ============================================
+// ADD WINNER ENTRY - WITH FILE UPLOAD SUPPORT
+// ============================================
+function addWinnerEntry() {
+    const container = document.getElementById('winnersContainer');
+    if (!container) return;
+    
+    const entry = document.createElement('div');
+    entry.className = 'winner-entry';
+    entry.style.cssText = 'background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;';
+    entry.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label style="font-size: 13px;">Winner Name *</label>
+                <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
+            </div>
+            <div class="form-group">
+                <label style="font-size: 13px;">Award Category *</label>
+                <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div class="form-group">
+                <label style="font-size: 13px;">Founder/Representative</label>
+                <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
+            </div>
+            <div class="form-group">
+                <label style="font-size: 13px;">Winner Image</label>
+                <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
+                <input type="hidden" class="winner-image" value="">
+                <small style="font-size: 10px;">Upload image or use URL below</small>
+                <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL">
+            </div>
+        </div>
+        <div style="margin-top: 10px;">
+            <label style="font-size: 13px;">Story / Achievement</label>
+            <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
+        </div>
+        <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+    `;
+    container.appendChild(entry);
+}
+
+// ============================================
+// ADD GALLERY IMAGE - WITH FILE UPLOAD SUPPORT
+// ============================================
+function addGalleryImage() {
+    const container = document.getElementById('galleryContainer');
+    if (!container) return;
+    
+    const entry = document.createElement('div');
+    entry.className = 'gallery-entry';
+    entry.style.cssText = 'background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;';
+    entry.innerHTML = `
+        <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
+        <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL">
+        <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
+        <input type="hidden" class="gallery-image" value="">
+        <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(entry);
+}
+
+// ============================================
+// REMOVE WINNER ENTRY
+// ============================================
+function removeWinner(button) {
+    const entry = button.closest('.winner-entry');
+    if (entry) {
+        const container = entry.parentElement;
+        const entries = container.querySelectorAll('.winner-entry');
+        if (entries.length > 1) {
+            entry.remove();
+        } else {
+            // Clear fields instead of removing last one
+            entry.querySelectorAll('input, textarea').forEach(field => {
+                if (field.type !== 'file' && field.type !== 'hidden') {
+                    field.value = '';
+                } else if (field.type === 'file') {
+                    field.value = '';
+                }
+            });
+            showNotification('Cannot remove the last winner entry. Clear fields instead.', 'info');
+        }
+    }
+}
+
+// ============================================
+// REMOVE GALLERY IMAGE ENTRY
+// ============================================
+function removeGalleryImage(button) {
+    const entry = button.closest('.gallery-entry');
+    if (entry) {
+        const container = entry.parentElement;
+        const entries = container.querySelectorAll('.gallery-entry');
+        if (entries.length > 1) {
+            entry.remove();
+        } else {
+            entry.querySelectorAll('input').forEach(field => {
+                field.value = '';
+            });
+            showNotification('Cannot remove the last gallery entry. Clear fields instead.', 'info');
+        }
+    }
+}
+
+// ============================================
+// CLEAR FEATURED IMAGE
+// ============================================
+function clearFeaturedImage() {
+    const preview = document.getElementById('eventImagePreview');
+    const fileInput = document.getElementById('eventImageFile');
+    const img = document.getElementById('eventPreviewImg');
+    const urlInput = document.getElementById('eventImageUrl');
+    
+    if (preview) preview.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+    if (img) img.src = '';
+    if (urlInput) urlInput.value = '';
+}
+
+// ============================================
+// SETUP IMAGE PREVIEW
+// ============================================
+function setupImagePreview() {
+    const fileInput = document.getElementById('eventImageFile');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const preview = document.getElementById('eventImagePreview');
+            const img = document.getElementById('eventPreviewImg');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+}      
 
 // ============================================
 // MISSING WINNER/GALLERY FUNCTIONS
@@ -7558,12 +7826,13 @@ function setupImagePreview() {
 }
 
 // ============================================
-// EDIT EVENT - WITH FILE SUPPORT
+// FIXED: EDIT EVENT - PROPER ID HANDLING + BACKEND FETCH
 // ============================================
-function editEvent(id) {
-    const event = pastEventsData.find(e => e.id === id);
-    if (!event) {
-        showNotification('Event not found', 'error');
+async function editEvent(id) {
+    console.log('📝 Editing event with ID:', id);
+    
+    if (!id) {
+        showNotification('Invalid event ID', 'error');
         return;
     }
     
@@ -7573,8 +7842,74 @@ function editEvent(id) {
         return;
     }
     
+    // ============================================
+    // STEP 1: Try to find in local data FIRST
+    // ============================================
+    let event = pastEventsData.find(e => {
+        const eid = e._id || e.id;
+        return eid === id;
+    });
+    
+    // ============================================
+    // STEP 2: If not found, fetch from API
+    // ============================================
+    if (!event) {
+        try {
+            const token = localStorage.getItem('lba_auth_token');
+            if (!token) {
+                showNotification('Authentication required', 'error');
+                return;
+            }
+            
+            console.log(`📡 Fetching event from API: ${id}`);
+            
+            const response = await fetch(`${API_BASE}/admin/events/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                if (response.status === 404) {
+                    showNotification('Event not found. It may have been deleted.', 'error');
+                    // Refresh the list
+                    await loadPastEvents();
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('📥 API Response:', result);
+            
+            if (result.success && result.event) {
+                event = result.event;
+            } else {
+                showNotification('Event not found', 'error');
+                return;
+            }
+        } catch (error) {
+            console.error('Fetch event error:', error);
+            showNotification('Error loading event: ' + error.message, 'error');
+            return;
+        }
+    }
+    
+    if (!event) {
+        showNotification('Event not found', 'error');
+        return;
+    }
+    
+    console.log('✅ Event found:', event.title);
+    
+    // ============================================
+    // STEP 3: Populate the form
+    // ============================================
+    const eventId = event._id || event.id;
+    
     document.getElementById('eventModalTitle').textContent = 'Edit Event';
-    document.getElementById('eventId').value = event.id;
+    document.getElementById('eventId').value = eventId;
     document.getElementById('eventTitle').value = event.title || '';
     document.getElementById('eventEdition').value = event.edition || '';
     document.getElementById('eventDate').value = event.event_date || '';
@@ -7586,130 +7921,169 @@ function editEvent(id) {
     document.getElementById('eventPartnerCount').value = event.partner_count || '';
     
     // Show image preview if exists
-    if (event.image) {
+    const imageUrl = normalizeImageUrl(event.image);
+    if (imageUrl && imageUrl !== '/images/LBA-cover.png') {
         const preview = document.getElementById('eventImagePreview');
         const img = document.getElementById('eventPreviewImg');
         if (preview && img) {
-            img.src = event.image;
+            img.src = imageUrl;
             preview.style.display = 'block';
-            // Store the URL for editing
-            document.getElementById('eventImageUrl').value = event.image;
         }
+        document.getElementById('eventImageUrl').value = imageUrl;
+    } else {
+        document.getElementById('eventImagePreview').style.display = 'none';
+        document.getElementById('eventImageUrl').value = '';
     }
     
     // Load winners
-    const winnersContainer = document.getElementById('winnersContainer');
-    if (winnersContainer && event.winners && event.winners.length > 0) {
-        winnersContainer.innerHTML = event.winners.map((winner, index) => `
-            <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="form-group">
-                        <label style="font-size: 13px;">Winner Name *</label>
-                        <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.name)}" placeholder="Business Name">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 13px;">Award Category *</label>
-                        <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.category)}" placeholder="e.g., Agriculture Business of the Year">
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                    <div class="form-group">
-                        <label style="font-size: 13px;">Founder/Representative</label>
-                        <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.founder || '')}" placeholder="Founder's Name">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 13px;">Winner Image</label>
-                        <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
-                        <input type="hidden" class="winner-image" value="${escapeHtml(winner.image || '')}">
-                        <small style="font-size: 10px;">Upload image or use URL below</small>
-                        <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL" value="${escapeHtml(winner.image || '')}">
-                        ${winner.image ? `<div style="margin-top: 4px;"><img src="${winner.image}" style="max-width: 60px; max-height: 40px; border-radius: 4px;"></div>` : ''}
-                    </div>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label style="font-size: 13px;">Story / Achievement</label>
-                    <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement...">${escapeHtml(winner.story || '')}</textarea>
-                </div>
-                <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
-            </div>
-        `).join('');
-    } else {
-        // Reset to one empty winner entry
-        winnersContainer.innerHTML = `
-            <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="form-group">
-                        <label style="font-size: 13px;">Winner Name *</label>
-                        <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 13px;">Award Category *</label>
-                        <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                    <div class="form-group">
-                        <label style="font-size: 13px;">Founder/Representative</label>
-                        <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 13px;">Winner Image</label>
-                        <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
-                        <input type="hidden" class="winner-image" value="">
-                        <small style="font-size: 10px;">Upload image or use URL below</small>
-                        <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL">
-                    </div>
-                </div>
-                <div style="margin-top: 10px;">
-                    <label style="font-size: 13px;">Story / Achievement</label>
-                    <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
-                </div>
-                <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
-            </div>
-        `;
-    }
+    populateWinners(event.winners || []);
     
     // Load gallery
-    const galleryContainer = document.getElementById('galleryContainer');
-    if (galleryContainer && event.gallery && event.gallery.length > 0) {
-        galleryContainer.innerHTML = event.gallery.map(item => `
-            <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
-                <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL" value="${escapeHtml(item.url)}">
-                <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)" value="${escapeHtml(item.caption || '')}">
-                <input type="hidden" class="gallery-image" value="${escapeHtml(item.url)}">
-                <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
-            </div>
-        `).join('');
-    } else {
-        galleryContainer.innerHTML = `
-            <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
-                <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL">
-                <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
-                <input type="hidden" class="gallery-image" value="">
-                <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
-            </div>
-        `;
-    }
+    populateGallery(event.gallery || []);
     
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    showNotification('Edit the event details and click Save', 'info');
 }
 
+// ============================================
+// HELPER: Populate Winners
+// ============================================
+function populateWinners(winners) {
+    const container = document.getElementById('winnersContainer');
+    if (!container) return;
+    
+    if (!winners || winners.length === 0) {
+        container.innerHTML = getEmptyWinnerHTML();
+        return;
+    }
+    
+    container.innerHTML = winners.map((winner, index) => `
+        <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label style="font-size: 13px;">Winner Name *</label>
+                    <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.name || '')}" placeholder="Business Name">
+                </div>
+                <div class="form-group">
+                    <label style="font-size: 13px;">Award Category *</label>
+                    <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.category || '')}" placeholder="e.g., Agriculture Business of the Year">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <div class="form-group">
+                    <label style="font-size: 13px;">Founder/Representative</label>
+                    <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" value="${escapeHtml(winner.founder || '')}" placeholder="Founder's Name">
+                </div>
+                <div class="form-group">
+                    <label style="font-size: 13px;">Winner Image</label>
+                    <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
+                    <input type="hidden" class="winner-image" value="${escapeHtml(winner.image || '')}">
+                    <small style="font-size: 10px;">Upload image or use URL below</small>
+                    <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL" value="${escapeHtml(winner.image || '')}">
+                    ${winner.image ? `<div style="margin-top: 4px;"><img src="${normalizeImageUrl(winner.image)}" style="max-width: 60px; max-height: 40px; border-radius: 4px;"></div>` : ''}
+                </div>
+            </div>
+            <div style="margin-top: 10px;">
+                <label style="font-size: 13px;">Story / Achievement</label>
+                <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement...">${escapeHtml(winner.story || '')}</textarea>
+            </div>
+            <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+        </div>
+    `).join('');
+}
 
 // ============================================
-// SAVE EVENT - WITH PROPER BACKEND SAVE
+// HELPER: Populate Gallery
+// ============================================
+function populateGallery(gallery) {
+    const container = document.getElementById('galleryContainer');
+    if (!container) return;
+    
+    if (!gallery || gallery.length === 0) {
+        container.innerHTML = getEmptyGalleryHTML();
+        return;
+    }
+    
+    container.innerHTML = gallery.map((item, index) => `
+        <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
+            <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL" value="${escapeHtml(item.url || '')}">
+            <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)" value="${escapeHtml(item.caption || '')}">
+            <input type="hidden" class="gallery-image" value="${escapeHtml(item.url || '')}">
+            <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+}
+
+// ============================================
+// HELPER: Empty Winner HTML
+// ============================================
+function getEmptyWinnerHTML() {
+    return `
+        <div class="winner-entry" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label style="font-size: 13px;">Winner Name *</label>
+                    <input type="text" class="winner-name sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Business Name">
+                </div>
+                <div class="form-group">
+                    <label style="font-size: 13px;">Award Category *</label>
+                    <input type="text" class="winner-category sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="e.g., Agriculture Business of the Year">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <div class="form-group">
+                    <label style="font-size: 13px;">Founder/Representative</label>
+                    <input type="text" class="winner-founder sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Founder's Name">
+                </div>
+                <div class="form-group">
+                    <label style="font-size: 13px;">Winner Image</label>
+                    <input type="file" class="winner-image-file sheet-btn secondary" style="width: 100%; padding: 6px;" accept="image/*">
+                    <input type="hidden" class="winner-image" value="">
+                    <small style="font-size: 10px;">Upload image or use URL below</small>
+                    <input type="text" class="winner-image-url sheet-btn secondary" style="width: 100%; padding: 6px; margin-top: 4px; font-size: 12px;" placeholder="Or paste image URL">
+                </div>
+            </div>
+            <div style="margin-top: 10px;">
+                <label style="font-size: 13px;">Story / Achievement</label>
+                <textarea class="winner-story sheet-btn secondary" rows="2" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Brief description of their achievement..."></textarea>
+            </div>
+            <button type="button" class="sheet-btn danger" style="margin-top: 10px; padding: 6px 12px; font-size: 12px;" onclick="removeWinner(this)">Remove Winner</button>
+        </div>
+    `;
+}
+
+// ============================================
+// HELPER: Empty Gallery HTML
+// ============================================
+function getEmptyGalleryHTML() {
+    return `
+        <div class="gallery-entry" style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="file" class="gallery-file sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 6px;" accept="image/*">
+            <input type="text" class="gallery-image-url sheet-btn secondary" style="flex: 1; min-width: 150px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Or paste image URL">
+            <input type="text" class="gallery-caption sheet-btn secondary" style="flex: 1; min-width: 120px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 6px;" placeholder="Caption (optional)">
+            <input type="hidden" class="gallery-image" value="">
+            <button type="button" class="sheet-btn danger" style="padding: 6px 12px;" onclick="removeGalleryImage(this)"><i class="fas fa-times"></i></button>
+        </div>
+    `;
+}
+
+// ============================================
+// FIXED: SAVE EVENT - PROPER ID HANDLING + ERROR HANDLING
 // ============================================
 async function saveEvent() {
     const eventId = document.getElementById('eventId').value;
     
     // Find the save button
-    const saveBtn = document.querySelector('#addEventModal .modal-footer .sheet-btn:last-child') || 
-                    document.querySelector('#addEventModal button[onclick*="saveEvent"]');
+    const saveBtn = document.querySelector('#addEventModal button[onclick*="saveEvent"]') || 
+                    document.querySelector('#addEventModal .sheet-btn:last-child');
     const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
     
-    // Collect basic event data
+    // ============================================
+    // STEP 1: Collect form data
+    // ============================================
     const eventData = {
         title: document.getElementById('eventTitle').value.trim(),
         edition: document.getElementById('eventEdition').value.trim(),
@@ -7724,13 +8098,17 @@ async function saveEvent() {
         gallery: []
     };
     
-    // Validate required fields
+    // ============================================
+    // STEP 2: Validate required fields
+    // ============================================
     if (!eventData.title || !eventData.edition || !eventData.event_date || !eventData.description) {
         showNotification('Title, Edition, Date, and Description are required', 'warning');
         return;
     }
     
-    // Collect winners with image files
+    // ============================================
+    // STEP 3: Collect winners
+    // ============================================
     const winnerEntries = document.querySelectorAll('.winner-entry');
     const winnerFiles = [];
     
@@ -7756,7 +8134,9 @@ async function saveEvent() {
         }
     });
     
-    // Collect gallery with image files
+    // ============================================
+    // STEP 4: Collect gallery images
+    // ============================================
     const galleryEntries = document.querySelectorAll('.gallery-entry');
     const galleryFiles = [];
     
@@ -7780,6 +8160,10 @@ async function saveEvent() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            throw new Error('Authentication required. Please login again.');
+        }
+        
         const formData = new FormData();
         
         // Add event data as JSON
@@ -7797,12 +8181,12 @@ async function saveEvent() {
             gallery: eventData.gallery
         }));
         
-        // Add files - use 'gallery_images' for all gallery files (backend expects this)
+        // Add gallery files
         galleryFiles.forEach((item) => {
             formData.append('gallery_images', item.file);
         });
         
-        // Add winner files - use 'winner_images' for all winner files
+        // Add winner files
         winnerFiles.forEach((item) => {
             formData.append('winner_images', item.file);
         });
@@ -7819,7 +8203,7 @@ async function saveEvent() {
             : `${API_BASE}/admin/events`;
         const method = eventId ? 'PUT' : 'POST';
         
-        console.log('📤 Saving event to Backend API...');
+        console.log(`📤 ${method} to ${url}`);
         console.log(`   Winners: ${eventData.winners.length}, Gallery: ${eventData.gallery.length}`);
         
         // Save to backend API
@@ -7834,7 +8218,7 @@ async function saveEvent() {
         if (!response.ok) {
             const text = await response.text();
             console.error('❌ Server error:', text.substring(0, 200));
-            throw new Error(`Server returned ${response.status}`);
+            throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
         }
         
         const result = await response.json();
@@ -7851,6 +8235,7 @@ async function saveEvent() {
             document.getElementById('eventForm').reset();
             document.getElementById('eventId').value = '';
             document.getElementById('eventImagePreview').style.display = 'none';
+            document.getElementById('eventImageUrl').value = '';
         } else {
             showNotification(result.message || 'Error saving event', 'error');
         }
@@ -7898,40 +8283,95 @@ async function saveEventToGoogleSheets(eventData, eventId) {
     });
 }
 
-// Delete Event
-function deleteEvent(id) {
-    if (!confirm('⚠️ Are you sure you want to delete this event? This will remove all winners and gallery images. This action cannot be undone.')) {
+// ============================================
+// FIXED: DELETE EVENT - WITH BACKEND API
+// ============================================
+async function deleteEvent(id) {
+    if (!id) {
+        showNotification('Invalid event ID', 'error');
         return;
     }
     
-    // Remove from local data
-    pastEventsData = pastEventsData.filter(e => e.id !== id);
-    displayPastEvents(pastEventsData);
-    updatePastEventsStats(pastEventsData);
-    
-    // Also try to delete from Google Sheets
-    try {
-        const formData = new URLSearchParams({
-            formType: 'deletePastEvent',
-            eventId: id,
-            timestamp: new Date().toISOString()
-        });
-        
-        fetch(GOOGLE_APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData.toString()
-        });
-    } catch (error) {
-        console.error('Error deleting from Google Sheets:', error);
+    // Show confirmation dialog
+    if (!confirm('⚠️ Are you sure you want to delete this event?\n\nThis will permanently remove:\n• All event data\n• All winners\n• All gallery images\n\nThis action CANNOT be undone!')) {
+        showNotification('Deletion cancelled', 'info');
+        return;
     }
     
-    showNotification('✅ Event deleted!', 'success');
+    const deleteBtn = event?.target;
+    const originalText = deleteBtn ? deleteBtn.innerHTML : 'Delete';
+    if (deleteBtn) {
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        deleteBtn.disabled = true;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            showNotification('Authentication required. Please login again.', 'error');
+            return;
+        }
+        
+        console.log(`🗑️ Deleting event with ID: ${id}`);
+        
+        // Call backend API
+        const response = await fetch(`${API_BASE}/admin/events/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        console.log('🗑️ Delete response:', result);
+        
+        if (result.success) {
+            showNotification('✅ Event deleted successfully!', 'success');
+            
+            // Remove from local data - handle both _id and id
+            pastEventsData = pastEventsData.filter(e => {
+                const eventId = e._id || e.id;
+                return eventId !== id;
+            });
+            
+            // Refresh the UI
+            displayPastEvents(pastEventsData);
+            updatePastEventsStats(pastEventsData);
+            
+            // Also try to delete from Google Sheets (backup)
+            try {
+                const formData = new URLSearchParams({
+                    formType: 'deletePastEvent',
+                    eventId: id,
+                    timestamp: new Date().toISOString()
+                });
+                
+                await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData.toString()
+                });
+            } catch (sheetsError) {
+                console.log('Google Sheets delete skipped (optional)');
+            }
+        } else {
+            showNotification(result.message || 'Failed to delete event', 'error');
+        }
+    } catch (error) {
+        console.error('Delete event error:', error);
+        showNotification('Error deleting event: ' + error.message, 'error');
+    } finally {
+        if (deleteBtn) {
+            deleteBtn.innerHTML = originalText;
+            deleteBtn.disabled = false;
+        }
+    }
 }
-
+        
 // Export to global scope
 window.showPastEventsModal = showPastEventsModal;
 window.loadPastEvents = loadPastEvents;
