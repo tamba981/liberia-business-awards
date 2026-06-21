@@ -7277,7 +7277,7 @@ function displayPastEvents(events) {
 }
 
 // ============================================
-// HELPER: Normalize Image URL
+// FIXED: NORMALIZE IMAGE URL - WITH DOMAIN HANDLING
 // ============================================
 function normalizeImageUrl(url) {
     if (!url) return '/images/LBA-cover.png';
@@ -7289,23 +7289,57 @@ function normalizeImageUrl(url) {
     
     // If it starts with /uploads, ensure it's correct
     if (url.startsWith('/uploads')) {
-        return url;
+        // Use the direct Railway URL to avoid domain issues
+        const baseUrl = 'https://liberia-business-awards-production.up.railway.app';
+        return baseUrl + url;
     }
     
-    // If it's a relative path, make it absolute
+    // If it's a relative path, make it absolute with full domain
     if (url.startsWith('uploads/') || url.startsWith('./uploads/')) {
-        return '/' + url.replace(/^\.\//, '');
+        const cleanPath = url.replace(/^\.\//, '');
+        return 'https://liberia-business-awards-production.up.railway.app/' + cleanPath;
     }
     
-    // If it's just a filename, add /uploads/
+    // If it's just a filename, add /uploads/ with full domain
     if (!url.includes('/')) {
-        return '/uploads/' + url;
+        return 'https://liberia-business-awards-production.up.railway.app/uploads/' + url;
     }
     
     // Otherwise, assume it's already a path
     return url;
 }
 
+// ============================================
+// HELPER: GET IMAGE URL WITH DOMAIN HANDLING
+// ============================================
+function getImageUrl(path) {
+    if (!path) return '/images/LBA-cover.png';
+    
+    // If it's already a full URL with http, return as is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    
+    // If it starts with /uploads, use the full domain
+    if (path.startsWith('/uploads')) {
+        return `https://liberia-business-awards-production.up.railway.app${path}`;
+    }
+    
+    // If it starts with uploads/ (no leading slash)
+    if (path.startsWith('uploads/')) {
+        return `https://liberia-business-awards-production.up.railway.app/${path}`;
+    }
+    
+    // If it's just a filename
+    if (!path.includes('/')) {
+        return `https://liberia-business-awards-production.up.railway.app/uploads/${path}`;
+    }
+    
+    return path;
+}
+
+
+        
 // Update stats
 function updatePastEventsStats(events) {
     const total = events.length;
@@ -7910,7 +7944,7 @@ async function editEvent(id) {
     document.getElementById('eventPartnerCount').value = event.partner_count || '';
     
     // Show image preview if exists
-    const imageUrl = normalizeImageUrl(event.image);
+    const imageUrl = getImageUrl(event.image);
     if (imageUrl && imageUrl !== '/images/LBA-cover.png') {
         const preview = document.getElementById('eventImagePreview');
         const img = document.getElementById('eventPreviewImg');
