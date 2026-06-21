@@ -6300,37 +6300,39 @@ app.get('/api/admin/events/:id', authenticate, authorize('admin'), async (req, r
 });
 
 
-// CREATE past event (admin) - WITH IMAGE UPLOAD SUPPORT - FIXED
-app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('featured_image'), async (req, res) => {
+// ============================================
+// PAST EVENTS - CREATE WITH MULTIPLE FILE UPLOADS
+// ============================================
+app.post('/api/admin/events', authenticate, authorize('admin'), upload.fields([
+    { name: 'featured_image', maxCount: 1 },
+    { name: 'winner_images', maxCount: 50 },
+    { name: 'gallery_images', maxCount: 50 }
+]), async (req, res) => {
     try {
-        console.log('📝 Creating event...');
+        console.log('📝 Creating event with file uploads...');
         console.log('📦 req.body keys:', Object.keys(req.body));
-        console.log('📦 req.file:', req.file ? req.file.filename : 'No file');
+        console.log('📦 req.files:', req.files ? Object.keys(req.files) : 'No files');
         
         let eventDataObj;
         
-        // ============================================
-        // FIX: Properly parse eventData from FormData
-        // ============================================
+        // Parse eventData from FormData
         if (req.body.eventData) {
             try {
                 eventDataObj = JSON.parse(req.body.eventData);
                 console.log('✅ Parsed eventData from JSON string');
             } catch (e) {
                 console.error('❌ Failed to parse eventData JSON:', e.message);
-                console.error('Raw eventData preview:', (req.body.eventData || '').substring(0, 200));
                 return res.status(400).json({ 
                     success: false, 
                     message: 'Invalid event data format: ' + e.message 
                 });
             }
         } else {
-            // Fallback: use req.body directly
             eventDataObj = req.body;
             console.log('📦 Using req.body directly');
         }
         
-        // Extract data with defaults
+        // Extract data
         const { 
             title, 
             edition, 
@@ -6348,16 +6350,64 @@ app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('f
         
         // Validate required fields
         if (!title || !edition || !event_date || !description) {
-            console.error('❌ Missing required fields:', { 
-                title: !!title, 
-                edition: !!edition, 
-                event_date: !!event_date, 
-                description: !!description 
-            });
             return res.status(400).json({ 
                 success: false, 
                 message: 'Missing required fields: title, edition, event_date, description' 
             });
+        }
+        
+        // Process winner images
+        let processedWinners = [];
+        if (Array.isArray(winners) && winners.length > 0) {
+            processedWinners = winners.map((winner, index) => {
+                // Check if there's an uploaded image for this winner
+                const winnerImageField = `winner_image_${index}`;
+                const uploadedFile = req.files && req.files[winnerImageField] ? req.files[winnerImageField][0] : null;
+                
+                // Also check if there's a file in the general winner_images array
+                const generalFile = req.files && req.files.winner_images && req.files.winner_images[index] 
+                    ? req.files.winner_images[index] 
+                    : null;
+                
+                const file = uploadedFile || generalFile;
+                
+                return {
+                    name: winner.name || '',
+                    category: winner.category || '',
+                    founder: winner.founder || '',
+                    story: winner.story || '',
+                    image: file ? `/uploads/${file.filename}` : (winner.image || '')
+                };
+            });
+        }
+        
+        // Process gallery images
+        let processedGallery = [];
+        if (Array.isArray(gallery) && gallery.length > 0) {
+            processedGallery = gallery.map((item, index) => {
+                // Check if there's an uploaded image for this gallery item
+                const galleryFileField = `gallery_image_${index}`;
+                const uploadedFile = req.files && req.files[galleryFileField] ? req.files[galleryFileField][0] : null;
+                
+                // Also check if there's a file in the general gallery_images array
+                const generalFile = req.files && req.files.gallery_images && req.files.gallery_images[index] 
+                    ? req.files.gallery_images[index] 
+                    : null;
+                
+                const file = uploadedFile || generalFile;
+                
+                return {
+                    url: file ? `/uploads/${file.filename}` : (item.url || ''),
+                    caption: item.caption || ''
+                };
+            });
+        }
+        
+        // Handle featured image
+        let featuredImageUrl = '';
+        if (req.files && req.files.featured_image && req.files.featured_image[0]) {
+            featuredImageUrl = `/uploads/${req.files.featured_image[0].filename}`;
+            console.log('📸 Featured image uploaded:', featuredImageUrl);
         }
         
         // Build event object
@@ -6368,65 +6418,31 @@ app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('f
             description: description.trim(),
             event_date: new Date(event_date),
             status: status || 'draft',
-            winner_count: parseInt(winner_count) || 0,
+            winner_count: parseInt(winner_count) || processedWinners.length,
             category_count: parseInt(category_count) || 0,
             partner_count: parseInt(partner_count) || 0,
-            winners: Array.isArray(winners) ? winners : [],
-            gallery: Array.isArray(gallery) ? gallery : [],
+            winners: processedWinners,
+            gallery: processedGallery,
+            image: featuredImageUrl,
             created_by: req.user._id
         });
-        
-        // Handle featured image upload
-        if (req.file) {
-            const imageUrl = `/uploads/${req.file.filename}`;
-            event.image = imageUrl;
-            console.log('📸 Featured image uploaded:', imageUrl);
-        }
         
         // Save to database
         await event.save();
         console.log('✅ Event saved to database:', event._id);
         
-        // Also try to save to Google Sheets as backup (fire and forget)
-        try {
-            const formData = new URLSearchParams({
-                formType: 'savePastEvent',
-                eventId: event._id.toString(),
-                title: event.title,
-                edition: event.edition,
-                event_date: event.event_date.toISOString(),
-                status: event.status,
-                tagline: event.tagline || '',
-                description: event.description,
-                winner_count: event.winner_count.toString(),
-                category_count: event.category_count.toString(),
-                partner_count: event.partner_count.toString(),
-                winners: JSON.stringify(event.winners),
-                gallery: JSON.stringify(event.gallery),
-                image: event.image || '',
-                timestamp: new Date().toISOString()
-            });
-            
-            // Don't await, just fire and forget
-            fetch(GOOGLE_APPS_SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData
-            }).catch(err => console.log('Google Sheets backup failed:', err.message));
-        } catch (backupError) {
-            console.log('Google Sheets backup error:', backupError.message);
-        }
-        
         res.status(201).json({
             success: true,
-            message: 'Event created successfully!',
+            message: 'Event created successfully with images!',
             event: {
                 _id: event._id,
                 title: event.title,
                 edition: event.edition,
                 status: event.status,
                 event_date: event.event_date,
-                image: event.image
+                image: event.image,
+                winners_count: event.winners.length,
+                gallery_count: event.gallery.length
             }
         });
         
@@ -6434,15 +6450,20 @@ app.post('/api/admin/events', authenticate, authorize('admin'), upload.single('f
         console.error('❌ Create event error:', error);
         res.status(500).json({ 
             success: false, 
-            message: error.message || 'Failed to create event',
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            message: error.message || 'Failed to create event'
         });
     }
 });
 
 
-// UPDATE past event (admin) - WITH IMAGE UPLOAD SUPPORT - FIXED
-app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single('featured_image'), async (req, res) => {
+// ============================================
+// PAST EVENTS - UPDATE WITH MULTIPLE FILE UPLOADS
+// ============================================
+app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.fields([
+    { name: 'featured_image', maxCount: 1 },
+    { name: 'winner_images', maxCount: 50 },
+    { name: 'gallery_images', maxCount: 50 }
+]), async (req, res) => {
     try {
         console.log('📝 Updating event:', req.params.id);
         
@@ -6453,9 +6474,6 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single
         
         let eventDataObj;
         
-        // ============================================
-        // FIX: Properly parse eventData from FormData
-        // ============================================
         if (req.body.eventData) {
             try {
                 eventDataObj = JSON.parse(req.body.eventData);
@@ -6469,7 +6487,6 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single
             }
         } else {
             eventDataObj = req.body;
-            console.log('📦 Using req.body directly');
         }
         
         const { 
@@ -6486,7 +6503,7 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single
             gallery 
         } = eventDataObj;
         
-        // Update fields
+        // Update basic fields
         if (title) event.title = title.trim();
         if (edition) event.edition = edition.trim();
         if (tagline !== undefined) event.tagline = tagline;
@@ -6496,14 +6513,52 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single
         if (winner_count !== undefined) event.winner_count = parseInt(winner_count) || 0;
         if (category_count !== undefined) event.category_count = parseInt(category_count) || 0;
         if (partner_count !== undefined) event.partner_count = parseInt(partner_count) || 0;
-        if (winners) event.winners = Array.isArray(winners) ? winners : [];
-        if (gallery) event.gallery = Array.isArray(gallery) ? gallery : [];
         
-        // Handle featured image upload
-        if (req.file) {
-            const imageUrl = `/uploads/${req.file.filename}`;
-            event.image = imageUrl;
-            console.log('📸 Featured image updated:', imageUrl);
+        // Process winner images
+        let processedWinners = [];
+        if (Array.isArray(winners) && winners.length > 0) {
+            processedWinners = winners.map((winner, index) => {
+                const winnerImageField = `winner_image_${index}`;
+                const uploadedFile = req.files && req.files[winnerImageField] ? req.files[winnerImageField][0] : null;
+                const generalFile = req.files && req.files.winner_images && req.files.winner_images[index] 
+                    ? req.files.winner_images[index] 
+                    : null;
+                const file = uploadedFile || generalFile;
+                
+                return {
+                    name: winner.name || '',
+                    category: winner.category || '',
+                    founder: winner.founder || '',
+                    story: winner.story || '',
+                    image: file ? `/uploads/${file.filename}` : (winner.image || '')
+                };
+            });
+        }
+        if (processedWinners.length > 0) event.winners = processedWinners;
+        
+        // Process gallery images
+        let processedGallery = [];
+        if (Array.isArray(gallery) && gallery.length > 0) {
+            processedGallery = gallery.map((item, index) => {
+                const galleryFileField = `gallery_image_${index}`;
+                const uploadedFile = req.files && req.files[galleryFileField] ? req.files[galleryFileField][0] : null;
+                const generalFile = req.files && req.files.gallery_images && req.files.gallery_images[index] 
+                    ? req.files.gallery_images[index] 
+                    : null;
+                const file = uploadedFile || generalFile;
+                
+                return {
+                    url: file ? `/uploads/${file.filename}` : (item.url || ''),
+                    caption: item.caption || ''
+                };
+            });
+        }
+        if (processedGallery.length > 0) event.gallery = processedGallery;
+        
+        // Handle featured image
+        if (req.files && req.files.featured_image && req.files.featured_image[0]) {
+            event.image = `/uploads/${req.files.featured_image[0].filename}`;
+            console.log('📸 Featured image updated:', event.image);
         }
         
         event.updated_by = req.user._id;
@@ -6522,8 +6577,7 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'), upload.single
         console.error('❌ Update event error:', error);
         res.status(500).json({ 
             success: false, 
-            message: error.message || 'Failed to update event',
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            message: error.message || 'Failed to update event' 
         });
     }
 });
