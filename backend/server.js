@@ -236,6 +236,30 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
+// ============ MULTER ERROR HANDLING WRAPPER ============
+// Wraps upload.single() so that MulterErrors (e.g. "Unexpected field") are
+// caught and returned as a structured JSON response instead of crashing the
+// request.  Non-multer errors are forwarded to Express's default error handler.
+function handleUpload(fieldName) {
+    return function (req, res, next) {
+        upload.single(fieldName)(req, res, function (err) {
+            if (!err) return next();
+            if (err.name === 'MulterError') {
+                return res.status(400).json({
+                    success: false,
+                    message: `File upload error: ${err.message}`,
+                    code: err.code
+                });
+            }
+            // Generic file-filter or other upload errors
+            return res.status(400).json({
+                success: false,
+                message: err.message || 'File upload failed'
+            });
+        });
+    };
+}
+
 // ============ DATABASE CONNECTION ============
 async function connectToMongoDB() {
     try {
@@ -1457,7 +1481,7 @@ app.get('/api/business/profile', authenticate, authorize('business'), async (req
 });
 
 // Update business profile
-app.put('/api/business/profile', authenticate, authorize('business'), upload.single('logo'), async (req, res) => {
+app.put('/api/business/profile', authenticate, authorize('business'), handleUpload('logo'), async (req, res) => {
     try {
         const business = await BusinessUser.findById(req.user._id);
         
@@ -2324,7 +2348,7 @@ app.get('/api/business/documents', authenticate, authorize('business'), async (r
 });
 
 // Upload document
-app.post('/api/business/documents', authenticate, authorize('business'), upload.single('document'), async (req, res) => {
+app.post('/api/business/documents', authenticate, authorize('business'), handleUpload('document'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
@@ -2438,7 +2462,7 @@ app.get('/api/admin/businesses/:businessId/documents', authenticate, authorize('
 });
 
 // Upload document for a specific business (admin only)
-app.post('/api/admin/businesses/:businessId/documents', authenticate, authorize('admin'), upload.single('document'), async (req, res) => {
+app.post('/api/admin/businesses/:businessId/documents', authenticate, authorize('admin'), handleUpload('document'), async (req, res) => {
     try {
         const { businessId } = req.params;
         const { name, type } = req.body;
