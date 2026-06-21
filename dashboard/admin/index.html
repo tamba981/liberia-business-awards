@@ -8057,40 +8057,23 @@ console.log(`📤 ${method} request to: ${url}`);
             throw new Error(`Server returned ${response.status}`);
         }
         
-        
-             const result = await response.json();
-        console.log('🗑️ Delete response:', result);
-        
-        if (result.success) {
-            showNotification(`✅ "${eventTitle}" deleted successfully!`, 'success');
-            
-            // Remove from local data - check both _id and id
-            pastEventsData = pastEventsData.filter(e => {
-                const eid = e._id || e.id;
-                return eid !== eventId;
-            });
-            
-            // Refresh the UI
-            displayPastEventsDirect(pastEventsData);
-            updatePastEventsStats(pastEventsData);
-            
-            // Also refresh from backend to ensure consistency
-            await loadPastEvents();
-        } else if (response.status === 404) {
-            showNotification('Event not found. It may have already been deleted.', 'warning');
-            // Remove from local data anyway
-            pastEventsData = pastEventsData.filter(e => {
-                const eid = e._id || e.id;
-                return eid !== eventId;
-            });
-            displayPastEventsDirect(pastEventsData);
-            updatePastEventsStats(pastEventsData);
-        } else if (response.status === 401) {
-            showNotification('Authentication failed. Please login again.', 'error');
-            redirectToLogin();
-        } else {
-            showNotification(result.message || 'Failed to delete event', 'error');
-        }   
+        const result = await response.json();
+console.log('📥 Save response:', result);
+
+if (result.success) {
+    showNotification(eventId ? '✅ Event updated!' : '✅ Event created!', 'success');
+    hideModal('addEventModal');
+    
+    // Refresh the events list
+    await loadPastEvents();
+    
+    // Reset form
+    document.getElementById('eventForm').reset();
+    document.getElementById('eventId').value = '';
+    document.getElementById('eventImagePreview').style.display = 'none';
+} else {
+    showNotification(result.message || 'Error saving event', 'error');
+}  
 // ============================================
 // SAVE EVENT TO GOOGLE SHEETS (BACKUP)
 // ============================================
