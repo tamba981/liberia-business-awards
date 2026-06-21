@@ -6327,20 +6327,18 @@ app.get('/api/admin/events/:id', authenticate, authorize('admin'), async (req, r
 });
 
 
+
+
 // ============================================
-// PAST EVENTS - CREATE WITH ERROR HANDLING
+// PAST EVENTS - CREATE WITH ANY FILES
 // ============================================
 app.post('/api/admin/events', authenticate, authorize('admin'), 
-    handleUpload(upload.fields([
-        { name: 'featured_image', maxCount: 1 },
-        { name: 'winner_images', maxCount: 50 },
-        { name: 'gallery_images', maxCount: 50 }
-    ])),
+    handleUpload(upload.any()),
     async (req, res) => {
         try {
             console.log('📝 CREATE EVENT - Request received');
             console.log('📦 Body keys:', Object.keys(req.body));
-            console.log('📦 Files:', req.files ? Object.keys(req.files) : 'No files');
+            console.log('📦 Files:', req.files ? req.files.length : 0);
             
             let eventData;
             
@@ -6412,38 +6410,49 @@ app.post('/api/admin/events', authenticate, authorize('admin'),
                 created_by: req.user._id
             });
             
-            // Process uploaded files
-            if (req.files) {
-                // Featured image
-                if (req.files.featured_image && req.files.featured_image[0]) {
-                    event.image = `/uploads/${req.files.featured_image[0].filename}`;
-                    console.log('📸 Featured image:', event.image);
-                }
+            // Process uploaded files from req.files (all files)
+            if (req.files && req.files.length > 0) {
+                // Sort files by fieldname to maintain order
+                const sortedFiles = req.files.sort((a, b) => {
+                    // Extract numbers from fieldname (gallery_0, gallery_1, etc.)
+                    const aNum = parseInt(a.fieldname.replace(/[^0-9]/g, '')) || 0;
+                    const bNum = parseInt(b.fieldname.replace(/[^0-9]/g, '')) || 0;
+                    return aNum - bNum;
+                });
                 
-                // Winner images - map to winners
-                if (req.files.winner_images && req.files.winner_images.length > 0) {
-                    req.files.winner_images.forEach((file, index) => {
-                        if (event.winners[index]) {
-                            event.winners[index].image = `/uploads/${file.filename}`;
-                        }
-                    });
-                    console.log(`📸 ${req.files.winner_images.length} winner images processed`);
-                }
+                let galleryIndex = 0;
+                let winnerIndex = 0;
                 
-                // Gallery images
-                if (req.files.gallery_images && req.files.gallery_images.length > 0) {
-                    req.files.gallery_images.forEach((file, index) => {
-                        if (event.gallery[index]) {
-                            event.gallery[index].url = `/uploads/${file.filename}`;
+                for (const file of sortedFiles) {
+                    const fieldname = file.fieldname;
+                    
+                    // Featured image
+                    if (fieldname === 'featured_image') {
+                        event.image = `/uploads/${file.filename}`;
+                        console.log('📸 Featured image:', event.image);
+                    }
+                    // Gallery images (gallery_0, gallery_1, etc. OR gallery_images)
+                    else if (fieldname.startsWith('gallery_') || fieldname === 'gallery_images') {
+                        if (event.gallery[galleryIndex]) {
+                            event.gallery[galleryIndex].url = `/uploads/${file.filename}`;
                         } else {
                             event.gallery.push({
                                 url: `/uploads/${file.filename}`,
                                 caption: ''
                             });
                         }
-                    });
-                    console.log(`📸 ${req.files.gallery_images.length} gallery images processed`);
+                        galleryIndex++;
+                    }
+                    // Winner images (winner_image_0, winner_image_1, etc. OR winner_images)
+                    else if (fieldname.startsWith('winner_image_') || fieldname === 'winner_images') {
+                        if (event.winners[winnerIndex]) {
+                            event.winners[winnerIndex].image = `/uploads/${file.filename}`;
+                        }
+                        winnerIndex++;
+                    }
                 }
+                
+                console.log(`📸 Processed ${galleryIndex} gallery images, ${winnerIndex} winner images`);
             }
             
             // Save to database
@@ -6474,6 +6483,7 @@ app.post('/api/admin/events', authenticate, authorize('admin'),
         }
     }
 );
+
 
 // ============================================
 // PAST EVENTS - UPDATE WITH ERROR HANDLING
