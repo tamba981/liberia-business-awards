@@ -1484,7 +1484,7 @@ app.get('/api/business/profile', authenticate, authorize('business'), async (req
 });
 
 // Update business profile
-app.put('/api/business/profile', authenticate, authorize('business'), upload.single('logo'), async (req, res) => {
+app.put('/api/business/profile', authenticate, authorize('business'), handleUpload(upload.single('logo')), async (req, res) => {
     try {
         const business = await BusinessUser.findById(req.user._id);
         
@@ -2351,7 +2351,7 @@ app.get('/api/business/documents', authenticate, authorize('business'), async (r
 });
 
 // Upload document
-app.post('/api/business/documents', authenticate, authorize('business'), upload.single('document'), async (req, res) => {
+app.post('/api/business/documents', authenticate, authorize('business'), handleUpload(upload.single('document')), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
@@ -2465,7 +2465,7 @@ app.get('/api/admin/businesses/:businessId/documents', authenticate, authorize('
 });
 
 // Upload document for a specific business (admin only)
-app.post('/api/admin/businesses/:businessId/documents', authenticate, authorize('admin'), upload.single('document'), async (req, res) => {
+app.post('/api/admin/businesses/:businessId/documents', authenticate, authorize('admin'), handleUpload(upload.single('document')), async (req, res) => {
     try {
         const { businessId } = req.params;
         const { name, type } = req.body;
