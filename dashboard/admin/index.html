@@ -8204,9 +8204,9 @@ async function saveEvent() {
             gallery: eventData.gallery
         }));
         
-        // Add gallery files
-        galleryFiles.forEach((item) => {
-            formData.append('gallery_images', item.file);
+        // Add gallery files - use unique field names to preserve all images
+        galleryFiles.forEach((item, index) => {
+        formData.append(`gallery_${index}`, item.file);
         });
         
         // Add winner files
