@@ -210,13 +210,14 @@
             to { opacity: 1; }
         }
         
-        .modal-overlay {
+        /* Winner Modal */
+        .winner-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.85);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -226,24 +227,116 @@
             transition: all 0.3s ease;
         }
         
-        .modal-overlay.active {
+        .winner-modal-overlay.active {
             opacity: 1;
             visibility: visible;
         }
         
-        .modal-content {
+        .winner-modal-content {
             background: white;
             border-radius: 20px;
-            max-width: 900px;
+            max-width: 700px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
             transform: scale(0.9);
             transition: transform 0.3s ease;
+            padding: 40px;
         }
         
-        .modal-overlay.active .modal-content {
+        .winner-modal-overlay.active .winner-modal-content {
             transform: scale(1);
+        }
+        
+        .winner-modal-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .winner-modal-close:hover {
+            color: #FF0000;
+        }
+        
+        /* Gallery Lightbox */
+        .gallery-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.92);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-lightbox.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .gallery-lightbox-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            overflow-y: auto;
+            max-height: 85vh;
+        }
+        
+        .gallery-lightbox-content img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            border: 3px solid transparent;
+        }
+        
+        .gallery-lightbox-content img:hover {
+            transform: scale(1.05);
+            border-color: #FF0000;
+        }
+        
+        .gallery-lightbox-close {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            background: none;
+            border: none;
+            font-size: 40px;
+            color: white;
+            cursor: pointer;
+            z-index: 1002;
+            transition: transform 0.3s;
+        }
+        
+        .gallery-lightbox-close:hover {
+            transform: rotate(90deg);
+        }
+        
+        .winner-clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .winner-clickable:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
         }
         
         /* Loading Spinner */
@@ -280,6 +373,10 @@
             
             .photo-grid {
                 grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            
+            .gallery-lightbox-content {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             }
         }
     </style>
@@ -432,6 +529,28 @@
         </div>
     </div>
 
+    <!-- Winner Detail Modal -->
+    <div class="winner-modal-overlay" id="winnerModal">
+        <div class="winner-modal-content">
+            <button class="winner-modal-close" onclick="closeWinnerModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="winnerModalBody">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Lightbox -->
+    <div class="gallery-lightbox" id="galleryLightbox">
+        <button class="gallery-lightbox-close" onclick="closeGalleryLightbox()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="gallery-lightbox-content" id="galleryLightboxContent">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
     <script>
         // ============================================
         // CONFIGURATION - FIXED API ENDPOINTS
@@ -450,32 +569,26 @@
         function normalizeImageUrl(url) {
             if (!url) return '/images/LBA-cover.png';
             
-            // If it's already a full URL with http, return as is
             if (url.startsWith('http://') || url.startsWith('https://')) {
                 return url;
             }
             
-            // If it starts with /uploads, use the full Railway URL
             if (url.startsWith('/uploads')) {
                 return RAILWAY_BASE_URL + url;
             }
             
-            // If it starts with uploads/ (no leading slash)
             if (url.startsWith('uploads/')) {
                 return RAILWAY_BASE_URL + '/' + url;
             }
             
-            // If it's just a filename
             if (!url.includes('/')) {
                 return RAILWAY_BASE_URL + '/uploads/' + url;
             }
             
-            // If it starts with images/ (relative path)
             if (url.startsWith('images/')) {
                 return url;
             }
             
-            // For all other paths, try to make them absolute with Railway URL
             if (url.startsWith('/')) {
                 return RAILWAY_BASE_URL + url;
             }
@@ -502,11 +615,9 @@
             timelineContainer.style.display = 'none';
 
             try {
-                // FIXED: Use /api/past-events instead of /api/events
                 let response = await fetch(`${API_BASE}/api/past-events?limit=50`);
                 let data = await response.json();
 
-                // If API fails, try Google Sheets
                 if (!data.success || !data.events || data.events.length === 0) {
                     console.log('🔄 Falling back to Google Sheets for events...');
                     
@@ -520,20 +631,14 @@
                     }
                 }
 
-                // ============================================
-                // CRITICAL FIX: Normalize all image URLs
-                // ============================================
                 if (data.success && data.events) {
                     eventsData = data.events.map(event => ({
                         ...event,
-                        // Fix featured image (if any)
                         image: normalizeImageUrl(event.image),
-                        // Fix gallery images
                         gallery: (event.gallery || []).map(item => ({
                             ...item,
                             url: normalizeImageUrl(item.url || item)
                         })),
-                        // Fix winner images
                         winners: (event.winners || []).map(winner => ({
                             ...winner,
                             image: normalizeImageUrl(winner.image)
@@ -542,10 +647,12 @@
                     
                     renderEvents(eventsData);
                     updateStats(eventsData);
+                    updateImpactStats(eventsData);
                 } else {
                     eventsData = getDefaultEvents();
                     renderEvents(eventsData);
                     updateStats(eventsData);
+                    updateImpactStats(eventsData);
                 }
 
             } catch (error) {
@@ -553,6 +660,7 @@
                 eventsData = getDefaultEvents();
                 renderEvents(eventsData);
                 updateStats(eventsData);
+                updateImpactStats(eventsData);
             }
 
             loadingState.style.display = 'none';
@@ -560,32 +668,119 @@
         }
 
         // ============================================
+        // UPDATE IMPACT STATS - AUTO-CALCULATED
+        // ============================================
+        function updateImpactStats(events) {
+            let totalBusinesses = 0;
+            let totalPartners = 0;
+            let totalWinners = 0;
+            let editions = [];
+
+            events.forEach(event => {
+                const winners = event.winners || [];
+                const winnerCount = winners.length;
+                const eventEdition = parseFloat(event.edition) || 0;
+                
+                totalWinners += winnerCount;
+                totalBusinesses += winnerCount;
+                totalPartners += parseInt(event.partner_count) || 0;
+                
+                if (eventEdition > 0) {
+                    editions.push(eventEdition);
+                }
+            });
+
+            // Calculate jobs: 20 jobs per business
+            const totalJobs = totalBusinesses * 20;
+
+            // Calculate editions planned: from 1.0 to max edition
+            const maxEdition = editions.length > 0 ? Math.max(...editions) : 0;
+            const totalEditions = maxEdition > 0 ? Math.floor(maxEdition) : 0;
+
+            document.getElementById('statBusinesses').textContent = totalBusinesses;
+            document.getElementById('statPartners').textContent = totalPartners;
+            document.getElementById('statJobs').textContent = totalJobs.toLocaleString();
+            document.getElementById('statEvents').textContent = totalEditions;
+        }
+
+        // ============================================
         // LOAD STATS - FIXED ENDPOINT
         // ============================================
         async function loadStats() {
             try {
-                // FIXED: Use the stats endpoint
                 const response = await fetch(`${API_BASE}/api/admin/events/stats`);
                 const data = await response.json();
                 
                 if (data.success && data.stats) {
-                    document.getElementById('statBusinesses').textContent = data.stats.totalWinners || '0';
-                    document.getElementById('statPartners').textContent = '0';
-                    document.getElementById('statJobs').textContent = '0';
-                    document.getElementById('statEvents').textContent = data.stats.total || '0';
+                    // Update impact stats will be called from loadEvents
                 }
             } catch (error) {
                 console.log('Stats not available, using fallback');
-                // Set fallback stats
-                document.getElementById('statBusinesses').textContent = '0';
-                document.getElementById('statPartners').textContent = '0';
-                document.getElementById('statJobs').textContent = '0';
-                document.getElementById('statEvents').textContent = '0';
             }
         }
 
         // ============================================
-        // RENDER EVENTS - FIXED WITH NORMALIZED IMAGES
+        // OPEN WINNER DETAIL MODAL
+        // ============================================
+        function openWinnerModal(winner) {
+            const modal = document.getElementById('winnerModal');
+            const body = document.getElementById('winnerModalBody');
+            
+            const imageHtml = winner.image ? 
+                `<img src="${normalizeImageUrl(winner.image)}" class="w-full max-h-64 object-cover rounded-lg mb-4" alt="${escapeHtml(winner.name)}">` : '';
+            
+            body.innerHTML = `
+                <div class="text-center">
+                    ${imageHtml}
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">${escapeHtml(winner.name)}</h2>
+                    <div class="inline-block bg-red-100 text-red-700 px-4 py-1 rounded-full text-sm font-semibold mb-4">
+                        🏆 ${escapeHtml(winner.category || 'Award Winner')}
+                    </div>
+                    ${winner.founder ? `<p class="text-gray-600 mb-2"><strong>Founder:</strong> ${escapeHtml(winner.founder)}</p>` : ''}
+                    ${winner.story ? `<p class="text-gray-600 mt-4 p-4 bg-gray-50 rounded-lg">${escapeHtml(winner.story)}</p>` : ''}
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeWinnerModal() {
+            const modal = document.getElementById('winnerModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // ============================================
+        // OPEN GALLERY LIGHTBOX
+        // ============================================
+        function openGalleryLightbox(images, startIndex = 0) {
+            const lightbox = document.getElementById('galleryLightbox');
+            const content = document.getElementById('galleryLightboxContent');
+            
+            content.innerHTML = images.map((img, index) => {
+                const imageUrl = normalizeImageUrl(img.url || img);
+                return `
+                    <img src="${imageUrl}" 
+                         alt="${img.caption || 'Gallery Image'}" 
+                         onclick="openModal('${imageUrl}')"
+                         loading="lazy"
+                         onerror="this.src='https://placehold.co/400x300/FF0000/white?text=No+Image'">
+                `;
+            }).join('');
+            
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeGalleryLightbox() {
+            const lightbox = document.getElementById('galleryLightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // ============================================
+        // RENDER EVENTS - WITH CLICKABLE WINNERS & GALLERY
         // ============================================
         function renderEvents(events) {
             const container = document.getElementById('timelineContainer');
@@ -600,20 +795,15 @@
                 return;
             }
 
-            // Sort events by date (oldest first for timeline)
             const sortedEvents = [...events].sort((a, b) => {
                 return new Date(a.event_date) - new Date(b.event_date);
             });
 
-            // Separate into past events and future
             const now = new Date();
             const pastEvents = sortedEvents.filter(e => new Date(e.event_date) <= now);
             const futureEvents = sortedEvents.filter(e => new Date(e.event_date) > now);
-
-            // Combine: past events first, then future (for "coming soon")
             const displayEvents = [...pastEvents, ...futureEvents];
 
-            // Update counters
             document.getElementById('totalEventsCount').textContent = pastEvents.length;
             document.getElementById('upcomingEventsCount').textContent = futureEvents.length;
 
@@ -623,16 +813,12 @@
                 const isFuture = new Date(event.event_date) > now;
                 const eventDate = new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                 
-                // Count winners
                 const winners = event.winners || [];
                 const winnerCount = winners.length;
-                
-                // Get stats
                 const winnerCountStat = event.winner_count || winnerCount || '0';
                 const categoryCount = event.category_count || '0';
                 const partnerCount = event.partner_count || '0';
 
-                // Determine badge style
                 let badgeText = event.edition || 'LBA';
                 let badgeStyle = 'background: linear-gradient(45deg, #FF0000, #87CEEB);';
                 if (isFuture) {
@@ -641,7 +827,7 @@
                 }
 
                 // ============================================
-                // FIXED: Build winners list with images
+                // CLICKABLE WINNERS
                 // ============================================
                 let winnersHTML = '';
                 if (winners.length > 0) {
@@ -649,27 +835,32 @@
                         <div class="mt-6 pt-6 border-t border-gray-100">
                             <h4 class="font-bold text-gray-700 mb-3">🏆 Winners:</h4>
                             <div class="flex flex-wrap gap-2">
-                                ${winners.slice(0, 8).map(w => `
-                                    <span class="bg-gradient-to-r from-yellow-50 to-amber-50 text-amber-700 px-3 py-1 rounded-full text-sm border border-amber-200" style="display: inline-flex; align-items: center; gap: 6px;">
+                                ${winners.map(w => `
+                                    <span class="winner-clickable bg-gradient-to-r from-yellow-50 to-amber-50 text-amber-700 px-3 py-1 rounded-full text-sm border border-amber-200" 
+                                          style="display: inline-flex; align-items: center; gap: 6px;"
+                                          onclick="openWinnerModal(${JSON.stringify(w).replace(/"/g, '&quot;')})">
                                         ${w.image ? `<img src="${normalizeImageUrl(w.image)}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'">` : ''}
                                         ${escapeHtml(w.name)}
+                                        <i class="fas fa-external-link-alt text-xs ml-1 opacity-60"></i>
                                     </span>
                                 `).join('')}
-                                ${winners.length > 8 ? `<span class="text-gray-500 text-sm">+${winners.length - 8} more</span>` : ''}
                             </div>
                         </div>
                     `;
                 }
 
                 // ============================================
-                // FIXED: Build gallery images with normalized URLs
+                // GALLERY WITH "+ more" BUTTON
                 // ============================================
                 let galleryHTML = '';
                 const galleryImages = event.gallery || [];
                 if (galleryImages.length > 0) {
+                    const displayImages = galleryImages.slice(0, 3);
+                    const extraCount = galleryImages.length - 3;
+                    
                     galleryHTML = `
                         <div class="photo-grid">
-                            ${galleryImages.slice(0, 3).map(img => {
+                            ${displayImages.map(img => {
                                 const imageUrl = normalizeImageUrl(img.url || img);
                                 return `
                                     <div class="photo-item" onclick="openModal('${imageUrl}')">
@@ -678,14 +869,16 @@
                                     </div>
                                 `;
                             }).join('')}
-                            ${galleryImages.length > 3 ? `<div class="photo-item" style="background: #f8fafc; display: flex; align-items: center; justify-content: center; cursor: default;">
-                                <span class="text-gray-500 text-2xl font-bold">+${galleryImages.length - 3} more</span>
-                            </div>` : ''}
+                            ${extraCount > 0 ? `
+                                <div class="photo-item" style="background: linear-gradient(135deg, #FF0000, #87CEEB); display: flex; align-items: center; justify-content: center; cursor: pointer;" 
+                                     onclick="openGalleryLightbox(${JSON.stringify(galleryImages).replace(/"/g, '&quot;')}, 0)">
+                                    <span class="text-white text-4xl font-bold">+${extraCount} more</span>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 }
 
-                // Determine which side of timeline (odd/even)
                 const side = (index % 2 === 0) ? 'odd' : 'even';
                 
                 html += `
@@ -746,7 +939,7 @@
         }
 
         // ============================================
-        // DEFAULT FALLBACK EVENTS - FIXED IMAGE PATHS
+        // DEFAULT FALLBACK EVENTS
         // ============================================
         function getDefaultEvents() {
             return [
@@ -762,9 +955,9 @@
                     category_count: 8,
                     partner_count: 10,
                     winners: [
-                        { name: 'STEBEL CLASSIC SHOES', category: 'Manufacturing Excellence' },
-                        { name: 'MAKOS FRUITS JUICE', category: 'Beverage Innovation' },
-                        { name: 'PATIENCE COCOA', category: 'Agricultural Excellence' }
+                        { name: 'STEBEL CLASSIC SHOES', category: 'Manufacturing Excellence', founder: 'John Doe', story: 'Handcrafted Liberian Footwear' },
+                        { name: 'MAKOS FRUITS JUICE', category: 'Beverage Innovation', founder: 'Jane Smith', story: '100% Natural Fruit Juices' },
+                        { name: 'PATIENCE COCOA', category: 'Agricultural Excellence', founder: 'Patience K.', story: 'Agricultural Innovation' }
                     ],
                     gallery: [
                         { url: 'images/gallery/lba1-steel.jpg', caption: 'STEBEL CLASSIC SHOES Interview' },
@@ -784,10 +977,9 @@
                     category_count: 12,
                     partner_count: 15,
                     winners: [
-                        { name: 'Kernel Fresh', category: 'Sustainable Agriculture' },
-                        { name: 'Wungkos Farm', category: 'Agricultural Innovation' },
-                        { name: 'Liberian Girls Lunchbox', category: 'Social Enterprise' },
-                        { name: 'Patience Cocoa Inc.', category: 'Manufacturing Excellence' }
+                        { name: 'Kernel Fresh', category: 'Sustainable Agriculture', founder: 'Mahmud Johnson', story: 'Sustainable palm oil production' },
+                        { name: 'Wungkos Farm', category: 'Agricultural Innovation', founder: 'Paul Wungko', story: 'Export-ready agricultural products' },
+                        { name: 'Liberian Girls Lunchbox', category: 'Social Enterprise', founder: 'Christollie Ade Suah', story: 'Empowering young women' }
                     ],
                     gallery: [
                         { url: 'images/gallery/lba2-ceremony.jpg', caption: 'Awards Ceremony' },
@@ -822,7 +1014,6 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalDescription = document.getElementById('modalDescription');
             
-            // Normalize the image URL before displaying in modal
             const normalizedUrl = normalizeImageUrl(imageUrl);
             modalImage.src = normalizedUrl;
             modalTitle.textContent = 'Event Gallery Image';
@@ -844,18 +1035,33 @@
             }
         });
 
-        // ============================================
-        // KEYBOARD SHORTCUTS
-        // ============================================
+        // Close winner modal on outside click
+        document.getElementById('winnerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeWinnerModal();
+            }
+        });
+
+        // Close gallery lightbox on outside click
+        document.getElementById('galleryLightbox').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeGalleryLightbox();
+            }
+        });
+
+        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+                closeWinnerModal();
+                closeGalleryLightbox();
             }
         });
 
         console.log('🏆 LBA Past Winners Gallery Loaded');
         console.log('📊 API Base:', API_BASE);
         console.log('📸 Image URL normalizer ready');
+        console.log('💡 Click winners to see details, click "+ more" for full gallery!');
     </script>
 </body>
 </html>
