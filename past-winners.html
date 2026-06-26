@@ -246,100 +246,96 @@
             transform: scale(1);
         }
         
-        .winner-detail {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px 15px;
-            border-bottom: 1px solid #f1f5f9;
-            transition: background 0.2s;
-            cursor: default;
+        /* Winner Detail Modal */
+        .winner-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
         }
         
-        .winner-detail:hover {
+        .winner-detail-card {
             background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            text-align: center;
         }
         
-        .winner-detail:last-child {
-            border-bottom: none;
+        .winner-detail-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #FF0000;
         }
         
-        .winner-detail img {
-            width: 50px;
-            height: 50px;
+        .winner-detail-card img {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            flex-shrink: 0;
-            background: #f1f5f9;
+            margin: 0 auto 12px;
+            border: 3px solid #FF0000;
         }
         
-        .winner-detail .winner-info {
-            flex: 1;
+        .winner-detail-card h4 {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a202c;
         }
         
-        .winner-detail .winner-info h4 {
-            font-weight: 600;
-            font-size: 15px;
-            margin-bottom: 2px;
-        }
-        
-        .winner-detail .winner-info p {
+        .winner-detail-card .category {
             font-size: 13px;
-            color: #64748b;
-        }
-        
-        .winner-detail .winner-category-badge {
-            font-size: 11px;
-            padding: 3px 12px;
-            border-radius: 20px;
-            background: #FF000010;
             color: #FF0000;
             font-weight: 600;
         }
         
-        .show-all-btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #FF0000, #cc0000);
-            color: white;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            font-size: 14px;
-            margin-top: 15px;
+        .winner-detail-card .founder {
+            font-size: 13px;
+            color: #64748b;
         }
         
-        .show-all-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(255, 0, 0, 0.3);
+        .winner-detail-card .story {
+            font-size: 13px;
+            color: #4a5568;
+            margin-top: 8px;
+            line-height: 1.5;
         }
         
-        /* Gallery modal for all images */
         .gallery-grid-modal {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 15px;
-            padding: 20px;
+            margin-top: 15px;
         }
         
-        .gallery-grid-modal .gallery-item {
-            border-radius: 12px;
-            overflow: hidden;
-            height: 180px;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        
-        .gallery-grid-modal .gallery-item:hover {
-            transform: scale(1.05);
-        }
-        
-        .gallery-grid-modal .gallery-item img {
+        .gallery-grid-modal img {
             width: 100%;
-            height: 100%;
+            height: 180px;
             object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-grid-modal img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #FF0000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         @media (max-width: 768px) {
@@ -362,8 +358,12 @@
                 grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             }
             
-            .winner-detail {
-                flex-wrap: wrap;
+            .winner-detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-grid-modal {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             }
         }
     </style>
@@ -449,7 +449,7 @@
                 <div class="bg-white p-8 rounded-2xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
                     <div class="text-5xl font-bold text-green-600 mb-4" id="statJobs">0</div>
                     <h4 class="text-xl font-bold text-gray-800 mb-2">Jobs Impacted</h4>
-                    <p class="text-gray-600">Created by recognized businesses</p>
+                    <p class="text-gray-600">Through business growth and support</p>
                 </div>
                 
                 <div class="bg-white p-8 rounded-2xl shadow-lg text-center transform hover:scale-105 transition-transform duration-300">
@@ -516,9 +516,9 @@
         </div>
     </div>
 
-    <!-- Winner Details Modal -->
+    <!-- Winner Detail Modal -->
     <div class="modal-overlay" id="winnerModal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content" style="max-width: 1000px;">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="title-font text-2xl font-bold text-gray-800" id="winnerModalTitle">🏆 Winners</h3>
@@ -526,22 +526,9 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div id="winnerModalBody"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Gallery All Images Modal -->
-    <div class="modal-overlay" id="galleryModal">
-        <div class="modal-content" style="max-width: 900px;">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="title-font text-2xl font-bold text-gray-800" id="galleryModalTitle">📸 Event Gallery</h3>
-                    <button onclick="closeGalleryModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div id="winnerModalContent">
+                    <!-- Dynamically populated -->
                 </div>
-                <div id="galleryModalBody" class="gallery-grid-modal"></div>
             </div>
         </div>
     </div>
@@ -564,26 +551,32 @@
         function normalizeImageUrl(url) {
             if (!url) return '/images/LBA-cover.png';
             
+            // If it's already a full URL with http, return as is
             if (url.startsWith('http://') || url.startsWith('https://')) {
                 return url;
             }
             
+            // If it starts with /uploads, use the full Railway URL
             if (url.startsWith('/uploads')) {
                 return RAILWAY_BASE_URL + url;
             }
             
+            // If it starts with uploads/ (no leading slash)
             if (url.startsWith('uploads/')) {
                 return RAILWAY_BASE_URL + '/' + url;
             }
             
+            // If it's just a filename
             if (!url.includes('/')) {
                 return RAILWAY_BASE_URL + '/uploads/' + url;
             }
             
+            // If it starts with images/ (relative path)
             if (url.startsWith('images/')) {
                 return url;
             }
             
+            // For all other paths, try to make them absolute with Railway URL
             if (url.startsWith('/')) {
                 return RAILWAY_BASE_URL + url;
             }
@@ -610,9 +603,11 @@
             timelineContainer.style.display = 'none';
 
             try {
+                // FIXED: Use /api/past-events instead of /api/events
                 let response = await fetch(`${API_BASE}/api/past-events?limit=50`);
                 let data = await response.json();
 
+                // If API fails, try Google Sheets
                 if (!data.success || !data.events || data.events.length === 0) {
                     console.log('🔄 Falling back to Google Sheets for events...');
                     
@@ -626,14 +621,20 @@
                     }
                 }
 
+                // ============================================
+                // CRITICAL FIX: Normalize all image URLs
+                // ============================================
                 if (data.success && data.events) {
                     eventsData = data.events.map(event => ({
                         ...event,
+                        // Fix featured image (if any)
                         image: normalizeImageUrl(event.image),
+                        // Fix gallery images
                         gallery: (event.gallery || []).map(item => ({
                             ...item,
                             url: normalizeImageUrl(item.url || item)
                         })),
+                        // Fix winner images
                         winners: (event.winners || []).map(winner => ({
                             ...winner,
                             image: normalizeImageUrl(winner.image)
@@ -660,32 +661,36 @@
         }
 
         // ============================================
-        // LOAD STATS - DYNAMICALLY CALCULATED
+        // LOAD STATS - FIXED ENDPOINT
         // ============================================
         async function loadStats() {
             try {
+                // FIXED: Use the stats endpoint
                 const response = await fetch(`${API_BASE}/api/admin/events/stats`);
                 const data = await response.json();
                 
                 if (data.success && data.stats) {
+                    // Total winners = all winners across all events
                     const totalWinners = data.stats.totalWinners || 0;
-                    const totalEvents = data.stats.total || 0;
                     
-                    // Calculate jobs: each winner creates ~20 jobs
+                    // Calculate jobs: each business creates 20 jobs
                     const jobsImpacted = totalWinners * 20;
                     
-                    // Calculate editions from events (extract edition numbers)
+                    // Calculate editions: get the highest edition number from events
                     let maxEdition = 0;
-                    if (eventsData.length > 0) {
-                        eventsData.forEach(e => {
-                            if (e.edition) {
-                                const num = parseFloat(e.edition);
-                                if (!isNaN(num) && num > maxEdition) maxEdition = num;
+                    if (eventsData && eventsData.length > 0) {
+                        eventsData.forEach(event => {
+                            if (event.edition) {
+                                const editionNum = parseFloat(event.edition);
+                                if (!isNaN(editionNum) && editionNum > maxEdition) {
+                                    maxEdition = editionNum;
+                                }
                             }
                         });
                     }
+                    
                     // If no editions found, use total events count
-                    const editionsPlanned = maxEdition > 0 ? Math.ceil(maxEdition) : totalEvents;
+                    const editionsPlanned = maxEdition > 0 ? maxEdition : data.stats.total || 0;
                     
                     document.getElementById('statBusinesses').textContent = totalWinners || '0';
                     document.getElementById('statPartners').textContent = data.stats.totalPartners || '0';
@@ -693,33 +698,43 @@
                     document.getElementById('statEvents').textContent = editionsPlanned || '0';
                 }
             } catch (error) {
-                console.log('Stats not available, calculating from events data');
-                // Calculate from eventsData
-                calculateStatsFromEvents();
+                console.log('Stats not available, using fallback');
+                // Set fallback stats from events data
+                updateStatsFromEvents();
             }
         }
 
         // ============================================
-        // CALCULATE STATS FROM EVENTS DATA
+        // UPDATE STATS FROM EVENTS DATA (FALLBACK)
         // ============================================
-        function calculateStatsFromEvents() {
+        function updateStatsFromEvents() {
+            if (!eventsData || eventsData.length === 0) {
+                document.getElementById('statBusinesses').textContent = '0';
+                document.getElementById('statPartners').textContent = '0';
+                document.getElementById('statJobs').textContent = '0';
+                document.getElementById('statEvents').textContent = '0';
+                return;
+            }
+            
             let totalWinners = 0;
             let totalPartners = 0;
             let maxEdition = 0;
             
             eventsData.forEach(event => {
                 const winners = event.winners || [];
-                totalWinners += winners.length;
+                totalWinners += winners.length + (parseInt(event.winner_count) || 0);
                 totalPartners += parseInt(event.partner_count) || 0;
                 
                 if (event.edition) {
-                    const num = parseFloat(event.edition);
-                    if (!isNaN(num) && num > maxEdition) maxEdition = num;
+                    const editionNum = parseFloat(event.edition);
+                    if (!isNaN(editionNum) && editionNum > maxEdition) {
+                        maxEdition = editionNum;
+                    }
                 }
             });
             
             const jobsImpacted = totalWinners * 20;
-            const editionsPlanned = maxEdition > 0 ? Math.ceil(maxEdition) : eventsData.length;
+            const editionsPlanned = maxEdition > 0 ? maxEdition : eventsData.length;
             
             document.getElementById('statBusinesses').textContent = totalWinners || '0';
             document.getElementById('statPartners').textContent = totalPartners || '0';
@@ -728,7 +743,7 @@
         }
 
         // ============================================
-        // RENDER EVENTS - WITH WINNER CLICK & GALLERY VIEW ALL
+        // RENDER EVENTS - FIXED WITH NORMALIZED IMAGES
         // ============================================
         function renderEvents(events) {
             const container = document.getElementById('timelineContainer');
@@ -743,15 +758,20 @@
                 return;
             }
 
+            // Sort events by date (oldest first for timeline)
             const sortedEvents = [...events].sort((a, b) => {
                 return new Date(a.event_date) - new Date(b.event_date);
             });
 
+            // Separate into past events and future
             const now = new Date();
             const pastEvents = sortedEvents.filter(e => new Date(e.event_date) <= now);
             const futureEvents = sortedEvents.filter(e => new Date(e.event_date) > now);
+
+            // Combine: past events first, then future (for "coming soon")
             const displayEvents = [...pastEvents, ...futureEvents];
 
+            // Update counters
             document.getElementById('totalEventsCount').textContent = pastEvents.length;
             document.getElementById('upcomingEventsCount').textContent = futureEvents.length;
 
@@ -761,12 +781,16 @@
                 const isFuture = new Date(event.event_date) > now;
                 const eventDate = new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                 
+                // Count winners
                 const winners = event.winners || [];
                 const winnerCount = winners.length;
+                
+                // Get stats
                 const winnerCountStat = event.winner_count || winnerCount || '0';
                 const categoryCount = event.category_count || '0';
                 const partnerCount = event.partner_count || '0';
 
+                // Determine badge style
                 let badgeText = event.edition || 'LBA';
                 let badgeStyle = 'background: linear-gradient(45deg, #FF0000, #87CEEB);';
                 if (isFuture) {
@@ -775,40 +799,40 @@
                 }
 
                 // ============================================
-                // BUILD WINNERS LIST - WITH CLICK TO VIEW ALL
+                // FIXED: Build winners list with click handler
                 // ============================================
                 let winnersHTML = '';
                 if (winners.length > 0) {
-                    const displayWinners = winners.slice(0, 6);
-                    const remainingCount = winners.length - 6;
+                    // Show first 8 winners with click handler
+                    const displayWinners = winners.slice(0, 8);
+                    const remainingCount = winners.length - 8;
                     
                     winnersHTML = `
                         <div class="mt-6 pt-6 border-t border-gray-100">
-                            <h4 class="font-bold text-gray-700 mb-3">🏆 Winners:</h4>
+                            <h4 class="font-bold text-gray-700 mb-3 flex items-center justify-between">
+                                <span>🏆 Winners</span>
+                                <button onclick="openWinnerModal('${event.id || event._id}')" 
+                                        class="text-sm text-red-600 hover:text-red-800 font-semibold underline">
+                                    View All (${winners.length})
+                                </button>
+                            </h4>
                             <div class="flex flex-wrap gap-2">
                                 ${displayWinners.map(w => `
-                                    <span class="bg-gradient-to-r from-yellow-50 to-amber-50 text-amber-700 px-3 py-1 rounded-full text-sm border border-amber-200 cursor-pointer hover:shadow-md transition" style="display: inline-flex; align-items: center; gap: 6px;" onclick="showAllWinners('${event.id || event._id}')">
+                                    <span class="bg-gradient-to-r from-yellow-50 to-amber-50 text-amber-700 px-3 py-1 rounded-full text-sm border border-amber-200 cursor-pointer hover:scale-105 transition-transform" 
+                                          style="display: inline-flex; align-items: center; gap: 6px;"
+                                          onclick="openWinnerModal('${event.id || event._id}')">
                                         ${w.image ? `<img src="${normalizeImageUrl(w.image)}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'">` : ''}
                                         ${escapeHtml(w.name)}
                                     </span>
                                 `).join('')}
-                                ${remainingCount > 0 ? `
-                                    <span class="bg-gradient-to-r from-red-50 to-red-100 text-red-700 px-3 py-1 rounded-full text-sm border border-red-200 cursor-pointer hover:shadow-md transition" onclick="showAllWinners('${event.id || event._id}')">
-                                        +${remainingCount} more
-                                    </span>
-                                ` : ''}
+                                ${remainingCount > 0 ? `<span class="text-gray-500 text-sm font-semibold cursor-pointer hover:text-red-600" onclick="openWinnerModal('${event.id || event._id}')">+${remainingCount} more</span>` : ''}
                             </div>
-                            ${winners.length > 6 ? `
-                                <button class="show-all-btn" onclick="showAllWinners('${event.id || event._id}')">
-                                    <i class="fas fa-users"></i> View All ${winners.length} Winners
-                                </button>
-                            ` : ''}
                         </div>
                     `;
                 }
 
                 // ============================================
-                // BUILD GALLERY - WITH VIEW ALL BUTTON
+                // FIXED: Build gallery images with "View All" button
                 // ============================================
                 let galleryHTML = '';
                 const galleryImages = event.gallery || [];
@@ -828,16 +852,16 @@
                                 `;
                             }).join('')}
                             ${remainingImages > 0 ? `
-                                <div class="photo-item" style="background: #f8fafc; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-direction: column; gap: 10px;" onclick="showAllGallery('${event.id || event._id}')">
-                                    <i class="fas fa-images text-4xl text-gray-400"></i>
+                                <div class="photo-item" style="background: #f8fafc; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px dashed #e2e8f0;" 
+                                     onclick="openWinnerModal('${event.id || event._id}')">
                                     <span class="text-gray-500 text-2xl font-bold">+${remainingImages} more</span>
-                                    <span class="text-gray-400 text-sm">Click to view all</span>
                                 </div>
                             ` : ''}
                         </div>
                     `;
                 }
 
+                // Determine which side of timeline (odd/even)
                 const side = (index % 2 === 0) ? 'odd' : 'even';
                 
                 html += `
@@ -877,82 +901,96 @@
         }
 
         // ============================================
-        // SHOW ALL WINNERS IN MODAL
+        // OPEN WINNER MODAL - DISPLAY ALL WINNERS WITH FULL INFO
         // ============================================
-        function showAllWinners(eventId) {
-            const event = eventsData.find(e => (e.id === eventId || e._id === eventId));
-            if (!event || !event.winners || event.winners.length === 0) {
-                showNotification('No winners found for this event', 'warning');
-                return;
-            }
-            
+        function openWinnerModal(eventId) {
             const modal = document.getElementById('winnerModal');
-            const body = document.getElementById('winnerModalBody');
+            const content = document.getElementById('winnerModalContent');
             const title = document.getElementById('winnerModalTitle');
             
-            title.textContent = `🏆 ${event.title} - All Winners (${event.winners.length})`;
-            
-            body.innerHTML = `
-                <div style="max-height: 500px; overflow-y: auto;">
-                    ${event.winners.map(w => `
-                        <div class="winner-detail">
-                            ${w.image ? `<img src="${normalizeImageUrl(w.image)}" onerror="this.style.display='none'">` : `<div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #FF000020, #87CEEB20); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #FF0000; flex-shrink: 0;">${(w.name || '?').charAt(0)}</div>`}
-                            <div class="winner-info">
-                                <h4>${escapeHtml(w.name)}</h4>
-                                <p>${escapeHtml(w.category || '')}${w.founder ? ` • Founder: ${escapeHtml(w.founder)}` : ''}</p>
-                            </div>
-                            <span class="winner-category-badge">${escapeHtml(w.category || 'Award')}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeWinnerModal() {
-            document.getElementById('winnerModal').classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-
-        // ============================================
-        // SHOW ALL GALLERY IMAGES IN MODAL
-        // ============================================
-        function showAllGallery(eventId) {
+            // Find the event
             const event = eventsData.find(e => (e.id === eventId || e._id === eventId));
-            if (!event || !event.gallery || event.gallery.length === 0) {
-                showNotification('No gallery images found for this event', 'warning');
+            
+            if (!event) {
+                showNotification('Event not found', 'error');
                 return;
             }
             
-            const modal = document.getElementById('galleryModal');
-            const body = document.getElementById('galleryModalBody');
-            const title = document.getElementById('galleryModalTitle');
+            const winners = event.winners || [];
+            const eventTitle = event.title || 'Event';
+            const galleryImages = event.gallery || [];
             
-            title.textContent = `📸 ${event.title} - All Gallery Images (${event.gallery.length})`;
+            title.textContent = `🏆 Winners - ${escapeHtml(eventTitle)}`;
             
-            body.innerHTML = event.gallery.map(img => {
-                const imageUrl = normalizeImageUrl(img.url || img);
-                return `
-                    <div class="gallery-item" onclick="openModal('${imageUrl}')">
-                        <img src="${imageUrl}" alt="${img.caption || event.title}" loading="lazy" onerror="this.src='https://placehold.co/400x300/FF0000/white?text=No+Image'">
-                        ${img.caption ? `<div style="padding: 8px; font-size: 12px; color: #64748b; text-align: center; background: white;">${escapeHtml(img.caption)}</div>` : ''}
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <p style="color: #64748b; font-size: 14px;">${winners.length} businesses recognized in this edition</p>
+                </div>
+                <div class="winner-detail-grid">
+            `;
+            
+            if (winners.length === 0) {
+                html = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-trophy text-4xl mb-4"></i>
+                        <p>No winners listed for this event</p>
                     </div>
                 `;
-            }).join('');
+            } else {
+                winners.forEach(winner => {
+                    const imageUrl = normalizeImageUrl(winner.image);
+                    html += `
+                        <div class="winner-detail-card">
+                            ${imageUrl && imageUrl !== '/images/LBA-cover.png' ? 
+                                `<img src="${imageUrl}" alt="${escapeHtml(winner.name)}" onerror="this.style.display='none'">` : 
+                                `<div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #FF0000, #87CEEB); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; font-weight: bold;">${escapeHtml(winner.name.charAt(0))}</div>`
+                            }
+                            <h4>${escapeHtml(winner.name)}</h4>
+                            <div class="category">🏅 ${escapeHtml(winner.category || 'General')}</div>
+                            ${winner.founder ? `<div class="founder">👤 ${escapeHtml(winner.founder)}</div>` : ''}
+                            ${winner.story ? `<div class="story">${escapeHtml(winner.story)}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
             
+            html += `</div>`;
+            
+            // Add gallery section if there are images
+            if (galleryImages.length > 0) {
+                html += `
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                        <h4 style="font-weight: 700; margin-bottom: 15px;">📸 Event Gallery (${galleryImages.length} images)</h4>
+                        <div class="gallery-grid-modal">
+                            ${galleryImages.map(img => {
+                                const imageUrl = normalizeImageUrl(img.url || img);
+                                return `
+                                    <img src="${imageUrl}" alt="${img.caption || event.title}" 
+                                         onclick="closeWinnerModal(); setTimeout(() => openModal('${imageUrl}'), 300);"
+                                         onerror="this.style.display='none'">
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = html;
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
 
-        function closeGalleryModal() {
-            document.getElementById('galleryModal').classList.remove('active');
+        // ============================================
+        // CLOSE WINNER MODAL
+        // ============================================
+        function closeWinnerModal() {
+            const modal = document.getElementById('winnerModal');
+            modal.classList.remove('active');
             document.body.style.overflow = 'auto';
         }
 
         // ============================================
-        // UPDATE STATS
+        // UPDATE STATS (OVERALL)
         // ============================================
         function updateStats(events) {
             let totalWinners = 0;
@@ -967,8 +1005,10 @@
                 totalBusinesses += parseInt(event.winner_count) || winners.length;
                 
                 if (event.edition) {
-                    const num = parseFloat(event.edition);
-                    if (!isNaN(num) && num > maxEdition) maxEdition = num;
+                    const editionNum = parseFloat(event.edition);
+                    if (!isNaN(editionNum) && editionNum > maxEdition) {
+                        maxEdition = editionNum;
+                    }
                 }
             });
 
@@ -977,17 +1017,16 @@
             document.getElementById('statBusinesses').textContent = totalBusinesses || '0';
             document.getElementById('statPartners').textContent = totalPartners || '0';
             
-            // Calculate jobs (20 per winner)
-            const jobsImpacted = totalWinners * 20;
-            document.getElementById('statJobs').textContent = jobsImpacted || '0';
+            // Jobs = winners * 20
+            document.getElementById('statJobs').textContent = (totalWinners * 20) || '0';
             
-            // Calculate editions from events
-            const editionsPlanned = maxEdition > 0 ? Math.ceil(maxEdition) : events.length;
+            // Editions = max edition number or total events
+            const editionsPlanned = maxEdition > 0 ? maxEdition : events.length;
             document.getElementById('statEvents').textContent = editionsPlanned || '0';
         }
 
         // ============================================
-        // DEFAULT FALLBACK EVENTS
+        // DEFAULT FALLBACK EVENTS - FIXED IMAGE PATHS
         // ============================================
         function getDefaultEvents() {
             return [
@@ -1003,18 +1042,14 @@
                     category_count: 8,
                     partner_count: 10,
                     winners: [
-                        { name: 'STEBEL CLASSIC SHOES', category: 'Manufacturing Excellence', founder: 'John Doe' },
-                        { name: 'MAKOS FRUITS JUICE', category: 'Beverage Innovation', founder: 'Jane Smith' },
-                        { name: 'PATIENCE COCOA', category: 'Agricultural Excellence', founder: 'Patience K.' },
-                        { name: 'Kernel Fresh', category: 'Sustainable Agriculture', founder: 'Mahmud Johnson' },
-                        { name: 'Wungkos Farm', category: 'Agricultural Innovation', founder: 'Paul Wungko' },
-                        { name: 'Liberian Girls Lunchbox', category: 'Social Enterprise', founder: 'Christollie Ade Suah' }
+                        { name: 'STEBEL CLASSIC SHOES', category: 'Manufacturing Excellence', founder: 'John Doe', story: 'Handcrafted Liberian Footwear' },
+                        { name: 'MAKOS FRUITS JUICE', category: 'Beverage Innovation', founder: 'Jane Smith', story: '100% Natural Fruit Juices' },
+                        { name: 'PATIENCE COCOA', category: 'Agricultural Excellence', founder: 'Patience K.', story: 'Agricultural Innovation' }
                     ],
                     gallery: [
                         { url: 'images/gallery/lba1-steel.jpg', caption: 'STEBEL CLASSIC SHOES Interview' },
                         { url: 'images/gallery/lba1-makos.jpg', caption: 'MAKOS FRUITS JUICE Showcase' },
-                        { url: 'images/gallery/lba1-patience.jpg', caption: 'PATIENCE COCOA Feature' },
-                        { url: 'images/gallery/lba1-ceremony.jpg', caption: 'Awards Ceremony' }
+                        { url: 'images/gallery/lba1-patience.jpg', caption: 'PATIENCE COCOA Feature' }
                     ]
                 },
                 {
@@ -1029,18 +1064,15 @@
                     category_count: 12,
                     partner_count: 15,
                     winners: [
-                        { name: 'Kernel Fresh', category: 'Sustainable Agriculture', founder: 'Mahmud Johnson' },
-                        { name: 'Wungkos Farm', category: 'Agricultural Innovation', founder: 'Paul Wungko' },
-                        { name: 'Liberian Girls Lunchbox', category: 'Social Enterprise', founder: 'Christollie Ade Suah' },
-                        { name: 'Patience Cocoa Inc.', category: 'Manufacturing Excellence', founder: 'Patience Cocoa' },
-                        { name: 'Orange Liberia', category: 'Telecommunications', founder: 'Orange Group' },
-                        { name: 'J-Palm Liberia', category: 'Sustainable Agriculture', founder: 'J-Palm Team' }
+                        { name: 'Kernel Fresh', category: 'Sustainable Agriculture', founder: 'Mahmud Johnson', story: 'Sustainable palm oil production' },
+                        { name: 'Wungkos Farm', category: 'Agricultural Innovation', founder: 'Paul Wungko', story: 'Export-ready agricultural products' },
+                        { name: 'Liberian Girls Lunchbox', category: 'Social Enterprise', founder: 'Christollie Ade Suah', story: 'Empowering young women' },
+                        { name: 'Patience Cocoa Inc.', category: 'Manufacturing Excellence', founder: 'Patience Cocoa', story: 'Premium Liberian chocolate' }
                     ],
                     gallery: [
                         { url: 'images/gallery/lba2-ceremony.jpg', caption: 'Awards Ceremony' },
                         { url: 'images/about-slider/slide-1.jpg', caption: 'Proud Winners' },
-                        { url: 'images/about-slider/slide-2.jpg', caption: 'Networking Session' },
-                        { url: 'images/gallery/lba2-speech.jpg', caption: 'Keynote Speech' }
+                        { url: 'images/about-slider/slide-2.jpg', caption: 'Networking Session' }
                     ]
                 }
             ];
@@ -1057,7 +1089,6 @@
         }
 
         function goBack() {
-            // Redirect to main domain
             window.location.href = 'https://liberiabusinessawardslr.com';
         }
 
@@ -1067,6 +1098,7 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalDescription = document.getElementById('modalDescription');
             
+            // Normalize the image URL before displaying in modal
             const normalizedUrl = normalizeImageUrl(imageUrl);
             modalImage.src = normalizedUrl;
             modalTitle.textContent = 'Event Gallery Image';
@@ -1083,77 +1115,37 @@
         }
 
         function showNotification(message, type = 'info') {
-            const colors = {
-                success: '#10B981',
-                warning: '#F59E0B',
-                error: '#EF4444',
-                info: '#3B82F6'
-            };
-            
-            const icons = {
-                success: 'check-circle',
-                warning: 'exclamation-triangle',
-                error: 'exclamation-circle',
-                info: 'info-circle'
-            };
-            
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                bottom: 30px;
-                right: 30px;
-                background: white;
-                color: ${colors[type]};
-                padding: 15px 25px;
-                border-radius: 12px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-                z-index: 9999;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                border-left: 4px solid ${colors[type]};
-                font-weight: 600;
-                font-size: 14px;
-                animation: slideUp 0.3s ease;
-                max-width: 400px;
-            `;
-            notification.innerHTML = `
-                <i class="fas fa-${icons[type]}" style="font-size: 18px;"></i>
-                <span>${escapeHtml(message)}</span>
-            `;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateY(20px)';
-                notification.style.transition = 'all 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
+            // Simple notification using alert for now
+            // You can replace with a custom toast notification
+            console.log(`[${type}] ${message}`);
         }
 
-        // Close modals on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('active');
-                    document.body.style.overflow = 'auto';
-                }
-            });
+        // Close modals on outside click
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
         });
 
-        // Keyboard shortcuts
+        document.getElementById('winnerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeWinnerModal();
+            }
+        });
+
+        // ============================================
+        // KEYBOARD SHORTCUTS
+        // ============================================
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
                 closeWinnerModal();
-                closeGalleryModal();
             }
         });
 
-        console.log('🏆 LBA Past Winners Gallery Loaded - MVP Version');
+        console.log('🏆 LBA Past Winners Gallery Loaded');
         console.log('📊 API Base:', API_BASE);
         console.log('📸 Image URL normalizer ready');
-        console.log('✨ Features: Winner details, Full gallery view, Dynamic stats');
     </script>
 </body>
 </html>
