@@ -434,9 +434,9 @@
 
     <script>
         // ============================================
-        // CONFIGURATION
+        // CONFIGURATION - FIXED API ENDPOINTS
         // ============================================
-        const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
+        const API_BASE = 'https://liberia-business-awards-production.up.railway.app';
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxJTXMjUdlzxa3Y5u-Cvhzso0ln_6Fv2rX7Qb9w6d7c-JvoA_yuNa6ObLSgigjiCz3/exec';
         const RAILWAY_BASE_URL = 'https://liberia-business-awards-production.up.railway.app';
 
@@ -492,7 +492,7 @@
         });
 
         // ============================================
-        // LOAD EVENTS FROM API / GOOGLE SHEETS
+        // LOAD EVENTS FROM API / GOOGLE SHEETS - FIXED ENDPOINT
         // ============================================
         async function loadEvents() {
             const loadingState = document.getElementById('loadingState');
@@ -502,8 +502,8 @@
             timelineContainer.style.display = 'none';
 
             try {
-                // Try to load from backend API first
-                let response = await fetch(`${API_BASE}/events?status=published&limit=50`);
+                // FIXED: Use /api/past-events instead of /api/events
+                let response = await fetch(`${API_BASE}/api/past-events?limit=50`);
                 let data = await response.json();
 
                 // If API fails, try Google Sheets
@@ -560,21 +560,27 @@
         }
 
         // ============================================
-        // LOAD STATS
+        // LOAD STATS - FIXED ENDPOINT
         // ============================================
         async function loadStats() {
             try {
-                const response = await fetch(`${API_BASE}/events/stats`);
+                // FIXED: Use the stats endpoint
+                const response = await fetch(`${API_BASE}/api/admin/events/stats`);
                 const data = await response.json();
                 
-                if (data.success) {
-                    document.getElementById('statBusinesses').textContent = data.totalBusinesses || '0';
-                    document.getElementById('statPartners').textContent = data.totalPartners || '0';
-                    document.getElementById('statJobs').textContent = data.totalJobs || '0';
-                    document.getElementById('statEvents').textContent = data.totalEvents || '0';
+                if (data.success && data.stats) {
+                    document.getElementById('statBusinesses').textContent = data.stats.totalWinners || '0';
+                    document.getElementById('statPartners').textContent = '0';
+                    document.getElementById('statJobs').textContent = '0';
+                    document.getElementById('statEvents').textContent = data.stats.total || '0';
                 }
             } catch (error) {
                 console.log('Stats not available, using fallback');
+                // Set fallback stats
+                document.getElementById('statBusinesses').textContent = '0';
+                document.getElementById('statPartners').textContent = '0';
+                document.getElementById('statJobs').textContent = '0';
+                document.getElementById('statEvents').textContent = '0';
             }
         }
 
@@ -848,7 +854,7 @@
         });
 
         console.log('🏆 LBA Past Winners Gallery Loaded');
-        console.log('📊 Events loaded:', eventsData.length);
+        console.log('📊 API Base:', API_BASE);
         console.log('📸 Image URL normalizer ready');
     </script>
 </body>
