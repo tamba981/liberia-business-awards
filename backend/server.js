@@ -6487,18 +6487,22 @@ app.post('/api/admin/events', authenticate, authorize('admin'),
                         event.image = `/uploads/${file.filename}`;
                         console.log('📸 Featured image:', event.image);
                     }
-                    // Gallery images (gallery_0, gallery_1, etc. OR gallery_images)
-                    else if (fieldname.startsWith('gallery_') || fieldname === 'gallery_images') {
-                        if (event.gallery[galleryIndex]) {
-                            event.gallery[galleryIndex].url = `/uploads/${file.filename}`;
-                        } else {
-                            event.gallery.push({
-                                url: `/uploads/${file.filename}`,
-                                caption: ''
-                            });
-                        }
-                        galleryIndex++;
-                    }
+
+
+                     // Gallery images (gallery_0, gallery_1, gallery_2, etc.)
+else if (fieldname.startsWith('gallery_')) {
+    const index = parseInt(fieldname.replace('gallery_', ''));
+    if (!isNaN(index)) {
+        // Make sure we have enough slots in the gallery array
+        while (event.gallery.length <= index) {
+            event.gallery.push({ url: '', caption: '' });
+        }
+        event.gallery[index].url = `/uploads/${file.filename}`;
+        console.log(`📸 Gallery image ${index}: ${file.filename}`);
+    }
+}   
+                        
+
                     // Winner images (winner_image_0, winner_image_1, etc. OR winner_images)
                     else if (fieldname.startsWith('winner_image_') || fieldname === 'winner_images') {
                         if (event.winners[winnerIndex]) {
@@ -6541,17 +6545,18 @@ app.post('/api/admin/events', authenticate, authorize('admin'),
 );
 
 
+
 // ============================================
-// PAST EVENTS - UPDATE WITH ERROR HANDLING
+// PAST EVENTS - UPDATE WITH MULTIPLE GALLERY IMAGES
 // ============================================
 app.put('/api/admin/events/:id', authenticate, authorize('admin'),
-    handleUpload(upload.fields([
-        { name: 'featured_image', maxCount: 1 },
-        { name: 'winner_images', maxCount: 50 },
-        { name: 'gallery_images', maxCount: 50 }
-    ])),
+    handleUpload(upload.any()),
     async (req, res) => {
         try {
+            console.log('📝 UPDATE EVENT - Request received');
+            console.log('📦 Body keys:', Object.keys(req.body));
+            console.log('📦 Files:', req.files ? req.files.length : 0);
+            
             const event = await PastEvent.findById(req.params.id);
             if (!event) {
                 return res.status(404).json({ success: false, message: 'Event not found' });
@@ -6559,12 +6564,15 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'),
             
             let eventData;
             
+            // Handle both JSON and FormData
             if (req.body.eventData) {
                 try {
                     eventData = typeof req.body.eventData === 'string' 
                         ? JSON.parse(req.body.eventData) 
                         : req.body.eventData;
+                    console.log('✅ Parsed eventData from FormData');
                 } catch (e) {
+                    console.error('❌ Failed to parse eventData:', e.message);
                     return res.status(400).json({
                         success: false,
                         message: 'Invalid event data format: ' + e.message
@@ -6572,15 +6580,25 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'),
                 }
             } else {
                 eventData = req.body;
+                console.log('📦 Using req.body directly');
             }
             
+            // Extract and validate
             const {
-                title, edition, tagline, description, event_date,
-                status, winner_count, category_count, partner_count,
-                winners, gallery
+                title = '',
+                edition = '',
+                tagline = '',
+                description = '',
+                event_date,
+                status = 'draft',
+                winner_count = 0,
+                category_count = 0,
+                partner_count = 0,
+                winners = [],
+                gallery = []
             } = eventData;
             
-            // Update fields
+            // Update basic fields
             if (title) event.title = String(title).trim();
             if (edition) event.edition = String(edition).trim();
             if (tagline !== undefined) event.tagline = String(tagline || '').trim();
@@ -6610,31 +6628,48 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'),
                 }));
             }
             
-            // Handle uploaded files
-            if (req.files) {
-                if (req.files.featured_image && req.files.featured_image[0]) {
-                    event.image = `/uploads/${req.files.featured_image[0].filename}`;
-                }
+            // ============================================
+            // FIXED: Process uploaded files from req.files
+            // ============================================
+            if (req.files && req.files.length > 0) {
+                // Sort files by fieldname to maintain order
+                const sortedFiles = req.files.sort((a, b) => {
+                    const aNum = parseInt(a.fieldname.replace(/[^0-9]/g, '')) || 0;
+                    const bNum = parseInt(b.fieldname.replace(/[^0-9]/g, '')) || 0;
+                    return aNum - bNum;
+                });
                 
-                if (req.files.winner_images && req.files.winner_images.length > 0) {
-                    req.files.winner_images.forEach((file, index) => {
-                        if (event.winners[index]) {
-                            event.winners[index].image = `/uploads/${file.filename}`;
-                        }
-                    });
-                }
+                let galleryIndex = 0;
+                let winnerIndex = 0;
                 
-                if (req.files.gallery_images && req.files.gallery_images.length > 0) {
-                    req.files.gallery_images.forEach((file, index) => {
-                        if (event.gallery[index]) {
+                for (const file of sortedFiles) {
+                    const fieldname = file.fieldname;
+                    
+                    // Featured image
+                    if (fieldname === 'featured_image') {
+                        event.image = `/uploads/${file.filename}`;
+                        console.log(`📸 Featured image: ${file.filename}`);
+                    }
+                    // Gallery images (gallery_0, gallery_1, gallery_2, etc.)
+                    else if (fieldname.startsWith('gallery_')) {
+                        const index = parseInt(fieldname.replace('gallery_', ''));
+                        if (!isNaN(index)) {
+                            // Make sure we have enough slots in the gallery array
+                            while (event.gallery.length <= index) {
+                                event.gallery.push({ url: '', caption: '' });
+                            }
                             event.gallery[index].url = `/uploads/${file.filename}`;
-                        } else {
-                            event.gallery.push({
-                                url: `/uploads/${file.filename}`,
-                                caption: ''
-                            });
+                            console.log(`📸 Gallery image ${index}: ${file.filename}`);
                         }
-                    });
+                    }
+                    // Winner images (winner_image_0, winner_image_1, etc.)
+                    else if (fieldname.startsWith('winner_image_')) {
+                        const index = parseInt(fieldname.replace('winner_image_', ''));
+                        if (!isNaN(index) && event.winners[index]) {
+                            event.winners[index].image = `/uploads/${file.filename}`;
+                            console.log(`📸 Winner image ${index}: ${file.filename}`);
+                        }
+                    }
                 }
             }
             
@@ -6647,7 +6682,16 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'),
             res.json({
                 success: true,
                 message: 'Event updated successfully!',
-                event
+                event: {
+                    _id: event._id,
+                    title: event.title,
+                    edition: event.edition,
+                    status: event.status,
+                    event_date: event.event_date,
+                    image: event.image,
+                    winner_count: event.winners.length,
+                    gallery_count: event.gallery.length
+                }
             });
             
         } catch (error) {
@@ -6659,6 +6703,8 @@ app.put('/api/admin/events/:id', authenticate, authorize('admin'),
         }
     }
 );
+
+
 
 // DELETE past event (admin)
 app.delete('/api/admin/events/:id', authenticate, authorize('admin'), async (req, res) => {
