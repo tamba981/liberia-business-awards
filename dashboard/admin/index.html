@@ -5,7 +5,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Liberia Business Awards</title>
     
+    <!-- ============ ADMIN DASHBOARD SECURITY LAYER - FIXED VERSION ============ -->
+<script>
+(function() {
+    'use strict';
+
+    // -------------------------------------------------------------------------
+    // 1. SAFE CONSOLE NEUTRALIZATION (NO BYPASSES, NO EXCEPTIONS)
+    // -------------------------------------------------------------------------
+    const noop = function() {};
+    if (window.console) {
+        const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'assert', 'profile', 'profileEnd', 'time', 'timeEnd'];
+        methods.forEach(function(method) {
+            if (window.console[method]) {
+                window.console[method] = noop;
+            }
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. BLOCK ALL COMMON DEV TOOLS ACCESS SHORTCUTS
+    // -------------------------------------------------------------------------
+    function blockDevToolsShortcuts(e) {
+        if (e.key === 'F12') {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            return false;
+        }
+        if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. BLOCK RIGHT-CLICK CONTEXT MENU (EXCEPT ON INPUTS WHERE IT'S USEFUL)
+    // -------------------------------------------------------------------------
+    function blockContextMenu(e) {
+        const target = e.target;
+        // Allow context menu on inputs, textareas, and select elements (useful for editing)
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+            return true;
+        }
+        e.preventDefault();
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. SAFE EVENT LISTENER REGISTRATION
+    // -------------------------------------------------------------------------
+    try {
+        document.addEventListener('contextmenu', blockContextMenu);
+        window.addEventListener('keydown', blockDevToolsShortcuts);
+        document.addEventListener('contextmenu', blockContextMenu, true);
+        window.addEventListener('keydown', blockDevToolsShortcuts, true);
+    } catch (err) {
+        // Silent fail
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. REMOVE THE BROKEN DEBUGGER INTERVAL - THIS WAS CAUSING THE ISSUE
+    // -------------------------------------------------------------------------
+    // The debugger interval has been removed because it was breaking image rendering
+    // Instead, we use a passive detection method that doesn't interfere with rendering
+    
+    // -------------------------------------------------------------------------
+    // 6. PASSIVE DEVTOOLS DETECTION (DOESN'T BREAK RENDERING)
+    // -------------------------------------------------------------------------
+    let devToolsOpen = false;
+    
+    // Use a passive approach - check size without affecting rendering
+    setInterval(function() {
+        // This check doesn't use debugger and won't break image rendering
+        const threshold = 160;
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
         
+        if ((widthThreshold || heightThreshold) && !devToolsOpen) {
+            devToolsOpen = true;
+            // Optional: You could log or take action here without breaking images
+            console = { log: noop, info: noop, warn: noop, error: noop };
+        } else if (!widthThreshold && !heightThreshold && devToolsOpen) {
+            devToolsOpen = false;
+        }
+    }, 3000); // Check every 3 seconds instead of every second
+
+    // -------------------------------------------------------------------------
+    // 7. PREVENT IFRAME CLICKJACKING
+    // -------------------------------------------------------------------------
+    try {
+        if (window.self !== window.top) {
+            window.top.location = window.self.location;
+        }
+    } catch (err) {
+        // Silently ignore cross-origin restrictions
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. SECURE createElement FOR SCRIPTS (KEEP THIS - IT'S GOOD)
+    // -------------------------------------------------------------------------
+    const originalCreateElement = document.createElement;
+    document.createElement = function(tagName) {
+        const element = originalCreateElement.call(document, tagName);
+        if (tagName && tagName.toLowerCase() === 'script') {
+            const originalSetAttribute = element.setAttribute;
+            element.setAttribute = function(name, value) {
+                if (name && name.toLowerCase() === 'src') {
+                    const srcValue = value;
+                    const allowed = [
+                        window.location.origin,
+                        'https://cdnjs.cloudflare.com',
+                        'https://unpkg.com',
+                        'https://fonts.googleapis.com',
+                        'https://code.jquery.com',
+                        'https://cdn.jsdelivr.net'
+                    ];
+                    let isAllowed = false;
+                    for (let i = 0; i < allowed.length; i++) {
+                        if (srcValue.indexOf(allowed[i]) === 0) {
+                            isAllowed = true;
+                            break;
+                        }
+                    }
+                    if (!isAllowed) {
+                        return;
+                    }
+                }
+                originalSetAttribute.call(this, name, value);
+            };
+        }
+        return element;
+    };
+
+})();
+</script>
+<!-- ============ END SECURITY LAYER ============ -->    
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
