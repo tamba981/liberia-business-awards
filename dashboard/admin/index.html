@@ -1576,6 +1576,16 @@
     </a>
 </div>
 
+
+<!-- ============ PRESENTATIONS / PITCH DECK SECTION ============ -->
+<div class="menu-section">
+    <h4>Presentations</h4>
+    <a href="#" class="menu-item" onclick="showPresentationsModal()">
+        <i class="fas fa-presentation"></i>
+        <span>Pitch Deck</span>
+        <span class="badge" style="background: #87CEEB;">Live</span>
+    </a>
+</div>
                 
   <!-- ============ DIRECTORY MANAGEMENT SECTION - ADD THIS ============ -->
 <div class="menu-section">
@@ -15621,6 +15631,372 @@ window.diagnoseSpotlight = diagnoseSpotlight;
         </div>
     </div>
 </div>                           
+
+  <!-- ============ PRESENTATIONS / PITCH DECK MODAL ============ -->
+<div class="modal" id="presentationsModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 95vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2><i class="fas fa-presentation"></i> Presentation Book</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span id="pageIndicator" style="color: white; font-size: 14px; font-weight: 600;">Page 1 / 20</span>
+                <button class="modal-close" onclick="hideModal('presentationsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="modal-body" style="padding: 20px; background: #1a1a2e; position: relative;">
+            <!-- Presentation Controls - Top -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; gap: 8px;">
+                    <button class="sheet-btn secondary" onclick="prevPage()" style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <button class="sheet-btn secondary" onclick="nextPage()" style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="number" id="pageJump" min="1" max="20" value="1" 
+                           style="width: 60px; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; text-align: center;">
+                    <button class="sheet-btn secondary" onclick="jumpToPage()" style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                        Go
+                    </button>
+                    <button class="sheet-btn" onclick="toggleFullscreen()" style="padding: 8px 16px; background: rgba(135,206,235,0.3); color: white; border: 1px solid rgba(135,206,235,0.4);">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                    <button class="sheet-btn" onclick="startPresentation()" style="padding: 8px 16px; background: rgba(255,0,0,0.3); color: white; border: 1px solid rgba(255,0,0,0.4);">
+                        <i class="fas fa-play"></i> Present
+                    </button>
+                </div>
+            </div>
+            
+            <!-- PDF Viewer Container -->
+            <div id="pdfViewerContainer" style="background: #0d0d1a; border-radius: 12px; overflow: hidden; position: relative; height: 75vh; border: 1px solid rgba(255,255,255,0.1);">
+                <div id="pdfLoadingOverlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 10; flex-direction: column;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #87CEEB;"></i>
+                    <p style="color: white; margin-top: 20px; font-weight: 500;">Loading Presentation...</p>
+                    <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 10px; overflow: hidden;">
+                        <div id="pdfLoadProgress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FF0000, #87CEEB); transition: width 0.3s;"></div>
+                    </div>
+                </div>
+                <iframe id="pdfViewer" 
+                        src="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#toolbar=0" 
+                        style="width: 100%; height: 100%; border: none;"
+                        allowfullscreen>
+                </iframe>
+            </div>
+            
+            <!-- Thumbnail Navigation -->
+            <div style="display: flex; justify-content: center; gap: 6px; margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 12px; overflow-x: auto; flex-wrap: nowrap; max-width: 100%;">
+                <button class="thumbnail-nav" onclick="prevPage()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div id="pageThumbnails" style="display: flex; gap: 4px; overflow-x: auto; padding: 4px 0; max-width: 80%;">
+                    <!-- Thumbnails generated by JavaScript -->
+                </div>
+                <button class="thumbnail-nav" onclick="nextPage()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <!-- Presentation Info -->
+            <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 13px; color: rgba(255,255,255,0.6); flex-wrap: wrap; gap: 10px;">
+                <span><i class="fas fa-file-pdf"></i> Liberia Business Awards Pitch Deck</span>
+                <span><i class="fas fa-calendar"></i> Version 3.0</span>
+                <span><i class="fas fa-download"></i> <a href="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf" target="_blank" style="color: #87CEEB; text-decoration: none;">Download PDF</a></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PRESENTATION MODE MODAL (Fullscreen Presentation) ============ -->
+<div class="modal" id="presentationModeModal" style="background: #000; z-index: 9999;">
+    <div class="modal-content" style="max-width: 100%; max-height: 100vh; background: #000; border-radius: 0; margin: 0; width: 100%; height: 100vh;">
+        <div style="position: absolute; top: 20px; right: 20px; z-index: 100; display: flex; gap: 10px;">
+            <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+                <i class="fas fa-times"></i> Exit
+            </button>
+        </div>
+        <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 20px; align-items: center;">
+            <button onclick="prevPagePresentation()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 20px;">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="presentationPageIndicator" style="color: white; font-size: 18px; font-weight: 600;">1 / 20</span>
+            <button onclick="nextPagePresentation()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 20px;">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        <iframe id="presentationViewer" 
+                src="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#toolbar=0&navpanes=0" 
+                style="width: 100%; height: 100%; border: none; background: #000;">
+        </iframe>
+    </div>
+</div>
+
+<script>
+// ============================================
+// PRESENTATIONS / PITCH DECK CONTROLS
+// ============================================
+
+let currentPage = 1;
+const totalPages = 20; // Update this based on your actual PDF page count
+
+// Show Presentations Modal
+function showPresentationsModal() {
+    hideAllModals();
+    const modal = document.getElementById('presentationsModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        generateThumbnails();
+        updatePageIndicator();
+        // Reset to page 1
+        currentPage = 1;
+        jumpToPage();
+    }
+}
+
+// Generate page thumbnails
+function generateThumbnails() {
+    const container = document.getElementById('pageThumbnails');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    for (let i = 1; i <= totalPages; i++) {
+        const thumb = document.createElement('button');
+        thumb.textContent = i;
+        thumb.style.cssText = `
+            background: ${i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.1)'};
+            border: 1px solid ${i === currentPage ? '#FF0000' : 'rgba(255,255,255,0.2)'};
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            min-width: 30px;
+            transition: all 0.3s;
+        `;
+        thumb.onmouseover = function() {
+            this.style.background = 'rgba(255,255,255,0.2)';
+        };
+        thumb.onmouseout = function() {
+            this.style.background = i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.1)';
+        };
+        thumb.onclick = function() {
+            currentPage = i;
+            jumpToPage();
+            updateThumbnails();
+        };
+        container.appendChild(thumb);
+    }
+}
+
+// Update thumbnail active state
+function updateThumbnails() {
+    const thumbs = document.querySelectorAll('#pageThumbnails button');
+    thumbs.forEach((thumb, index) => {
+        const pageNum = index + 1;
+        thumb.style.background = pageNum === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.1)';
+        thumb.style.borderColor = pageNum === currentPage ? '#FF0000' : 'rgba(255,255,255,0.2)';
+    });
+}
+
+// Update page indicator
+function updatePageIndicator() {
+    const indicator = document.getElementById('pageIndicator');
+    const jumpInput = document.getElementById('pageJump');
+    if (indicator) {
+        indicator.textContent = `Page ${currentPage} / ${totalPages}`;
+    }
+    if (jumpInput) {
+        jumpInput.value = currentPage;
+    }
+    // Update presentation mode indicator
+    const presIndicator = document.getElementById('presentationPageIndicator');
+    if (presIndicator) {
+        presIndicator.textContent = `${currentPage} / ${totalPages}`;
+    }
+}
+
+// Navigate to previous page
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        jumpToPage();
+        updateThumbnails();
+        updatePageIndicator();
+    }
+}
+
+// Navigate to next page
+function nextPage() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        jumpToPage();
+        updateThumbnails();
+        updatePageIndicator();
+    }
+}
+
+// Jump to specific page
+function jumpToPage() {
+    const jumpInput = document.getElementById('pageJump');
+    let page = parseInt(jumpInput ? jumpInput.value : currentPage);
+    
+    if (isNaN(page) || page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    
+    currentPage = page;
+    
+    const viewer = document.getElementById('pdfViewer');
+    if (viewer) {
+        // Update the iframe src to navigate to specific page
+        const baseUrl = 'https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf';
+        viewer.src = `${baseUrl}#page=${currentPage}&toolbar=0`;
+    }
+    
+    updatePageIndicator();
+    updateThumbnails();
+}
+
+// Toggle fullscreen mode
+function toggleFullscreen() {
+    const container = document.getElementById('pdfViewerContainer');
+    if (!document.fullscreenElement) {
+        if (container.requestFullscreen) {
+            container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+            container.webkitRequestFullscreen();
+        } else if (container.msRequestFullscreen) {
+            container.msRequestFullscreen();
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
+
+// Start presentation mode
+function startPresentation() {
+    const modal = document.getElementById('presentationModeModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        // Update viewer
+        const viewer = document.getElementById('presentationViewer');
+        if (viewer) {
+            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0`;
+        }
+        updatePageIndicator();
+    }
+}
+
+// Exit presentation mode
+function exitPresentation() {
+    const modal = document.getElementById('presentationModeModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Presentation navigation
+function prevPagePresentation() {
+    if (currentPage > 1) {
+        currentPage--;
+        const viewer = document.getElementById('presentationViewer');
+        if (viewer) {
+            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0`;
+        }
+        updatePageIndicator();
+    }
+}
+
+function nextPagePresentation() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        const viewer = document.getElementById('presentationViewer');
+        if (viewer) {
+            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0`;
+        }
+        updatePageIndicator();
+    }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    const presentationsModal = document.getElementById('presentationsModal');
+    if (presentationsModal && presentationsModal.classList.contains('active')) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+            e.preventDefault();
+            nextPage();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+            e.preventDefault();
+            prevPage();
+        } else if (e.key === 'f' || e.key === 'F') {
+            e.preventDefault();
+            toggleFullscreen();
+        } else if (e.key === 'p' || e.key === 'P') {
+            e.preventDefault();
+            startPresentation();
+        }
+    }
+    
+    // Presentation mode keyboard navigation
+    const presentationModal = document.getElementById('presentationModeModal');
+    if (presentationModal && presentationModal.classList.contains('active')) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+            e.preventDefault();
+            nextPagePresentation();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+            e.preventDefault();
+            prevPagePresentation();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            exitPresentation();
+        }
+    }
+});
+
+// Initialize page jump input
+document.addEventListener('DOMContentLoaded', function() {
+    const jumpInput = document.getElementById('pageJump');
+    if (jumpInput) {
+        jumpInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                jumpToPage();
+            }
+        });
+    }
+    
+    // Handle PDF loading
+    const viewer = document.getElementById('pdfViewer');
+    if (viewer) {
+        viewer.addEventListener('load', function() {
+            const overlay = document.getElementById('pdfLoadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        });
+        // Fallback: hide overlay after 5 seconds
+        setTimeout(function() {
+            const overlay = document.getElementById('pdfLoadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }, 5000);
+    }
+});
+
+console.log('✅ Presentations Module Loaded');
+console.log('📄 Pitch Deck ready for presentation');
+console.log('⌨️ Keyboard shortcuts: ← → for navigation, F for fullscreen, P for presentation mode');
+</script>
                             
 </body>
 </html>
