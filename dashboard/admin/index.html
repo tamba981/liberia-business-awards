@@ -15632,7 +15632,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
     </div>
 </div>                           
 
-<!-- ============ PRESENTATIONS MODAL - FIXED GLASSMORPHISM ============ -->
+  <!-- ============ PRESENTATIONS MODAL - CONTROLS IN DROPDOWN BELOW ============ -->
 <div class="modal" id="presentationsModal">
     <div class="modal-content" style="max-width: 1400px; max-height: 98vh; background: #0a0a1a;">
         <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 18px 30px;">
@@ -15647,10 +15647,10 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                 </button>
             </div>
         </div>
-        <div class="modal-body" style="padding: 0; background: #0a0a1a; max-height: calc(98vh - 70px);">
+        <div class="modal-body" style="padding: 0; background: #0a0a1a; max-height: calc(98vh - 70px); display: flex; flex-direction: column;">
             
-            <!-- PDF Viewer Container -->
-            <div style="position: relative; height: calc(85vh); background: #0a0a1a; overflow: hidden;">
+            <!-- PDF Viewer Container - TAKES FULL HEIGHT -->
+            <div style="position: relative; flex: 1; background: #0a0a1a; overflow: hidden; min-height: 0;">
                 <!-- Canvas for PDF rendering -->
                 <canvas id="pdfCanvas" style="width: 100%; height: 100%; display: block; background: #0a0a1a;"></canvas>
                 
@@ -15663,7 +15663,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                     </div>
                 </div>
                 
-                <!-- Navigation Overlay Controls - LIGHTER GLASSMORPHISM -->
+                <!-- Navigation Overlay Controls - LEFT/RIGHT ONLY -->
                 <div style="position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; z-index: 15;">
                     <button id="prevPageBtn" onclick="prevPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);" 
                             onmouseover="this.style.background='rgba(255,0,0,0.2)'; this.style.transform='scale(1.1)'; this.style.borderColor='rgba(255,0,0,0.3)';" 
@@ -15676,57 +15676,74 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                         <i class="fas fa-chevron-right" style="font-size: 20px;"></i>
                     </button>
                 </div>
+            </div>
+            
+            <!-- ============ CONTROLS DROPDOWN - MOVED BELOW PRESENTATION ============ -->
+            <div style="background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px);">
+                <!-- Toggle Button -->
+                <div style="display: flex; justify-content: center; padding: 6px 0;">
+                    <button onclick="toggleControls()" id="controlsToggleBtn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); padding: 4px 20px; border-radius: 12px; cursor: pointer; font-size: 11px; transition: all 0.3s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                        <i class="fas fa-chevron-up" id="controlsChevron"></i>
+                        <span>Controls</span>
+                    </button>
+                </div>
                 
-                <!-- Bottom Controls - LIGHTER GLASSMORPHISM -->
-                <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 15; display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 30px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06);">
-                    <button onclick="prevPage()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-                        <i class="fas fa-chevron-left"></i>
+                <!-- Collapsible Controls Panel -->
+                <div id="controlsPanel" style="padding: 10px 20px 14px 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                    <!-- Page Navigation Controls -->
+                    <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.04);">
+                        <button onclick="prevPage()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.7); padding: 6px 10px; border-radius: 12px; cursor: pointer; transition: all 0.3s; font-size: 13px;" onmouseover="this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span style="color: rgba(255,255,255,0.4); font-size: 12px;">Page</span>
+                        <input type="number" id="pageJump" min="1" value="1" 
+                               style="width: 50px; padding: 4px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.05); color: white; text-align: center; font-size: 13px; outline: none;">
+                        <span style="color: rgba(255,255,255,0.3); font-size: 12px;">/ <span id="totalPagesDisplay2">Loading...</span></span>
+                        <button id="goButton" onclick="jumpToPage()" style="background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.2); color: white; padding: 6px 14px; border-radius: 14px; cursor: pointer; transition: all 0.3s; font-size: 12px;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,0,0,0.15)'">
+                            Go
+                        </button>
+                        <button onclick="nextPage()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.7); padding: 6px 10px; border-radius: 12px; cursor: pointer; transition: all 0.3s; font-size: 13px;" onmouseover="this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Separator -->
+                    <div style="width: 1px; height: 28px; background: rgba(255,255,255,0.06);"></div>
+                    
+                    <!-- Action Buttons -->
+                    <button onclick="toggleFullscreen()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.7); padding: 6px 14px; border-radius: 16px; cursor: pointer; transition: all 0.3s; font-size: 13px; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='rgba(135,206,235,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Fullscreen (F)">
+                        <i class="fas fa-expand"></i> Fullscreen
                     </button>
                     
-                    <span style="color: rgba(255,255,255,0.5); font-size: 13px;">Page</span>
-                    <input type="number" id="pageJump" min="1" value="1" 
-                           style="width: 60px; padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.05); color: white; text-align: center; font-size: 14px; outline: none;">
-                    <span style="color: rgba(255,255,255,0.3); font-size: 13px;">/ <span id="totalPagesDisplay2">Loading...</span></span>
-                    
-                    <button id="goButton" onclick="jumpToPage()" style="background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.2); color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 13px;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,0,0,0.15)'">
-                        Go
-                    </button>
-                    
-                    <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.08);"></div>
-                    
-                    <button onclick="toggleFullscreen()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(135,206,235,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Fullscreen (F)">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    
-                    <button onclick="startPresentation()" style="background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.2); color: white; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,0,0,0.15)'" title="Presentation Mode (P)">
+                    <button onclick="startPresentation()" style="background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.2); color: white; padding: 6px 18px; border-radius: 16px; cursor: pointer; transition: all 0.3s; font-size: 13px; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,0,0,0.15)'" title="Presentation Mode (P)">
                         <i class="fas fa-play"></i> Present
                     </button>
                     
-                    <button onclick="downloadPDF()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(135,206,235,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Download PDF">
-                        <i class="fas fa-download"></i>
+                    <button onclick="downloadPDF()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.7); padding: 6px 14px; border-radius: 16px; cursor: pointer; transition: all 0.3s; font-size: 13px; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='rgba(135,206,235,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Download PDF">
+                        <i class="fas fa-download"></i> Download
                     </button>
                 </div>
             </div>
             
-            <!-- Thumbnail Strip - LIGHTER GLASSMORPHISM -->
-            <div style="background: rgba(0,0,0,0.2); padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.03); display: flex; align-items: center; gap: 8px; overflow-x: auto; max-height: 100px; scrollbar-width: thin; backdrop-filter: blur(5px);">
-                <div id="pageThumbnails" style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
+            <!-- Thumbnail Strip -->
+            <div style="background: rgba(0,0,0,0.15); padding: 8px 20px; border-top: 1px solid rgba(255,255,255,0.02); display: flex; align-items: center; gap: 8px; overflow-x: auto; max-height: 80px; scrollbar-width: thin; backdrop-filter: blur(5px);">
+                <div id="pageThumbnails" style="display: flex; gap: 5px; align-items: center; flex-wrap: nowrap;">
                     <!-- Generated by JavaScript -->
                 </div>
             </div>
             
-            <!-- Presentation Info Bar -->
-            <div style="background: rgba(0,0,0,0.15); padding: 8px 30px; border-top: 1px solid rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; backdrop-filter: blur(5px);">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span style="color: rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 1px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck</span>
-                    <span style="color: rgba(255,255,255,0.1);">|</span>
-                    <span style="color: rgba(255,255,255,0.2); font-size: 11px;"><i class="fas fa-keyboard"></i> ← → to navigate</span>
-                </div>
+            <!-- Info Bar -->
+            <div style="background: rgba(0,0,0,0.1); padding: 4px 30px; border-top: 1px solid rgba(255,255,255,0.01); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="color: rgba(255,255,255,0.1); font-size: 10px;">POWERED BY</span>
-                    <span style="color: rgba(255,255,255,0.15); font-size: 10px; letter-spacing: 2px;">LBA</span>
-                    <span style="color: #FF0000; font-weight: 700; font-size: 12px;">●</span>
-                    <span style="color: #87CEEB; font-weight: 700; font-size: 12px;">●</span>
+                    <span style="color: rgba(255,255,255,0.2); font-size: 10px; letter-spacing: 1px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck</span>
+                    <span style="color: rgba(255,255,255,0.08);">|</span>
+                    <span style="color: rgba(255,255,255,0.15); font-size: 10px;"><i class="fas fa-keyboard"></i> ← → to navigate</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: rgba(255,255,255,0.08); font-size: 9px;">POWERED BY</span>
+                    <span style="color: rgba(255,255,255,0.12); font-size: 9px; letter-spacing: 2px;">LBA</span>
+                    <span style="color: #FF0000; font-weight: 700; font-size: 10px;">●</span>
+                    <span style="color: #87CEEB; font-weight: 700; font-size: 10px;">●</span>
                 </div>
             </div>
         </div>
@@ -15780,7 +15797,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 
-<!-- ============ PRESENTATION JAVASCRIPT - FIXED "GO" BUTTON ============ -->
+<!-- ============ PRESENTATION JAVASCRIPT ============ -->
 <script>
 // ============================================
 // PRESENTATION SYSTEM - FULLY FUNCTIONAL
@@ -15799,6 +15816,7 @@ let hideTopBarTimeout = null;
 let isRendering = false;
 let renderQueue = [];
 let isPdfLoaded = false;
+let controlsVisible = true;
 
 // ============================================
 // PDF.JS INITIALIZATION
@@ -15959,7 +15977,7 @@ function queueRender(pageNum, canvasId = 'pdfCanvas') {
 }
 
 // ============================================
-// NAVIGATION FUNCTIONS - ALL WORKING
+// NAVIGATION FUNCTIONS
 // ============================================
 
 function prevPage() {
@@ -15977,25 +15995,20 @@ function nextPage() {
 }
 
 function jumpToPage() {
-    // FIXED: Properly get the value and navigate
     const jumpInput = document.getElementById('pageJump');
     if (!jumpInput) return;
     
     let page = parseInt(jumpInput.value);
     
-    // Validate the page number
     if (isNaN(page) || page < 1) page = 1;
     if (page > totalPages) page = totalPages;
     
-    // Update the input to show the valid page
     jumpInput.value = page;
     
-    // Navigate to the page
     if (pdfDoc && page !== currentPage) {
         queueRender(page);
         animatePageTransition();
     } else if (pdfDoc && page === currentPage) {
-        // If same page, just update indicator
         updatePageIndicator();
     }
 }
@@ -16008,6 +16021,28 @@ function animatePageTransition() {
         setTimeout(() => {
             canvas.style.opacity = '1';
         }, 150);
+    }
+}
+
+// ============================================
+// CONTROLS TOGGLE - NEW!
+// ============================================
+
+function toggleControls() {
+    const panel = document.getElementById('controlsPanel');
+    const chevron = document.getElementById('controlsChevron');
+    const toggleBtn = document.getElementById('controlsToggleBtn');
+    
+    controlsVisible = !controlsVisible;
+    
+    if (controlsVisible) {
+        panel.style.display = 'flex';
+        chevron.className = 'fas fa-chevron-up';
+        if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-chevron-up" id="controlsChevron"></i><span>Controls</span>';
+    } else {
+        panel.style.display = 'none';
+        chevron.className = 'fas fa-chevron-down';
+        if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-chevron-down" id="controlsChevron"></i><span>Controls</span>';
     }
 }
 
@@ -16028,14 +16063,13 @@ function generateThumbnails() {
             background: ${i === currentPage ? 'rgba(255,0,0,0.3)' : 'rgba(255,255,255,0.03)'};
             border: 2px solid ${i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.05)'};
             color: ${i === currentPage ? 'white' : 'rgba(255,255,255,0.5)'};
-            padding: 6px 14px;
-            border-radius: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: ${i === currentPage ? '700' : '400'};
-            min-width: 35px;
+            min-width: 30px;
             transition: all 0.3s ease;
-            position: relative;
             flex-shrink: 0;
         `;
         thumb.onmouseover = function() {
@@ -16063,7 +16097,6 @@ function updateThumbnails() {
         thumb.style.fontWeight = pageNum === currentPage ? '700' : '400';
     });
     
-    // Scroll to active thumbnail
     const activeThumb = document.querySelector('#pageThumbnails button:nth-child(' + currentPage + ')');
     if (activeThumb) {
         activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -16083,7 +16116,6 @@ function updatePageIndicator() {
     if (jumpInput) {
         jumpInput.value = currentPage;
     }
-    // Update presentation indicators
     const presIndicator = document.getElementById('presentationPageIndicator');
     const presNumber = document.getElementById('presentationPageNumber');
     if (presIndicator) presIndicator.innerHTML = `${currentPage} / <span id="presentationTotalPages">${totalPages}</span>`;
@@ -16100,7 +16132,13 @@ function showPresentationsModal() {
     if (modal) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        // Load PDF if not loaded
+        // Reset controls visibility
+        controlsVisible = true;
+        const panel = document.getElementById('controlsPanel');
+        const chevron = document.getElementById('controlsChevron');
+        if (panel) panel.style.display = 'flex';
+        if (chevron) chevron.className = 'fas fa-chevron-up';
+        
         if (!pdfDoc) {
             loadPDF();
         } else {
@@ -16178,7 +16216,6 @@ function startPresentation() {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         
-        // Render current page in presentation canvas
         const canvas = document.getElementById('presentationCanvas');
         if (canvas && pdfDoc) {
             renderPage(currentPage, 'presentationCanvas');
@@ -16241,7 +16278,6 @@ function showPresentationTopBar() {
 // ============================================
 
 document.addEventListener('keydown', function(e) {
-    // Main modal shortcuts
     const presentationsModal = document.getElementById('presentationsModal');
     if (presentationsModal && presentationsModal.classList.contains('active')) {
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
@@ -16263,7 +16299,6 @@ document.addEventListener('keydown', function(e) {
         }
     }
     
-    // Presentation mode shortcuts
     const presentationModal = document.getElementById('presentationModeModal');
     if (presentationModal && presentationModal.classList.contains('active')) {
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
@@ -16279,7 +16314,6 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Mouse movement in presentation mode shows top bar
 document.addEventListener('mousemove', function(e) {
     if (presentationActive) {
         const topBar = document.getElementById('presentationTopBar');
@@ -16333,7 +16367,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Also add click handler to Go button to ensure it works
     const goButton = document.getElementById('goButton');
     if (goButton) {
         goButton.addEventListener('click', function(e) {
@@ -16354,9 +16387,9 @@ styleSheet.textContent = `
 document.head.appendChild(styleSheet);
 
 console.log('✅ Fully Functional Presentation System Loaded');
-console.log('📄 Features: PDF.js rendering, auto page count, all buttons working');
+console.log('📄 Controls moved below presentation - nothing covers the content');
 console.log('⌨️ Keyboard shortcuts: ← → to navigate, F for fullscreen, P for presentation mode');
-</script>
+</script>                          
                             
 </body>
 </html>
