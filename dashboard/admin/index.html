@@ -15632,7 +15632,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
     </div>
 </div>                           
 
-<!-- ============ PRESENTATIONS / PITCH DECK MODAL - FIXED NAVIGATION ============ -->
+<!-- ============ PRESENTATIONS MODAL - FULLY FUNCTIONAL ============ -->
 <div class="modal" id="presentationsModal">
     <div class="modal-content" style="max-width: 1400px; max-height: 98vh; background: #0a0a1a;">
         <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 18px 30px;">
@@ -15640,7 +15640,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
             <div style="display: flex; gap: 15px; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px;">
                     <span style="color: rgba(255,255,255,0.7); font-size: 12px;">Page</span>
-                    <span id="pageIndicator" style="color: white; font-size: 16px; font-weight: 700;">1 / 20</span>
+                    <span id="pageIndicator" style="color: white; font-size: 16px; font-weight: 700;">1 / <span id="totalPagesDisplay">Loading...</span></span>
                 </div>
                 <button class="modal-close" onclick="hideModal('presentationsModal')" style="background: rgba(255,255,255,0.15);">
                     <i class="fas fa-times"></i>
@@ -15649,8 +15649,11 @@ window.diagnoseSpotlight = diagnoseSpotlight;
         </div>
         <div class="modal-body" style="padding: 0; background: #0a0a1a; max-height: calc(98vh - 70px);">
             
-            <!-- Main Viewer -->
-            <div style="position: relative; height: calc(85vh); background: #0a0a1a;">
+            <!-- PDF Viewer Container -->
+            <div style="position: relative; height: calc(85vh); background: #0a0a1a; overflow: hidden;">
+                <!-- Canvas for PDF rendering -->
+                <canvas id="pdfCanvas" style="width: 100%; height: 100%; display: block; background: #0a0a1a;"></canvas>
+                
                 <!-- Loading Overlay -->
                 <div id="pdfLoadingOverlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,10,26,0.9); z-index: 20; flex-direction: column;">
                     <div style="width: 80px; height: 80px; border: 4px solid rgba(135,206,235,0.1); border-top-color: #FF0000; border-radius: 50%; animation: spin 1s linear infinite;"></div>
@@ -15660,22 +15663,14 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                     </div>
                 </div>
                 
-                <!-- PDF Viewer - FIXED: Using embed with proper scaling -->
-                <div id="pdfViewerContainer" style="width: 100%; height: 100%; overflow: auto; background: #0a0a1a; position: relative;">
-                    <embed id="pdfViewer" 
-                           src="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#toolbar=0&navpanes=0&scrollbar=0" 
-                           type="application/pdf"
-                           style="width: 100%; height: 100%; border: none; background: #0a0a1a;">
-                </div>
-                
                 <!-- Navigation Overlay Controls -->
                 <div style="position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; z-index: 15;">
-                    <button onclick="prevPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);" 
+                    <button id="prevPageBtn" onclick="prevPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);" 
                             onmouseover="this.style.background='rgba(255,0,0,0.3)'; this.style.transform='scale(1.1)';" 
                             onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.transform='scale(1)';">
                         <i class="fas fa-chevron-left" style="font-size: 20px;"></i>
                     </button>
-                    <button onclick="nextPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
+                    <button id="nextPageBtn" onclick="nextPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
                             onmouseover="this.style.background='rgba(255,0,0,0.3)'; this.style.transform='scale(1.1)';" 
                             onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.transform='scale(1)';">
                         <i class="fas fa-chevron-right" style="font-size: 20px;"></i>
@@ -15689,9 +15684,9 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                     </button>
                     
                     <span style="color: rgba(255,255,255,0.6); font-size: 13px;">Page</span>
-                    <input type="number" id="pageJump" min="1" max="20" value="1" 
-                           style="width: 50px; padding: 4px 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; text-align: center; font-size: 14px; outline: none;">
-                    <span style="color: rgba(255,255,255,0.4); font-size: 13px;">/ <span id="totalPagesDisplay">20</span></span>
+                    <input type="number" id="pageJump" min="1" value="1" 
+                           style="width: 60px; padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; text-align: center; font-size: 14px; outline: none;">
+                    <span style="color: rgba(255,255,255,0.4); font-size: 13px;">/ <span id="totalPagesDisplay2">Loading...</span></span>
                     
                     <button onclick="jumpToPage()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 13px;" onmouseover="this.style.background='rgba(135,206,235,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                         Go
@@ -15723,7 +15718,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
             <!-- Presentation Info Bar -->
             <div style="background: rgba(0,0,0,0.2); padding: 8px 30px; border-top: 1px solid rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <span style="color: rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 1px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck v3.0</span>
+                    <span style="color: rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 1px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck</span>
                     <span style="color: rgba(255,255,255,0.15);">|</span>
                     <span style="color: rgba(255,255,255,0.25); font-size: 11px;"><i class="fas fa-keyboard"></i> ← → to navigate</span>
                 </div>
@@ -15738,7 +15733,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
     </div>
 </div>
 
-<!-- ============ PRESENTATION MODE MODAL - ENHANCED ============ -->
+<!-- ============ PRESENTATION MODE MODAL ============ -->
 <div class="modal" id="presentationModeModal" style="background: #000; z-index: 9999; padding: 0;">
     <div class="modal-content" style="max-width: 100%; max-height: 100vh; background: #000; border-radius: 0; margin: 0; width: 100%; height: 100vh; overflow: hidden;">
         <!-- Top Bar -->
@@ -15746,20 +15741,15 @@ window.diagnoseSpotlight = diagnoseSpotlight;
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span style="color: rgba(255,255,255,0.6); font-size: 14px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck</span>
                 <span style="color: rgba(255,255,255,0.2);">|</span>
-                <span id="presentationPageIndicator" style="color: white; font-size: 16px; font-weight: 600;">1 / 20</span>
+                <span id="presentationPageIndicator" style="color: white; font-size: 16px; font-weight: 600;">1 / <span id="presentationTotalPages">Loading...</span></span>
             </div>
             <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                 <i class="fas fa-times"></i> Exit (Esc)
             </button>
         </div>
         
-        <!-- Presentation Viewer - FIXED: Using embed -->
-        <div style="width: 100%; height: 100%; overflow: auto; background: #000;">
-            <embed id="presentationViewer" 
-                   src="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#toolbar=0&navpanes=0&scrollbar=0" 
-                   type="application/pdf"
-                   style="width: 100%; height: 100%; border: none; background: #000;">
-        </div>
+        <!-- PDF Canvas for Presentation -->
+        <canvas id="presentationCanvas" style="width: 100%; height: 100%; display: block; background: #000;"></canvas>
         
         <!-- Bottom Navigation -->
         <div style="position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 25px; align-items: center; background: rgba(0,0,0,0.7); padding: 12px 30px; border-radius: 50px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05);">
@@ -15770,7 +15760,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
             <div style="display: flex; align-items: center; gap: 12px;">
                 <span style="color: rgba(255,255,255,0.3); font-size: 13px;">Page</span>
                 <span id="presentationPageNumber" style="color: white; font-size: 18px; font-weight: 700; min-width: 30px; text-align: center;">1</span>
-                <span style="color: rgba(255,255,255,0.2); font-size: 13px;">/ <span id="presentationTotalPages">20</span></span>
+                <span style="color: rgba(255,255,255,0.2); font-size: 13px;">/ <span id="presentationTotalPages2">Loading...</span></span>
             </div>
             
             <button onclick="nextPagePresentation()" style="background: rgba(255,255,255,0.05); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
@@ -15786,63 +15776,178 @@ window.diagnoseSpotlight = diagnoseSpotlight;
     </div>
 </div>
 
-<!-- ============ ENHANCED PRESENTATION JAVASCRIPT - WITH WORKING NAVIGATION ============ -->
+<!-- ============ PDF.JS LIBRARY ============ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+
+<!-- ============ PRESENTATION JAVASCRIPT - FULLY FUNCTIONAL ============ -->
 <script>
 // ============================================
-// ENHANCED PRESENTATIONS / PITCH DECK CONTROLS
+// PRESENTATION SYSTEM - FULLY FUNCTIONAL
 // ============================================
 
+// Configuration
+const PDF_URL = 'https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf';
+
+// State
 let currentPage = 1;
-const totalPages = 20;
+let totalPages = 0;
+let pdfDoc = null;
+let scale = 1.0;
 let presentationActive = false;
 let hideTopBarTimeout = null;
+let isRendering = false;
+let renderQueue = [];
 
 // ============================================
-// FIXED: PDF PAGE NAVIGATION USING SCROLL POSITION
+// PDF.JS INITIALIZATION
 // ============================================
 
-// Calculate approximate scroll position for each page
-// PDF pages are roughly 842px tall (A4 at 72dpi)
-const PAGE_HEIGHT = 842; // Approximate height of each PDF page in pixels
-const VIEWER_HEIGHT = window.innerHeight - 200; // Approximate visible area
+// Set PDF.js worker source
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-function getScrollPositionForPage(page) {
-    // Each page starts at (page - 1) * PAGE_HEIGHT
-    // But we want to center it in the viewer
-    const pageStart = (page - 1) * PAGE_HEIGHT;
-    // Center the page in the viewport
-    const centerOffset = (VIEWER_HEIGHT - PAGE_HEIGHT) / 2;
-    return Math.max(0, pageStart - centerOffset);
+async function loadPDF() {
+    try {
+        const loadingOverlay = document.getElementById('pdfLoadingOverlay');
+        const progressBar = document.getElementById('pdfLoadProgress');
+        
+        if (loadingOverlay) loadingOverlay.style.display = 'flex';
+        if (progressBar) progressBar.style.width = '10%';
+        
+        // Load the PDF document
+        const loadingTask = pdfjsLib.getDocument(PDF_URL);
+        loadingTask.onProgress = function(progress) {
+            const percent = (progress.loaded / progress.total) * 100;
+            if (progressBar) progressBar.style.width = Math.min(percent, 90) + '%';
+        };
+        
+        pdfDoc = await loadingTask.promise;
+        totalPages = pdfDoc.numPages;
+        
+        if (progressBar) progressBar.style.width = '100%';
+        
+        // Update page displays
+        document.getElementById('totalPagesDisplay').textContent = totalPages;
+        document.getElementById('totalPagesDisplay2').textContent = totalPages;
+        document.getElementById('presentationTotalPages').textContent = totalPages;
+        document.getElementById('presentationTotalPages2').textContent = totalPages;
+        
+        // Update page jump max
+        document.getElementById('pageJump').max = totalPages;
+        
+        // Generate thumbnails
+        generateThumbnails();
+        
+        // Render first page
+        currentPage = 1;
+        await renderPage(currentPage);
+        
+        // Hide loading overlay
+        if (loadingOverlay) {
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 500);
+        }
+        
+        updatePageIndicator();
+        updateThumbnails();
+        
+        console.log(`✅ PDF Loaded: ${totalPages} pages`);
+        
+    } catch (error) {
+        console.error('❌ Error loading PDF:', error);
+        document.getElementById('pdfLoadingOverlay').innerHTML = `
+            <div style="text-align: center; color: white;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #FF0000; margin-bottom: 20px;"></i>
+                <p style="font-size: 18px; margin-bottom: 10px;">Failed to load presentation</p>
+                <p style="color: rgba(255,255,255,0.4); font-size: 14px;">${error.message}</p>
+                <button onclick="loadPDF()" style="margin-top: 20px; background: #FF0000; color: white; border: none; padding: 10px 30px; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-sync-alt"></i> Retry
+                </button>
+            </div>
+        `;
+    }
 }
 
-function navigateToPage(page) {
-    if (page < 1 || page > totalPages) return;
+// ============================================
+// PAGE RENDERING
+// ============================================
+
+async function renderPage(pageNum, canvasId = 'pdfCanvas') {
+    if (!pdfDoc) return;
+    if (pageNum < 1 || pageNum > totalPages) return;
     
-    currentPage = page;
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
     
-    // Update the embed src with the page parameter
-    const viewer = document.getElementById('pdfViewer');
-    if (viewer) {
-        const baseUrl = 'https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf';
-        // Using #page=N parameter which works with both embed and iframe
-        viewer.src = `${baseUrl}#page=${page}&toolbar=0&navpanes=0&scrollbar=0`;
+    const context = canvas.getContext('2d');
+    
+    try {
+        isRendering = true;
+        
+        // Get the page
+        const page = await pdfDoc.getPage(pageNum);
+        
+        // Calculate scale to fit the canvas
+        const container = canvas.parentElement || canvas;
+        const containerWidth = container.clientWidth || window.innerWidth - 40;
+        const containerHeight = container.clientHeight || window.innerHeight - 200;
+        
+        const viewport = page.getViewport({ scale: 1 });
+        const scaleX = (containerWidth - 40) / viewport.width;
+        const scaleY = (containerHeight - 40) / viewport.height;
+        scale = Math.min(scaleX, scaleY, 1.5);
+        
+        const scaledViewport = page.getViewport({ scale: scale });
+        
+        // Set canvas size
+        canvas.width = scaledViewport.width;
+        canvas.height = scaledViewport.height;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.objectFit = 'contain';
+        
+        // Render the page
+        const renderContext = {
+            canvasContext: context,
+            viewport: scaledViewport
+        };
+        
+        await page.render(renderContext).promise;
+        
+        // Update current page
+        currentPage = pageNum;
+        updatePageIndicator();
+        updateThumbnails();
+        
+        isRendering = false;
+        
+        // Process any queued renders
+        if (renderQueue.length > 0) {
+            const nextPage = renderQueue.shift();
+            await renderPage(nextPage, canvasId);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error rendering page:', error);
+        isRendering = false;
     }
-    
-    // Also try to scroll the container to the right position
-    const container = document.getElementById('pdfViewerContainer');
-    if (container) {
-        // Wait a moment for the PDF to load, then scroll
-        setTimeout(() => {
-            const scrollPos = getScrollPositionForPage(page);
-            container.scrollTo({
-                top: scrollPos,
-                behavior: 'smooth'
-            });
-        }, 300);
+}
+
+function queueRender(pageNum, canvasId = 'pdfCanvas') {
+    if (pageNum === currentPage && !isRendering) {
+        renderPage(pageNum, canvasId);
+    } else if (pageNum !== currentPage) {
+        // Add to queue if not already queued
+        if (!renderQueue.includes(pageNum)) {
+            renderQueue.push(pageNum);
+        }
+        // If not rendering, start the queue
+        if (!isRendering) {
+            const nextPage = renderQueue.shift();
+            renderPage(nextPage, canvasId);
+        }
     }
-    
-    updatePageIndicator();
-    updateThumbnails();
 }
 
 // ============================================
@@ -15851,14 +15956,14 @@ function navigateToPage(page) {
 
 function prevPage() {
     if (currentPage > 1) {
-        navigateToPage(currentPage - 1);
+        queueRender(currentPage - 1);
         animatePageTransition();
     }
 }
 
 function nextPage() {
     if (currentPage < totalPages) {
-        navigateToPage(currentPage + 1);
+        queueRender(currentPage + 1);
         animatePageTransition();
     }
 }
@@ -15870,18 +15975,98 @@ function jumpToPage() {
     if (isNaN(page) || page < 1) page = 1;
     if (page > totalPages) page = totalPages;
     
-    navigateToPage(page);
+    queueRender(page);
+    animatePageTransition();
 }
 
 function animatePageTransition() {
-    const container = document.getElementById('pdfViewerContainer');
-    if (container) {
-        container.style.transition = 'opacity 0.15s ease';
-        container.style.opacity = '0.7';
+    const canvas = document.getElementById('pdfCanvas');
+    if (canvas) {
+        canvas.style.transition = 'opacity 0.15s ease';
+        canvas.style.opacity = '0.7';
         setTimeout(() => {
-            container.style.opacity = '1';
+            canvas.style.opacity = '1';
         }, 150);
     }
+}
+
+// ============================================
+// THUMBNAILS
+// ============================================
+
+async function generateThumbnails() {
+    const container = document.getElementById('pageThumbnails');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    for (let i = 1; i <= totalPages; i++) {
+        const thumb = document.createElement('button');
+        thumb.textContent = i;
+        thumb.style.cssText = `
+            background: ${i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)'};
+            border: 2px solid ${i === currentPage ? '#FF0000' : 'rgba(255,255,255,0.05)'};
+            color: ${i === currentPage ? 'white' : 'rgba(255,255,255,0.5)'};
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: ${i === currentPage ? '700' : '400'};
+            min-width: 35px;
+            transition: all 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        `;
+        thumb.onmouseover = function() {
+            this.style.background = 'rgba(255,255,255,0.1)';
+            this.style.transform = 'scale(1.05)';
+        };
+        thumb.onmouseout = function() {
+            this.style.background = i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)';
+            this.style.transform = 'scale(1)';
+        };
+        thumb.onclick = function() {
+            queueRender(i);
+        };
+        container.appendChild(thumb);
+    }
+}
+
+function updateThumbnails() {
+    const thumbs = document.querySelectorAll('#pageThumbnails button');
+    thumbs.forEach((thumb, index) => {
+        const pageNum = index + 1;
+        thumb.style.background = pageNum === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)';
+        thumb.style.borderColor = pageNum === currentPage ? '#FF0000' : 'rgba(255,255,255,0.05)';
+        thumb.style.color = pageNum === currentPage ? 'white' : 'rgba(255,255,255,0.5)';
+        thumb.style.fontWeight = pageNum === currentPage ? '700' : '400';
+    });
+    
+    // Scroll to active thumbnail
+    const activeThumb = document.querySelector('#pageThumbnails button:nth-child(' + currentPage + ')');
+    if (activeThumb) {
+        activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+}
+
+// ============================================
+// PAGE INDICATOR
+// ============================================
+
+function updatePageIndicator() {
+    const indicator = document.getElementById('pageIndicator');
+    const jumpInput = document.getElementById('pageJump');
+    if (indicator) {
+        indicator.innerHTML = `${currentPage} / <span id="totalPagesDisplay">${totalPages}</span>`;
+    }
+    if (jumpInput) {
+        jumpInput.value = currentPage;
+    }
+    // Update presentation indicators
+    const presIndicator = document.getElementById('presentationPageIndicator');
+    const presNumber = document.getElementById('presentationPageNumber');
+    if (presIndicator) presIndicator.innerHTML = `${currentPage} / <span id="presentationTotalPages">${totalPages}</span>`;
+    if (presNumber) presNumber.textContent = currentPage;
 }
 
 // ============================================
@@ -15894,10 +16079,14 @@ function showPresentationsModal() {
     if (modal) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        generateThumbnails();
-        document.getElementById('totalPagesDisplay').textContent = totalPages;
-        // Load first page
-        navigateToPage(1);
+        // Load PDF if not loaded
+        if (!pdfDoc) {
+            loadPDF();
+        } else {
+            renderPage(currentPage);
+            updateThumbnails();
+            updatePageIndicator();
+        }
     }
 }
 
@@ -15914,81 +16103,6 @@ function hideAllModals() {
         modal.classList.remove('active');
     });
     document.body.style.overflow = 'auto';
-}
-
-// ============================================
-// THUMBNAILS
-// ============================================
-
-function generateThumbnails() {
-    const container = document.getElementById('pageThumbnails');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    for (let i = 1; i <= totalPages; i++) {
-        const thumb = document.createElement('button');
-        thumb.textContent = i;
-        thumb.style.cssText = `
-            background: ${i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)'};
-            border: 2px solid ${i === currentPage ? '#FF0000' : 'rgba(255,255,255,0.05)'};
-            color: ${i === currentPage ? 'white' : 'rgba(255,255,255,0.5)'};
-            padding: 6px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: ${i === currentPage ? '700' : '400'};
-            min-width: 35px;
-            transition: all 0.3s ease;
-        `;
-        thumb.onmouseover = function() {
-            this.style.background = 'rgba(255,255,255,0.1)';
-            this.style.transform = 'scale(1.05)';
-        };
-        thumb.onmouseout = function() {
-            this.style.background = i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)';
-            this.style.transform = 'scale(1)';
-        };
-        thumb.onclick = function() {
-            navigateToPage(i);
-        };
-        container.appendChild(thumb);
-    }
-}
-
-function updateThumbnails() {
-    const thumbs = document.querySelectorAll('#pageThumbnails button');
-    thumbs.forEach((thumb, index) => {
-        const pageNum = index + 1;
-        thumb.style.background = pageNum === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)';
-        thumb.style.borderColor = pageNum === currentPage ? '#FF0000' : 'rgba(255,255,255,0.05)';
-        thumb.style.color = pageNum === currentPage ? 'white' : 'rgba(255,255,255,0.5)';
-        thumb.style.fontWeight = pageNum === currentPage ? '700' : '400';
-    });
-    // Scroll to active thumbnail
-    const activeThumb = document.querySelector('#pageThumbnails button:nth-child(' + currentPage + ')');
-    if (activeThumb) {
-        activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-}
-
-// ============================================
-// PAGE INDICATOR
-// ============================================
-
-function updatePageIndicator() {
-    const indicator = document.getElementById('pageIndicator');
-    const jumpInput = document.getElementById('pageJump');
-    if (indicator) {
-        indicator.textContent = `${currentPage} / ${totalPages}`;
-    }
-    if (jumpInput) {
-        jumpInput.value = currentPage;
-    }
-    // Update presentation indicators
-    const presIndicator = document.getElementById('presentationPageIndicator');
-    const presNumber = document.getElementById('presentationPageNumber');
-    if (presIndicator) presIndicator.textContent = `${currentPage} / ${totalPages}`;
-    if (presNumber) presNumber.textContent = currentPage;
 }
 
 // ============================================
@@ -16022,11 +16136,12 @@ function toggleFullscreen() {
 
 function downloadPDF() {
     const link = document.createElement('a');
-    link.href = 'https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf';
+    link.href = PDF_URL;
     link.download = 'Liberia-Business-Awards-Pitch-Deck.pdf';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    showNotification('Downloading presentation...', 'success');
 }
 
 // ============================================
@@ -16040,10 +16155,12 @@ function startPresentation() {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         
-        const viewer = document.getElementById('presentationViewer');
-        if (viewer) {
-            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`;
+        // Render current page in presentation canvas
+        const canvas = document.getElementById('presentationCanvas');
+        if (canvas && pdfDoc) {
+            renderPage(currentPage, 'presentationCanvas');
         }
+        
         updatePageIndicator();
         
         const topBar = document.getElementById('presentationTopBar');
@@ -16071,14 +16188,14 @@ function exitPresentation() {
 
 function prevPagePresentation() {
     if (currentPage > 1) {
-        navigateToPage(currentPage - 1);
+        renderPage(currentPage - 1, 'presentationCanvas');
         showPresentationTopBar();
     }
 }
 
 function nextPagePresentation() {
     if (currentPage < totalPages) {
-        navigateToPage(currentPage + 1);
+        renderPage(currentPage + 1, 'presentationCanvas');
         showPresentationTopBar();
     }
 }
@@ -16156,6 +16273,23 @@ document.addEventListener('mousemove', function(e) {
 });
 
 // ============================================
+// WINDOW RESIZE HANDLER
+// ============================================
+
+let resizeTimeout = null;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        if (pdfDoc && document.getElementById('presentationsModal').classList.contains('active')) {
+            renderPage(currentPage);
+        }
+        if (pdfDoc && presentationActive) {
+            renderPage(currentPage, 'presentationCanvas');
+        }
+    }, 300);
+});
+
+// ============================================
 // INITIALIZATION
 // ============================================
 
@@ -16167,23 +16301,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 jumpToPage();
             }
         });
-    }
-    
-    // Handle PDF loading
-    const viewer = document.getElementById('pdfViewer');
-    if (viewer) {
-        viewer.addEventListener('load', function() {
-            const overlay = document.getElementById('pdfLoadingOverlay');
-            if (overlay) {
-                overlay.style.display = 'none';
+        jumpInput.addEventListener('change', function() {
+            let val = parseInt(this.value);
+            if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                queueRender(val);
             }
         });
-        setTimeout(function() {
-            const overlay = document.getElementById('pdfLoadingOverlay');
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
-        }, 5000);
     }
 });
 
@@ -16197,13 +16320,9 @@ styleSheet.textContent = `
 `;
 document.head.appendChild(styleSheet);
 
-console.log('✅ Enhanced Presentations Module Loaded');
-console.log('📄 Pitch Deck ready for presentation');
-console.log('⌨️ Keyboard shortcuts:');
-console.log('   ← →  Navigate pages');
-console.log('   F    Toggle fullscreen');
-console.log('   P    Start presentation mode');
-console.log('   Esc  Exit presentation/fullscreen');
+console.log('✅ Fully Functional Presentation System Loaded');
+console.log('📄 Features: PDF.js rendering, auto page count, all buttons working');
+console.log('⌨️ Keyboard shortcuts: ← → to navigate, F for fullscreen, P for presentation mode');
 </script>
                             
 </body>
