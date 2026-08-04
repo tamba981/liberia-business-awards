@@ -15632,114 +15632,167 @@ window.diagnoseSpotlight = diagnoseSpotlight;
     </div>
 </div>                           
 
-  <!-- ============ PRESENTATIONS / PITCH DECK MODAL ============ -->
+  <!-- ============ PRESENTATIONS / PITCH DECK MODAL - ENHANCED ============ -->
 <div class="modal" id="presentationsModal">
-    <div class="modal-content" style="max-width: 1200px; max-height: 95vh;">
-        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
-            <h2><i class="fas fa-presentation"></i> Presentation Book</h2>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <span id="pageIndicator" style="color: white; font-size: 14px; font-weight: 600;">Page 1 / 20</span>
-                <button class="modal-close" onclick="hideModal('presentationsModal')">
+    <div class="modal-content" style="max-width: 1400px; max-height: 98vh; background: #0a0a1a;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 18px 30px;">
+            <h2><i class="fas fa-presentation"></i> Pitch Deck</h2>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px;">
+                    <span style="color: rgba(255,255,255,0.7); font-size: 12px;">Page</span>
+                    <span id="pageIndicator" style="color: white; font-size: 16px; font-weight: 700;">1 / 20</span>
+                </div>
+                <button class="modal-close" onclick="hideModal('presentationsModal')" style="background: rgba(255,255,255,0.15);">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
-        <div class="modal-body" style="padding: 20px; background: #1a1a2e; position: relative;">
-            <!-- Presentation Controls - Top -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; gap: 8px;">
-                    <button class="sheet-btn secondary" onclick="prevPage()" style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </button>
-                    <button class="sheet-btn secondary" onclick="nextPage()" style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="number" id="pageJump" min="1" max="20" value="1" 
-                           style="width: 60px; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; text-align: center;">
-                    <button class="sheet-btn secondary" onclick="jumpToPage()" style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
-                        Go
-                    </button>
-                    <button class="sheet-btn" onclick="toggleFullscreen()" style="padding: 8px 16px; background: rgba(135,206,235,0.3); color: white; border: 1px solid rgba(135,206,235,0.4);">
-                        <i class="fas fa-expand"></i> Fullscreen
-                    </button>
-                    <button class="sheet-btn" onclick="startPresentation()" style="padding: 8px 16px; background: rgba(255,0,0,0.3); color: white; border: 1px solid rgba(255,0,0,0.4);">
-                        <i class="fas fa-play"></i> Present
-                    </button>
-                </div>
-            </div>
+        <div class="modal-body" style="padding: 0; background: #0a0a1a; max-height: calc(98vh - 70px);">
             
-            <!-- PDF Viewer Container -->
-            <div id="pdfViewerContainer" style="background: #0d0d1a; border-radius: 12px; overflow: hidden; position: relative; height: 75vh; border: 1px solid rgba(255,255,255,0.1);">
-                <div id="pdfLoadingOverlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 10; flex-direction: column;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #87CEEB;"></i>
-                    <p style="color: white; margin-top: 20px; font-weight: 500;">Loading Presentation...</p>
-                    <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 10px; overflow: hidden;">
-                        <div id="pdfLoadProgress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FF0000, #87CEEB); transition: width 0.3s;"></div>
+            <!-- Main Viewer -->
+            <div style="position: relative; height: calc(85vh); background: #0a0a1a;">
+                <!-- Loading Overlay -->
+                <div id="pdfLoadingOverlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,10,26,0.9); z-index: 20; flex-direction: column;">
+                    <div style="width: 80px; height: 80px; border: 4px solid rgba(135,206,235,0.1); border-top-color: #FF0000; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <p style="color: rgba(255,255,255,0.6); margin-top: 25px; font-weight: 300; letter-spacing: 2px;">LOADING PRESENTATION</p>
+                    <div style="width: 300px; height: 3px; background: rgba(255,255,255,0.05); border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                        <div id="pdfLoadProgress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FF0000, #87CEEB); transition: width 0.4s ease;"></div>
                     </div>
                 </div>
+                
+                <!-- PDF Viewer -->
                 <iframe id="pdfViewer" 
-                        src="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#toolbar=0" 
-                        style="width: 100%; height: 100%; border: none;"
+                        src="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#toolbar=0&navpanes=0&scrollbar=0" 
+                        style="width: 100%; height: 100%; border: none; background: #0a0a1a;"
                         allowfullscreen>
                 </iframe>
-            </div>
-            
-            <!-- Thumbnail Navigation -->
-            <div style="display: flex; justify-content: center; gap: 6px; margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 12px; overflow-x: auto; flex-wrap: nowrap; max-width: 100%;">
-                <button class="thumbnail-nav" onclick="prevPage()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <div id="pageThumbnails" style="display: flex; gap: 4px; overflow-x: auto; padding: 4px 0; max-width: 80%;">
-                    <!-- Thumbnails generated by JavaScript -->
+                
+                <!-- Navigation Overlay Controls -->
+                <div style="position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; z-index: 15;">
+                    <button onclick="prevPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);" 
+                            onmouseover="this.style.background='rgba(255,0,0,0.3)'; this.style.transform='scale(1.1)';" 
+                            onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.transform='scale(1)';">
+                        <i class="fas fa-chevron-left" style="font-size: 20px;"></i>
+                    </button>
+                    <button onclick="nextPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
+                            onmouseover="this.style.background='rgba(255,0,0,0.3)'; this.style.transform='scale(1.1)';" 
+                            onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.transform='scale(1)';">
+                        <i class="fas fa-chevron-right" style="font-size: 20px;"></i>
+                    </button>
                 </div>
-                <button class="thumbnail-nav" onclick="nextPage()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+                
+                <!-- Bottom Controls -->
+                <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 15; display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05);">
+                    <button onclick="prevPage()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    <span style="color: rgba(255,255,255,0.6); font-size: 13px;">Page</span>
+                    <input type="number" id="pageJump" min="1" max="20" value="1" 
+                           style="width: 50px; padding: 4px 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; text-align: center; font-size: 14px; outline: none;">
+                    <span style="color: rgba(255,255,255,0.4); font-size: 13px;">/ <span id="totalPagesDisplay">20</span></span>
+                    
+                    <button onclick="jumpToPage()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 13px;" onmouseover="this.style.background='rgba(135,206,235,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                        Go
+                    </button>
+                    
+                    <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.1);"></div>
+                    
+                    <button onclick="toggleFullscreen()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(135,206,235,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Fullscreen (F)">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    
+                    <button onclick="startPresentation()" style="background: rgba(255,0,0,0.2); border: 1px solid rgba(255,0,0,0.3); color: white; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(255,0,0,0.4)'" onmouseout="this.style.background='rgba(255,0,0,0.2)'" title="Presentation Mode (P)">
+                        <i class="fas fa-play"></i> Present
+                    </button>
+                    
+                    <button onclick="downloadPDF()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(135,206,235,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Download PDF">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
             </div>
             
-            <!-- Presentation Info -->
-            <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 13px; color: rgba(255,255,255,0.6); flex-wrap: wrap; gap: 10px;">
-                <span><i class="fas fa-file-pdf"></i> Liberia Business Awards Pitch Deck</span>
-                <span><i class="fas fa-calendar"></i> Version 3.0</span>
-                <span><i class="fas fa-download"></i> <a href="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf" target="_blank" style="color: #87CEEB; text-decoration: none;">Download PDF</a></span>
+            <!-- Thumbnail Strip -->
+            <div style="background: rgba(0,0,0,0.3); padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.03); display: flex; align-items: center; gap: 8px; overflow-x: auto; max-height: 100px; scrollbar-width: thin;">
+                <div id="pageThumbnails" style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Presentation Info Bar -->
+            <div style="background: rgba(0,0,0,0.2); padding: 8px 30px; border-top: 1px solid rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="color: rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 1px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck v3.0</span>
+                    <span style="color: rgba(255,255,255,0.15);">|</span>
+                    <span style="color: rgba(255,255,255,0.25); font-size: 11px;"><i class="fas fa-keyboard"></i> ← → to navigate</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: rgba(255,255,255,0.15); font-size: 10px;">POWERED BY</span>
+                    <span style="color: rgba(255,255,255,0.2); font-size: 10px; letter-spacing: 2px;">LBA</span>
+                    <span style="color: #FF0000; font-weight: 700; font-size: 12px;">●</span>
+                    <span style="color: #87CEEB; font-weight: 700; font-size: 12px;">●</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ============ PRESENTATION MODE MODAL (Fullscreen Presentation) ============ -->
-<div class="modal" id="presentationModeModal" style="background: #000; z-index: 9999;">
-    <div class="modal-content" style="max-width: 100%; max-height: 100vh; background: #000; border-radius: 0; margin: 0; width: 100%; height: 100vh;">
-        <div style="position: absolute; top: 20px; right: 20px; z-index: 100; display: flex; gap: 10px;">
-            <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+<!-- ============ PRESENTATION MODE MODAL - ENHANCED ============ -->
+<div class="modal" id="presentationModeModal" style="background: #000; z-index: 9999; padding: 0;">
+    <div class="modal-content" style="max-width: 100%; max-height: 100vh; background: #000; border-radius: 0; margin: 0; width: 100%; height: 100vh; overflow: hidden;">
+        <!-- Top Bar - Auto Hidden -->
+        <div id="presentationTopBar" style="position: absolute; top: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,0.5); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; transition: opacity 0.5s ease; opacity: 0; pointer-events: none;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="color: rgba(255,255,255,0.6); font-size: 14px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck</span>
+                <span style="color: rgba(255,255,255,0.2);">|</span>
+                <span id="presentationPageIndicator" style="color: white; font-size: 16px; font-weight: 600;">1 / 20</span>
+            </div>
+            <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                <i class="fas fa-times"></i> Exit (Esc)
+            </button>
+        </div>
+        
+        <!-- Presentation Viewer -->
+        <iframe id="presentationViewer" 
+                src="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#toolbar=0&navpanes=0&scrollbar=0" 
+                style="width: 100%; height: 100%; border: none; background: #000;">
+        </iframe>
+        
+        <!-- Bottom Navigation -->
+        <div style="position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 25px; align-items: center; background: rgba(0,0,0,0.6); padding: 12px 30px; border-radius: 50px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05);">
+            <button onclick="prevPagePresentation()" style="background: rgba(255,255,255,0.05); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="color: rgba(255,255,255,0.3); font-size: 13px;">Page</span>
+                <span id="presentationPageNumber" style="color: white; font-size: 18px; font-weight: 700; min-width: 30px; text-align: center;">1</span>
+                <span style="color: rgba(255,255,255,0.2); font-size: 13px;">/ <span id="presentationTotalPages">20</span></span>
+            </div>
+            
+            <button onclick="nextPagePresentation()" style="background: rgba(255,255,255,0.05); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.05);"></div>
+            
+            <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); padding: 8px 18px; border-radius: 25px; cursor: pointer; font-size: 13px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,0,0,0.2)'; this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.color='rgba(255,255,255,0.4)'">
                 <i class="fas fa-times"></i> Exit
             </button>
         </div>
-        <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 20px; align-items: center;">
-            <button onclick="prevPagePresentation()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 20px;">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <span id="presentationPageIndicator" style="color: white; font-size: 18px; font-weight: 600;">1 / 20</span>
-            <button onclick="nextPagePresentation()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 20px;">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
-        <iframe id="presentationViewer" 
-                src="https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#toolbar=0&navpanes=0" 
-                style="width: 100%; height: 100%; border: none; background: #000;">
-        </iframe>
     </div>
 </div>
 
+<!-- ============ ENHANCED PRESENTATION JAVASCRIPT ============ -->
 <script>
 // ============================================
-// PRESENTATIONS / PITCH DECK CONTROLS
+// ENHANCED PRESENTATIONS / PITCH DECK CONTROLS
 // ============================================
 
 let currentPage = 1;
-const totalPages = 20; // Update this based on your actual PDF page count
+const totalPages = 20;
+let presentationActive = false;
+let hideTopBarTimeout = null;
 
 // Show Presentations Modal
 function showPresentationsModal() {
@@ -15750,13 +15803,13 @@ function showPresentationsModal() {
         document.body.style.overflow = 'hidden';
         generateThumbnails();
         updatePageIndicator();
-        // Reset to page 1
         currentPage = 1;
         jumpToPage();
+        document.getElementById('totalPagesDisplay').textContent = totalPages;
     }
 }
 
-// Generate page thumbnails
+// Generate page thumbnails with visual preview
 function generateThumbnails() {
     const container = document.getElementById('pageThumbnails');
     if (!container) return;
@@ -15766,39 +15819,51 @@ function generateThumbnails() {
         const thumb = document.createElement('button');
         thumb.textContent = i;
         thumb.style.cssText = `
-            background: ${i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.1)'};
-            border: 1px solid ${i === currentPage ? '#FF0000' : 'rgba(255,255,255,0.2)'};
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
+            background: ${i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)'};
+            border: 2px solid ${i === currentPage ? '#FF0000' : 'rgba(255,255,255,0.05)'};
+            color: ${i === currentPage ? 'white' : 'rgba(255,255,255,0.5)'};
+            padding: 6px 14px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            min-width: 30px;
-            transition: all 0.3s;
+            font-weight: ${i === currentPage ? '700' : '400'};
+            min-width: 35px;
+            transition: all 0.3s ease;
+            position: relative;
         `;
         thumb.onmouseover = function() {
-            this.style.background = 'rgba(255,255,255,0.2)';
+            this.style.background = 'rgba(255,255,255,0.1)';
+            this.style.transform = 'scale(1.05)';
         };
         thumb.onmouseout = function() {
-            this.style.background = i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.1)';
+            this.style.background = i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)';
+            this.style.transform = 'scale(1)';
         };
         thumb.onclick = function() {
             currentPage = i;
             jumpToPage();
             updateThumbnails();
+            updatePageIndicator();
         };
         container.appendChild(thumb);
     }
 }
 
-// Update thumbnail active state
+// Update thumbnails
 function updateThumbnails() {
     const thumbs = document.querySelectorAll('#pageThumbnails button');
     thumbs.forEach((thumb, index) => {
         const pageNum = index + 1;
-        thumb.style.background = pageNum === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.1)';
-        thumb.style.borderColor = pageNum === currentPage ? '#FF0000' : 'rgba(255,255,255,0.2)';
+        thumb.style.background = pageNum === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)';
+        thumb.style.borderColor = pageNum === currentPage ? '#FF0000' : 'rgba(255,255,255,0.05)';
+        thumb.style.color = pageNum === currentPage ? 'white' : 'rgba(255,255,255,0.5)';
+        thumb.style.fontWeight = pageNum === currentPage ? '700' : '400';
     });
+    // Scroll to active thumbnail
+    const activeThumb = document.querySelector('#pageThumbnails button:nth-child(' + currentPage + ')');
+    if (activeThumb) {
+        activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
 }
 
 // Update page indicator
@@ -15806,35 +15871,48 @@ function updatePageIndicator() {
     const indicator = document.getElementById('pageIndicator');
     const jumpInput = document.getElementById('pageJump');
     if (indicator) {
-        indicator.textContent = `Page ${currentPage} / ${totalPages}`;
+        indicator.textContent = `${currentPage} / ${totalPages}`;
     }
     if (jumpInput) {
         jumpInput.value = currentPage;
     }
-    // Update presentation mode indicator
+    // Update presentation indicators
     const presIndicator = document.getElementById('presentationPageIndicator');
-    if (presIndicator) {
-        presIndicator.textContent = `${currentPage} / ${totalPages}`;
-    }
+    const presNumber = document.getElementById('presentationPageNumber');
+    if (presIndicator) presIndicator.textContent = `${currentPage} / ${totalPages}`;
+    if (presNumber) presNumber.textContent = currentPage;
 }
 
-// Navigate to previous page
+// Navigation with smooth transitions
 function prevPage() {
     if (currentPage > 1) {
         currentPage--;
+        animatePageTransition();
         jumpToPage();
         updateThumbnails();
         updatePageIndicator();
     }
 }
 
-// Navigate to next page
 function nextPage() {
     if (currentPage < totalPages) {
         currentPage++;
+        animatePageTransition();
         jumpToPage();
         updateThumbnails();
         updatePageIndicator();
+    }
+}
+
+// Smooth page transition animation
+function animatePageTransition() {
+    const container = document.getElementById('pdfViewerContainer');
+    if (container) {
+        container.style.transition = 'opacity 0.15s ease';
+        container.style.opacity = '0.7';
+        setTimeout(() => {
+            container.style.opacity = '1';
+        }, 150);
     }
 }
 
@@ -15850,18 +15928,17 @@ function jumpToPage() {
     
     const viewer = document.getElementById('pdfViewer');
     if (viewer) {
-        // Update the iframe src to navigate to specific page
         const baseUrl = 'https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf';
-        viewer.src = `${baseUrl}#page=${currentPage}&toolbar=0`;
+        viewer.src = `${baseUrl}#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`;
     }
     
     updatePageIndicator();
     updateThumbnails();
 }
 
-// Toggle fullscreen mode
+// Toggle fullscreen
 function toggleFullscreen() {
-    const container = document.getElementById('pdfViewerContainer');
+    const container = document.getElementById('presentationsModal');
     if (!document.fullscreenElement) {
         if (container.requestFullscreen) {
             container.requestFullscreen();
@@ -15881,39 +15958,67 @@ function toggleFullscreen() {
     }
 }
 
-// Start presentation mode
+// Download PDF
+function downloadPDF() {
+    const link = document.createElement('a');
+    link.href = 'https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf';
+    link.download = 'Liberia-Business-Awards-Pitch-Deck.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showNotification('Downloading presentation...', 'success');
+}
+
+// ============================================
+// PRESENTATION MODE - ENHANCED
+// ============================================
+
 function startPresentation() {
     const modal = document.getElementById('presentationModeModal');
     if (modal) {
+        presentationActive = true;
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        // Update viewer
+        
         const viewer = document.getElementById('presentationViewer');
         if (viewer) {
-            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0`;
+            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`;
         }
         updatePageIndicator();
+        
+        // Show top bar briefly
+        const topBar = document.getElementById('presentationTopBar');
+        if (topBar) {
+            topBar.style.opacity = '1';
+            topBar.style.pointerEvents = 'all';
+            clearTimeout(hideTopBarTimeout);
+            hideTopBarTimeout = setTimeout(() => {
+                topBar.style.opacity = '0';
+                topBar.style.pointerEvents = 'none';
+            }, 3000);
+        }
     }
 }
 
-// Exit presentation mode
 function exitPresentation() {
     const modal = document.getElementById('presentationModeModal');
     if (modal) {
+        presentationActive = false;
         modal.classList.remove('active');
         document.body.style.overflow = 'auto';
+        clearTimeout(hideTopBarTimeout);
     }
 }
 
-// Presentation navigation
 function prevPagePresentation() {
     if (currentPage > 1) {
         currentPage--;
         const viewer = document.getElementById('presentationViewer');
         if (viewer) {
-            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0`;
+            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`;
         }
         updatePageIndicator();
+        showPresentationTopBar();
     }
 }
 
@@ -15922,14 +16027,32 @@ function nextPagePresentation() {
         currentPage++;
         const viewer = document.getElementById('presentationViewer');
         if (viewer) {
-            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0`;
+            viewer.src = `https://liberiabusinessawardslr.com/resources/Liberiabusinessawards-pitch-deck.pdf#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`;
         }
         updatePageIndicator();
+        showPresentationTopBar();
     }
 }
 
-// Keyboard navigation
+function showPresentationTopBar() {
+    const topBar = document.getElementById('presentationTopBar');
+    if (topBar) {
+        topBar.style.opacity = '1';
+        topBar.style.pointerEvents = 'all';
+        clearTimeout(hideTopBarTimeout);
+        hideTopBarTimeout = setTimeout(() => {
+            topBar.style.opacity = '0';
+            topBar.style.pointerEvents = 'none';
+        }, 2000);
+    }
+}
+
+// ============================================
+// KEYBOARD SHORTCUTS
+// ============================================
+
 document.addEventListener('keydown', function(e) {
+    // Main modal shortcuts
     const presentationsModal = document.getElementById('presentationsModal');
     if (presentationsModal && presentationsModal.classList.contains('active')) {
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
@@ -15944,13 +16067,18 @@ document.addEventListener('keydown', function(e) {
         } else if (e.key === 'p' || e.key === 'P') {
             e.preventDefault();
             startPresentation();
+        } else if (e.key === 'Escape') {
+            // Close modal if not in fullscreen
+            if (!document.fullscreenElement) {
+                hideModal('presentationsModal');
+            }
         }
     }
     
-    // Presentation mode keyboard navigation
+    // Presentation mode shortcuts
     const presentationModal = document.getElementById('presentationModeModal');
     if (presentationModal && presentationModal.classList.contains('active')) {
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
             e.preventDefault();
             nextPagePresentation();
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
@@ -15963,7 +16091,23 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Initialize page jump input
+// Mouse movement in presentation mode shows top bar
+document.addEventListener('mousemove', function(e) {
+    if (presentationActive) {
+        const topBar = document.getElementById('presentationTopBar');
+        if (topBar && e.clientY < 100) {
+            topBar.style.opacity = '1';
+            topBar.style.pointerEvents = 'all';
+            clearTimeout(hideTopBarTimeout);
+            hideTopBarTimeout = setTimeout(() => {
+                topBar.style.opacity = '0';
+                topBar.style.pointerEvents = 'none';
+            }, 2000);
+        }
+    }
+});
+
+// Initialize
 document.addEventListener('DOMContentLoaded', function() {
     const jumpInput = document.getElementById('pageJump');
     if (jumpInput) {
@@ -15983,7 +16127,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 overlay.style.display = 'none';
             }
         });
-        // Fallback: hide overlay after 5 seconds
         setTimeout(function() {
             const overlay = document.getElementById('pdfLoadingOverlay');
             if (overlay) {
@@ -15993,9 +16136,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-console.log('✅ Presentations Module Loaded');
+// Add spin animation
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(styleSheet);
+
+console.log('✅ Enhanced Presentations Module Loaded');
 console.log('📄 Pitch Deck ready for presentation');
-console.log('⌨️ Keyboard shortcuts: ← → for navigation, F for fullscreen, P for presentation mode');
+console.log('⌨️ Keyboard shortcuts:');
+console.log('   ← →  Navigate pages');
+console.log('   F    Toggle fullscreen');
+console.log('   P    Start presentation mode');
+console.log('   Esc  Exit presentation/fullscreen');
 </script>
                             
 </body>
