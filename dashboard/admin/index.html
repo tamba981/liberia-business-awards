@@ -15632,17 +15632,17 @@ window.diagnoseSpotlight = diagnoseSpotlight;
     </div>
 </div>                           
 
-<!-- ============ PRESENTATIONS MODAL - FULLY FUNCTIONAL ============ -->
+<!-- ============ PRESENTATIONS MODAL - FIXED GLASSMORPHISM ============ -->
 <div class="modal" id="presentationsModal">
     <div class="modal-content" style="max-width: 1400px; max-height: 98vh; background: #0a0a1a;">
         <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB); padding: 18px 30px;">
             <h2><i class="fas fa-presentation"></i> Pitch Deck</h2>
             <div style="display: flex; gap: 15px; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(10px);">
                     <span style="color: rgba(255,255,255,0.7); font-size: 12px;">Page</span>
                     <span id="pageIndicator" style="color: white; font-size: 16px; font-weight: 700;">1 / <span id="totalPagesDisplay">Loading...</span></span>
                 </div>
-                <button class="modal-close" onclick="hideModal('presentationsModal')" style="background: rgba(255,255,255,0.15);">
+                <button class="modal-close" onclick="hideModal('presentationsModal')" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -15663,68 +15663,68 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                     </div>
                 </div>
                 
-                <!-- Navigation Overlay Controls -->
+                <!-- Navigation Overlay Controls - LIGHTER GLASSMORPHISM -->
                 <div style="position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; z-index: 15;">
-                    <button id="prevPageBtn" onclick="prevPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);" 
-                            onmouseover="this.style.background='rgba(255,0,0,0.3)'; this.style.transform='scale(1.1)';" 
-                            onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.transform='scale(1)';">
+                    <button id="prevPageBtn" onclick="prevPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);" 
+                            onmouseover="this.style.background='rgba(255,0,0,0.2)'; this.style.transform='scale(1.1)'; this.style.borderColor='rgba(255,0,0,0.3)';" 
+                            onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.transform='scale(1)'; this.style.borderColor='rgba(255,255,255,0.08)';">
                         <i class="fas fa-chevron-left" style="font-size: 20px;"></i>
                     </button>
-                    <button id="nextPageBtn" onclick="nextPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);"
-                            onmouseover="this.style.background='rgba(255,0,0,0.3)'; this.style.transform='scale(1.1)';" 
-                            onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.transform='scale(1)';">
+                    <button id="nextPageBtn" onclick="nextPage()" style="pointer-events: all; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);"
+                            onmouseover="this.style.background='rgba(255,0,0,0.2)'; this.style.transform='scale(1.1)'; this.style.borderColor='rgba(255,0,0,0.3)';" 
+                            onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.transform='scale(1)'; this.style.borderColor='rgba(255,255,255,0.08)';">
                         <i class="fas fa-chevron-right" style="font-size: 20px;"></i>
                     </button>
                 </div>
                 
-                <!-- Bottom Controls -->
-                <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 15; display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05);">
-                    <button onclick="prevPage()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                <!-- Bottom Controls - LIGHTER GLASSMORPHISM -->
+                <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 15; display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 30px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.06);">
+                    <button onclick="prevPage()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     
-                    <span style="color: rgba(255,255,255,0.6); font-size: 13px;">Page</span>
+                    <span style="color: rgba(255,255,255,0.5); font-size: 13px;">Page</span>
                     <input type="number" id="pageJump" min="1" value="1" 
-                           style="width: 60px; padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; text-align: center; font-size: 14px; outline: none;">
-                    <span style="color: rgba(255,255,255,0.4); font-size: 13px;">/ <span id="totalPagesDisplay2">Loading...</span></span>
+                           style="width: 60px; padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.05); color: white; text-align: center; font-size: 14px; outline: none;">
+                    <span style="color: rgba(255,255,255,0.3); font-size: 13px;">/ <span id="totalPagesDisplay2">Loading...</span></span>
                     
-                    <button onclick="jumpToPage()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 13px;" onmouseover="this.style.background='rgba(135,206,235,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    <button id="goButton" onclick="jumpToPage()" style="background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.2); color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 13px;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,0,0,0.15)'">
                         Go
                     </button>
                     
-                    <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.1);"></div>
+                    <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.08);"></div>
                     
-                    <button onclick="toggleFullscreen()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(135,206,235,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Fullscreen (F)">
+                    <button onclick="toggleFullscreen()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(135,206,235,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Fullscreen (F)">
                         <i class="fas fa-expand"></i>
                     </button>
                     
-                    <button onclick="startPresentation()" style="background: rgba(255,0,0,0.2); border: 1px solid rgba(255,0,0,0.3); color: white; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(255,0,0,0.4)'" onmouseout="this.style.background='rgba(255,0,0,0.2)'" title="Presentation Mode (P)">
+                    <button onclick="startPresentation()" style="background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.2); color: white; padding: 8px 18px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,0,0,0.15)'" title="Presentation Mode (P)">
                         <i class="fas fa-play"></i> Present
                     </button>
                     
-                    <button onclick="downloadPDF()" style="background: rgba(255,255,255,0.05); border: none; color: white; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(135,206,235,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Download PDF">
+                    <button onclick="downloadPDF()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;" onmouseover="this.style.background='rgba(135,206,235,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="Download PDF">
                         <i class="fas fa-download"></i>
                     </button>
                 </div>
             </div>
             
-            <!-- Thumbnail Strip -->
-            <div style="background: rgba(0,0,0,0.3); padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.03); display: flex; align-items: center; gap: 8px; overflow-x: auto; max-height: 100px; scrollbar-width: thin;">
+            <!-- Thumbnail Strip - LIGHTER GLASSMORPHISM -->
+            <div style="background: rgba(0,0,0,0.2); padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.03); display: flex; align-items: center; gap: 8px; overflow-x: auto; max-height: 100px; scrollbar-width: thin; backdrop-filter: blur(5px);">
                 <div id="pageThumbnails" style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap;">
                     <!-- Generated by JavaScript -->
                 </div>
             </div>
             
             <!-- Presentation Info Bar -->
-            <div style="background: rgba(0,0,0,0.2); padding: 8px 30px; border-top: 1px solid rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="background: rgba(0,0,0,0.15); padding: 8px 30px; border-top: 1px solid rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; backdrop-filter: blur(5px);">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <span style="color: rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 1px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck</span>
-                    <span style="color: rgba(255,255,255,0.15);">|</span>
-                    <span style="color: rgba(255,255,255,0.25); font-size: 11px;"><i class="fas fa-keyboard"></i> ← → to navigate</span>
+                    <span style="color: rgba(255,255,255,0.1);">|</span>
+                    <span style="color: rgba(255,255,255,0.2); font-size: 11px;"><i class="fas fa-keyboard"></i> ← → to navigate</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="color: rgba(255,255,255,0.15); font-size: 10px;">POWERED BY</span>
-                    <span style="color: rgba(255,255,255,0.2); font-size: 10px; letter-spacing: 2px;">LBA</span>
+                    <span style="color: rgba(255,255,255,0.1); font-size: 10px;">POWERED BY</span>
+                    <span style="color: rgba(255,255,255,0.15); font-size: 10px; letter-spacing: 2px;">LBA</span>
                     <span style="color: #FF0000; font-weight: 700; font-size: 12px;">●</span>
                     <span style="color: #87CEEB; font-weight: 700; font-size: 12px;">●</span>
                 </div>
@@ -15736,14 +15736,14 @@ window.diagnoseSpotlight = diagnoseSpotlight;
 <!-- ============ PRESENTATION MODE MODAL ============ -->
 <div class="modal" id="presentationModeModal" style="background: #000; z-index: 9999; padding: 0;">
     <div class="modal-content" style="max-width: 100%; max-height: 100vh; background: #000; border-radius: 0; margin: 0; width: 100%; height: 100vh; overflow: hidden;">
-        <!-- Top Bar -->
-        <div id="presentationTopBar" style="position: absolute; top: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,0.5); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; transition: opacity 0.5s ease; opacity: 0; pointer-events: none;">
+        <!-- Top Bar - LIGHTER -->
+        <div id="presentationTopBar" style="position: absolute; top: 0; left: 0; right: 0; z-index: 100; background: rgba(0,0,0,0.3); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; transition: opacity 0.5s ease; opacity: 0; pointer-events: none; backdrop-filter: blur(10px);">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <span style="color: rgba(255,255,255,0.6); font-size: 14px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck</span>
-                <span style="color: rgba(255,255,255,0.2);">|</span>
+                <span style="color: rgba(255,255,255,0.5); font-size: 14px;"><i class="fas fa-file-pdf"></i> LBA Pitch Deck</span>
+                <span style="color: rgba(255,255,255,0.15);">|</span>
                 <span id="presentationPageIndicator" style="color: white; font-size: 16px; font-weight: 600;">1 / <span id="presentationTotalPages">Loading...</span></span>
             </div>
-            <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+            <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.3s; backdrop-filter: blur(5px);" onmouseover="this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                 <i class="fas fa-times"></i> Exit (Esc)
             </button>
         </div>
@@ -15751,9 +15751,9 @@ window.diagnoseSpotlight = diagnoseSpotlight;
         <!-- PDF Canvas for Presentation -->
         <canvas id="presentationCanvas" style="width: 100%; height: 100%; display: block; background: #000;"></canvas>
         
-        <!-- Bottom Navigation -->
-        <div style="position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 25px; align-items: center; background: rgba(0,0,0,0.7); padding: 12px 30px; border-radius: 50px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05);">
-            <button onclick="prevPagePresentation()" style="background: rgba(255,255,255,0.05); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+        <!-- Bottom Navigation - LIGHTER -->
+        <div style="position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; gap: 25px; align-items: center; background: rgba(0,0,0,0.5); padding: 12px 30px; border-radius: 50px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05);">
+            <button onclick="prevPagePresentation()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                 <i class="fas fa-chevron-left"></i>
             </button>
             
@@ -15763,13 +15763,13 @@ window.diagnoseSpotlight = diagnoseSpotlight;
                 <span style="color: rgba(255,255,255,0.2); font-size: 13px;">/ <span id="presentationTotalPages2">Loading...</span></span>
             </div>
             
-            <button onclick="nextPagePresentation()" style="background: rgba(255,255,255,0.05); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,0,0,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+            <button onclick="nextPagePresentation()" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.8); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                 <i class="fas fa-chevron-right"></i>
             </button>
             
             <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.05);"></div>
             
-            <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); padding: 8px 18px; border-radius: 25px; cursor: pointer; font-size: 13px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,0,0,0.2)'; this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.color='rgba(255,255,255,0.4)'">
+            <button onclick="exitPresentation()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); padding: 8px 18px; border-radius: 25px; cursor: pointer; font-size: 13px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,0,0,0.15)'; this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.color='rgba(255,255,255,0.3)'">
                 <i class="fas fa-times"></i> Exit
             </button>
         </div>
@@ -15780,7 +15780,7 @@ window.diagnoseSpotlight = diagnoseSpotlight;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 
-<!-- ============ PRESENTATION JAVASCRIPT - FULLY FUNCTIONAL ============ -->
+<!-- ============ PRESENTATION JAVASCRIPT - FIXED "GO" BUTTON ============ -->
 <script>
 // ============================================
 // PRESENTATION SYSTEM - FULLY FUNCTIONAL
@@ -15798,6 +15798,7 @@ let presentationActive = false;
 let hideTopBarTimeout = null;
 let isRendering = false;
 let renderQueue = [];
+let isPdfLoaded = false;
 
 // ============================================
 // PDF.JS INITIALIZATION
@@ -15823,6 +15824,7 @@ async function loadPDF() {
         
         pdfDoc = await loadingTask.promise;
         totalPages = pdfDoc.numPages;
+        isPdfLoaded = true;
         
         if (progressBar) progressBar.style.width = '100%';
         
@@ -15856,16 +15858,19 @@ async function loadPDF() {
         
     } catch (error) {
         console.error('❌ Error loading PDF:', error);
-        document.getElementById('pdfLoadingOverlay').innerHTML = `
-            <div style="text-align: center; color: white;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #FF0000; margin-bottom: 20px;"></i>
-                <p style="font-size: 18px; margin-bottom: 10px;">Failed to load presentation</p>
-                <p style="color: rgba(255,255,255,0.4); font-size: 14px;">${error.message}</p>
-                <button onclick="loadPDF()" style="margin-top: 20px; background: #FF0000; color: white; border: none; padding: 10px 30px; border-radius: 8px; cursor: pointer;">
-                    <i class="fas fa-sync-alt"></i> Retry
-                </button>
-            </div>
-        `;
+        const overlay = document.getElementById('pdfLoadingOverlay');
+        if (overlay) {
+            overlay.innerHTML = `
+                <div style="text-align: center; color: white;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #FF0000; margin-bottom: 20px;"></i>
+                    <p style="font-size: 18px; margin-bottom: 10px;">Failed to load presentation</p>
+                    <p style="color: rgba(255,255,255,0.4); font-size: 14px;">${error.message}</p>
+                    <button onclick="loadPDF()" style="margin-top: 20px; background: #FF0000; color: white; border: none; padding: 10px 30px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-sync-alt"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -15935,6 +15940,9 @@ async function renderPage(pageNum, canvasId = 'pdfCanvas') {
 }
 
 function queueRender(pageNum, canvasId = 'pdfCanvas') {
+    if (!pdfDoc) return;
+    if (pageNum < 1 || pageNum > totalPages) return;
+    
     if (pageNum === currentPage && !isRendering) {
         renderPage(pageNum, canvasId);
     } else if (pageNum !== currentPage) {
@@ -15951,32 +15959,45 @@ function queueRender(pageNum, canvasId = 'pdfCanvas') {
 }
 
 // ============================================
-// NAVIGATION FUNCTIONS
+// NAVIGATION FUNCTIONS - ALL WORKING
 // ============================================
 
 function prevPage() {
-    if (currentPage > 1) {
+    if (currentPage > 1 && pdfDoc) {
         queueRender(currentPage - 1);
         animatePageTransition();
     }
 }
 
 function nextPage() {
-    if (currentPage < totalPages) {
+    if (currentPage < totalPages && pdfDoc) {
         queueRender(currentPage + 1);
         animatePageTransition();
     }
 }
 
 function jumpToPage() {
+    // FIXED: Properly get the value and navigate
     const jumpInput = document.getElementById('pageJump');
-    let page = parseInt(jumpInput ? jumpInput.value : currentPage);
+    if (!jumpInput) return;
     
+    let page = parseInt(jumpInput.value);
+    
+    // Validate the page number
     if (isNaN(page) || page < 1) page = 1;
     if (page > totalPages) page = totalPages;
     
-    queueRender(page);
-    animatePageTransition();
+    // Update the input to show the valid page
+    jumpInput.value = page;
+    
+    // Navigate to the page
+    if (pdfDoc && page !== currentPage) {
+        queueRender(page);
+        animatePageTransition();
+    } else if (pdfDoc && page === currentPage) {
+        // If same page, just update indicator
+        updatePageIndicator();
+    }
 }
 
 function animatePageTransition() {
@@ -15994,7 +16015,7 @@ function animatePageTransition() {
 // THUMBNAILS
 // ============================================
 
-async function generateThumbnails() {
+function generateThumbnails() {
     const container = document.getElementById('pageThumbnails');
     if (!container) return;
     
@@ -16004,8 +16025,8 @@ async function generateThumbnails() {
         const thumb = document.createElement('button');
         thumb.textContent = i;
         thumb.style.cssText = `
-            background: ${i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)'};
-            border: 2px solid ${i === currentPage ? '#FF0000' : 'rgba(255,255,255,0.05)'};
+            background: ${i === currentPage ? 'rgba(255,0,0,0.3)' : 'rgba(255,255,255,0.03)'};
+            border: 2px solid ${i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.05)'};
             color: ${i === currentPage ? 'white' : 'rgba(255,255,255,0.5)'};
             padding: 6px 14px;
             border-radius: 6px;
@@ -16018,11 +16039,11 @@ async function generateThumbnails() {
             flex-shrink: 0;
         `;
         thumb.onmouseover = function() {
-            this.style.background = 'rgba(255,255,255,0.1)';
+            this.style.background = 'rgba(255,255,255,0.08)';
             this.style.transform = 'scale(1.05)';
         };
         thumb.onmouseout = function() {
-            this.style.background = i === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)';
+            this.style.background = i === currentPage ? 'rgba(255,0,0,0.3)' : 'rgba(255,255,255,0.03)';
             this.style.transform = 'scale(1)';
         };
         thumb.onclick = function() {
@@ -16036,8 +16057,8 @@ function updateThumbnails() {
     const thumbs = document.querySelectorAll('#pageThumbnails button');
     thumbs.forEach((thumb, index) => {
         const pageNum = index + 1;
-        thumb.style.background = pageNum === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.03)';
-        thumb.style.borderColor = pageNum === currentPage ? '#FF0000' : 'rgba(255,255,255,0.05)';
+        thumb.style.background = pageNum === currentPage ? 'rgba(255,0,0,0.3)' : 'rgba(255,255,255,0.03)';
+        thumb.style.borderColor = pageNum === currentPage ? 'rgba(255,0,0,0.4)' : 'rgba(255,255,255,0.05)';
         thumb.style.color = pageNum === currentPage ? 'white' : 'rgba(255,255,255,0.5)';
         thumb.style.fontWeight = pageNum === currentPage ? '700' : '400';
     });
@@ -16141,7 +16162,9 @@ function downloadPDF() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showNotification('Downloading presentation...', 'success');
+    if (typeof showNotification === 'function') {
+        showNotification('Downloading presentation...', 'success');
+    }
 }
 
 // ============================================
@@ -16187,14 +16210,14 @@ function exitPresentation() {
 }
 
 function prevPagePresentation() {
-    if (currentPage > 1) {
+    if (currentPage > 1 && pdfDoc) {
         renderPage(currentPage - 1, 'presentationCanvas');
         showPresentationTopBar();
     }
 }
 
 function nextPagePresentation() {
-    if (currentPage < totalPages) {
+    if (currentPage < totalPages && pdfDoc) {
         renderPage(currentPage + 1, 'presentationCanvas');
         showPresentationTopBar();
     }
@@ -16298,6 +16321,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (jumpInput) {
         jumpInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 jumpToPage();
             }
         });
@@ -16306,6 +16330,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!isNaN(val) && val >= 1 && val <= totalPages) {
                 queueRender(val);
             }
+        });
+    }
+    
+    // Also add click handler to Go button to ensure it works
+    const goButton = document.getElementById('goButton');
+    if (goButton) {
+        goButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            jumpToPage();
         });
     }
 });
