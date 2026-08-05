@@ -437,7 +437,7 @@ const businessUserSchema = new mongoose.Schema({
 const refreshTokenSchema = new mongoose.Schema({
     token: { type: String, required: true, unique: true },
     user_id: { type: mongoose.Schema.Types.ObjectId, required: true },
-    user_type: { type: String, enum: ['admin', 'business', 'judge'], required: true }, 
+    user_type: { type: String, enum: ['admin', 'business', 'judge', 'partner'], required: true },
     expires_at: { type: Date, required: true },
     created_at: { type: Date, default: Date.now },
     revoked: { type: Boolean, default: false }
@@ -5003,6 +5003,805 @@ async function sendJudgeWelcomeEmail(email, name, tempPassword) {
         console.error('Welcome email error:', error);
     }
 }
+
+// ============================================
+// PARTNER MANAGEMENT SYSTEM - COMPLETE
+// ============================================
+
+// Partner Schema
+const partnerSchema = new mongoose.Schema({
+    organization_name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    contact_name: { type: String, default: '' },
+    phone: { type: String, default: '' },
+    website: { type: String, default: '' },
+    bio: { type: String, default: '' },
+    type: { 
+        type: String, 
+        enum: ['sponsor', 'media', 'community', 'government', 'ngo', 'corporate', 'other'], 
+        default: 'other' 
+    },
+    status: { 
+        type: String, 
+        enum: ['pending', 'active', 'inactive'], 
+        default: 'pending' 
+    },
+    logo: { type: String, default: '' },
+    events_count: { type: Number, default: 0 },
+    last_login: { type: Date },
+    login_attempts: { type: Number, default: 0 },
+    lock_until: { type: Date },
+    reset_password_token: { type: String },
+    reset_password_expires: { type: Date },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+    approved_at: { type: Date },
+    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' }
+}, { timestamps: true });
+
+// Partner methods
+partnerSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+partnerSchema.methods.comparePassword = async function(candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
+};
+
+partnerSchema.methods.isLocked = function() {
+    return !!(this.lock_until && this.lock_until > Date.now());
+};
+
+partnerSchema.methods.incrementLoginAttempts = function() {
+    this.login_attempts += 1;
+    if (this.login_attempts >= 5) {
+        this.lock_until = Date.now() + 30 * 60 * 1000;
+    }
+    return this.save();
+};
+
+partnerSchema.methods.resetLoginAttempts = function() {
+    this.login_attempts = 0;
+    this.lock_until = undefined;
+    return this.save();
+};
+
+const Partner = mongoose.model('Partner', partnerSchema);
+
+// ============ PARTNER AUTH ROUTES ============
+
+// Partner Login
+app.post('/api/partner/login', authLimiter, async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        console.log('Partner login attempt:', email);
+        
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: 'Email and password are required' });
+        }
+        
+        const partner = await Partner.findOne({ email: email.toLowerCase() });
+        if (!partner) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+        
+        if (partner.isLocked()) {
+            const lockTime = Math.ceil((partner.lock_until - Date.now()) / (60 * 1000));
+            return res.status(403).json({ success: false, message: `Account locked. Try again in ${lockTime} minutes` });
+        }
+        
+        if (partner.status === 'pending') {
+            return res.status(403).json({ success: false, message: 'Your account is awaiting admin approval' });
+        }
+        
+        if (partner.status === 'inactive') {
+            return res.status(403).json({ success: false, message: 'Your account has been deactivated. Contact the administrator.' });
+        }
+        
+        const isMatch = await partner.comparePassword(password);
+        if (!isMatch) {
+            await partner.incrementLoginAttempts();
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+        
+        await partner.resetLoginAttempts();
+        
+        const token = jwt.sign(
+            { userId: partner._id, role: 'partner' }, 
+            JWT_SECRET, 
+            { expiresIn: JWT_EXPIRES_IN }
+        );
+        
+        const refreshToken = jwt.sign(
+            { userId: partner._id, role: 'partner', type: 'refresh' },
+            JWT_REFRESH_SECRET,
+            { expiresIn: JWT_REFRESH_EXPIRES_IN }
+        );
+        
+        await RefreshToken.create({
+            token: refreshToken,
+            user_id: partner._id,
+            user_type: 'partner',
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        });
+        
+        partner.last_login = new Date();
+        await partner.save();
+        
+        res.json({
+            success: true,
+            token,
+            refreshToken,
+            user: {
+                id: partner._id,
+                email: partner.email,
+                name: partner.organization_name,
+                role: 'partner',
+                status: partner.status
+            }
+        });
+    } catch (error) {
+        console.error('Partner login error:', error);
+        res.status(500).json({ success: false, message: 'Server error during login' });
+    }
+});
+
+// Partner Token Verification
+app.post('/api/partner/verify', async (req, res) => {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'partner') {
+            return res.status(401).json({ success: false, message: 'Invalid token type' });
+        }
+        
+        const partner = await Partner.findById(decoded.userId).select('-password');
+        if (!partner) {
+            return res.status(401).json({ success: false, message: 'Partner not found' });
+        }
+        
+        if (partner.status !== 'active') {
+            return res.status(403).json({ success: false, message: 'Account not active' });
+        }
+        
+        res.json({
+            success: true,
+            partner: {
+                id: partner._id,
+                organization_name: partner.organization_name,
+                email: partner.email,
+                contact_name: partner.contact_name,
+                phone: partner.phone,
+                type: partner.type,
+                status: partner.status,
+                bio: partner.bio,
+                website: partner.website,
+                logo: partner.logo,
+                created_at: partner.created_at
+            }
+        });
+    } catch (error) {
+        return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+});
+
+// ============ ADMIN PARTNER MANAGEMENT ROUTES ============
+
+// Get all partners (admin)
+app.get('/api/admin/partners', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status, page = 1, limit = 20, search } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        if (search) {
+            query.$or = [
+                { organization_name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { contact_name: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [partners, total] = await Promise.all([
+            Partner.find(query)
+                .select('-password')
+                .sort({ created_at: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Partner.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            partners: partners.map(p => ({
+                _id: p._id,
+                organization_name: p.organization_name,
+                email: p.email,
+                contact_name: p.contact_name,
+                phone: p.phone,
+                website: p.website,
+                bio: p.bio,
+                type: p.type,
+                status: p.status,
+                logo: p.logo,
+                events_count: p.events_count || 0,
+                created_at: p.created_at,
+                approved_at: p.approved_at
+            })),
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get partners error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get partner stats (admin)
+app.get('/api/admin/partners/stats', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const [total, active, inactive, pending] = await Promise.all([
+            Partner.countDocuments(),
+            Partner.countDocuments({ status: 'active' }),
+            Partner.countDocuments({ status: 'inactive' }),
+            Partner.countDocuments({ status: 'pending' })
+        ]);
+        
+        res.json({
+            success: true,
+            stats: { total, active, inactive, pending }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single partner (admin)
+app.get('/api/admin/partners/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const partner = await Partner.findById(req.params.id).select('-password');
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        res.json({ success: true, partner });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create partner (admin)
+app.post('/api/admin/partners', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { 
+            organization_name, email, password, contact_name, phone, 
+            website, bio, type, status 
+        } = req.body;
+        
+        if (!organization_name || !email || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Organization name, email, and password are required' 
+            });
+        }
+        
+        if (password.length < 6) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password must be at least 6 characters' 
+            });
+        }
+        
+        const existing = await Partner.findOne({ email: email.toLowerCase() });
+        if (existing) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Partner with this email already exists' 
+            });
+        }
+        
+        const partner = new Partner({
+            organization_name,
+            email: email.toLowerCase(),
+            password,
+            contact_name: contact_name || '',
+            phone: phone || '',
+            website: website || '',
+            bio: bio || '',
+            type: type || 'other',
+            status: status || 'pending',
+            created_by: req.user._id
+        });
+        
+        await partner.save();
+        
+        // Send welcome email
+        try {
+            await sendPartnerWelcomeEmail(partner.email, partner.organization_name, password);
+        } catch (emailError) {
+            console.error('Failed to send partner welcome email:', emailError);
+        }
+        
+        res.status(201).json({
+            success: true,
+            message: 'Partner created successfully! Welcome email sent.',
+            partner: {
+                _id: partner._id,
+                organization_name: partner.organization_name,
+                email: partner.email,
+                status: partner.status
+            }
+        });
+    } catch (error) {
+        console.error('Create partner error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update partner (admin)
+app.put('/api/admin/partners/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const partner = await Partner.findById(req.params.id);
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        const { 
+            organization_name, contact_name, phone, website, 
+            bio, type, status 
+        } = req.body;
+        
+        if (organization_name) partner.organization_name = organization_name;
+        if (contact_name !== undefined) partner.contact_name = contact_name;
+        if (phone !== undefined) partner.phone = phone;
+        if (website !== undefined) partner.website = website;
+        if (bio !== undefined) partner.bio = bio;
+        if (type) partner.type = type;
+        if (status) partner.status = status;
+        
+        await partner.save();
+        
+        res.json({
+            success: true,
+            message: 'Partner updated successfully',
+            partner: {
+                _id: partner._id,
+                organization_name: partner.organization_name,
+                email: partner.email,
+                status: partner.status
+            }
+        });
+    } catch (error) {
+        console.error('Update partner error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Approve partner (admin)
+app.post('/api/admin/partners/:id/approve', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const partner = await Partner.findById(req.params.id);
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        partner.status = 'active';
+        partner.approved_at = new Date();
+        partner.approved_by = req.user._id;
+        await partner.save();
+        
+        // Send approval notification
+        try {
+            await sendPartnerApprovalEmail(partner.email, partner.organization_name);
+        } catch (emailError) {
+            console.error('Failed to send partner approval email:', emailError);
+        }
+        
+        res.json({
+            success: true,
+            message: 'Partner approved successfully',
+            partner: {
+                _id: partner._id,
+                organization_name: partner.organization_name,
+                status: partner.status
+            }
+        });
+    } catch (error) {
+        console.error('Approve partner error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Reset partner password (admin)
+app.post('/api/admin/partners/:id/reset-password', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { password } = req.body;
+        
+        if (!password || password.length < 6) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password must be at least 6 characters' 
+            });
+        }
+        
+        const partner = await Partner.findById(req.params.id);
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        partner.password = password;
+        await partner.save();
+        
+        // Send new password email
+        try {
+            await sendPartnerPasswordResetEmail(partner.email, partner.organization_name, password);
+        } catch (emailError) {
+            console.error('Failed to send password reset email:', emailError);
+        }
+        
+        res.json({
+            success: true,
+            message: 'Password reset successfully. New credentials sent to partner email.'
+        });
+    } catch (error) {
+        console.error('Reset partner password error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete partner (admin)
+app.delete('/api/admin/partners/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const partner = await Partner.findByIdAndDelete(req.params.id);
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        // Clean up related data
+        await RefreshToken.deleteMany({ user_id: partner._id, user_type: 'partner' });
+        
+        res.json({
+            success: true,
+            message: 'Partner deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete partner error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ PARTNER FORGOT PASSWORD ROUTES ============
+
+// Partner Forgot Password
+app.post('/api/partner/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+        
+        const partner = await Partner.findOne({ email: email.toLowerCase() });
+        if (!partner) {
+            return res.json({ 
+                success: true, 
+                message: 'If an account exists, a reset link has been sent.' 
+            });
+        }
+        
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = Date.now() + 3600000;
+        
+        partner.reset_password_token = resetToken;
+        partner.reset_password_expires = resetTokenExpiry;
+        await partner.save();
+        
+        const frontendUrl = process.env.FRONTEND_URL || 'https://liberiabusinessawardslr.com';
+        const resetUrl = `${frontendUrl}/reset-password.html?token=${resetToken}&type=partner`;
+        
+        // Send email
+        try {
+            await sendPartnerPasswordResetEmail(partner.email, partner.organization_name, resetUrl);
+        } catch (emailError) {
+            console.error('Failed to send partner password reset email:', emailError);
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Password reset link has been sent to your email.' 
+        });
+    } catch (error) {
+        console.error('Partner forgot password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Partner Reset Password
+app.post('/api/partner/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        
+        if (!token || !newPassword) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Token and new password are required' 
+            });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password must be at least 6 characters' 
+            });
+        }
+        
+        const partner = await Partner.findOne({
+            reset_password_token: token,
+            reset_password_expires: { $gt: Date.now() }
+        });
+        
+        if (!partner) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password reset token is invalid or has expired.' 
+            });
+        }
+        
+        partner.password = newPassword;
+        partner.reset_password_token = undefined;
+        partner.reset_password_expires = undefined;
+        await partner.save();
+        
+        res.json({ 
+            success: true, 
+            message: 'Password has been reset successfully.' 
+        });
+    } catch (error) {
+        console.error('Partner reset password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// ============ PARTNER EMAIL FUNCTIONS ============
+
+async function sendPartnerWelcomeEmail(email, orgName, tempPassword) {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'liberiabusinessawards@gmail.com',
+                pass: process.env.GMAIL_APP_PASSWORD
+            }
+        });
+        
+        const loginUrl = 'https://liberiabusinessawardslr.com/partner/login.html';
+        const dashboardUrl = 'https://liberiabusinessawardslr.com/dashboard/partner.html';
+        
+        const htmlBody = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Welcome Partner - Liberia Business Awards</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; padding: 20px; text-align: center; }
+                    .credentials { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                    .btn { display: inline-block; background: #8B5CF6; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; }
+                    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🤝 Welcome to the Partner Portal!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear ${orgName},</p>
+                        <p>Congratulations! Your organization has been registered as a partner for the Liberia Business Awards.</p>
+                        
+                        <div class="credentials">
+                            <h3>Your Login Credentials:</h3>
+                            <p><strong>Email:</strong> ${email}</p>
+                            <p><strong>Temporary Password:</strong> ${tempPassword}</p>
+                            <p><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
+                        </div>
+                        
+                        <p>Please log in using the credentials above. You will be prompted to change your password after your first login.</p>
+                        
+                        <div style="text-align: center;">
+                            <a href="${loginUrl}" class="btn">Login to Partner Portal</a>
+                        </div>
+                        
+                        <p>Once logged in, you can manage your partnership, view events, and access exclusive resources.</p>
+                        
+                        <p>If you have any questions, please contact the awards committee.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; ${new Date().getFullYear()} Liberia Business Awards</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        await transporter.sendMail({
+            from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
+            to: email,
+            subject: 'Welcome to the Partner Portal - Liberia Business Awards',
+            html: htmlBody
+        });
+        
+        console.log('✅ Welcome email sent to partner:', email);
+    } catch (error) {
+        console.error('Partner welcome email error:', error);
+    }
+}
+
+async function sendPartnerApprovalEmail(email, orgName) {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'liberiabusinessawards@gmail.com',
+                pass: process.env.GMAIL_APP_PASSWORD
+            }
+        });
+        
+        const loginUrl = 'https://liberiabusinessawardslr.com/partner/login.html';
+        
+        const htmlBody = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Partner Approved - Liberia Business Awards</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; padding: 20px; text-align: center; }
+                    .btn { display: inline-block; background: #8B5CF6; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; }
+                    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>✅ Partner Approved!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear ${orgName},</p>
+                        <p>Your partner account has been approved by the administrator!</p>
+                        
+                        <p>You can now log in to the Partner Portal and access all features.</p>
+                        
+                        <div style="text-align: center;">
+                            <a href="${loginUrl}" class="btn">Login to Partner Portal</a>
+                        </div>
+                        
+                        <p>Thank you for being a valued partner of the Liberia Business Awards.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; ${new Date().getFullYear()} Liberia Business Awards</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        await transporter.sendMail({
+            from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
+            to: email,
+            subject: '✅ Partner Account Approved - Liberia Business Awards',
+            html: htmlBody
+        });
+        
+        console.log('✅ Approval email sent to partner:', email);
+    } catch (error) {
+        console.error('Partner approval email error:', error);
+    }
+}
+
+async function sendPartnerPasswordResetEmail(email, orgName, resetUrlOrPassword) {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'liberiabusinessawards@gmail.com',
+                pass: process.env.GMAIL_APP_PASSWORD
+            }
+        });
+        
+        const isPassword = resetUrlOrPassword && resetUrlOrPassword.length < 100 && !resetUrlOrPassword.includes('http');
+        
+        let content;
+        if (isPassword) {
+            content = `
+                <div class="credentials" style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h3>Your New Password:</h3>
+                    <p><strong>${resetUrlOrPassword}</strong></p>
+                    <p style="font-size: 14px; color: #666;">Please log in and change your password immediately.</p>
+                </div>
+                <div style="text-align: center;">
+                    <a href="https://liberiabusinessawardslr.com/partner/login.html" class="btn">Login to Partner Portal</a>
+                </div>
+            `;
+        } else {
+            content = `
+                <div style="text-align: center;">
+                    <a href="${resetUrlOrPassword}" class="btn">Reset Your Password</a>
+                </div>
+                <p style="font-size: 12px; color: #666;">This link will expire in 1 hour.</p>
+            `;
+        }
+        
+        const htmlBody = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Password Reset - Partner Portal</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; padding: 20px; text-align: center; }
+                    .btn { display: inline-block; background: #8B5CF6; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; }
+                    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🔑 Partner Portal - Password Reset</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear ${orgName},</p>
+                        <p>We received a request to reset your password for the Partner Portal.</p>
+                        ${content}
+                        <p>If you did not request this, please ignore this email.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; ${new Date().getFullYear()} Liberia Business Awards</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        await transporter.sendMail({
+            from: '"Liberia Business Awards" <liberiabusinessawards@gmail.com>',
+            to: email,
+            subject: isPassword ? '🔑 New Password - Partner Portal' : '🔑 Password Reset Request - Partner Portal',
+            html: htmlBody
+        });
+        
+        console.log('✅ Password reset email sent to partner:', email);
+    } catch (error) {
+        console.error('Partner password reset email error:', error);
+    }
+}
+
+console.log('✅ Partner Management System Ready');
 
 console.log('✅ Judge Management System Ready');
 
