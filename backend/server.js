@@ -594,6 +594,52 @@ const adSchema = new mongoose.Schema({
     rejection_reason: { type: String }
 }, { timestamps: true });
 
+// ============ EVENT SCHEMA ============
+const eventSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    start_date: { type: Date, required: true },
+    end_date: { type: Date, required: true },
+    location: { type: String, default: '' },
+    type: { type: String, enum: ['workshop', 'seminar', 'networking', 'conference', 'webinar', 'other'], default: 'other' },
+    image_url: { type: String, default: '' },
+    registration_link: { type: String, default: '' },
+    status: { type: String, enum: ['draft', 'published', 'cancelled'], default: 'draft' },
+    attendees: { type: Number, default: 0 },
+    partner_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
+    partner_name: { type: String, default: '' },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' }
+}, { timestamps: true });
+
+// ============ SESSION SCHEMA ============
+const sessionSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    description: { type: String, default: '' },
+    date: { type: Date, required: true },
+    time: { type: String, required: true },
+    meeting_link: { type: String, default: '' },
+    max_attendees: { type: Number, default: 100 },
+    attendees: { type: Number, default: 0 },
+    status: { type: String, enum: ['scheduled', 'live', 'ended', 'cancelled'], default: 'scheduled' },
+    partner_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
+    partner_name: { type: String, default: '' },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' }
+}, { timestamps: true });
+
+// ============ MESSAGE SCHEMA ============
+const messageSchema = new mongoose.Schema({
+    sender_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+    sender_type: { type: String, enum: ['partner', 'admin'], required: true },
+    sender_name: { type: String, required: true },
+    recipient_id: { type: mongoose.Schema.Types.ObjectId },
+    recipient_type: { type: String, enum: ['partner', 'admin'], required: true },
+    subject: { type: String, required: true },
+    content: { type: String, required: true },
+    priority: { type: String, enum: ['normal', 'high', 'urgent'], default: 'normal' },
+    read: { type: Boolean, default: false },
+    status: { type: String, enum: ['sent', 'read', 'replied'], default: 'sent' },
+    related_id: { type: mongoose.Schema.Types.ObjectId }
+}, { timestamps: true });
 // Create Models
 const Admin = mongoose.model('Admin', adminSchema);
 const BusinessUser = mongoose.model('BusinessUser', businessUserSchema);
@@ -602,6 +648,11 @@ const Nomination = mongoose.model('Nomination', nominationSchema);
 const BusinessDocument = mongoose.model('BusinessDocument', businessDocumentSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
 const Ad = mongoose.model('Ad', adSchema);
+const Event = mongoose.model('Event', eventSchema);      
+const Session = mongoose.model('Session', sessionSchema); 
+const Message = mongoose.model('Message', messageSchema); 
+
+
 
 // ============ AUTH ROUTES ============
 
@@ -855,10 +906,12 @@ const authenticate = async (req, res, next) => {
         } else if (decoded.role === 'business') {
             user = await BusinessUser.findById(decoded.userId).select('-password');
         } else if (decoded.role === 'judge') {
-            // ADD THIS CASE FOR JUDGES
-            const Judge = require('./models/Judge');
-            user = await Judge.findById(decoded.userId).select('-password');
-        }
+    const Judge = require('./models/Judge');
+    user = await Judge.findById(decoded.userId).select('-password');
+} else if (decoded.role === 'partner') {
+    const Partner = require('./models/Partner');
+    user = await Partner.findById(decoded.userId).select('-password');
+}
         
         if (!user) {
             console.log(`❌ User not found for role: ${decoded.role}, userId: ${decoded.userId}`);
@@ -5075,6 +5128,7 @@ partnerSchema.methods.resetLoginAttempts = function() {
 
 const Partner = mongoose.model('Partner', partnerSchema);
 
+
 // ============ PARTNER AUTH ROUTES ============
 
 // Partner Login
@@ -5803,7 +5857,460 @@ async function sendPartnerPasswordResetEmail(email, orgName, resetUrlOrPassword)
 
 console.log('✅ Partner Management System Ready');
 
+// ============================================
+// PARTNER DASHBOARD ROUTES - Profile & Dashboard
+// ============================================
+
+// ============ PARTNER PROFILE ROUTES ============
+
+// Get partner profile
+app.get('/api/partner/profile', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const partner = await Partner.findById(req.user._id).select('-password');
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        res.json({
+            success: true,
+            profile: {
+                _id: partner._id,
+                organization_name: partner.organization_name,
+                email: partner.email,
+                contact_name: partner.contact_name,
+                phone: partner.phone,
+                website: partner.website,
+                bio: partner.bio,
+                type: partner.type,
+                status: partner.status,
+                logo: partner.logo,
+                created_at: partner.created_at
+            }
+        });
+    } catch (error) {
+        console.error('Get partner profile error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update partner profile
+app.put('/api/partner/profile', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const partner = await Partner.findById(req.user._id);
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        const { organization_name, contact_name, phone, website, bio } = req.body;
+        
+        if (organization_name) partner.organization_name = organization_name;
+        if (contact_name !== undefined) partner.contact_name = contact_name;
+        if (phone !== undefined) partner.phone = phone;
+        if (website !== undefined) partner.website = website;
+        if (bio !== undefined) partner.bio = bio;
+        
+        await partner.save();
+        
+        res.json({
+            success: true,
+            message: 'Profile updated successfully',
+            profile: {
+                _id: partner._id,
+                organization_name: partner.organization_name,
+                email: partner.email,
+                contact_name: partner.contact_name,
+                phone: partner.phone,
+                website: partner.website,
+                bio: partner.bio,
+                type: partner.type,
+                status: partner.status
+            }
+        });
+    } catch (error) {
+        console.error('Update partner profile error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Partner change password
+app.post('/api/partner/change-password', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Current and new password are required' });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+        }
+        
+        const partner = await Partner.findById(req.user._id);
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        const isValid = await partner.comparePassword(currentPassword);
+        if (!isValid) {
+            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        }
+        
+        partner.password = newPassword;
+        await partner.save();
+        
+        res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Partner change password error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ PARTNER EVENTS ROUTES ============
+
+// Get partner events
+app.get('/api/partner/events', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { page = 1, limit = 10, status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        let query = { partner_id: req.user._id };
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        // Use your existing Event model or create a new one
+        const Event = mongoose.model('Event');
+        const events = await Event.find(query)
+            .sort({ start_date: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await Event.countDocuments(query);
+        
+        res.json({
+            success: true,
+            events,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get partner events error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create partner event
+app.post('/api/partner/events', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { title, description, start_date, end_date, location, type, image_url, registration_link, status } = req.body;
+        
+        if (!title || !description || !start_date || !end_date) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const Event = mongoose.model('Event');
+        const event = new Event({
+            title,
+            description,
+            start_date: new Date(start_date),
+            end_date: new Date(end_date),
+            location,
+            type: type || 'other',
+            image_url,
+            registration_link,
+            status: status || 'draft',
+            partner_id: req.user._id,
+            partner_name: req.user.organization_name,
+            created_by: req.user._id
+        });
+        
+        await event.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Event created successfully',
+            event
+        });
+    } catch (error) {
+        console.error('Create partner event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete partner event
+app.delete('/api/partner/events/:id', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const Event = mongoose.model('Event');
+        const event = await Event.findOneAndDelete({
+            _id: req.params.id,
+            partner_id: req.user._id
+        });
+        
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        
+        res.json({ success: true, message: 'Event deleted successfully' });
+    } catch (error) {
+        console.error('Delete partner event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ PARTNER SESSIONS ROUTES ============
+
+// Get partner sessions
+app.get('/api/partner/sessions', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { page = 1, limit = 10, status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        let query = { partner_id: req.user._id };
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        const Session = mongoose.model('Session');
+        const sessions = await Session.find(query)
+            .sort({ date: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await Session.countDocuments(query);
+        
+        res.json({
+            success: true,
+            sessions,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get partner sessions error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create partner session
+app.post('/api/partner/sessions', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { title, description, date, time, meeting_link, max_attendees, status } = req.body;
+        
+        if (!title || !date || !time) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const Session = mongoose.model('Session');
+        const session = new Session({
+            title,
+            description,
+            date: new Date(date),
+            time,
+            meeting_link,
+            max_attendees: max_attendees || 100,
+            status: status || 'scheduled',
+            partner_id: req.user._id,
+            partner_name: req.user.organization_name,
+            created_by: req.user._id
+        });
+        
+        await session.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Session created successfully',
+            session
+        });
+    } catch (error) {
+        console.error('Create partner session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete partner session
+app.delete('/api/partner/sessions/:id', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const Session = mongoose.model('Session');
+        const session = await Session.findOneAndDelete({
+            _id: req.params.id,
+            partner_id: req.user._id
+        });
+        
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
+        }
+        
+        res.json({ success: true, message: 'Session deleted successfully' });
+    } catch (error) {
+        console.error('Delete partner session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ PARTNER MESSAGES ROUTES ============
+
+// Get partner messages
+app.get('/api/partner/messages', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { limit = 50 } = req.query;
+        
+        // Use existing Message model or create one
+        const Message = mongoose.model('Message');
+        const messages = await Message.find({
+            $or: [
+                { recipient_id: req.user._id, recipient_type: 'partner' },
+                { sender_id: req.user._id, sender_type: 'partner' }
+            ]
+        })
+        .sort({ created_at: -1 })
+        .limit(parseInt(limit));
+        
+        res.json({
+            success: true,
+            messages
+        });
+    } catch (error) {
+        console.error('Get partner messages error:', error);
+        // If Message model doesn't exist, return empty array
+        res.json({ success: true, messages: [] });
+    }
+});
+
+// Send partner message
+app.post('/api/partner/messages', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { subject, content, priority } = req.body;
+        
+        if (!subject || !content) {
+            return res.status(400).json({ success: false, message: 'Subject and content are required' });
+        }
+        
+        // Get admin users to send to
+        const admins = await Admin.find().select('_id');
+        
+        const Message = mongoose.model('Message');
+        const message = new Message({
+            sender_id: req.user._id,
+            sender_type: 'partner',
+            sender_name: req.user.organization_name,
+            recipient_type: 'admin',
+            recipient_id: admins[0]?._id || null,
+            subject,
+            content,
+            priority: priority || 'normal',
+            status: 'sent'
+        });
+        
+        await message.save();
+        
+        // Create notifications for admins
+        for (const admin of admins) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: admin._id,
+                recipient_type: 'admin',
+                title: `New Message from Partner: ${req.user.organization_name}`,
+                message: `${subject}`,
+                type: 'info',
+                read: false,
+                related_id: message._id
+            });
+        }
+        
+        res.status(201).json({
+            success: true,
+            message: 'Message sent successfully',
+            message
+        });
+    } catch (error) {
+        console.error('Send partner message error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Mark partner message as read
+app.post('/api/partner/messages/:id/read', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const Message = mongoose.model('Message');
+        await Message.updateOne(
+            { _id: req.params.id, recipient_id: req.user._id },
+            { read: true }
+        );
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark message read error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============ PARTNER NOTIFICATIONS ROUTES ============
+
+// Get partner notifications
+app.get('/api/partner/notifications', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { limit = 50 } = req.query;
+        
+        const Notification = mongoose.model('Notification');
+        const notifications = await Notification.find({
+            recipient_id: req.user._id,
+            recipient_type: 'partner'
+        })
+        .sort({ created_at: -1 })
+        .limit(parseInt(limit));
+        
+        res.json({
+            success: true,
+            notifications
+        });
+    } catch (error) {
+        console.error('Get partner notifications error:', error);
+        // If model doesn't exist, return empty array
+        res.json({ success: true, notifications: [] });
+    }
+});
+
+// Mark partner notification as read
+app.post('/api/partner/notifications/:id/read', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const Notification = mongoose.model('Notification');
+        await Notification.updateOne(
+            { _id: req.params.id, recipient_id: req.user._id },
+            { read: true }
+        );
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark notification read error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Mark all partner notifications as read
+app.post('/api/partner/notifications/read-all', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const Notification = mongoose.model('Notification');
+        await Notification.updateMany(
+            { recipient_id: req.user._id, recipient_type: 'partner', read: false },
+            { read: true }
+        );
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark all notifications read error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+console.log('✅ Partner Dashboard API Routes Ready');
+
 console.log('✅ Judge Management System Ready');
+
+
 
 // ============================================
 // AI BUSINESS ASSISTANT - BACKEND IMPLEMENTATION
