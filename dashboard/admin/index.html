@@ -1539,6 +1539,13 @@
                         <i class="fas fa-gavel"></i>
                         <span>Judges Panel</span>
                     </a>
+
+                    <!-- ============ PARTNERS MANAGEMENT ============ -->
+                    <a href="#" class="menu-item" onclick="showPartnersModal()">
+                   <i class="fas fa-handshake"></i>
+                   <span>Partners</span>
+                  <span class="badge" id="partnersCount">0</span>
+                 </a>
                 </div>
                 
                 <div class="menu-section">
@@ -11771,6 +11778,654 @@ window.deleteJudge = deleteJudge;
 window.resetJudgePassword = resetJudgePassword;
 window.filterJudges = filterJudges;
 
+  // ============================================
+// PARTNERS MANAGEMENT - COMPLETE
+// ============================================
+
+// Global state for partners
+let partnersData = [];
+let partnersCurrentPage = 1;
+let partnersTotalPages = 1;
+
+// Show Partners Modal
+function showPartnersModal() {
+    hideAllModals();
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('partnersModal');
+    if (!modal) {
+        createPartnersModal();
+        modal = document.getElementById('partnersModal');
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadPartners();
+}
+
+function createPartnersModal() {
+    const modalHTML = `
+    <div class="modal" id="partnersModal">
+        <div class="modal-content" style="max-width: 1200px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                <h2><i class="fas fa-handshake"></i> Partners Management</h2>
+                <button class="modal-close" onclick="hideModal('partnersModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="totalPartnersCount">0</h3>
+                        <p>Total Partners</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="activePartnersCount">0</h3>
+                        <p>Active Partners</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="inactivePartnersCount">0</h3>
+                        <p>Inactive</p>
+                    </div>
+                    <div class="stat-card" style="padding: 20px;">
+                        <h3 id="pendingPartnersCount">0</h3>
+                        <p>Pending</p>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px; text-align: right;">
+                    <button class="sheet-btn" onclick="showAddPartnerModal()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                        <i class="fas fa-plus"></i> Add Partner
+                    </button>
+                </div>
+                
+                <div class="filter-controls">
+                    <div class="filter-grid">
+                        <div class="filter-group">
+                            <label>Filter by Status</label>
+                            <select id="partnerStatusFilter" onchange="loadPartners()">
+                                <option value="all">All</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Search</label>
+                            <input type="text" id="partnerSearch" placeholder="Search partners..." onkeyup="filterPartners()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Organization</th>
+                                <th>Contact Person</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Events</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnersTableBody">
+                            <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="partnersPagination"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Partner Modal -->
+    <div class="modal" id="addPartnerModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                <h2 id="partnerModalTitle">Add Partner</h2>
+                <button class="modal-close" onclick="hideModal('addPartnerModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="partnerForm">
+                    <input type="hidden" id="partnerId">
+                    
+                    <div class="form-group">
+                        <label>Organization Name *</label>
+                        <input type="text" id="partnerOrgName" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="partnerEmail" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                        <small>This will be their login username</small>
+                    </div>
+                    
+                    <div class="form-group" id="partnerPasswordField">
+                        <label>Password *</label>
+                        <input type="password" id="partnerPassword" class="sheet-btn secondary" style="width: 100%; padding: 12px;" minlength="6" required>
+                        <small>Minimum 6 characters. They can change this after login.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Contact Person Name</label>
+                        <input type="text" id="partnerContactName" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="partnerPhone" class="sheet-btn secondary" style="width: 100%; padding: 12px;" placeholder="+231 XXX XXX XXX">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Website</label>
+                        <input type="url" id="partnerWebsite" class="sheet-btn secondary" style="width: 100%; padding: 12px;" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Bio / Description</label>
+                        <textarea id="partnerBio" rows="3" class="sheet-btn secondary" style="width: 100%; padding: 12px;" placeholder="Organization description..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Partner Type</label>
+                        <select id="partnerType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                            <option value="sponsor">Sponsor</option>
+                            <option value="media">Media Partner</option>
+                            <option value="community">Community Partner</option>
+                            <option value="government">Government Partner</option>
+                            <option value="ngo">NGO Partner</option>
+                            <option value="corporate">Corporate Partner</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="partnerStatus" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                    
+                    <div class="error-message" id="partnerError" style="display: none; color: #EF4444;"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="sheet-btn warning" onclick="hideModal('addPartnerModal')" style="flex: 1;">Cancel</button>
+                        <button type="button" class="sheet-btn" onclick="savePartner()" style="flex: 2; background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                            Save Partner
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Load Partners from API
+async function loadPartners(page = 1) {
+    const tbody = document.getElementById('partnersTableBody');
+    if (!tbody) return;
+    
+    partnersCurrentPage = page;
+    const status = document.getElementById('partnerStatusFilter')?.value || 'all';
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading partners...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        let url = `${API_BASE}/admin/partners?page=${page}&limit=20`;
+        if (status !== 'all') {
+            url += `&status=${status}`;
+        }
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.status === 401) {
+            showNotification('Session expired. Please refresh the page and log in again.', 'error');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Session expired. Please <a href="#" onclick="location.reload()">refresh the page</a> and log in again.</td></tr>';
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            partnersData = data.partners || [];
+            partnersTotalPages = data.pagination?.pages || 1;
+            displayPartners(partnersData);
+            updatePartnersPagination();
+            updatePartnerStats(partnersData);
+            document.getElementById('partnersCount').textContent = partnersData.length;
+        } else {
+            tbody.innerHTML = `<td><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${data.message || 'Failed to load partners'}</td></tr>`;
+        }
+    } catch (error) {
+        console.error('Error loading partners:', error);
+        tbody.innerHTML = `<td><td colspan="7" style="text-align: center; color: #EF4444;">Error loading partners: ${error.message}</td></tr>`;
+    }
+}
+
+function displayPartners(partners) {
+    const tbody = document.getElementById('partnersTableBody');
+    if (!tbody) return;
+    
+    if (!partners || partners.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No partners found. Click "Add Partner" to get started.</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = partners.map(partner => {
+        let statusClass = '';
+        let statusText = partner.status || 'pending';
+        
+        switch(partner.status) {
+            case 'active':
+                statusClass = 'status-active';
+                statusText = 'Active';
+                break;
+            case 'inactive':
+                statusClass = 'status-pending';
+                statusText = 'Inactive';
+                break;
+            case 'pending':
+                statusClass = 'status-pending';
+                statusText = 'Pending';
+                break;
+            default:
+                statusClass = 'status-pending';
+        }
+        
+        const partnerId = partner._id || partner.id;
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(partner.organization_name || partner.name || 'N/A')}</strong></td>
+                <td>${escapeHtml(partner.contact_name || '-')}</td>
+                <td>${escapeHtml(partner.email || '-')}</td>
+                <td>${escapeHtml(partner.phone || '-')}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>${partner.events_count || 0}</td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="editPartner('${partnerId}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="deletePartner('${partnerId}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        ${partner.status === 'pending' ? `
+                            <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approvePartner('${partnerId}')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                        ` : ''}
+                        <button class="sheet-btn" style="padding: 6px 12px; background: #3B82F6;" onclick="resetPartnerPassword('${partnerId}')">
+                            <i class="fas fa-key"></i> Reset Pwd
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updatePartnerStats(partners) {
+    const totalEl = document.getElementById('totalPartnersCount');
+    const activeEl = document.getElementById('activePartnersCount');
+    const inactiveEl = document.getElementById('inactivePartnersCount');
+    const pendingEl = document.getElementById('pendingPartnersCount');
+    
+    if (totalEl) totalEl.textContent = partners.length;
+    if (activeEl) activeEl.textContent = partners.filter(p => p.status === 'active').length;
+    if (inactiveEl) inactiveEl.textContent = partners.filter(p => p.status === 'inactive').length;
+    if (pendingEl) pendingEl.textContent = partners.filter(p => p.status === 'pending').length;
+}
+
+function updatePartnersPagination() {
+    const pagination = document.getElementById('partnersPagination');
+    if (!pagination) return;
+    
+    if (partnersTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${partnersCurrentPage === 1 ? 'disabled' : ''} onclick="loadPartners(${partnersCurrentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= partnersTotalPages; i++) {
+        if (i === 1 || i === partnersTotalPages || (i >= partnersCurrentPage - 2 && i <= partnersCurrentPage + 2)) {
+            html += `<button class="page-btn ${i === partnersCurrentPage ? 'active' : ''}" onclick="loadPartners(${i})">${i}</button>`;
+        } else if (i === partnersCurrentPage - 3 || i === partnersCurrentPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${partnersCurrentPage === partnersTotalPages ? 'disabled' : ''} onclick="loadPartners(${partnersCurrentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+function filterPartners() {
+    const search = document.getElementById('partnerSearch')?.value.toLowerCase() || '';
+    const filtered = partnersData.filter(partner => 
+        (partner.organization_name && partner.organization_name.toLowerCase().includes(search)) ||
+        (partner.email && partner.email.toLowerCase().includes(search)) ||
+        (partner.contact_name && partner.contact_name.toLowerCase().includes(search))
+    );
+    displayPartners(filtered);
+}
+
+// Show Add Partner Modal
+function showAddPartnerModal() {
+    const modal = document.getElementById('addPartnerModal');
+    if (!modal) {
+        createPartnersModal();
+    }
+    
+    const titleEl = document.getElementById('partnerModalTitle');
+    const form = document.getElementById('partnerForm');
+    const idField = document.getElementById('partnerId');
+    const passwordField = document.getElementById('partnerPasswordField');
+    const passwordInput = document.getElementById('partnerPassword');
+    const errorEl = document.getElementById('partnerError');
+    
+    if (titleEl) titleEl.textContent = 'Add Partner';
+    if (form) form.reset();
+    if (idField) idField.value = '';
+    if (passwordField) passwordField.style.display = 'block';
+    if (passwordInput) passwordInput.required = true;
+    if (errorEl) errorEl.style.display = 'none';
+    
+    const modalEl = document.getElementById('addPartnerModal');
+    if (modalEl) {
+        modalEl.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    } else {
+        console.error('Could not find addPartnerModal');
+        showNotification('Error opening add partner form', 'error');
+    }
+}
+
+// Edit Partner
+async function editPartner(id) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partners/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.partner) {
+            const partner = data.partner;
+            
+            document.getElementById('partnerModalTitle').textContent = 'Edit Partner';
+            document.getElementById('partnerId').value = partner._id || partner.id;
+            document.getElementById('partnerOrgName').value = partner.organization_name || partner.name || '';
+            document.getElementById('partnerEmail').value = partner.email || '';
+            document.getElementById('partnerContactName').value = partner.contact_name || '';
+            document.getElementById('partnerPhone').value = partner.phone || '';
+            document.getElementById('partnerWebsite').value = partner.website || '';
+            document.getElementById('partnerBio').value = partner.bio || '';
+            document.getElementById('partnerType').value = partner.type || 'other';
+            document.getElementById('partnerStatus').value = partner.status || 'pending';
+            document.getElementById('partnerPasswordField').style.display = 'none';
+            document.getElementById('partnerPassword').required = false;
+            document.getElementById('addPartnerModal').classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error editing partner:', error);
+        showNotification('Error loading partner details', 'error');
+    }
+}
+
+// Save Partner
+async function savePartner() {
+    const id = document.getElementById('partnerId').value;
+    const errorEl = document.getElementById('partnerError');
+    if (errorEl) errorEl.style.display = 'none';
+    
+    const partnerData = {
+        organization_name: document.getElementById('partnerOrgName').value.trim(),
+        email: document.getElementById('partnerEmail').value.trim(),
+        contact_name: document.getElementById('partnerContactName').value.trim(),
+        phone: document.getElementById('partnerPhone').value.trim(),
+        website: document.getElementById('partnerWebsite').value.trim(),
+        bio: document.getElementById('partnerBio').value.trim(),
+        type: document.getElementById('partnerType').value,
+        status: document.getElementById('partnerStatus').value
+    };
+    
+    // Validation
+    if (!partnerData.organization_name || !partnerData.email) {
+        const errorMsg = 'Organization Name and Email are required';
+        if (errorEl) {
+            errorEl.textContent = errorMsg;
+            errorEl.style.display = 'block';
+        } else {
+            showNotification(errorMsg, 'error');
+        }
+        return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(partnerData.email)) {
+        const errorMsg = 'Please enter a valid email address';
+        if (errorEl) {
+            errorEl.textContent = errorMsg;
+            errorEl.style.display = 'block';
+        } else {
+            showNotification(errorMsg, 'error');
+        }
+        return;
+    }
+    
+    // Handle password for new partner
+    const password = document.getElementById('partnerPassword').value;
+    if (!id && (!password || password.length < 6)) {
+        const errorMsg = 'Password must be at least 6 characters';
+        if (errorEl) {
+            errorEl.textContent = errorMsg;
+            errorEl.style.display = 'block';
+        } else {
+            showNotification(errorMsg, 'error');
+        }
+        return;
+    }
+    
+    if (password) partnerData.password = password;
+    
+    // Find and disable save button
+    const saveBtn = document.querySelector('#addPartnerModal .sheet-btn:last-child') || 
+                    document.querySelector('#addPartnerModal button[onclick*="savePartner"]');
+    let originalText = '';
+    if (saveBtn) {
+        originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            throw new Error('Authentication required. Please login again.');
+        }
+        
+        const url = id ? `${API_BASE}/admin/partners/${id}` : `${API_BASE}/admin/partners`;
+        const method = id ? 'PUT' : 'POST';
+        
+        console.log('Saving partner:', { url, method, partnerData });
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(partnerData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(id ? 'Partner updated successfully!' : 'Partner added successfully!', 'success');
+            
+            // Send welcome email if new partner
+            if (!id) {
+                await sendPartnerWelcomeEmail(partnerData.email, partnerData.organization_name, password);
+            }
+            
+            hideModal('addPartnerModal');
+            loadPartners();
+        } else {
+            const errorMsg = result.message || 'Error saving partner';
+            if (errorEl) {
+                errorEl.textContent = errorMsg;
+                errorEl.style.display = 'block';
+            } else {
+                showNotification(errorMsg, 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Save partner error:', error);
+        const errorMsg = error.message || 'Error saving partner';
+        if (errorEl) {
+            errorEl.textContent = errorMsg;
+            errorEl.style.display = 'block';
+        } else {
+            showNotification(errorMsg, 'error');
+        }
+    } finally {
+        if (saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    }
+}
+
+// Approve Partner
+async function approvePartner(id) {
+    if (!confirm('Approve this partner? They will be able to login and access the partner portal.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partners/${id}/approve`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Partner approved successfully!', 'success');
+            loadPartners();
+        } else {
+            showNotification(result.message || 'Approval failed', 'error');
+        }
+    } catch (error) {
+        showNotification('Error approving partner', 'error');
+    }
+}
+
+// Delete Partner
+async function deletePartner(id) {
+    if (!confirm('⚠️ Delete this partner? This will remove their access and all partner data.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partners/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Partner deleted successfully', 'success');
+            loadPartners();
+        } else {
+            showNotification(result.message || 'Error deleting partner', 'error');
+        }
+    } catch (error) {
+        showNotification('Error deleting partner', 'error');
+    }
+}
+
+// Reset Partner Password
+async function resetPartnerPassword(partnerId) {
+    const newPassword = prompt('Enter new password for this partner (minimum 6 characters):');
+    if (!newPassword || newPassword.length < 6) {
+        showNotification('Password must be at least 6 characters', 'warning');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partners/${partnerId}/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: newPassword })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Password reset successfully! The partner can now login with the new password.', 'success');
+        } else {
+            showNotification(result.message || 'Error resetting password', 'error');
+        }
+    } catch (error) {
+        showNotification('Error resetting password', 'error');
+    }
+}
+
+// Send Partner Welcome Email
+async function sendPartnerWelcomeEmail(email, orgName, tempPassword) {
+    try {
+        await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                formType: 'partner_welcome',
+                email: email,
+                orgName: orgName,
+                password: tempPassword,
+                loginUrl: 'https://liberiabusinessawardslr.com/partner/login.html',
+                timestamp: new Date().toISOString()
+            })
+        });
+        console.log('Welcome email sent to partner:', email);
+    } catch (error) {
+        console.error('Failed to send welcome email:', error);
+    }
+}
+
+// Make functions global
+window.showPartnersModal = showPartnersModal;
+window.loadPartners = loadPartners;
+window.showAddPartnerModal = showAddPartnerModal;
+window.editPartner = editPartner;
+window.savePartner = savePartner;
+window.deletePartner = deletePartner;
+window.approvePartner = approvePartner;
+window.resetPartnerPassword = resetPartnerPassword;
+window.filterPartners = filterPartners;      
         
 // ============================================
 // ADD THESE MISSING FUNCTIONS TO ADMIN DASHBOARD
