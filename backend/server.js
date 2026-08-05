@@ -642,7 +642,7 @@ const messageSchema = new mongoose.Schema({
 }, { timestamps: true });
 // Create Models
 const Admin = mongoose.model('Admin', adminSchema);
-const BusinessUser = mongoose.model('BusinessUser', businessUserSchema);
+const BusinessUser = mongoose.model('BusinessUser', businessUserSchema); 
 const RefreshToken = mongoose.model('RefreshToken', refreshTokenSchema);
 const Nomination = mongoose.model('Nomination', nominationSchema);
 const BusinessDocument = mongoose.model('BusinessDocument', businessDocumentSchema);
