@@ -5543,6 +5543,50 @@ app.delete('/api/admin/partners/:id', authenticate, authorize('admin'), async (r
     }
 });
 
+// ============ PARTNER TOKEN VERIFICATION ============
+app.post('/api/partner/verify', async (req, res) => {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.role !== 'partner') {
+            return res.status(401).json({ success: false, message: 'Invalid token type' });
+        }
+        
+        const partner = await Partner.findById(decoded.userId).select('-password');
+        if (!partner) {
+            return res.status(401).json({ success: false, message: 'Partner not found' });
+        }
+        
+        if (partner.status !== 'active') {
+            return res.status(403).json({ success: false, message: 'Account not active' });
+        }
+        
+        res.json({
+            success: true,
+            partner: {
+                id: partner._id,
+                organization_name: partner.organization_name,
+                email: partner.email,
+                contact_name: partner.contact_name,
+                phone: partner.phone,
+                type: partner.type,
+                status: partner.status,
+                bio: partner.bio,
+                website: partner.website,
+                logo: partner.logo,
+                created_at: partner.created_at
+            }
+        });
+    } catch (error) {
+        console.error('Partner verify error:', error);
+        return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    }
+});
+
 // ============ PARTNER FORGOT PASSWORD ROUTES ============
 
 // Partner Forgot Password
