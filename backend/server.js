@@ -881,7 +881,7 @@ app.post('/api/auth/verify', async (req, res) => {
 // ============ AUTHENTICATION MIDDLEWARE ============
 
 // Update authenticate middleware to check query token
-// ============ AUTHENTICATION MIDDLEWARE (FIXED FOR JUDGES) ============
+// ============ AUTHENTICATION MIDDLEWARE (FIXED) ============
 const authenticate = async (req, res, next) => {
     try {
         // Check Authorization header first, then query parameter
@@ -900,18 +900,18 @@ const authenticate = async (req, res, next) => {
         
         let user;
         
-        // Handle different user types
+        // Handle different user types - NO EXTRA BRACES!
         if (decoded.role === 'admin') {
             user = await Admin.findById(decoded.userId).select('-password');
         } else if (decoded.role === 'business') {
             user = await BusinessUser.findById(decoded.userId).select('-password');
         } else if (decoded.role === 'judge') {
-    const Judge = require('./models/Judge');
-    user = await Judge.findById(decoded.userId).select('-password');
-} else if (decoded.role === 'partner') {
-    const Partner = require('./models/Partner');
-    user = await Partner.findById(decoded.userId).select('-password');
-}
+            const Judge = require('./models/Judge');
+            user = await Judge.findById(decoded.userId).select('-password');
+        } else if (decoded.role === 'partner') {
+            const Partner = require('./models/Partner');
+            user = await Partner.findById(decoded.userId).select('-password');
+        }
         
         if (!user) {
             console.log(`❌ User not found for role: ${decoded.role}, userId: ${decoded.userId}`);
