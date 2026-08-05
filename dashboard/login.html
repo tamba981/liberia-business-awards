@@ -448,6 +448,7 @@
     <button class="tab-btn active" data-tab="admin">Admin Login</button>
     <button class="tab-btn" data-tab="business">Business Portal</button>
     <button class="tab-btn" data-tab="judge">Judge Portal</button>
+    <button class="tab-btn" data-tab="partner">Partner Portal</button>
 </div>
             
             <!-- Admin Login Form -->
@@ -648,7 +649,47 @@
         <p>Judges are appointed by the Liberia Business Awards committee. If you are a judge, you should have received your login credentials via email. For assistance, contact the awards committee.</p>
     </div>
 </div>
-            
+                        <!-- Partner Portal Form -->
+            <div class="login-form" id="partnerForm">
+                <div class="info-box">
+                    <h4><i class="fas fa-handshake"></i> Partner Portal Access</h4>
+                    <p>Authorized partners can login here to manage events, host sessions, and communicate with the admin team.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="partnerEmail">Partner Email</label>
+                    <input type="email" id="partnerEmail" required 
+                           placeholder="Enter your partner email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="partnerPassword">Password</label>
+                    <input type="password" id="partnerPassword" required 
+                           placeholder="Enter your password">
+                    <div class="password-checkbox">
+                        <input type="checkbox" id="showPartnerPassword" onchange="togglePartnerPasswordVisibility()">
+                        <label for="showPartnerPassword">Show password</label>
+                    </div>
+                    <div style="text-align: right; margin-top: 5px;">
+                        <a href="#" onclick="showPartnerForgotPassword()" style="color: var(--lba-red); font-size: 13px; text-decoration: none;">
+                            Forgot Password?
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="error-message" id="partnerError"></div>
+                <div class="success-message" id="partnerSuccess"></div>
+                
+                <button type="button" class="login-btn" onclick="handlePartnerLogin()" id="partnerBtn" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                    <i class="fas fa-handshake"></i>
+                    <span>Login as Partner</span>
+                </button>
+                
+                <div class="info-box" style="margin-top: 20px;">
+                    <h4><i class="fas fa-question-circle"></i> About Partner Portal</h4>
+                    <p>Partners are organizations that collaborate with Liberia Business Awards to host events, sessions, and support the business community. If you are a partner, you should have received your login credentials via email. For assistance, contact the awards committee.</p>
+                </div>
+            </div>
             <!-- Footer Links -->
             <div class="footer-links">
                 <a href="../index.html">
@@ -692,6 +733,8 @@ if (token && userRole) {
                 window.location.href = 'business/index.html';
             } else if (userRole === 'judge') {
                 window.location.href = 'judge/index.html';
+            } else if (userRole === 'partner') {
+                window.location.href = 'partner/index.html';
             }
             return;
         }
@@ -734,6 +777,7 @@ if (token && userRole) {
                 if (tab === 'admin') formId = 'adminForm';
                 else if (tab === 'business') formId = 'businessForm';
                 else if (tab === 'judge') formId = 'judgeForm';
+                else if (tab === 'partner') formId = 'partnerForm';
                 
                 if (form.id === formId) {
                     form.classList.add('active');
@@ -1120,6 +1164,108 @@ async function showJudgeForgotPassword() {
     }
 }
 
+        // ==================== PARTNER LOGIN ====================
+async function handlePartnerLogin() {
+    const email = document.getElementById('partnerEmail').value.trim();
+    const password = document.getElementById('partnerPassword').value;
+    const errorEl = document.getElementById('partnerError');
+    const successEl = document.getElementById('partnerSuccess');
+    const btn = document.getElementById('partnerBtn');
+    
+    clearAllMessages();
+    
+    if (!email || !password) {
+        showError(errorEl, 'Please fill in all fields');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/partner/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-Token': localStorage.getItem('csrf_token')
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            localStorage.setItem('lba_auth_token', result.token);
+            if (result.refreshToken) localStorage.setItem('lba_refresh_token', result.refreshToken);
+            localStorage.setItem('lba_user_data', JSON.stringify(result.user));
+            localStorage.setItem('lba_user_role', 'partner');
+            if (result.csrfToken) localStorage.setItem('csrf_token', result.csrfToken);
+            
+            showSuccess(successEl, '✓ Login successful! Redirecting to Partner Dashboard...');
+            console.log('✅ Partner login successful');
+            
+            setTimeout(() => {
+                window.location.href = 'partner/index.html';
+            }, 1500);
+        } else {
+            if (result.message && result.message.includes('pending')) {
+                showError(errorEl, 'Your partner account is pending approval by the admin.');
+            } else if (result.message && result.message.includes('inactive')) {
+                showError(errorEl, 'Your partner account has been deactivated. Contact the awards committee.');
+            } else {
+                showError(errorEl, result.message || 'Invalid partner credentials');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Partner login error:', error);
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to server. Please try again later.';
+        }
+        showError(errorEl, errorMessage);
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+}
+
+function togglePartnerPasswordVisibility() {
+    const field = document.getElementById('partnerPassword');
+    const checkbox = document.getElementById('showPartnerPassword');
+    if (field && checkbox) {
+        field.type = checkbox.checked ? 'text' : 'password';
+    }
+}
+
+async function showPartnerForgotPassword() {
+    const email = prompt('Please enter your partner email to reset your password:');
+    if (email && email.includes('@')) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/partner/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message || 'Password reset link has been sent to your email.', 'success');
+            } else {
+                showToast(result.message || 'Failed to send reset link.', 'error');
+            }
+        } catch (error) {
+            console.error('Forgot password error:', error);
+            showToast('Cannot connect to server.', 'error');
+        }
+    } else if (email) {
+        showToast('Please enter a valid email address.', 'error');
+    }
+}
         // ==================== UTILITY FUNCTIONS ====================
         function showError(element, message) {
             if (!element) return;
