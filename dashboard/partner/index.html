@@ -1,40 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- ============ AUTHENTICATION CHECK ============ -->
-    <script>
-        (function() {
-            const token = localStorage.getItem('lba_auth_token');
-            const userRole = localStorage.getItem('lba_user_role');
-            
-            if (!token || userRole !== 'partner') {
-                localStorage.removeItem('lba_auth_token');
-                localStorage.removeItem('lba_user_data');
-                localStorage.removeItem('lba_user_role');
-                window.location.replace('../login.html');
-                return;
+   <!-- ============ AUTHENTICATION CHECK ============ -->
+<script>
+    (function() {
+        const token = localStorage.getItem('lba_auth_token');
+        const userRole = localStorage.getItem('lba_user_role');
+        
+        if (!token || userRole !== 'partner') {
+            localStorage.removeItem('lba_auth_token');
+            localStorage.removeItem('lba_user_data');
+            localStorage.removeItem('lba_user_role');
+            window.location.replace('../login.html');
+            return;
+        }
+        
+        
+        fetch('https://liberia-business-awards-production.up.railway.app/api/partner/verify', {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-            
-            // Verify token with backend
-            fetch('https://liberia-business-awards-production.up.railway.app/api/auth/verify', {
-                method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => {
-                if (!response.ok) throw new Error('Invalid token');
-                return response.json();
-            }).then(data => {
-                if (!data.success || data.user.role !== 'partner') {
-                    throw new Error('Not partner user');
-                }
-            }).catch(() => {
-                localStorage.clear();
-                window.location.replace('../login.html');
-            });
-        })();
-    </script>
+        }).then(response => {
+            if (!response.ok) throw new Error('Invalid token');
+            return response.json();
+        }).then(data => {
+            if (!data.success || data.partner?.status !== 'active') {
+                throw new Error('Partner account not active');
+            }
+        }).catch(() => {
+            localStorage.clear();
+            window.location.replace('../login.html');
+        });
+    })();
+</script>
     
     <!-- ============ SECURITY LAYER ============ -->
     <script>
