@@ -1,5 +1,5 @@
- <!DOCTYPE html>
-<html lang="en"> 
+<!DOCTYPE html>
+<html lang="en">
 <head>
    <!-- ============ AUTHENTICATION CHECK ============ -->
 <script>
@@ -36,7 +36,76 @@
     })();
 </script>
     
-    
+    <!-- ============ SECURITY LAYER ============ -->
+    <script>
+    (function() {
+        'use strict';
+        const noop = function() {};
+        if (window.console) {
+            const methods = ['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'assert', 'profile', 'profileEnd', 'time', 'timeEnd'];
+            methods.forEach(function(method) {
+                if (window.console[method]) {
+                    window.console[method] = noop;
+                }
+            });
+        }
+        
+        function blockDevToolsShortcuts(e) {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's')) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        }
+        
+        function blockContextMenu(e) {
+            const target = e.target;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+                return true;
+            }
+            e.preventDefault();
+            return false;
+        }
+        
+        try {
+            document.addEventListener('contextmenu', blockContextMenu);
+            window.addEventListener('keydown', blockDevToolsShortcuts);
+        } catch (err) {}
+        
+        const originalCreateElement = document.createElement;
+        document.createElement = function(tagName) {
+            const element = originalCreateElement.call(document, tagName);
+            if (tagName && tagName.toLowerCase() === 'script') {
+                const originalSetAttribute = element.setAttribute;
+                element.setAttribute = function(name, value) {
+                    if (name && name.toLowerCase() === 'src') {
+                        const srcValue = value;
+                        const allowed = [
+                            window.location.origin,
+                            'https://cdnjs.cloudflare.com',
+                            'https://unpkg.com',
+                            'https://fonts.googleapis.com',
+                            'https://code.jquery.com',
+                            'https://cdn.jsdelivr.net'
+                        ];
+                        let isAllowed = false;
+                        for (let i = 0; i < allowed.length; i++) {
+                            if (srcValue.indexOf(allowed[i]) === 0) {
+                                isAllowed = true;
+                                break;
+                            }
+                        }
+                        if (!isAllowed) {
+                            return;
+                        }
+                    }
+                    originalSetAttribute.call(this, name, value);
+                };
+            }
+            return element;
+        };
+    })();
+    </script>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1176,62 +1245,10 @@
     </div>
     
     <script>
-
         // ============================================
         // CONFIGURATION
         // ============================================
         const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
-
-       // ============================================
-// 🚀 DIAGNOSTIC - CHECK TOKEN STATUS
-// ============================================
-console.log('=== 🔍 PARTNER DASHBOARD DIAGNOSTIC ===');
-
-const diagToken = localStorage.getItem('lba_auth_token');
-const diagUser = localStorage.getItem('lba_user_data');
-const diagRole = localStorage.getItem('lba_user_role');
-
-console.log('🔑 Token present:', diagToken ? 'YES' : 'NO');
-console.log('👤 User data present:', diagUser ? 'YES' : 'NO');
-console.log('🎭 Role:', diagRole);
-
-if (diagToken) {
-    console.log('🔑 Token preview:', diagToken.substring(0, 30) + '...');
-    try {
-        const payload = JSON.parse(atob(diagToken.split('.')[1]));
-        console.log('📦 Token payload:', payload);
-        console.log('⏰ Expires:', new Date(payload.exp * 1000).toLocaleString());
-        console.log('👤 User ID:', payload.userId);
-        console.log('🎭 Role from token:', payload.role);
-    } catch(e) {
-        console.error('❌ Invalid token format:', e);
-    }
-} else {
-    console.error('❌ NO TOKEN FOUND!');
-}
-
-// Test the verify endpoint
-console.log('📡 Testing /partner/verify endpoint...');
-fetch(`${API_BASE}/partner/verify`, {
-    method: 'POST',
-    headers: { 
-        'Authorization': `Bearer ${diagToken || ''}`,
-        'Content-Type': 'application/json'
-    }
-})
-.then(res => {
-    console.log('📡 Response status:', res.status);
-    return res.json();
-})
-.then(data => {
-    console.log('📡 Verify response:', data);
-    if (data.success) {
-        console.log('✅ Token is VALID! Partner:', data.partner?.organization_name);
-    } else {
-        console.error('❌ Token is INVALID:', data.message);
-    }
-})
-.catch(err => console.error('❌ Verify error:', err));
         
         // ============================================
         // STATE
