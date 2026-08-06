@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
    <!-- ============ AUTHENTICATION CHECK ============ -->
 <script>
     (function() {
@@ -15,20 +16,35 @@
             return;
         }
         
+        // Use relative API path or environment-aware URL
+        const API_BASE = (function() {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return 'http://localhost:8080/api';
+            }
+            return 'https://liberia-business-awards-production.up.railway.app/api';
+        })();
         
-        fetch('https://liberia-business-awards-production.up.railway.app/api/partner/verify', {
+        fetch(`${API_BASE}/partner/verify`, {
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         }).then(response => {
-            if (!response.ok) throw new Error('Invalid token');
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('lba_auth_token');
+                    localStorage.removeItem('lba_user_data');
+                    localStorage.removeItem('lba_user_role');
+                }
+                throw new Error('Invalid token');
+            }
             return response.json();
         }).then(data => {
             if (!data.success || data.partner?.status !== 'active') {
                 throw new Error('Partner account not active');
             }
+            console.log('✅ Partner authentication verified');
         }).catch(() => {
             localStorage.clear();
             window.location.replace('../login.html');
@@ -1245,10 +1261,18 @@
     </div>
     
     <script>
-        // ============================================
-        // CONFIGURATION
-        // ============================================
-        const API_BASE = 'https://liberia-business-awards-production.up.railway.app/api';
+
+// ============================================
+// CONFIGURATION - Environment Aware
+// ============================================
+const API_BASE = (() => {
+    // Check if we're in development mode
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:8080/api';
+    }
+    // Production URL
+    return 'https://liberia-business-awards-production.up.railway.app/api';
+})();
         
         // ============================================
         // STATE
@@ -1268,24 +1292,44 @@
         // INITIALIZATION
         // ============================================
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🤝 Partner Dashboard Initializing...');
-            
-            await loadUserProfile();
-            setupUI();
-            setupNavigation();
-            setupSidebarToggle();
-            setupLogout();
-            
-            // Load data
-            await Promise.all([
-                loadEvents(),
-                loadSessions(),
-                loadMessages(),
-                loadNotifications()
-            ]);
-            
-            console.log('✅ Partner Dashboard Ready');
-        });
+    console.log('🤝 Partner Dashboard Initializing...');
+    
+    try {
+        // First, verify the token is valid
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            console.warn('🔒 No token found, redirecting to login');
+            window.location.href = '../login.html';
+            return;
+        }
+        
+        // Load user profile (this will verify the token)
+        await loadUserProfile();
+        
+        // Only setup UI and load data if profile loaded successfully
+        setupUI();
+        setupNavigation();
+        setupSidebarToggle();
+        setupLogout();
+        
+        // Load data sequentially to avoid flooding the server
+        console.log('📊 Loading dashboard data...');
+        await loadEvents();
+        await loadSessions();
+        await loadMessages();
+        await loadNotifications();
+        
+        console.log('✅ Partner Dashboard Ready');
+    } catch (error) {
+        console.error('❌ Dashboard initialization failed:', error);
+        if (error.message === 'Unauthorized' || error.status === 401) {
+            localStorage.removeItem('lba_auth_token');
+            localStorage.removeItem('lba_user_data');
+            localStorage.removeItem('lba_user_role');
+            window.location.href = '../login.html';
+        }
+    }
+});
         
         // ============================================
         // USER PROFILE
@@ -1297,39 +1341,55 @@
         
         console.log('🔑 TOKEN:', token ? token.substring(0, 50) + '...' : 'NO TOKEN');
         console.log('👤 USER DATA:', userData);
-        console.log('📡 API BASE:', API_BASE);
+        
+        if (!token) {
+            throw new Error('No token found');
+        }
         
         appState.user = userData;
         
-        if (token) {
-            console.log('📡 Sending request to:', `${API_BASE}/partner/profile`);
-            const response = await fetch(`${API_BASE}/partner/profile`, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            console.log('📡 Response status:', response.status);
-            
-            if (response.status === 401) {
-                console.error('❌ 401 Unauthorized - Token may be invalid or expired');
-                showToast('Session expired. Please login again.', 'error');
-                setTimeout(logout, 3000);
-                return;
+        console.log('📡 Sending request to:', `${API_BASE}/partner/profile`);
+        
+        const response = await fetch(`${API_BASE}/partner/profile`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-            
-            const data = await response.json();
-            console.log('📡 Profile data:', data);
-            
-            if (data.success && data.profile) {
-                appState.profile = data.profile;
-                appState.partnerId = data.profile._id || data.profile.id;
-            }
+        });
+        console.log('📡 Response status:', response.status);
+        
+        if (response.status === 401) {
+            console.error('❌ 401 Unauthorized - Token may be invalid or expired');
+            const error = new Error('Unauthorized');
+            error.status = 401;
+            throw error;
+        }
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('📡 Profile data received');
+        
+        if (data.success && data.profile) {
+            appState.profile = data.profile;
+            appState.partnerId = data.profile._id || data.profile.id;
+            // Update user data with profile info
+            appState.user.name = data.profile.organization_name || appState.user.name;
+            appState.user.email = data.profile.email || appState.user.email;
+            // Save updated user data
+            localStorage.setItem('lba_user_data', JSON.stringify(appState.user));
+        } else {
+            throw new Error(data.message || 'Failed to load profile');
         }
         
         updateUserDisplay();
+        return true;
     } catch (error) {
         console.error('Error loading profile:', error);
+        throw error;
     }
 }
         
@@ -1429,6 +1489,14 @@
         // ============================================
         async function apiRequest(endpoint, options = {}) {
     const token = localStorage.getItem('lba_auth_token');
+    
+    // If no token and this isn't a login/register endpoint, redirect to login
+    if (!token && !endpoint.includes('/login') && !endpoint.includes('/register')) {
+        console.warn('🔒 No auth token found for:', endpoint);
+        window.location.href = '../login.html';
+        throw new Error('No authentication token');
+    }
+    
     console.log(`📡 API Request: ${endpoint}`, { token: token ? 'present' : 'missing' });
     
     const defaultOptions = {
@@ -1448,22 +1516,35 @@
         fetchOptions.headers = { ...defaultOptions.headers, ...options.headers };
     }
     
-    const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
-    console.log(`📡 Response: ${endpoint} - ${response.status}`);
-    
-    if (response.status === 401) {
-        console.error('❌ 401 Unauthorized for:', endpoint);
-        const error = new Error('Unauthorized');
-        error.status = 401;
+    try {
+        const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+        console.log(`📡 Response: ${endpoint} - ${response.status}`);
+        
+        if (response.status === 401) {
+            console.error('❌ 401 Unauthorized for:', endpoint);
+            // Clear token and redirect if it's not a verify endpoint (to avoid loops)
+            if (!endpoint.includes('/verify')) {
+                localStorage.removeItem('lba_auth_token');
+                localStorage.removeItem('lba_user_data');
+                localStorage.removeItem('lba_user_role');
+                window.location.href = '../login.html';
+            }
+            const error = new Error('Unauthorized');
+            error.status = 401;
+            throw error;
+        }
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP ${response.status}`);
+        }
+        
+        return response.json();
+    } catch (error) {
+        // Rethrow with status if it's a 401
+        if (error.status === 401) throw error;
         throw error;
     }
-    
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `HTTP ${response.status}`);
-    }
-    
-    return response.json();
 }
         
         // ============================================
@@ -1522,7 +1603,8 @@
         // ============================================
         // EVENTS MANAGEMENT
         // ============================================
-        async function loadEvents(page = 1) {
+
+       async function loadEvents(page = 1) {
     try {
         const response = await apiRequest(`/partner/events?page=${page}&limit=10`);
         if (response.success) {
@@ -1533,8 +1615,9 @@
             updateDashboardStats();
         }
     } catch (error) {
+        // apiRequest now handles 401 redirect, so we just log
         if (error.status === 401) {
-            console.warn('Auth required for events');
+            console.warn('🔒 Auth required for events - redirecting');
             return;
         }
         console.error('Load events error:', error);
@@ -1542,6 +1625,9 @@
             <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
                 <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
                 <p>Error loading events</p>
+                <button class="btn btn-primary btn-sm" onclick="loadEvents()" style="margin-top: 10px;">
+                    <i class="fas fa-sync"></i> Retry
+                </button>
             </div>
         `;
     }
