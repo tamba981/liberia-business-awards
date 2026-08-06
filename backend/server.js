@@ -31,14 +31,21 @@ const corsOptions = {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Accept', 'Origin']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'Accept', 'Origin', 'X-Requested-With'],
+    exposedHeaders: ['Authorization', 'Content-Length', 'X-Response-Time']
 };
 
+// Apply CORS to all routes
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
-// Handle preflight requests
-app.options('*', cors());
+// Handle preflight requests for all routes
+app.options('*', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token, Accept, Origin, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.sendStatus(200);
+});
 
 // Log requests
 app.use((req, res, next) => {
@@ -880,7 +887,6 @@ app.post('/api/auth/verify', async (req, res) => {
 
 // ============ AUTHENTICATION MIDDLEWARE ============
 
-// Update authenticate middleware to check query token
 // ============ AUTHENTICATION MIDDLEWARE (FIXED) ============
 const authenticate = async (req, res, next) => {
     try {
@@ -900,16 +906,30 @@ const authenticate = async (req, res, next) => {
         
         let user;
         
-        // Handle different user types - NO EXTRA BRACES!
+        // Handle different user types - USE DIRECT MODEL REFERENCES
         if (decoded.role === 'admin') {
             user = await Admin.findById(decoded.userId).select('-password');
         } else if (decoded.role === 'business') {
             user = await BusinessUser.findById(decoded.userId).select('-password');
         } else if (decoded.role === 'judge') {
-            const Judge = require('./models/Judge');
+            // Check if Judge model exists, if not, try to get it
+            let Judge;
+            try {
+                Judge = mongoose.model('Judge');
+            } catch (e) {
+                // Judge model might not be registered yet
+                console.log('⚠️ Judge model not found, trying to require it');
+                try {
+                    Judge = require('./models/Judge');
+                } catch (err) {
+                    console.error('❌ Judge model not available');
+                    return res.status(401).json({ success: false, message: 'User type not supported.' });
+                }
+            }
             user = await Judge.findById(decoded.userId).select('-password');
         } else if (decoded.role === 'partner') {
-            const Partner = require('./models/Partner');
+            // ============ FIXED: Use the already-registered Partner model ============
+            const Partner = mongoose.model('Partner');
             user = await Partner.findById(decoded.userId).select('-password');
         }
         
@@ -5126,7 +5146,11 @@ partnerSchema.methods.resetLoginAttempts = function() {
     return this.save();
 };
 
+// ============ REGISTER PARTNER MODEL BEFORE MIDDLEWARE USES IT ============
 const Partner = mongoose.model('Partner', partnerSchema);
+
+// Export for use in middleware
+module.exports.Partner = Partner;
 
 
 // ============ PARTNER AUTH ROUTES ============
