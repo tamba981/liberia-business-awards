@@ -1291,27 +1291,47 @@
         // USER PROFILE
         // ============================================
         async function loadUserProfile() {
-            try {
-                const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
-                appState.user = userData;
-                
-                const token = localStorage.getItem('lba_auth_token');
-                if (token) {
-                    const response = await fetch(`${API_BASE}/partner/profile`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const data = await response.json();
-                    if (data.success && data.profile) {
-                        appState.profile = data.profile;
-                        appState.partnerId = data.profile._id || data.profile.id;
-                    }
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const userData = JSON.parse(localStorage.getItem('lba_user_data') || '{}');
+        
+        console.log('🔑 TOKEN:', token ? token.substring(0, 50) + '...' : 'NO TOKEN');
+        console.log('👤 USER DATA:', userData);
+        console.log('📡 API BASE:', API_BASE);
+        
+        appState.user = userData;
+        
+        if (token) {
+            console.log('📡 Sending request to:', `${API_BASE}/partner/profile`);
+            const response = await fetch(`${API_BASE}/partner/profile`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
-                
-                updateUserDisplay();
-            } catch (error) {
-                console.error('Error loading profile:', error);
+            });
+            console.log('📡 Response status:', response.status);
+            
+            if (response.status === 401) {
+                console.error('❌ 401 Unauthorized - Token may be invalid or expired');
+                showToast('Session expired. Please login again.', 'error');
+                setTimeout(logout, 3000);
+                return;
+            }
+            
+            const data = await response.json();
+            console.log('📡 Profile data:', data);
+            
+            if (data.success && data.profile) {
+                appState.profile = data.profile;
+                appState.partnerId = data.profile._id || data.profile.id;
             }
         }
+        
+        updateUserDisplay();
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
         
         function updateUserDisplay() {
             const user = appState.user || {};
@@ -1408,39 +1428,43 @@
         // API HELPERS
         // ============================================
         async function apiRequest(endpoint, options = {}) {
-            const token = localStorage.getItem('lba_auth_token');
-            const defaultOptions = {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            };
-            
-            if (options.body instanceof FormData) {
-                delete defaultOptions.headers['Content-Type'];
-            }
-            
-            const fetchOptions = { ...defaultOptions, ...options };
-            if (fetchOptions.headers) {
-                fetchOptions.headers = { ...defaultOptions.headers, ...options.headers };
-            }
-            
-            const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
-            
-            if (response.status === 401) {
-                showToast('Session expired. Please login again.', 'error');
-                setTimeout(logout, 2000);
-                throw new Error('Unauthorized');
-            }
-            
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({}));
-                throw new Error(error.message || `HTTP ${response.status}`);
-            }
-            
-            return response.json();
+    const token = localStorage.getItem('lba_auth_token');
+    console.log(`📡 API Request: ${endpoint}`, { token: token ? 'present' : 'missing' });
+    
+    const defaultOptions = {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         }
+    };
+    
+    if (options.body instanceof FormData) {
+        delete defaultOptions.headers['Content-Type'];
+    }
+    
+    const fetchOptions = { ...defaultOptions, ...options };
+    if (fetchOptions.headers) {
+        fetchOptions.headers = { ...defaultOptions.headers, ...options.headers };
+    }
+    
+    const response = await fetch(`${API_BASE}${endpoint}`, fetchOptions);
+    console.log(`📡 Response: ${endpoint} - ${response.status}`);
+    
+    if (response.status === 401) {
+        console.error('❌ 401 Unauthorized for:', endpoint);
+        const error = new Error('Unauthorized');
+        error.status = 401;
+        throw error;
+    }
+    
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `HTTP ${response.status}`);
+    }
+    
+    return response.json();
+}
         
         // ============================================
         // TOAST NOTIFICATIONS
@@ -1499,25 +1523,29 @@
         // EVENTS MANAGEMENT
         // ============================================
         async function loadEvents(page = 1) {
-            try {
-                const response = await apiRequest(`/partner/events?page=${page}&limit=10`);
-                if (response.success) {
-                    appState.events = response.events || [];
-                    displayEvents(appState.events);
-                    updateEventsPagination(response.pagination);
-                    document.getElementById('eventsCount').textContent = appState.events.length;
-                    updateDashboardStats();
-                }
-            } catch (error) {
-                console.error('Load events error:', error);
-                document.getElementById('eventsGrid').innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
-                        <p>Error loading events</p>
-                    </div>
-                `;
-            }
+    try {
+        const response = await apiRequest(`/partner/events?page=${page}&limit=10`);
+        if (response.success) {
+            appState.events = response.events || [];
+            displayEvents(appState.events);
+            updateEventsPagination(response.pagination);
+            document.getElementById('eventsCount').textContent = appState.events.length;
+            updateDashboardStats();
         }
+    } catch (error) {
+        if (error.status === 401) {
+            console.warn('Auth required for events');
+            return;
+        }
+        console.error('Load events error:', error);
+        document.getElementById('eventsGrid').innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p>Error loading events</p>
+            </div>
+        `;
+    }
+}
         
         function displayEvents(events) {
             const grid = document.getElementById('eventsGrid');
@@ -1669,25 +1697,29 @@
         // SESSIONS MANAGEMENT
         // ============================================
         async function loadSessions(page = 1) {
-            try {
-                const response = await apiRequest(`/partner/sessions?page=${page}&limit=10`);
-                if (response.success) {
-                    appState.sessions = response.sessions || [];
-                    displaySessions(appState.sessions);
-                    updateSessionsPagination(response.pagination);
-                    document.getElementById('sessionsCount').textContent = appState.sessions.length;
-                    updateDashboardStats();
-                }
-            } catch (error) {
-                console.error('Load sessions error:', error);
-                document.getElementById('sessionsGrid').innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
-                        <p>Error loading sessions</p>
-                    </div>
-                `;
-            }
+    try {
+        const response = await apiRequest(`/partner/sessions?page=${page}&limit=10`);
+        if (response.success) {
+            appState.sessions = response.sessions || [];
+            displaySessions(appState.sessions);
+            updateSessionsPagination(response.pagination);
+            document.getElementById('sessionsCount').textContent = appState.sessions.length;
+            updateDashboardStats();
         }
+    } catch (error) {
+        if (error.status === 401) {
+            console.warn('Auth required for sessions');
+            return;
+        }
+        console.error('Load sessions error:', error);
+        document.getElementById('sessionsGrid').innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p>Error loading sessions</p>
+            </div>
+        `;
+    }
+}
         
         function displaySessions(sessions) {
             const grid = document.getElementById('sessionsGrid');
@@ -1842,25 +1874,29 @@
         // MESSAGES (Communication with Admin)
         // ============================================
         async function loadMessages() {
-            try {
-                const response = await apiRequest('/partner/messages?limit=50');
-                if (response.success) {
-                    appState.messages = response.messages || [];
-                    displayMessages(appState.messages);
-                    const unread = appState.messages.filter(m => !m.read).length;
-                    document.getElementById('messagesCount').textContent = unread;
-                    updateDashboardStats();
-                }
-            } catch (error) {
-                console.error('Load messages error:', error);
-                document.getElementById('messagesList').innerHTML = `
-                    <div style="text-align: center; padding: 50px; color: #EF4444;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
-                        <p>Error loading messages</p>
-                    </div>
-                `;
-            }
+    try {
+        const response = await apiRequest('/partner/messages?limit=50');
+        if (response.success) {
+            appState.messages = response.messages || [];
+            displayMessages(appState.messages);
+            const unread = appState.messages.filter(m => !m.read).length;
+            document.getElementById('messagesCount').textContent = unread;
+            updateDashboardStats();
         }
+    } catch (error) {
+        if (error.status === 401) {
+            console.warn('Auth required for messages');
+            return;
+        }
+        console.error('Load messages error:', error);
+        document.getElementById('messagesList').innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p>Error loading messages</p>
+            </div>
+        `;
+    }
+}
         
         function displayMessages(messages) {
             const container = document.getElementById('messagesList');
@@ -1950,25 +1986,29 @@
         // NOTIFICATIONS
         // ============================================
         async function loadNotifications() {
-            try {
-                const response = await apiRequest('/partner/notifications?limit=50');
-                if (response.success) {
-                    appState.notifications = response.notifications || [];
-                    displayNotifications(appState.notifications);
-                    const unread = appState.notifications.filter(n => !n.read).length;
-                    document.getElementById('notificationsCount').textContent = unread;
-                    updateDashboardStats();
-                }
-            } catch (error) {
-                console.error('Load notifications error:', error);
-                document.getElementById('notificationsList').innerHTML = `
-                    <div style="text-align: center; padding: 50px; color: #EF4444;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
-                        <p>Error loading notifications</p>
-                    </div>
-                `;
-            }
+    try {
+        const response = await apiRequest('/partner/notifications?limit=50');
+        if (response.success) {
+            appState.notifications = response.notifications || [];
+            displayNotifications(appState.notifications);
+            const unread = appState.notifications.filter(n => !n.read).length;
+            document.getElementById('notificationsCount').textContent = unread;
+            updateDashboardStats();
         }
+    } catch (error) {
+        if (error.status === 401) {
+            console.warn('Auth required for notifications');
+            return;
+        }
+        console.error('Load notifications error:', error);
+        document.getElementById('notificationsList').innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p>Error loading notifications</p>
+            </div>
+        `;
+    }
+}
         
         function displayNotifications(notifications) {
             const container = document.getElementById('notificationsList');
