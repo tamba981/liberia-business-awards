@@ -6603,6 +6603,853 @@ console.log('✅ Partner Dashboard API Routes Ready');
 
 
 // ============================================
+// ADMIN PARTNER EVENTS MANAGEMENT ROUTES
+// ============================================
+
+// Get all partner events (admin)
+app.get('/api/admin/partner/events', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { approval_status, search, page = 1, limit = 20 } = req.query;
+        let query = {};
+        
+        if (approval_status && approval_status !== 'all') {
+            query.approval_status = approval_status;
+        }
+        
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { partner_name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [events, total] = await Promise.all([
+            Event.find(query)
+                .sort({ created_at: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Event.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            events,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get partner events error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Approve partner event (admin)
+app.put('/api/admin/partner/events/:id/approve', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        
+        event.approval_status = 'approved';
+        event.approved_at = new Date();
+        event.approved_by = req.user._id;
+        event.status = 'published';
+        await event.save();
+        
+        // Notify partner
+        if (event.partner_id) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: event.partner_id,
+                recipient_type: 'partner',
+                title: `✅ Event Approved: ${event.title}`,
+                message: `Your event "${event.title}" has been approved and is now visible to the public.`,
+                type: 'success',
+                read: false,
+                related_id: event._id,
+                metadata: { event_id: event._id }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Event approved successfully',
+            event
+        });
+    } catch (error) {
+        console.error('Approve event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Reject partner event (admin)
+app.put('/api/admin/partner/events/:id/reject', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { reason } = req.body;
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        
+        event.approval_status = 'rejected';
+        event.admin_notes = reason || 'Event rejected by administrator';
+        await event.save();
+        
+        // Notify partner
+        if (event.partner_id) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: event.partner_id,
+                recipient_type: 'partner',
+                title: `❌ Event Rejected: ${event.title}`,
+                message: `Your event "${event.title}" was rejected. Reason: ${event.admin_notes}`,
+                type: 'error',
+                read: false,
+                related_id: event._id,
+                metadata: { event_id: event._id, reason: event.admin_notes }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Event rejected',
+            event
+        });
+    } catch (error) {
+        console.error('Reject event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Request changes for partner event (admin)
+app.put('/api/admin/partner/events/:id/request-changes', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { changes } = req.body;
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        
+        event.approval_status = 'changes_requested';
+        event.requested_changes = changes || 'Changes requested by administrator';
+        await event.save();
+        
+        // Notify partner
+        if (event.partner_id) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: event.partner_id,
+                recipient_type: 'partner',
+                title: `📝 Changes Requested: ${event.title}`,
+                message: `Please review and update your event "${event.title}". Requested changes: ${event.requested_changes}`,
+                type: 'warning',
+                read: false,
+                related_id: event._id,
+                metadata: { event_id: event._id, changes: event.requested_changes }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Changes requested',
+            event
+        });
+    } catch (error) {
+        console.error('Request changes error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single partner event (admin)
+app.get('/api/admin/partner/events/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        res.json({ success: true, event });
+    } catch (error) {
+        console.error('Get event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============================================
+// ADMIN PARTNER SESSIONS MANAGEMENT ROUTES
+// ============================================
+
+// Get all partner sessions (admin)
+app.get('/api/admin/partner/sessions', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status, search, page = 1, limit = 20 } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { partner_name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [sessions, total] = await Promise.all([
+            Session.find(query)
+                .sort({ date: -1, time: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Session.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            sessions,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get partner sessions error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Start session (admin)
+app.put('/api/admin/partner/sessions/:id/start', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const session = await Session.findById(req.params.id);
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
+        }
+        
+        session.status = 'live';
+        await session.save();
+        
+        // Generate embed URL if not set
+        let embedUrl = session.meeting_link;
+        if (session.platform === 'zoom' && session.meeting_link.includes('zoom.us/j/')) {
+            const match = session.meeting_link.match(/zoom\.us\/j\/(\d+)/);
+            if (match) {
+                embedUrl = `https://zoom.us/embed/${match[1]}`;
+            }
+        }
+        
+        // Notify partner
+        if (session.partner_id) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: session.partner_id,
+                recipient_type: 'partner',
+                title: `🔴 Session Started: ${session.title}`,
+                message: `Your session "${session.title}" is now live!`,
+                type: 'success',
+                read: false,
+                related_id: session._id,
+                metadata: { session_id: session._id }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Session started',
+            session: {
+                ...session.toObject(),
+                embed_url: embedUrl
+            }
+        });
+    } catch (error) {
+        console.error('Start session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// End session (admin)
+app.put('/api/admin/partner/sessions/:id/end', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const session = await Session.findById(req.params.id);
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
+        }
+        
+        session.status = 'ended';
+        await session.save();
+        
+        // Notify partner
+        if (session.partner_id) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: session.partner_id,
+                recipient_type: 'partner',
+                title: `⏹️ Session Ended: ${session.title}`,
+                message: `Your session "${session.title}" has ended.`,
+                type: 'info',
+                read: false,
+                related_id: session._id,
+                metadata: { session_id: session._id }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Session ended'
+        });
+    } catch (error) {
+        console.error('End session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete session (admin)
+app.delete('/api/admin/partner/sessions/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const session = await Session.findByIdAndDelete(req.params.id);
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
+        }
+        res.json({ success: true, message: 'Session deleted' });
+    } catch (error) {
+        console.error('Delete session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+
+// ============================================
+// ADMIN PARTNER DOCUMENTS MANAGEMENT ROUTES
+// ============================================
+
+// Partner Document Schema (if not already defined)
+const partnerDocumentSchema = new mongoose.Schema({
+    partner_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner', required: true },
+    partner_name: { type: String, default: '' },
+    name: { type: String, required: true },
+    type: { type: String, enum: ['registration', 'certificate', 'proposal', 'agreement', 'presentation', 'financial', 'legal', 'other'], default: 'other' },
+    file_url: { type: String, required: true },
+    file_name: { type: String },
+    file_size: { type: Number },
+    mime_type: { type: String },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    admin_notes: { type: String, default: '' },
+    version: { type: Number, default: 1 },
+    version_history: [{
+        version: Number,
+        file_url: String,
+        uploaded_at: Date,
+        note: String
+    }],
+    uploaded_by: { type: String, enum: ['partner', 'admin'], default: 'partner' },
+    uploaded_by_id: { type: mongoose.Schema.Types.ObjectId }
+}, { timestamps: true });
+
+// Check if model exists before creating
+const PartnerDocument = mongoose.models.PartnerDocument || mongoose.model('PartnerDocument', partnerDocumentSchema);
+
+// Get all partner documents (admin)
+app.get('/api/admin/partner/documents', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status, search, page = 1, limit = 20 } = req.query;
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { partner_name: { $regex: search, $options: 'i' } },
+                { file_name: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [documents, total] = await Promise.all([
+            PartnerDocument.find(query)
+                .populate('partner_id', 'organization_name email')
+                .sort({ created_at: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            PartnerDocument.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            documents,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get partner documents error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Upload document for partner (admin)
+app.post('/api/admin/partner/documents', authenticate, authorize('admin'), handleUpload(upload.single('document')), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+        
+        const { partner_id, name, type } = req.body;
+        
+        if (!partner_id || !name) {
+            return res.status(400).json({ success: false, message: 'Partner ID and document name are required' });
+        }
+        
+        // Verify partner exists
+        const partner = await Partner.findById(partner_id);
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        const fileUrl = `/uploads/${req.file.filename}`;
+        
+        const document = new PartnerDocument({
+            partner_id: partner_id,
+            partner_name: partner.organization_name,
+            name: name,
+            type: type || 'other',
+            file_url: fileUrl,
+            file_name: req.file.originalname,
+            file_size: req.file.size,
+            mime_type: req.file.mimetype,
+            status: 'pending',
+            uploaded_by: 'admin',
+            uploaded_by_id: req.user._id
+        });
+        
+        await document.save();
+        
+        // Notify partner
+        const Notification = mongoose.model('Notification');
+        await Notification.create({
+            recipient_id: partner_id,
+            recipient_type: 'partner',
+            title: `📄 New Document Uploaded: ${name}`,
+            message: `An administrator has uploaded a new document "${name}" to your account. Please review it.`,
+            type: 'info',
+            read: false,
+            related_id: document._id,
+            metadata: { document_id: document._id }
+        });
+        
+        res.status(201).json({
+            success: true,
+            message: 'Document uploaded successfully',
+            document
+        });
+    } catch (error) {
+        console.error('Upload partner document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Approve partner document (admin)
+app.put('/api/admin/partner/documents/:id/approve', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const document = await PartnerDocument.findById(req.params.id);
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        document.status = 'approved';
+        await document.save();
+        
+        // Notify partner
+        if (document.partner_id) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: document.partner_id,
+                recipient_type: 'partner',
+                title: `✅ Document Approved: ${document.name}`,
+                message: `Your document "${document.name}" has been approved.`,
+                type: 'success',
+                read: false,
+                related_id: document._id,
+                metadata: { document_id: document._id }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Document approved',
+            document
+        });
+    } catch (error) {
+        console.error('Approve document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Reject partner document (admin)
+app.put('/api/admin/partner/documents/:id/reject', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { reason } = req.body;
+        const document = await PartnerDocument.findById(req.params.id);
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        document.status = 'rejected';
+        document.admin_notes = reason || 'Document rejected by administrator';
+        await document.save();
+        
+        // Notify partner
+        if (document.partner_id) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: document.partner_id,
+                recipient_type: 'partner',
+                title: `❌ Document Rejected: ${document.name}`,
+                message: `Your document "${document.name}" was rejected. Reason: ${document.admin_notes}`,
+                type: 'error',
+                read: false,
+                related_id: document._id,
+                metadata: { document_id: document._id, reason: document.admin_notes }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Document rejected',
+            document
+        });
+    } catch (error) {
+        console.error('Reject document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// View partner document (admin)
+app.get('/api/admin/partner/documents/:id/view', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const document = await PartnerDocument.findById(req.params.id);
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        const fileName = path.basename(document.file_url);
+        const filePath = path.join(uploadDir, fileName);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: 'File not found' });
+        }
+        
+        const ext = path.extname(document.file_name || fileName).toLowerCase();
+        let contentType = 'application/octet-stream';
+        
+        switch(ext) {
+            case '.pdf': contentType = 'application/pdf'; break;
+            case '.jpg': case '.jpeg': contentType = 'image/jpeg'; break;
+            case '.png': contentType = 'image/png'; break;
+            case '.gif': contentType = 'image/gif'; break;
+            case '.doc': contentType = 'application/msword'; break;
+            case '.docx': contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; break;
+        }
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `inline; filename="${document.name}${ext}"`);
+        res.sendFile(filePath);
+        
+    } catch (error) {
+        console.error('View document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Download partner document (admin)
+app.get('/api/admin/partner/documents/:id/download', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const document = await PartnerDocument.findById(req.params.id);
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        const fileName = path.basename(document.file_url);
+        const filePath = path.join(uploadDir, fileName);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: 'File not found' });
+        }
+        
+        const ext = path.extname(document.file_name || fileName).toLowerCase();
+        let contentType = 'application/octet-stream';
+        
+        switch(ext) {
+            case '.pdf': contentType = 'application/pdf'; break;
+            case '.jpg': case '.jpeg': contentType = 'image/jpeg'; break;
+            case '.png': contentType = 'image/png'; break;
+            case '.gif': contentType = 'image/gif'; break;
+            case '.doc': contentType = 'application/msword'; break;
+            case '.docx': contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; break;
+        }
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${document.name}${ext}"`);
+        res.sendFile(filePath);
+        
+    } catch (error) {
+        console.error('Download document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete partner document (admin)
+app.delete('/api/admin/partner/documents/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const document = await PartnerDocument.findByIdAndDelete(req.params.id);
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        // Delete file from filesystem
+        const fileName = path.basename(document.file_url);
+        const filePath = path.join(uploadDir, fileName);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        
+        res.json({ success: true, message: 'Document deleted' });
+    } catch (error) {
+        console.error('Delete document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============================================
+// BUSINESS DASHBOARD - EVENTS & SESSIONS
+// ============================================
+
+// Get approved events for businesses
+app.get('/api/business/events', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const query = {
+            approval_status: 'approved',
+            status: 'published'
+        };
+        
+        const [events, total] = await Promise.all([
+            Event.find(query)
+                .sort({ start_date: 1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Event.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            events,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get business events error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single event details (business)
+app.get('/api/business/events/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const event = await Event.findOne({
+            _id: req.params.id,
+            approval_status: 'approved',
+            status: 'published'
+        });
+        
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        
+        res.json({ success: true, event });
+    } catch (error) {
+        console.error('Get event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Register for event (business)
+app.post('/api/business/events/:id/register', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const event = await Event.findOne({
+            _id: req.params.id,
+            approval_status: 'approved',
+            status: 'published'
+        });
+        
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+        
+        // Check if already registered (using attendees count or separate registration tracking)
+        // For now, just increment attendees
+        event.attendees = (event.attendees || 0) + 1;
+        await event.save();
+        
+        // Create notification for business
+        const Notification = mongoose.model('Notification');
+        await Notification.create({
+            recipient_id: req.user._id,
+            recipient_type: 'business',
+            title: `✅ Registered for Event: ${event.title}`,
+            message: `You have successfully registered for "${event.title}". Check your email for details.`,
+            type: 'success',
+            read: false,
+            related_id: event._id,
+            metadata: { event_id: event._id }
+        });
+        
+        res.json({
+            success: true,
+            message: 'Registration successful!',
+            event
+        });
+    } catch (error) {
+        console.error('Register for event error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get live sessions for businesses
+app.get('/api/business/sessions', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const now = new Date();
+        const query = {
+            status: { $in: ['scheduled', 'live'] },
+            visibility: 'public'
+        };
+        
+        const [sessions, total] = await Promise.all([
+            Session.find(query)
+                .sort({ date: 1, time: 1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Session.countDocuments(query)
+        ]);
+        
+        res.json({
+            success: true,
+            sessions,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get business sessions error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get single session (business)
+app.get('/api/business/sessions/:id', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const session = await Session.findOne({
+            _id: req.params.id,
+            status: { $in: ['scheduled', 'live'] }
+        });
+        
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
+        }
+        
+        // Generate embed URL if available
+        let embedUrl = null;
+        if (session.is_embedded && session.status === 'live') {
+            embedUrl = session.meeting_link;
+            if (session.platform === 'zoom' && session.meeting_link.includes('zoom.us/j/')) {
+                const match = session.meeting_link.match(/zoom\.us\/j\/(\d+)/);
+                if (match) {
+                    embedUrl = `https://zoom.us/embed/${match[1]}`;
+                }
+            }
+        }
+        
+        res.json({
+            success: true,
+            session: {
+                ...session.toObject(),
+                embed_url: embedUrl
+            }
+        });
+    } catch (error) {
+        console.error('Get session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Join session (business)
+app.post('/api/business/sessions/:id/join', authenticate, authorize('business'), async (req, res) => {
+    try {
+        const session = await Session.findOne({
+            _id: req.params.id,
+            status: 'live'
+        });
+        
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found or not live' });
+        }
+        
+        // Increment attendees
+        session.attendees = (session.attendees || 0) + 1;
+        await session.save();
+        
+        let embedUrl = session.meeting_link;
+        if (session.is_embedded && session.platform === 'zoom' && session.meeting_link.includes('zoom.us/j/')) {
+            const match = session.meeting_link.match(/zoom\.us\/j\/(\d+)/);
+            if (match) {
+                embedUrl = `https://zoom.us/embed/${match[1]}`;
+            }
+        }
+        
+        res.json({
+            success: true,
+            session: {
+                ...session.toObject(),
+                embed_url: embedUrl
+            }
+        });
+    } catch (error) {
+        console.error('Join session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ============================================
 // ADMIN PARTNER MESSAGES MANAGEMENT ROUTES
 // ============================================
 
