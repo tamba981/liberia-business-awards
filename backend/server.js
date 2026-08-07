@@ -619,6 +619,11 @@ const eventSchema = new mongoose.Schema({
     image_url: { type: String, default: '' },
     registration_link: { type: String, default: '' },
     status: { type: String, enum: ['draft', 'published', 'cancelled'], default: 'draft' },
+    approval_status: { type: String, enum: ['pending', 'approved', 'rejected', 'changes_requested'], default: 'pending' },
+    admin_notes: { type: String, default: '' },
+    requested_changes: { type: String, default: '' },
+    approved_at: { type: Date },
+    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
     attendees: { type: Number, default: 0 },
     partner_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
     partner_name: { type: String, default: '' },
@@ -6436,6 +6441,30 @@ app.post('/api/partner/notifications/:id/archive', authenticate, authorize('part
         res.json({ success: true });
     } catch (error) {
         console.error('Archive notification error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Unarchive notification
+app.post('/api/partner/notifications/:id/unarchive', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const notification = await Notification.findOne({
+            _id: id,
+            recipient_id: req.user._id,
+            recipient_type: 'partner'
+        });
+        
+        if (!notification) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
+        
+        notification.archived = false;
+        await notification.save();
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Unarchive notification error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
