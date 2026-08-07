@@ -1393,7 +1393,121 @@
     </div>
 </div>
 
-             <!-- AI Business Assistant Page -->
+    <!-- ============ EVENTS PAGE ============ -->
+<div id="businessEventsPage" class="page" style="display: none;">
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-calendar-alt"></i> Events</h2>
+            <div style="display: flex; gap: 10px;">
+                <select id="eventFilter" onchange="loadBusinessEvents(1)" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <option value="all">All Events</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" onclick="loadBusinessEvents(1)">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="businessEventsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading events...</p>
+            </div>
+        </div>
+        
+        <div class="pagination" id="businessEventsPagination"></div>
+    </div>
+</div>
+
+<!-- ============ LIVE SESSIONS PAGE ============ -->
+<div id="businessSessionsPage" class="page" style="display: none;">
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-video"></i> Live Sessions</h2>
+            <div style="display: flex; gap: 10px;">
+                <select id="sessionFilter" onchange="loadBusinessSessions(1)" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <option value="all">All Sessions</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="live">Live Now</option>
+                    <option value="ended">Ended</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" onclick="loadBusinessSessions(1)">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="businessSessionsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading sessions...</p>
+            </div>
+        </div>
+        
+        <div class="pagination" id="businessSessionsPagination"></div>
+    </div>
+</div>         
+
+<!-- ============ EVENTS PAGE ============ -->
+<div id="businessEventsPage" class="page" style="display: none;">
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-calendar-alt"></i> Events</h2>
+            <div style="display: flex; gap: 10px;">
+                <select id="eventFilter" onchange="loadBusinessEvents(1)" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <option value="all">All Events</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" onclick="loadBusinessEvents(1)">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="businessEventsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading events...</p>
+            </div>
+        </div>
+        
+        <div class="pagination" id="businessEventsPagination"></div>
+    </div>
+</div>
+
+<!-- ============ LIVE SESSIONS PAGE ============ -->
+<div id="businessSessionsPage" class="page" style="display: none;">
+    <div class="content-section">
+        <div class="section-header">
+            <h2><i class="fas fa-video"></i> Live Sessions</h2>
+            <div style="display: flex; gap: 10px;">
+                <select id="sessionFilter" onchange="loadBusinessSessions(1)" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <option value="all">All Sessions</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="live">Live Now</option>
+                    <option value="ended">Ended</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" onclick="loadBusinessSessions(1)">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="businessSessionsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading sessions...</p>
+            </div>
+        </div>
+        
+        <div class="pagination" id="businessSessionsPagination"></div>
+    </div>
+</div>
+             
+<!-- AI Business Assistant Page -->
 <div id="aiAssistantPage" class="page" style="display: none;">
     <div class="content-section">
         <div class="section-header">
@@ -2053,6 +2167,57 @@
         </div>
     </div>
 
+     <!-- ============ EMBEDDED SESSION VIEWER MODAL ============ -->
+<div class="modal" id="embeddedSessionModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh; padding: 0;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="embeddedSessionTitle">Live Session</h2>
+            <button class="modal-close" onclick="closeEmbeddedSessionModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 20px; max-height: calc(90vh - 70px);">
+            <div id="embeddedSessionContainer" style="width: 100%; height: 60vh; background: #0a0a1a; border-radius: 12px; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; flex-direction: column;">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="margin-bottom: 20px;"></i>
+                    <p>Loading session...</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="fullscreenEmbeddedSession()">
+                    <i class="fas fa-expand"></i> Fullscreen
+                </button>
+                <a href="#" id="sessionDirectLink" target="_blank" class="btn btn-secondary">
+                    <i class="fas fa-external-link-alt"></i> Open in New Tab
+                </a>
+                <button class="btn btn-secondary" onclick="closeEmbeddedSessionModal()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ EVENT DETAILS MODAL ============ -->
+<div class="modal" id="eventDetailsModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+            <h2 id="eventDetailsTitle">Event Details</h2>
+            <button class="modal-close" onclick="hideModal('eventDetailsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="eventDetailsContent"></div>
+            <div id="eventRegistrationSection" style="margin-top: 20px; display: none;">
+                <button class="btn btn-primary btn-block" onclick="registerForEvent()">
+                    <i class="fas fa-check-circle"></i> Register for Event
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+     
     <script>
         // ============================================
         // CONFIGURATION
@@ -2189,7 +2354,7 @@ async function checkAuth() {
     // Hide all pages
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     
-    // Handle special case for ai-assistant (id is aiAssistantPage, not ai-assistantPage)
+    // Handle special case for ai-assistant...
     let pageId = page === 'ai-assistant' ? 'aiAssistantPage' : page + 'Page';
     const targetPage = document.getElementById(pageId);
     
@@ -2200,7 +2365,7 @@ async function checkAuth() {
         return;
     }
     
-    // Update active menu item
+    // Update active menu item...
     document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
     const activeMenuItem = document.querySelector(`.menu-item[data-page="${page}"]`);
     if (activeMenuItem) activeMenuItem.classList.add('active');
@@ -2215,7 +2380,9 @@ async function checkAuth() {
         opportunities: 'Opportunity Center', 
         notifications: 'Notifications', 
         settings: 'Settings',
-        'ai-assistant': 'AI Business Assistant' 
+        'ai-assistant': 'AI Business Assistant',
+        'business-events': 'Events',
+        'business-sessions': 'Live Sessions'
     };
     document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
     appState.currentPage = page;
@@ -2226,7 +2393,9 @@ async function checkAuth() {
     else if (page === 'notifications') loadNotifications();
     else if (page === 'opportunities') loadOpportunities(1);
     else if (page === 'spotlight') loadBusinessSpotlightStories(); 
-    else if (page === 'ai-assistant') initAIAssistant();  
+    else if (page === 'ai-assistant') initAIAssistant();
+    else if (page === 'business-events') loadBusinessEvents(1);
+    else if (page === 'business-sessions') loadBusinessSessions(1);
 }
 
         async function apiRequest(endpoint, options = {}) {
@@ -3286,6 +3455,19 @@ document.getElementById('profileEditForm').addEventListener('submit', async func
         window.BACKEND_URL = BACKEND_URL;
         window.API_BASE = BACKEND_URL;
         window.refreshActivities = function() { loadAllData(); showToast('Dashboard refreshed', 'success'); };
+
+         window.loadBusinessEvents = loadBusinessEvents;
+window.loadBusinessSessions = loadBusinessSessions;
+window.viewEventDetails = viewEventDetails;
+window.registerForEvent = registerForEvent;
+window.openEmbeddedSession = openEmbeddedSession;
+window.closeEmbeddedSessionModal = closeEmbeddedSessionModal;
+window.fullscreenEmbeddedSession = fullscreenEmbeddedSession;
+window.viewSessionDetails = viewSessionDetails;
+
+window.BACKEND_URL = BACKEND_URL;
+window.API_BASE = BACKEND_URL;
+window.refreshActivities = function() { loadAllData(); showToast('Dashboard refreshed', 'success'); };
         console.log('✅ Business Dashboard fully functional');
 
       // ============================================
@@ -3523,6 +3705,659 @@ async function submitApplication() {
         showToast(error.message || 'Error submitting application', 'error');
     }
 }
+
+
+   // ============================================
+// BUSINESS EVENTS FUNCTIONS
+// ============================================
+
+let businessEventsPage = 1;
+let businessEventsTotalPages = 1;
+let businessEventsData = [];
+let currentEventId = null;
+
+async function loadBusinessEvents(page = 1) {
+    const container = document.getElementById('businessEventsList');
+    const filter = document.getElementById('eventFilter')?.value || 'all';
+    
+    businessEventsPage = page;
+    
+    container.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading events...</p>
+        </div>
+    `;
+    
+    try {
+        let url = `${BACKEND_URL}/business/events?page=${page}&limit=12`;
+        if (filter !== 'all') {
+            url += `&filter=${filter}`;
+        }
+        
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            businessEventsData = data.events || [];
+            businessEventsTotalPages = data.pagination?.pages || 1;
+            displayBusinessEvents();
+            updateBusinessEventsPagination();
+            
+            // Update badge count
+            const badge = document.getElementById('businessEventsCount');
+            if (badge) {
+                badge.textContent = data.events?.length || 0;
+            }
+        } else {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                    <i class="fas fa-calendar-times" style="font-size: 48px; color: #cbd5e0;"></i>
+                    <p style="margin-top: 15px;">No events available</p>
+                    <p style="font-size: 13px; color: #64748b;">Check back later for new events</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Load events error:', error);
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p style="margin-top: 15px;">Error loading events</p>
+            </div>
+        `;
+    }
+}
+
+function displayBusinessEvents() {
+    const container = document.getElementById('businessEventsList');
+    
+    if (!businessEventsData || businessEventsData.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-calendar-alt" style="font-size: 48px; color: #cbd5e0;"></i>
+                <p style="margin-top: 15px;">No events found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = businessEventsData.map(event => {
+        const startDate = event.start_date ? new Date(event.start_date) : null;
+        const endDate = event.end_date ? new Date(event.end_date) : null;
+        const now = new Date();
+        
+        let statusText = 'Upcoming';
+        let statusClass = 'status-upcoming';
+        if (startDate && startDate <= now && endDate && endDate >= now) {
+            statusText = '🔴 Live';
+            statusClass = 'status-live';
+        } else if (endDate && endDate < now) {
+            statusText = 'Ended';
+            statusClass = 'status-ended';
+        }
+        
+        const dateStr = startDate ? startDate.toLocaleDateString() : 'TBD';
+        const timeStr = startDate ? startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        
+        return `
+            <div class="opportunity-card" onclick="viewEventDetails('${event._id}')" style="cursor: pointer;">
+                ${event.image_url ? `
+                    <div style="width: 100%; height: 160px; overflow: hidden;">
+                        <img src="${event.image_url}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+                    </div>
+                ` : `
+                    <div class="opportunity-image">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                `}
+                <div class="opportunity-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h3 class="opportunity-title">${escapeHtml(event.title)}</h3>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <p class="opportunity-description">${escapeHtml(event.description?.substring(0, 120) || 'No description')}${event.description?.length > 120 ? '...' : ''}</p>
+                    <div style="display: flex; gap: 15px; font-size: 13px; color: #64748b; margin-bottom: 10px; flex-wrap: wrap;">
+                        <span><i class="fas fa-calendar"></i> ${dateStr} ${timeStr}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(event.location || 'TBD')}</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 13px; color: #64748b;"><i class="fas fa-users"></i> ${event.attendees || 0} registered</span>
+                        <button class="apply-btn" onclick="event.stopPropagation(); viewEventDetails('${event._id}')" style="padding: 6px 16px; font-size: 13px;">
+                            <i class="fas fa-arrow-right"></i> View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateBusinessEventsPagination() {
+    const pagination = document.getElementById('businessEventsPagination');
+    if (!pagination) return;
+    
+    if (businessEventsTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${businessEventsPage === 1 ? 'disabled' : ''} onclick="loadBusinessEvents(${businessEventsPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= businessEventsTotalPages; i++) {
+        if (i === 1 || i === businessEventsTotalPages || (i >= businessEventsPage - 2 && i <= businessEventsPage + 2)) {
+            html += `<button class="page-btn ${i === businessEventsPage ? 'active' : ''}" onclick="loadBusinessEvents(${i})">${i}</button>`;
+        } else if (i === businessEventsPage - 3 || i === businessEventsPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${businessEventsPage === businessEventsTotalPages ? 'disabled' : ''} onclick="loadBusinessEvents(${businessEventsPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+async function viewEventDetails(eventId) {
+    currentEventId = eventId;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${BACKEND_URL}/business/events/${eventId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.event) {
+            const event = data.event;
+            
+            document.getElementById('eventDetailsTitle').textContent = event.title;
+            
+            const startDate = event.start_date ? new Date(event.start_date) : null;
+            const endDate = event.end_date ? new Date(event.end_date) : null;
+            const now = new Date();
+            
+            let statusText = 'Upcoming';
+            let statusColor = '#3B82F6';
+            let isLive = false;
+            if (startDate && startDate <= now && endDate && endDate >= now) {
+                statusText = '🔴 Live';
+                statusColor = '#10B981';
+                isLive = true;
+            } else if (endDate && endDate < now) {
+                statusText = 'Ended';
+                statusColor = '#64748b';
+            }
+            
+            const dateStr = startDate ? startDate.toLocaleString() : 'TBD';
+            const endDateStr = endDate ? endDate.toLocaleString() : 'TBD';
+            
+            document.getElementById('eventDetailsContent').innerHTML = `
+                ${event.image_url ? `<img src="${event.image_url}" style="width: 100%; border-radius: 12px; margin-bottom: 20px;" onerror="this.style.display='none'">` : ''}
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <span class="status-badge" style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 15px;">${statusText}</span>
+                    <span class="status-badge" style="background: #f1f5f9; color: #475569;">${event.type || 'General'}</span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+                        <p style="color: #64748b; font-size: 12px; margin-bottom: 3px;">📅 Start</p>
+                        <p style="font-weight: 600;">${dateStr}</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+                        <p style="color: #64748b; font-size: 12px; margin-bottom: 3px;">📅 End</p>
+                        <p style="font-weight: 600;">${endDateStr}</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+                        <p style="color: #64748b; font-size: 12px; margin-bottom: 3px;">📍 Location</p>
+                        <p style="font-weight: 600;">${escapeHtml(event.location || 'TBD')}</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+                        <p style="color: #64748b; font-size: 12px; margin-bottom: 3px;">👥 Attendees</p>
+                        <p style="font-weight: 600;">${event.attendees || 0} registered</p>
+                    </div>
+                </div>
+                
+                <h4 style="margin-bottom: 10px; color: #FF0000;">📋 Description</h4>
+                <p style="margin-bottom: 20px; line-height: 1.6;">${escapeHtml(event.description || 'No description')}</p>
+                
+                ${event.registration_link ? `
+                    <div style="margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 12px;">
+                        <h4 style="margin-bottom: 10px;">🔗 External Registration</h4>
+                        <a href="${event.registration_link}" target="_blank" class="btn btn-primary" style="display: inline-block;">
+                            <i class="fas fa-external-link-alt"></i> Register on External Site
+                        </a>
+                    </div>
+                ` : ''}
+                
+                ${event.partner_name ? `
+                    <div style="margin-top: 15px; padding: 12px; background: #f1f5f9; border-radius: 8px; font-size: 13px; color: #64748b;">
+                        <i class="fas fa-handshake"></i> Hosted by: <strong>${escapeHtml(event.partner_name)}</strong>
+                    </div>
+                ` : ''}
+            `;
+            
+            // Show registration button if event is not ended and not external registration
+            const regSection = document.getElementById('eventRegistrationSection');
+            if (regSection) {
+                if (!event.registration_link && !(endDate && endDate < now)) {
+                    regSection.style.display = 'block';
+                } else {
+                    regSection.style.display = 'none';
+                }
+            }
+            
+            document.getElementById('eventDetailsModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    } catch (error) {
+        console.error('View event error:', error);
+        showToast('Error loading event details', 'error');
+    }
+}
+
+async function registerForEvent() {
+    if (!currentEventId) {
+        showToast('No event selected', 'error');
+        return;
+    }
+    
+    if (!confirm('Register for this event?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${BACKEND_URL}/business/events/${currentEventId}/register`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('✅ Registration successful!', 'success');
+            hideModal('eventDetailsModal');
+            await loadBusinessEvents(businessEventsPage);
+        } else {
+            showToast(data.message || 'Registration failed', 'error');
+        }
+    } catch (error) {
+        showToast('Error registering for event', 'error');
+    }
+}   
+
+ // ============================================
+// BUSINESS LIVE SESSIONS FUNCTIONS
+// ============================================
+
+let businessSessionsPage = 1;
+let businessSessionsTotalPages = 1;
+let businessSessionsData = [];
+let currentSessionId = null;
+let embeddedSessionInterval = null;
+
+async function loadBusinessSessions(page = 1) {
+    const container = document.getElementById('businessSessionsList');
+    const filter = document.getElementById('sessionFilter')?.value || 'all';
+    
+    businessSessionsPage = page;
+    
+    container.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading sessions...</p>
+        </div>
+    `;
+    
+    try {
+        let url = `${BACKEND_URL}/business/sessions?page=${page}&limit=12`;
+        if (filter !== 'all') {
+            url += `&filter=${filter}`;
+        }
+        
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            businessSessionsData = data.sessions || [];
+            businessSessionsTotalPages = data.pagination?.pages || 1;
+            displayBusinessSessions();
+            updateBusinessSessionsPagination();
+            
+            // Update badge count
+            const badge = document.getElementById('businessSessionsCount');
+            if (badge) {
+                const liveCount = businessSessionsData.filter(s => s.status === 'live').length;
+                badge.textContent = liveCount;
+                badge.style.display = liveCount > 0 ? 'inline' : 'none';
+            }
+        } else {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                    <i class="fas fa-video-slash" style="font-size: 48px; color: #cbd5e0;"></i>
+                    <p style="margin-top: 15px;">No sessions available</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Load sessions error:', error);
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p style="margin-top: 15px;">Error loading sessions</p>
+            </div>
+        `;
+    }
+}
+
+function displayBusinessSessions() {
+    const container = document.getElementById('businessSessionsList');
+    
+    if (!businessSessionsData || businessSessionsData.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-video" style="font-size: 48px; color: #cbd5e0;"></i>
+                <p style="margin-top: 15px;">No sessions available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = businessSessionsData.map(session => {
+        const sessionDate = session.date ? new Date(session.date) : null;
+        const now = new Date();
+        
+        let statusText = session.status || 'scheduled';
+        let statusClass = 'status-draft';
+        let isLive = false;
+        
+        switch(session.status) {
+            case 'live':
+                statusText = '🔴 Live Now';
+                statusClass = 'status-live';
+                isLive = true;
+                break;
+            case 'scheduled':
+                statusText = 'Scheduled';
+                statusClass = 'status-upcoming';
+                break;
+            case 'ended':
+                statusText = 'Ended';
+                statusClass = 'status-ended';
+                break;
+            case 'cancelled':
+                statusText = 'Cancelled';
+                statusClass = 'status-rejected';
+                break;
+        }
+        
+        const dateStr = sessionDate ? sessionDate.toLocaleDateString() : 'TBD';
+        const timeStr = session.time || 'TBD';
+        const platform = session.platform || 'custom';
+        
+        const platformIcons = {
+            'zoom': 'fa-video',
+            'google_meet': 'fa-google',
+            'teams': 'fa-microsoft',
+            'custom': 'fa-link'
+        };
+        const platformIcon = platformIcons[platform] || 'fa-link';
+        const platformNames = {
+            'zoom': 'Zoom',
+            'google_meet': 'Google Meet',
+            'teams': 'Microsoft Teams',
+            'custom': 'Custom Link'
+        };
+        
+        return `
+            <div class="opportunity-card" onclick="${isLive ? `openEmbeddedSession('${session._id}')` : `viewSessionDetails('${session._id}')`}" style="cursor: pointer;">
+                ${session.featured_image ? `
+                    <div style="width: 100%; height: 160px; overflow: hidden;">
+                        <img src="${session.featured_image}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+                    </div>
+                ` : `
+                    <div class="opportunity-image" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                        <i class="fas fa-video"></i>
+                    </div>
+                `}
+                <div class="opportunity-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h3 class="opportunity-title">${escapeHtml(session.title)}</h3>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <p class="opportunity-description">${escapeHtml(session.description?.substring(0, 100) || 'No description')}${session.description?.length > 100 ? '...' : ''}</p>
+                    <div style="display: flex; gap: 15px; font-size: 13px; color: #64748b; margin-bottom: 10px; flex-wrap: wrap;">
+                        <span><i class="fas fa-calendar"></i> ${dateStr} at ${timeStr}</span>
+                        <span><i class="fas fa-clock"></i> ${session.duration || 60} min</span>
+                        <span><i class="fas ${platformIcon}"></i> ${platformNames[platform] || 'Custom'}</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 13px; color: #64748b;"><i class="fas fa-users"></i> ${session.attendees || 0} attending</span>
+                        ${isLive ? `
+                            <button class="btn btn-primary" onclick="event.stopPropagation(); openEmbeddedSession('${session._id}')" style="padding: 6px 16px; font-size: 13px;">
+                                <i class="fas fa-play"></i> Join Live
+                            </button>
+                        ` : session.status === 'scheduled' ? `
+                            <button class="btn btn-secondary" onclick="event.stopPropagation(); viewSessionDetails('${session._id}')" style="padding: 6px 16px; font-size: 13px;">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateBusinessSessionsPagination() {
+    const pagination = document.getElementById('businessSessionsPagination');
+    if (!pagination) return;
+    
+    if (businessSessionsTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${businessSessionsPage === 1 ? 'disabled' : ''} onclick="loadBusinessSessions(${businessSessionsPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= businessSessionsTotalPages; i++) {
+        if (i === 1 || i === businessSessionsTotalPages || (i >= businessSessionsPage - 2 && i <= businessSessionsPage + 2)) {
+            html += `<button class="page-btn ${i === businessSessionsPage ? 'active' : ''}" onclick="loadBusinessSessions(${i})">${i}</button>`;
+        } else if (i === businessSessionsPage - 3 || i === businessSessionsPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${businessSessionsPage === businessSessionsTotalPages ? 'disabled' : ''} onclick="loadBusinessSessions(${businessSessionsPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+async function viewSessionDetails(sessionId) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${BACKEND_URL}/business/sessions/${sessionId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.session) {
+            const session = data.session;
+            const isLive = session.status === 'live';
+            
+            const sessionDate = session.date ? new Date(session.date) : null;
+            const dateStr = sessionDate ? sessionDate.toLocaleString() : 'TBD';
+            
+            // Show session details in a modal or alert
+            const details = `
+                📹 Session: ${session.title}
+                📅 Date: ${dateStr}
+                ⏱️ Duration: ${session.duration || 60} minutes
+                📍 Platform: ${session.platform || 'custom'}
+                👥 Attendees: ${session.attendees || 0} / ${session.max_attendees || '∞'}
+                📝 Description: ${session.description || 'No description'}
+                ${session.meeting_link ? `\n🔗 Meeting Link: ${session.meeting_link}` : ''}
+            `;
+            
+            if (isLive) {
+                openEmbeddedSession(sessionId);
+            } else {
+                showToast(`Session details:\n${details}`, 'info');
+                console.log('Session Details:', session);
+            }
+        }
+    } catch (error) {
+        showToast('Error loading session details', 'error');
+    }
+}
+
+async function openEmbeddedSession(sessionId) {
+    currentSessionId = sessionId;
+    
+    const modal = document.getElementById('embeddedSessionModal');
+    const container = document.getElementById('embeddedSessionContainer');
+    const titleEl = document.getElementById('embeddedSessionTitle');
+    const linkEl = document.getElementById('sessionDirectLink');
+    
+    if (!modal || !container) {
+        showToast('Modal not found', 'error');
+        return;
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    container.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; flex-direction: column;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="margin-bottom: 20px;"></i>
+            <p>Connecting to session...</p>
+        </div>
+    `;
+    
+    try {
+        // First try to join the session
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${BACKEND_URL}/business/sessions/${sessionId}/join`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.session) {
+            const session = data.session;
+            
+            titleEl.textContent = session.title || 'Live Session';
+            
+            // Set direct link
+            if (linkEl && session.meeting_link) {
+                linkEl.href = session.meeting_link;
+                linkEl.style.display = 'inline-block';
+            }
+            
+            // Determine embed URL
+            let embedUrl = session.meeting_link || '';
+            
+            // Check if we have a specific embed URL
+            if (session.embed_url) {
+                embedUrl = session.embed_url;
+            } else if (session.is_embedded && session.platform === 'zoom' && session.meeting_link) {
+                const match = session.meeting_link.match(/zoom\.us\/j\/(\d+)/);
+                if (match) {
+                    embedUrl = `https://zoom.us/embed/${match[1]}`;
+                }
+            }
+            
+            if (embedUrl) {
+                // Try to embed the meeting
+                container.innerHTML = `
+                    <iframe src="${embedUrl}" 
+                            style="width: 100%; height: 100%; border: none; border-radius: 12px; background: #000;"
+                            allow="camera; microphone; fullscreen; display-capture; autoplay; encrypted-media; clipboard-write;"
+                            allowfullscreen
+                            sandbox="allow-forms allow-same-origin allow-scripts allow-popups allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-top-navigation"
+                            loading="lazy">
+                    </iframe>
+                `;
+            } else {
+                // Fallback: Show meeting link
+                container.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; padding: 40px; text-align: center;">
+                        <i class="fas fa-external-link-alt" style="font-size: 48px; color: #87CEEB; margin-bottom: 20px;"></i>
+                        <h3 style="color: white; margin-bottom: 10px;">${escapeHtml(session.title)}</h3>
+                        <p style="color: #64748b; margin-bottom: 20px;">Click the button below to join the session</p>
+                        <a href="${session.meeting_link}" target="_blank" class="btn btn-primary" style="display: inline-block;">
+                            <i class="fas fa-video"></i> Join Session
+                        </a>
+                    </div>
+                `;
+            }
+        } else {
+            container.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; padding: 40px; text-align: center;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #EF4444; margin-bottom: 20px;"></i>
+                    <h3 style="color: white; margin-bottom: 10px;">Unable to Join Session</h3>
+                    <p style="color: #64748b;">${data.message || 'Session is not available at this time'}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Open session error:', error);
+        container.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; padding: 40px; text-align: center;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #EF4444; margin-bottom: 20px;"></i>
+                <h3 style="color: white; margin-bottom: 10px;">Connection Error</h3>
+                <p style="color: #64748b;">Failed to connect to the session. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+function closeEmbeddedSessionModal() {
+    const modal = document.getElementById('embeddedSessionModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Clear any intervals
+    if (embeddedSessionInterval) {
+        clearInterval(embeddedSessionInterval);
+        embeddedSessionInterval = null;
+    }
+}
+
+function fullscreenEmbeddedSession() {
+    const iframe = document.querySelector('#embeddedSessionContainer iframe');
+    if (iframe) {
+        if (iframe.requestFullscreen) {
+            iframe.requestFullscreen();
+        } else if (iframe.webkitRequestFullscreen) {
+            iframe.webkitRequestFullscreen();
+        }
+    }
+}
+
+// Close embedded session with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('embeddedSessionModal')?.classList.contains('active')) {
+        closeEmbeddedSessionModal();
+    }
+});
+
+// Auto-refresh live sessions every 30 seconds
+setInterval(function() {
+    if (document.getElementById('businessSessionsPage')?.style.display !== 'none') {
+        loadBusinessSessions(businessSessionsPage);
+    }
+}, 30000);        
 
  // ============================================
 // AI BUSINESS ASSISTANT - FRONTEND FUNCTIONS
