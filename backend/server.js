@@ -6223,6 +6223,73 @@ app.delete('/api/partner/sessions/:id', authenticate, authorize('partner'), asyn
     }
 });
 
+
+// ============ ENHANCED SESSION ROUTES ============
+
+// Start session (partner)
+app.put('/api/partner/sessions/:id/start', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const session = await Session.findOne({
+            _id: req.params.id,
+            partner_id: req.user._id
+        });
+        
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
+        }
+        
+        session.status = 'live';
+        await session.save();
+        
+        // Generate embed URL if not set
+        let embedUrl = session.meeting_link;
+        if (session.platform === 'zoom' && session.meeting_link.includes('zoom.us/j/')) {
+            const match = session.meeting_link.match(/zoom\.us\/j\/(\d+)/);
+            if (match) {
+                embedUrl = `https://zoom.us/embed/${match[1]}`;
+            }
+        }
+        
+        res.json({
+            success: true,
+            message: 'Session started',
+            session: {
+                ...session.toObject(),
+                embed_url: embedUrl
+            }
+        });
+    } catch (error) {
+        console.error('Start session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// End session (partner)
+app.put('/api/partner/sessions/:id/end', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const session = await Session.findOne({
+            _id: req.params.id,
+            partner_id: req.user._id
+        });
+        
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
+        }
+        
+        session.status = 'ended';
+        await session.save();
+        
+        res.json({
+            success: true,
+            message: 'Session ended'
+        });
+    } catch (error) {
+        console.error('End session error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+
 // ============ PARTNER MESSAGES ROUTES ============
 
 // Get partner messages
