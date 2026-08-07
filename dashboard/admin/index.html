@@ -14886,6 +14886,8 @@ setTimeout(() => {
 // Add to window
 window.diagnoseSpotlight = diagnoseSpotlight;
 
+
+        
 // ============================================
 // ADMIN PARTNER MESSAGES MANAGEMENT
 // ============================================
@@ -17559,6 +17561,171 @@ console.log('🖱️ Hover near bottom of screen to show controls');
                     <i class="fas fa-paper-plane"></i> Send
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PARTNER NOTIFICATIONS MODAL ============ -->
+<div class="modal" id="partnerNotificationsModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-bell"></i> Partner Notifications</h2>
+            <button class="modal-close" onclick="hideModal('partnerNotificationsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Action Bar -->
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="sheet-btn" onclick="showCreatePartnerNotificationModal()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                        <i class="fas fa-plus"></i> New Notification
+                    </button>
+                    <button class="sheet-btn secondary" onclick="showBulkNotificationModal()">
+                        <i class="fas fa-users"></i> Send to All Partners
+                    </button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="notifStatusFilter" onchange="loadPartnerNotifications()" class="sheet-btn secondary" style="padding: 8px 15px;">
+                        <option value="all">All</option>
+                        <option value="unread">Unread</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                    <input type="text" id="notifSearch" placeholder="Search..." class="sheet-btn secondary" style="padding: 8px 15px; width: 200px;" onkeyup="filterPartnerNotifications()">
+                </div>
+            </div>
+            
+            <!-- Notifications List -->
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Partner</th>
+                            <th>Title</th>
+                            <th>Message</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Sent</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerNotificationsTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="partnerNotificationsPagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ CREATE NOTIFICATION MODAL ============ -->
+<div class="modal" id="createPartnerNotificationModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2 id="notifModalTitle">Create Notification</h2>
+            <button class="modal-close" onclick="hideModal('createPartnerNotificationModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="partnerNotificationForm">
+                <div class="form-group">
+                    <label>Recipient Partner *</label>
+                    <select id="notifPartnerId" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                        <option value="">-- Select Partner --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="notifTitle" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                </div>
+                <div class="form-group">
+                    <label>Message *</label>
+                    <textarea id="notifMessage" rows="4" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="notifType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="info">Information</option>
+                        <option value="success">Success</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="notifPriority" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Schedule (optional)</label>
+                    <input type="datetime-local" id="notifSchedule" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('createPartnerNotificationModal')" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="savePartnerNotification()" style="flex: 2; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                        Send Notification
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============ BULK NOTIFICATION MODAL ============ -->
+<div class="modal" id="bulkNotificationModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-users"></i> Send to All Partners</h2>
+            <button class="modal-close" onclick="hideModal('bulkNotificationModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="bulkNotificationForm">
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="bulkNotifTitle" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                </div>
+                <div class="form-group">
+                    <label>Message *</label>
+                    <textarea id="bulkNotifMessage" rows="4" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="bulkNotifType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="info">Information</option>
+                        <option value="success">Success</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="bulkNotifPriority" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div style="padding: 15px; background: #FEF3C7; border-radius: 10px; margin-bottom: 15px;">
+                    <p style="font-size: 14px; color: #92400E; margin: 0;">
+                        <i class="fas fa-info-circle"></i> This will send the notification to ALL active partners.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('bulkNotificationModal')" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="sendBulkNotification()" style="flex: 2; background: #EF4444; color: white;">
+                        <i class="fas fa-paper-plane"></i> Send to All Partners
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
