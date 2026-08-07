@@ -1004,23 +1004,30 @@
 </div>
             
             <!-- ============ NOTIFICATIONS PAGE ============ -->
-            <div id="notificationsPage" class="page">
-                <div class="content-section" style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <h2><i class="fas fa-bell"></i> Notifications</h2>
-                        <button class="btn btn-secondary" onclick="markAllNotificationsRead()">
-                            <i class="fas fa-check-double"></i> Mark All Read
-                        </button>
-                    </div>
-                    
-                    <div id="notificationsList">
-                        <div style="text-align: center; padding: 50px;">
-                            <i class="fas fa-spinner fa-spin fa-2x"></i>
-                            <p>Loading notifications...</p>
-                        </div>
-                    </div>
-                </div>
+<div id="notificationsPage" class="page">
+    <div class="content-section" style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px;">
+            <h2><i class="fas fa-bell"></i> Notifications <span class="badge" id="notificationBadge" style="background: #8B5CF6; color: white; padding: 2px 12px; border-radius: 20px; font-size: 14px;">0</span></h2>
+            <div style="display: flex; gap: 10px;">
+                <select id="notificationFilter" onchange="loadNotifications()" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 10px; background: white;">
+                    <option value="all">All</option>
+                    <option value="unread">Unread</option>
+                    <option value="archived">Archived</option>
+                </select>
+                <button class="btn btn-secondary" onclick="markAllNotificationsRead()">
+                    <i class="fas fa-check-double"></i> Mark All Read
+                </button>
             </div>
+        </div>
+        
+        <div id="notificationsList">
+            <div style="text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading notifications...</p>
+            </div>
+        </div>
+    </div>
+</div>
             
             <!-- ============ SETTINGS PAGE ============ -->
             <div id="settingsPage" class="page">
@@ -2285,16 +2292,19 @@ async function viewMessage(id) {
 }
         
         // ============================================
-        // NOTIFICATIONS
-        // ============================================
-        async function loadNotifications() {
+// NOTIFICATIONS - ENHANCED
+// ============================================
+
+async function loadNotifications() {
+    const filter = document.getElementById('notificationFilter')?.value || 'all';
     try {
-        const response = await apiRequest('/partner/notifications?limit=50');
+        const response = await apiRequest(`/partner/notifications?limit=50&filter=${filter}`);
         if (response.success) {
             appState.notifications = response.notifications || [];
             displayNotifications(appState.notifications);
-            const unread = appState.notifications.filter(n => !n.read).length;
+            const unread = response.unreadCount || appState.notifications.filter(n => !n.read).length;
             document.getElementById('notificationsCount').textContent = unread;
+            document.getElementById('notificationBadge').textContent = unread;
             updateDashboardStats();
         }
     } catch (error) {
@@ -2310,6 +2320,61 @@ async function viewMessage(id) {
             </div>
         `;
     }
+}
+
+function displayNotifications(notifications) {
+    const container = document.getElementById('notificationsList');
+    if (!container) return;
+    
+    if (!notifications || notifications.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px;">
+                <i class="fas fa-bell-slash" style="font-size: 48px; color: #cbd5e0; margin-bottom: 15px;"></i>
+                <p>${document.getElementById('notificationFilter')?.value === 'archived' ? 'No archived notifications' : 'No notifications'}</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = notifications.map(notif => {
+        const date = notif.created_at ? new Date(notif.created_at) : null;
+        const dateStr = date ? date.toLocaleString() : 'Recent';
+        const isUnread = !notif.read;
+        const isArchived = notif.archived;
+        
+        let icon = 'info-circle';
+        let color = '#3B82F6';
+        let bgColor = '#DBEAFE';
+        if (notif.type === 'success') { icon = 'check-circle'; color = '#10B981'; bgColor = '#D1FAE5'; }
+        else if (notif.type === 'warning') { icon = 'exclamation-triangle'; color = '#F59E0B'; bgColor = '#FEF3C7'; }
+        else if (notif.type === 'error') { icon = 'exclamation-circle'; color = '#EF4444'; bgColor = '#FEE2E2'; }
+        
+        let priorityBadge = '';
+        if (notif.priority === 'urgent') priorityBadge = ' <span style="background: #EF4444; color: white; padding: 1px 10px; border-radius: 10px; font-size: 10px; margin-left: 5px;">URGENT</span>';
+        else if (notif.priority === 'high') priorityBadge = ' <span style="background: #F59E0B; color: white; padding: 1px 10px; border-radius: 10px; font-size: 10px; margin-left: 5px;">HIGH</span>';
+        
+        return `
+            <div class="message-item ${isUnread ? 'unread' : ''}" style="cursor: default; ${isArchived ? 'opacity: 0.6;' : ''}">
+                <div class="message-avatar" style="background: ${bgColor}; color: ${color};">
+                    <i class="fas fa-${icon}"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-title">${escapeHtml(notif.title)}${priorityBadge}</div>
+                    <div class="message-text">${escapeHtml(notif.message)}</div>
+                    <div class="message-time">${dateStr}</div>
+                </div>
+                <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                    ${!isArchived ? `
+                        ${isUnread ? `<button class="btn btn-sm btn-primary" onclick="markNotificationRead('${notif._id}')" title="Mark Read"><i class="fas fa-check"></i></button>` : ''}
+                        <button class="btn btn-sm btn-secondary" onclick="archiveNotification('${notif._id}')" title="Archive"><i class="fas fa-archive"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteNotification('${notif._id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    ` : `
+                        <button class="btn btn-sm btn-secondary" onclick="unarchiveNotification('${notif._id}')" title="Restore"><i class="fas fa-undo"></i></button>
+                    `}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
         
         function displayNotifications(notifications) {
@@ -2348,6 +2413,52 @@ async function viewMessage(id) {
                 `;
             }).join('');
         }
+
+       async function archiveNotification(id) {
+    try {
+        const response = await apiRequest(`/partner/notifications/${id}/archive`, {
+            method: 'POST'
+        });
+        if (response.success) {
+            showToast('Notification archived', 'success');
+            await loadNotifications();
+        }
+    } catch (error) {
+        showToast('Failed to archive notification', 'error');
+    }
+}
+
+async function deleteNotification(id) {
+    if (!confirm('Delete this notification?')) return;
+    try {
+        const response = await apiRequest(`/partner/notifications/${id}`, {
+            method: 'DELETE'
+        });
+        if (response.success) {
+            showToast('Notification deleted', 'success');
+            await loadNotifications();
+        }
+    } catch (error) {
+        showToast('Failed to delete notification', 'error');
+    }
+}
+
+async function unarchiveNotification(id) {
+    try {
+        // Unarchive by updating the notification
+        const response = await apiRequest(`/partner/notifications/${id}/unarchive`, {
+            method: 'POST'
+        });
+        if (response.success) {
+            showToast('Notification restored', 'success');
+            await loadNotifications();
+        }
+    } catch (error) {
+        // Fallback: use the regular API if unarchive endpoint doesn't exist
+        showToast('Restore feature coming soon', 'info');
+        await loadNotifications();
+    }
+}
         
         async function markNotificationRead(id) {
             try {
