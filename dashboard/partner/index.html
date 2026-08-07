@@ -1752,48 +1752,58 @@ const API_BASE = (() => {
         }
         
         async function createEvent() {
-            const data = {
-                title: document.getElementById('eventTitle').value,
-                description: document.getElementById('eventDescription').value,
-                start_date: document.getElementById('eventStartDate').value,
-                end_date: document.getElementById('eventEndDate').value,
-                location: document.getElementById('eventLocation').value,
-                type: document.getElementById('eventType').value,
-                image_url: document.getElementById('eventImage').value,
-                registration_link: document.getElementById('eventRegistrationLink').value,
-                status: 'draft'
-            };
+    const data = {
+        title: document.getElementById('eventTitle').value,
+        description: document.getElementById('eventDescription').value,
+        start_date: document.getElementById('eventStartDate').value,
+        end_date: document.getElementById('eventEndDate').value,
+        location: document.getElementById('eventLocation').value,
+        type: document.getElementById('eventType').value,
+        image_url: document.getElementById('eventImage').value,
+        registration_link: document.getElementById('eventRegistrationLink').value,
+        status: 'draft',
+        approval_status: 'pending'  // Always pending for approval
+    };
+    
+    if (!data.title || !data.description || !data.start_date || !data.end_date) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    const submitBtn = document.querySelector('#createEventModal .btn-primary');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await apiRequest('/partner/events', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        if (response.success) {
+            showToast('Event submitted for admin approval!', 'success');
+            hideModal('createEventModal');
+            document.getElementById('createEventForm').reset();
+            await loadEvents();
             
-            if (!data.title || !data.description || !data.start_date || !data.end_date) {
-                showToast('Please fill in all required fields', 'error');
-                return;
-            }
-            
-            try {
-                const response = await apiRequest('/partner/events', {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
-                
-                if (response.success) {
-                    showToast('Event created successfully!', 'success');
-                    hideModal('createEventModal');
-                    await loadEvents();
-                    
-                    // Send notification to admin
-                    await apiRequest('/partner/messages', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            subject: `New Event Created: ${data.title}`,
-                            content: `A new event "${data.title}" has been created by ${appState.user?.name || 'a partner'}. Please review and approve.`,
-                            priority: 'normal'
-                        })
-                    });
-                }
-            } catch (error) {
-                showToast(error.message || 'Failed to create event', 'error');
-            }
+            // Send notification to admin via message thread
+            await apiRequest('/partner/messages/thread', {
+                method: 'POST',
+                body: JSON.stringify({
+                    subject: `New Event Pending Approval: ${data.title}`,
+                    content: `A new event "${data.title}" has been created by ${appState.user?.name || 'a partner'}. Please review and approve.\n\nDescription: ${data.description}\nDate: ${new Date(data.start_date).toLocaleString()} - ${new Date(data.end_date).toLocaleString()}\nLocation: ${data.location || 'TBD'}`,
+                    priority: 'normal'
+                })
+            });
         }
+    } catch (error) {
+        showToast(error.message || 'Failed to create event', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
         
         async function deleteEvent(id) {
             if (!confirm('⚠️ Are you sure you want to delete this event? This action cannot be undone.')) return;
