@@ -6824,6 +6824,185 @@ app.put('/api/admin/partner/messages/thread/:threadId/archive', authenticate, au
     }
 });
 
+// ============================================
+// ADMIN PARTNER NOTIFICATIONS MANAGEMENT ROUTES
+// ============================================
+
+// Get all partner notifications (admin)
+app.get('/api/admin/partner/notifications', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status = 'all', search = '', page = 1, limit = 20 } = req.query;
+        let query = { recipient_type: 'partner' };
+        
+        if (status === 'unread') {
+            query.read = false;
+        } else if (status === 'archived') {
+            query.archived = true;
+        }
+        
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { message: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const notifications = await Notification.find(query)
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit))
+            .populate('recipient_id', 'organization_name email');
+        
+        const total = await Notification.countDocuments(query);
+        
+        res.json({
+            success: true,
+            notifications,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get admin notifications error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create notification for partner (admin)
+app.post('/api/admin/partner/notifications', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { 
+            partner_id, 
+            title, 
+            message, 
+            type = 'info', 
+            priority = 'medium',
+            scheduled_for = null
+        } = req.body;
+        
+        if (!partner_id || !title || !message) {
+            return res.status(400).json({ success: false, message: 'Partner ID, Title, and Message are required' });
+        }
+        
+        // Verify partner exists
+        const partner = await Partner.findById(partner_id);
+        if (!partner) {
+            return res.status(404).json({ success: false, message: 'Partner not found' });
+        }
+        
+        const notification = new Notification({
+            recipient_id: partner_id,
+            recipient_type: 'partner',
+            title,
+            message,
+            type,
+            priority: priority || 'medium',
+            read: false,
+            scheduled_for: scheduled_for ? new Date(scheduled_for) : null,
+            sent_at: scheduled_for ? null : new Date()
+        });
+        
+        await notification.save();
+        
+        res.status(201).json({
+            success: true,
+            notification
+        });
+    } catch (error) {
+        console.error('Create notification error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create notification for ALL partners (admin)
+app.post('/api/admin/partner/notifications/all', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { title, message, type = 'info', priority = 'medium' } = req.body;
+        
+        if (!title || !message) {
+            return res.status(400).json({ success: false, message: 'Title and Message are required' });
+        }
+        
+        // Get all active partners
+        const partners = await Partner.find({ status: 'active' }).select('_id organization_name');
+        
+        if (partners.length === 0) {
+            return res.status(404).json({ success: false, message: 'No active partners found' });
+        }
+        
+        const notifications = await Promise.all(partners.map(async (partner) => {
+            const notification = new Notification({
+                recipient_id: partner._id,
+                recipient_type: 'partner',
+                title,
+                message,
+                type,
+                priority: priority || 'medium',
+                read: false,
+                sent_at: new Date()
+            });
+            return await notification.save();
+        }));
+        
+        res.status(201).json({
+            success: true,
+            message: `Notification sent to ${notifications.length} partners`,
+            count: notifications.length
+        });
+    } catch (error) {
+        console.error('Create bulk notification error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Update notification (admin)
+app.put('/api/admin/partner/notifications/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, message, type, priority, scheduled_for } = req.body;
+        
+        const notification = await Notification.findById(id);
+        if (!notification) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
+        
+        if (title) notification.title = title;
+        if (message) notification.message = message;
+        if (type) notification.type = type;
+        if (priority) notification.priority = priority;
+        if (scheduled_for !== undefined) notification.scheduled_for = scheduled_for ? new Date(scheduled_for) : null;
+        
+        await notification.save();
+        
+        res.json({ success: true, notification });
+    } catch (error) {
+        console.error('Update notification error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete notification (admin)
+app.delete('/api/admin/partner/notifications/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const notification = await Notification.findByIdAndDelete(id);
+        
+        if (!notification) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
+        
+        res.json({ success: true, message: 'Notification deleted' });
+    } catch (error) {
+        console.error('Delete notification error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============ ENHANCED PARTNER MESSAGES ROUTES ============
 
 // Get all message threads for partner
