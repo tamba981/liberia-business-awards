@@ -1546,7 +1546,44 @@
                    <span>Partners</span>
                   <span class="badge" id="partnersCount">0</span>
                  </a>
-                </div>
+
+                  <!-- ============ PARTNER MESSAGES MANAGEMENT ============ -->
+<a href="#" class="menu-item" onclick="showPartnerMessagesModal()">
+    <i class="fas fa-envelope"></i>
+    <span>Partner Messages</span>
+    <span class="badge" id="partnerMessagesCount" style="background: #EF4444;">0</span>
+</a>
+
+<!-- ============ PARTNER NOTIFICATIONS MANAGEMENT ============ -->
+<a href="#" class="menu-item" onclick="showPartnerNotificationsModal()">
+    <i class="fas fa-bell"></i>
+    <span>Partner Notifications</span>
+    <span class="badge" id="partnerNotificationsCount">0</span>
+</a>
+
+<!-- ============ PARTNER EVENTS MANAGEMENT ============ -->
+<a href="#" class="menu-item" onclick="showPartnerEventsModal()">
+    <i class="fas fa-calendar-alt"></i>
+    <span>Partner Events</span>
+    <span class="badge" id="partnerEventsCount">0</span>
+</a>
+
+<!-- ============ PARTNER SESSIONS MANAGEMENT ============ -->
+<a href="#" class="menu-item" onclick="showPartnerSessionsModal()">
+    <i class="fas fa-video"></i>
+    <span>Partner Live Sessions</span>
+    <span class="badge" id="partnerSessionsCount">0</span>
+</a>
+
+<!-- ============ PARTNER DOCUMENTS MANAGEMENT ============ -->
+<a href="#" class="menu-item" onclick="showPartnerDocumentsModal()">
+    <i class="fas fa-file-alt"></i>
+    <span>Partner Documents</span>
+    <span class="badge" id="partnerDocumentsCount">0</span>
+</a>
+</div>
+
+                
                 
                 <div class="menu-section">
                     <h4>System</h4>
@@ -14849,7 +14886,342 @@ setTimeout(() => {
 // Add to window
 window.diagnoseSpotlight = diagnoseSpotlight;
 
+// ============================================
+// ADMIN PARTNER MESSAGES MANAGEMENT
+// ============================================
 
+let partnerMessagesPage = 1;
+let partnerMessagesTotalPages = 1;
+let partnerMessagesData = [];
+let currentPartnerThreadId = null;
+
+async function showPartnerMessagesModal() {
+    hideAllModals();
+    const modal = document.getElementById('partnerMessagesModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        partnerMessagesPage = 1;
+        await loadPartnerMessages();
+    }
+}
+
+async function loadPartnerMessages() {
+    const tbody = document.getElementById('partnerMessagesTableBody');
+    if (!tbody) return;
+    
+    const status = document.getElementById('msgStatusFilter')?.value || 'active';
+    const search = document.getElementById('msgSearch')?.value || '';
+    
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const url = `${API_BASE}/admin/partner/messages/threads?page=${partnerMessagesPage}&limit=20&status=${status}&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            partnerMessagesData = data.threads || [];
+            partnerMessagesTotalPages = data.pagination?.pages || 1;
+            displayPartnerMessages();
+            updatePartnerMessagesPagination();
+            updateUnreadCount();
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No threads found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Load partner messages error:', error);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #EF4444;">Error: ${error.message}</td></tr>`;
+    }
+}
+
+function displayPartnerMessages() {
+    const tbody = document.getElementById('partnerMessagesTableBody');
+    if (!tbody) return;
+    
+    const unreadOnly = document.getElementById('msgUnreadOnly')?.checked || false;
+    
+    let filtered = partnerMessagesData;
+    if (unreadOnly) {
+        filtered = filtered.filter(t => (t.unread_count || 0) > 0);
+    }
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No messages found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(thread => {
+        const partner = thread.participants?.find(p => p.user_type === 'partner');
+        const partnerName = partner?.name || 'Unknown Partner';
+        const unread = thread.unread_count || 0;
+        const date = thread.last_message_at ? new Date(thread.last_message_at) : null;
+        const dateStr = date ? date.toLocaleString() : 'Recent';
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(thread.subject)}</strong></td>
+                <td>${escapeHtml(partnerName)}</td>
+                <td><small>${escapeHtml(thread.last_message_preview || 'No messages')}</small><br><small style="color: #94a3b8; font-size: 11px;">${dateStr}</small></td>
+                <td>${unread > 0 ? `<span class="status-badge status-pending">${unread} unread</span>` : '<span style="color: #64748b;">0</span>'}</td>
+                <td><span class="status-badge ${thread.status === 'active' ? 'status-active' : 'status-pending'}">${thread.status}</span></td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button class="sheet-btn secondary" onclick="openPartnerThread('${thread._id}')" style="padding: 6px 12px;">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        ${thread.status === 'active' ? `
+                            <button class="sheet-btn warning" onclick="archivePartnerThread('${thread._id}')" style="padding: 6px 12px;">
+                                <i class="fas fa-archive"></i>
+                            </button>
+                        ` : `
+                            <button class="sheet-btn" onclick="unarchivePartnerThread('${thread._id}')" style="padding: 6px 12px; background: #10B981; color: white;">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        `}
+                        <button class="sheet-btn danger" onclick="deletePartnerThread('${thread._id}')" style="padding: 6px 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updatePartnerMessagesPagination() {
+    const pagination = document.getElementById('partnerMessagesPagination');
+    if (!pagination) return;
+    
+    if (partnerMessagesTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${partnerMessagesPage === 1 ? 'disabled' : ''} onclick="changePartnerMessagesPage(${partnerMessagesPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= partnerMessagesTotalPages; i++) {
+        if (i === 1 || i === partnerMessagesTotalPages || (i >= partnerMessagesPage - 2 && i <= partnerMessagesPage + 2)) {
+            html += `<button class="page-btn ${i === partnerMessagesPage ? 'active' : ''}" onclick="changePartnerMessagesPage(${i})">${i}</button>`;
+        } else if (i === partnerMessagesPage - 3 || i === partnerMessagesPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${partnerMessagesPage === partnerMessagesTotalPages ? 'disabled' : ''} onclick="changePartnerMessagesPage(${partnerMessagesPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+function changePartnerMessagesPage(page) {
+    partnerMessagesPage = page;
+    loadPartnerMessages();
+}
+
+function filterPartnerMessages() {
+    displayPartnerMessages();
+}
+
+async function openPartnerThread(threadId) {
+    currentPartnerThreadId = threadId;
+    const modal = document.getElementById('partnerThreadModal');
+    const messagesContainer = document.getElementById('partnerThreadMessages');
+    const subjectEl = document.getElementById('partnerThreadSubject');
+    
+    if (!modal || !messagesContainer) return;
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    messagesContainer.innerHTML = `
+        <div style="text-align: center; padding: 30px;">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading messages...</p>
+        </div>
+    `;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/messages/thread/${threadId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            subjectEl.textContent = data.thread?.subject || 'Conversation';
+            displayPartnerThreadMessages(data.messages);
+            await loadPartnerMessages(); // Refresh thread list
+        }
+    } catch (error) {
+        messagesContainer.innerHTML = `
+            <div style="text-align: center; padding: 30px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 36px;"></i>
+                <p>Error loading messages</p>
+            </div>
+        `;
+    }
+}
+
+function displayPartnerThreadMessages(messages) {
+    const container = document.getElementById('partnerThreadMessages');
+    if (!container) return;
+    
+    if (!messages || messages.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #64748b;">
+                <i class="fas fa-comment-dots" style="font-size: 36px;"></i>
+                <p>No messages in this conversation</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => {
+        const isAdmin = msg.sender_type === 'admin';
+        const date = msg.created_at ? new Date(msg.created_at) : null;
+        const dateStr = date ? date.toLocaleString() : 'Recent';
+        
+        return `
+            <div style="display: flex; justify-content: ${isAdmin ? 'flex-end' : 'flex-start'}; margin-bottom: 15px;">
+                <div style="max-width: 75%;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; ${isAdmin ? 'justify-content: flex-end' : ''}">
+                        <span style="font-size: 12px; font-weight: 600; color: ${isAdmin ? '#8B5CF6' : '#1a202c'};">
+                            ${isAdmin ? 'You (Admin)' : escapeHtml(msg.sender_name || 'Partner')}
+                        </span>
+                        <span style="font-size: 10px; color: #94a3b8;">${dateStr}</span>
+                    </div>
+                    <div style="background: ${isAdmin ? 'linear-gradient(135deg, #8B5CF6, #6D28D9)' : 'white'}; 
+                                color: ${isAdmin ? 'white' : '#1a202c'}; 
+                                padding: 12px 16px; 
+                                border-radius: ${isAdmin ? '15px 15px 4px 15px' : '15px 15px 15px 4px'}; 
+                                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                                word-wrap: break-word;
+                                ${!isAdmin ? 'border: 1px solid #e2e8f0;' : ''}">
+                        ${escapeHtml(msg.content)}
+                        ${msg.priority === 'urgent' ? `<span style="display: inline-block; background: #EF4444; color: white; padding: 1px 10px; border-radius: 10px; font-size: 10px; margin-left: 8px;">URGENT</span>` : ''}
+                        ${msg.priority === 'high' ? `<span style="display: inline-block; background: #F59E0B; color: white; padding: 1px 10px; border-radius: 10px; font-size: 10px; margin-left: 8px;">HIGH</span>` : ''}
+                    </div>
+                    ${msg.is_read ? `<div style="font-size: 10px; color: #94a3b8; text-align: ${isAdmin ? 'right' : 'left'}; margin-top: 4px;">✓ Read</div>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendPartnerReply() {
+    const input = document.getElementById('partnerReplyInput');
+    const content = input.value.trim();
+    
+    if (!content || !currentPartnerThreadId) {
+        showToast('Please enter a message', 'warning');
+        return;
+    }
+    
+    const sendBtn = document.querySelector('#partnerThreadModal .btn-primary');
+    const originalText = sendBtn.innerHTML;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    sendBtn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/messages/thread/${currentPartnerThreadId}/reply`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            input.value = '';
+            await openPartnerThread(currentPartnerThreadId);
+            showToast('Reply sent!', 'success');
+        }
+    } catch (error) {
+        showToast('Failed to send reply', 'error');
+    } finally {
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+    }
+}
+
+async function archivePartnerThread(threadId) {
+    if (!confirm('Archive this conversation?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/messages/thread/${threadId}/archive`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Conversation archived', 'success');
+            await loadPartnerMessages();
+        }
+    } catch (error) {
+        showToast('Failed to archive', 'error');
+    }
+}
+
+async function unarchivePartnerThread(threadId) {
+    try {
+        // Use the same archive endpoint but with status 'active'
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/messages/thread/${threadId}/unarchive`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Conversation restored', 'success');
+            await loadPartnerMessages();
+        }
+    } catch (error) {
+        showToast('Failed to restore', 'error');
+    }
+}
+
+async function deletePartnerThread(threadId) {
+    if (!confirm('⚠️ Delete this conversation permanently? This action cannot be undone.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/messages/thread/${threadId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Conversation deleted', 'success');
+            await loadPartnerMessages();
+        }
+    } catch (error) {
+        showToast('Failed to delete', 'error');
+    }
+}
+
+function updateUnreadCount() {
+    const totalUnread = partnerMessagesData.reduce((sum, t) => sum + (t.unread_count || 0), 0);
+    const badge = document.getElementById('partnerMessagesCount');
+    if (badge) {
+        badge.textContent = totalUnread;
+        badge.style.display = totalUnread > 0 ? 'inline' : 'none';
+    }
+}
         
 </script>
     
@@ -17106,6 +17478,90 @@ console.log('📄 Features: PDF.js rendering, auto page count, dropdown controls
 console.log('⌨️ Keyboard shortcuts: ← → to navigate, F for fullscreen, P for presentation mode');
 console.log('🖱️ Hover near bottom of screen to show controls');
 </script>         
+
+<!-- ============ PARTNER MESSAGES MODAL ============ -->
+<div class="modal" id="partnerMessagesModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-envelope"></i> Partner Messages</h2>
+            <button class="modal-close" onclick="hideModal('partnerMessagesModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Filter Controls -->
+            <div class="filter-controls" style="margin-bottom: 20px;">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Filter by Status</label>
+                        <select id="msgStatusFilter" onchange="loadPartnerMessages()">
+                            <option value="active">Active</option>
+                            <option value="archived">Archived</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="msgSearch" placeholder="Search by subject..." onkeyup="filterPartnerMessages()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Unread Only</label>
+                        <input type="checkbox" id="msgUnreadOnly" onchange="filterPartnerMessages()">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Threads List -->
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Partner</th>
+                            <th>Last Message</th>
+                            <th>Unread</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerMessagesTableBody">
+                        <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="partnerMessagesPagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PARTNER MESSAGE THREAD VIEW MODAL ============ -->
+<div class="modal" id="partnerThreadModal">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2 id="partnerThreadSubject">Conversation</h2>
+            <button class="modal-close" onclick="hideModal('partnerThreadModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 0; max-height: calc(90vh - 130px);">
+            <!-- Messages Container -->
+            <div id="partnerThreadMessages" style="padding: 20px; max-height: calc(90vh - 250px); overflow-y: auto; background: #f8fafc;">
+                <div style="text-align: center; padding: 30px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading messages...</p>
+                </div>
+            </div>
+            
+            <!-- Reply Input -->
+            <div style="padding: 15px 20px; border-top: 1px solid #e2e8f0; background: white; display: flex; gap: 10px;">
+                <textarea id="partnerReplyInput" rows="2" style="flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; resize: none;" placeholder="Type your reply..."></textarea>
+                <button class="btn btn-primary" onclick="sendPartnerReply()" style="align-self: flex-end; background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
                             
 </body>
 </html>
