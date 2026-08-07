@@ -15224,6 +15224,1308 @@ function updateUnreadCount() {
         badge.style.display = totalUnread > 0 ? 'inline' : 'none';
     }
 }
+
+ // ============================================
+// ADMIN PARTNER NOTIFICATIONS MANAGEMENT
+// ============================================
+
+let partnerNotificationsPage = 1;
+let partnerNotificationsTotalPages = 1;
+let partnerNotificationsData = [];
+
+async function showPartnerNotificationsModal() {
+    hideAllModals();
+    const modal = document.getElementById('partnerNotificationsModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        partnerNotificationsPage = 1;
+        await loadPartnerNotifications();
+        await loadPartnerListForNotification();
+    }
+}
+
+async function loadPartnerNotifications() {
+    const tbody = document.getElementById('partnerNotificationsTableBody');
+    if (!tbody) return;
+    
+    const status = document.getElementById('notifStatusFilter')?.value || 'all';
+    const search = document.getElementById('notifSearch')?.value || '';
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const url = `${API_BASE}/admin/partner/notifications?page=${partnerNotificationsPage}&limit=20&status=${status}&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            partnerNotificationsData = data.notifications || [];
+            partnerNotificationsTotalPages = data.pagination?.pages || 1;
+            displayPartnerNotifications();
+            updatePartnerNotificationsPagination();
+            
+            // Update badge count
+            const unreadCount = partnerNotificationsData.filter(n => !n.read).length;
+            const badge = document.getElementById('partnerNotificationsCount');
+            if (badge) {
+                badge.textContent = unreadCount;
+                badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+            }
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No notifications found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Load partner notifications error:', error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${error.message}</td></tr>`;
+    }
+}
+
+function displayPartnerNotifications() {
+    const tbody = document.getElementById('partnerNotificationsTableBody');
+    if (!tbody) return;
+    
+    if (partnerNotificationsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No notifications found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = partnerNotificationsData.map(notif => {
+        const partner = notif.recipient_id || {};
+        const partnerName = partner.organization_name || 'Unknown Partner';
+        const date = notif.created_at ? new Date(notif.created_at) : null;
+        const dateStr = date ? date.toLocaleString() : 'Recent';
+        
+        let typeColor = '';
+        let typeIcon = 'info-circle';
+        switch(notif.type) {
+            case 'success': typeColor = '#10B981'; typeIcon = 'check-circle'; break;
+            case 'warning': typeColor = '#F59E0B'; typeIcon = 'exclamation-triangle'; break;
+            case 'error': typeColor = '#EF4444'; typeIcon = 'exclamation-circle'; break;
+            default: typeColor = '#3B82F6'; typeIcon = 'info-circle';
+        }
+        
+        let priorityBadge = '';
+        if (notif.priority === 'urgent') priorityBadge = '<span class="status-badge status-pending" style="background: #EF4444; color: white;">Urgent</span>';
+        else if (notif.priority === 'high') priorityBadge = '<span class="status-badge status-pending" style="background: #F59E0B; color: white;">High</span>';
+        
+        let statusText = 'Unread';
+        let statusClass = 'status-pending';
+        if (notif.read) {
+            statusText = 'Read';
+            statusClass = 'status-active';
+        }
+        if (notif.archived) {
+            statusText = 'Archived';
+            statusClass = 'status-draft';
+        }
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(partnerName)}</strong></td>
+                <td><strong>${escapeHtml(notif.title)}</strong></td>
+                <td>${escapeHtml(notif.message?.substring(0, 80))}${notif.message?.length > 80 ? '...' : ''}</td>
+                <td><i class="fas fa-${typeIcon}" style="color: ${typeColor};"></i> ${notif.type}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span> ${priorityBadge}</td>
+                <td>${dateStr}</td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button class="sheet-btn secondary" onclick="editPartnerNotification('${notif._id}')" style="padding: 6px 12px;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="sheet-btn danger" onclick="deletePartnerNotification('${notif._id}')" style="padding: 6px 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updatePartnerNotificationsPagination() {
+    const pagination = document.getElementById('partnerNotificationsPagination');
+    if (!pagination) return;
+    
+    if (partnerNotificationsTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${partnerNotificationsPage === 1 ? 'disabled' : ''} onclick="changePartnerNotificationsPage(${partnerNotificationsPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= partnerNotificationsTotalPages; i++) {
+        if (i === 1 || i === partnerNotificationsTotalPages || (i >= partnerNotificationsPage - 2 && i <= partnerNotificationsPage + 2)) {
+            html += `<button class="page-btn ${i === partnerNotificationsPage ? 'active' : ''}" onclick="changePartnerNotificationsPage(${i})">${i}</button>`;
+        } else if (i === partnerNotificationsPage - 3 || i === partnerNotificationsPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${partnerNotificationsPage === partnerNotificationsTotalPages ? 'disabled' : ''} onclick="changePartnerNotificationsPage(${partnerNotificationsPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+function changePartnerNotificationsPage(page) {
+    partnerNotificationsPage = page;
+    loadPartnerNotifications();
+}
+
+function filterPartnerNotifications() {
+    displayPartnerNotifications();
+}
+
+async function loadPartnerListForNotification() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partners?status=active&limit=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            const select = document.getElementById('notifPartnerId');
+            if (select) {
+                select.innerHTML = '<option value="">-- Select Partner --</option>' + 
+                    data.partners.map(p => `<option value="${p._id}">${escapeHtml(p.organization_name)} (${escapeHtml(p.email)})</option>`).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Load partner list error:', error);
+    }
+}
+
+function showCreatePartnerNotificationModal() {
+    document.getElementById('notifModalTitle').textContent = 'Create Notification';
+    document.getElementById('partnerNotificationForm').reset();
+    document.getElementById('notifPartnerId').value = '';
+    document.getElementById('createPartnerNotificationModal').classList.add('active');
+}
+
+function showBulkNotificationModal() {
+    document.getElementById('bulkNotificationForm').reset();
+    document.getElementById('bulkNotificationModal').classList.add('active');
+}
+
+async function savePartnerNotification() {
+    const partnerId = document.getElementById('notifPartnerId').value;
+    const title = document.getElementById('notifTitle').value;
+    const message = document.getElementById('notifMessage').value;
+    const type = document.getElementById('notifType').value;
+    const priority = document.getElementById('notifPriority').value;
+    const scheduled_for = document.getElementById('notifSchedule').value;
+    
+    if (!partnerId || !title || !message) {
+        showToast('Partner, Title, and Message are required', 'warning');
+        return;
+    }
+    
+    const btn = document.querySelector('#createPartnerNotificationModal .sheet-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    btn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/notifications`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ partner_id: partnerId, title, message, type, priority, scheduled_for })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Notification sent successfully!', 'success');
+            hideModal('createPartnerNotificationModal');
+            await loadPartnerNotifications();
+            document.getElementById('partnerNotificationForm').reset();
+        } else {
+            showToast(data.message || 'Failed to send notification', 'error');
+        }
+    } catch (error) {
+        showToast('Error sending notification', 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function sendBulkNotification() {
+    const title = document.getElementById('bulkNotifTitle').value;
+    const message = document.getElementById('bulkNotifMessage').value;
+    const type = document.getElementById('bulkNotifType').value;
+    const priority = document.getElementById('bulkNotifPriority').value;
+    
+    if (!title || !message) {
+        showToast('Title and Message are required', 'warning');
+        return;
+    }
+    
+    if (!confirm(`Send this notification to ALL active partners?\n\nTitle: ${title}\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    const btn = document.querySelector('#bulkNotificationModal .sheet-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    btn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/notifications/all`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title, message, type, priority })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(`Notification sent to ${data.count || 0} partners!`, 'success');
+            hideModal('bulkNotificationModal');
+            await loadPartnerNotifications();
+            document.getElementById('bulkNotificationForm').reset();
+        } else {
+            showToast(data.message || 'Failed to send notifications', 'error');
+        }
+    } catch (error) {
+        showToast('Error sending notifications', 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function editPartnerNotification(id) {
+    const notif = partnerNotificationsData.find(n => n._id === id);
+    if (!notif) {
+        showToast('Notification not found', 'error');
+        return;
+    }
+    
+    // Open edit modal (reuse create modal)
+    document.getElementById('notifModalTitle').textContent = 'Edit Notification';
+    document.getElementById('notifPartnerId').value = notif.recipient_id?._id || notif.recipient_id || '';
+    document.getElementById('notifTitle').value = notif.title || '';
+    document.getElementById('notifMessage').value = notif.message || '';
+    document.getElementById('notifType').value = notif.type || 'info';
+    document.getElementById('notifPriority').value = notif.priority || 'medium';
+    if (notif.scheduled_for) {
+        const date = new Date(notif.scheduled_for);
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        document.getElementById('notifSchedule').value = date.toISOString().slice(0, 16);
+    }
+    document.getElementById('createPartnerNotificationModal').classList.add('active');
+    
+    // Change save button to update
+    const saveBtn = document.querySelector('#createPartnerNotificationModal .sheet-btn');
+    saveBtn.textContent = 'Update Notification';
+    saveBtn.onclick = function() { updatePartnerNotification(id); };
+}
+
+async function updatePartnerNotification(id) {
+    const partnerId = document.getElementById('notifPartnerId').value;
+    const title = document.getElementById('notifTitle').value;
+    const message = document.getElementById('notifMessage').value;
+    const type = document.getElementById('notifType').value;
+    const priority = document.getElementById('notifPriority').value;
+    const scheduled_for = document.getElementById('notifSchedule').value;
+    
+    if (!partnerId || !title || !message) {
+        showToast('Partner, Title, and Message are required', 'warning');
+        return;
+    }
+    
+    const btn = document.querySelector('#createPartnerNotificationModal .sheet-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    btn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/notifications/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title, message, type, priority, scheduled_for })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Notification updated!', 'success');
+            hideModal('createPartnerNotificationModal');
+            await loadPartnerNotifications();
+            document.getElementById('partnerNotificationForm').reset();
+        } else {
+            showToast(data.message || 'Failed to update notification', 'error');
+        }
+    } catch (error) {
+        showToast('Error updating notification', 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function deletePartnerNotification(id) {
+    if (!confirm('Delete this notification?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/notifications/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Notification deleted', 'success');
+            await loadPartnerNotifications();
+        }
+    } catch (error) {
+        showToast('Failed to delete notification', 'error');
+    }
+}
+
+ // ============================================
+// ADMIN PARTNER EVENTS MANAGEMENT
+// ============================================
+
+let partnerEventsPage = 1;
+let partnerEventsTotalPages = 1;
+let partnerEventsData = [];
+
+async function showPartnerEventsModal() {
+    hideAllModals();
+    const modal = document.getElementById('partnerEventsModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        partnerEventsPage = 1;
+        await loadPartnerEvents();
+    }
+}
+
+async function loadPartnerEvents() {
+    const tbody = document.getElementById('partnerEventsTableBody');
+    if (!tbody) return;
+    
+    const status = document.getElementById('eventApprovalFilter')?.value || 'pending';
+    const search = document.getElementById('eventSearchPartner')?.value || '';
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        let url = `${API_BASE}/admin/partner/events?page=${partnerEventsPage}&limit=20&approval_status=${status}`;
+        if (search) {
+            url += `&search=${encodeURIComponent(search)}`;
+        }
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            partnerEventsData = data.events || [];
+            partnerEventsTotalPages = data.pagination?.pages || 1;
+            displayPartnerEvents();
+            updatePartnerEventsPagination();
+            
+            // Update badge count
+            const pendingCount = partnerEventsData.filter(e => e.approval_status === 'pending').length;
+            const badge = document.getElementById('partnerEventsCount');
+            if (badge) {
+                badge.textContent = pendingCount;
+                badge.style.display = pendingCount > 0 ? 'inline' : 'none';
+            }
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No events found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Load partner events error:', error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${error.message}</td></tr>`;
+    }
+}
+
+function displayPartnerEvents() {
+    const tbody = document.getElementById('partnerEventsTableBody');
+    if (!tbody) return;
+    
+    if (partnerEventsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No events found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = partnerEventsData.map(event => {
+        const partnerName = event.partner_name || 'Unknown Partner';
+        const date = event.start_date ? new Date(event.start_date) : null;
+        const dateStr = date ? date.toLocaleDateString() : 'TBD';
+        const endDate = event.end_date ? new Date(event.end_date) : null;
+        const endDateStr = endDate ? endDate.toLocaleDateString() : 'TBD';
+        
+        let approvalStatusClass = 'status-pending';
+        let approvalStatusText = event.approval_status || 'pending';
+        switch(event.approval_status) {
+            case 'approved': approvalStatusClass = 'status-active'; break;
+            case 'rejected': approvalStatusClass = 'status-rejected'; break;
+            case 'changes_requested': approvalStatusClass = 'status-pending'; break;
+            default: approvalStatusClass = 'status-pending';
+        }
+        
+        let actionButtons = '';
+        if (event.approval_status === 'pending') {
+            actionButtons = `
+                <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approvePartnerEvent('${event._id}')">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+                <button class="sheet-btn" style="background: #F59E0B; padding: 6px 12px;" onclick="requestChangesPartnerEvent('${event._id}')">
+                    <i class="fas fa-edit"></i> Changes
+                </button>
+                <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="rejectPartnerEvent('${event._id}')">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+            `;
+        } else {
+            actionButtons = `
+                <button class="sheet-btn secondary" style="padding: 6px 12px;" onclick="viewPartnerEventDetails('${event._id}')">
+                    <i class="fas fa-eye"></i> View
+                </button>
+            `;
+        }
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(event.title)}</strong></td>
+                <td>${escapeHtml(partnerName)}</td>
+                <td>${dateStr} - ${endDateStr}</td>
+                <td>${escapeHtml(event.location || 'TBD')}</td>
+                <td>${event.attendees || 0}</td>
+                <td><span class="status-badge ${approvalStatusClass}">${approvalStatusText.replace(/_/g, ' ').toUpperCase()}</span></td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        ${actionButtons}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updatePartnerEventsPagination() {
+    const pagination = document.getElementById('partnerEventsPagination');
+    if (!pagination) return;
+    
+    if (partnerEventsTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${partnerEventsPage === 1 ? 'disabled' : ''} onclick="changePartnerEventsPage(${partnerEventsPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= partnerEventsTotalPages; i++) {
+        if (i === 1 || i === partnerEventsTotalPages || (i >= partnerEventsPage - 2 && i <= partnerEventsPage + 2)) {
+            html += `<button class="page-btn ${i === partnerEventsPage ? 'active' : ''}" onclick="changePartnerEventsPage(${i})">${i}</button>`;
+        } else if (i === partnerEventsPage - 3 || i === partnerEventsPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${partnerEventsPage === partnerEventsTotalPages ? 'disabled' : ''} onclick="changePartnerEventsPage(${partnerEventsPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+function changePartnerEventsPage(page) {
+    partnerEventsPage = page;
+    loadPartnerEvents();
+}
+
+function filterPartnerEvents() {
+    displayPartnerEvents();
+}
+
+async function approvePartnerEvent(id) {
+    if (!confirm('Approve this event? It will become visible on the Business Dashboard.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/events/${id}/approve`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Event approved successfully!', 'success');
+            await loadPartnerEvents();
+        } else {
+            showToast(data.message || 'Failed to approve event', 'error');
+        }
+    } catch (error) {
+        showToast('Error approving event', 'error');
+    }
+}
+
+async function rejectPartnerEvent(id) {
+    const reason = prompt('Enter rejection reason:');
+    if (reason === null) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/events/${id}/reject`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Event rejected', 'warning');
+            await loadPartnerEvents();
+        } else {
+            showToast(data.message || 'Failed to reject event', 'error');
+        }
+    } catch (error) {
+        showToast('Error rejecting event', 'error');
+    }
+}
+
+async function requestChangesPartnerEvent(id) {
+    const changes = prompt('Enter requested changes:');
+    if (changes === null) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/events/${id}/request-changes`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ changes: changes.trim() })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Changes requested! Partner notified.', 'success');
+            await loadPartnerEvents();
+        } else {
+            showToast(data.message || 'Failed to request changes', 'error');
+        }
+    } catch (error) {
+        showToast('Error requesting changes', 'error');
+    }
+}
+
+function viewPartnerEventDetails(id) {
+    const event = partnerEventsData.find(e => e._id === id);
+    if (!event) {
+        showToast('Event not found', 'error');
+        return;
+    }
+    
+    const details = `
+        <h3>${escapeHtml(event.title)}</h3>
+        <p><strong>Partner:</strong> ${escapeHtml(event.partner_name)}</p>
+        <p><strong>Date:</strong> ${event.start_date ? new Date(event.start_date).toLocaleString() : 'TBD'} - ${event.end_date ? new Date(event.end_date).toLocaleString() : 'TBD'}</p>
+        <p><strong>Location:</strong> ${escapeHtml(event.location || 'TBD')}</p>
+        <p><strong>Type:</strong> ${event.type || 'General'}</p>
+        <p><strong>Attendees:</strong> ${event.attendees || 0}</p>
+        <p><strong>Status:</strong> ${event.status || 'draft'}</p>
+        <p><strong>Approval Status:</strong> ${event.approval_status || 'pending'}</p>
+        <p><strong>Description:</strong> ${escapeHtml(event.description || 'No description')}</p>
+        ${event.admin_notes ? `<p><strong>Admin Notes:</strong> ${escapeHtml(event.admin_notes)}</p>` : ''}
+        ${event.requested_changes ? `<p><strong>Requested Changes:</strong> ${escapeHtml(event.requested_changes)}</p>` : ''}
+    `;
+    
+    alert('Event Details:\n\n' + details.replace(/<[^>]*>/g, ''));
+    showNotification('Event details displayed in console', 'info');
+    console.log('Event Details:', event);
+}    
+
+
+// ============================================
+// ADMIN PARTNER SESSIONS MANAGEMENT
+// ============================================
+
+let partnerSessionsPage = 1;
+let partnerSessionsTotalPages = 1;
+let partnerSessionsData = [];
+
+async function showPartnerSessionsModal() {
+    hideAllModals();
+    const modal = document.getElementById('partnerSessionsModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        partnerSessionsPage = 1;
+        await loadPartnerSessions();
+    }
+}
+
+async function loadPartnerSessions() {
+    const tbody = document.getElementById('partnerSessionsTableBody');
+    if (!tbody) return;
+    
+    const status = document.getElementById('sessionStatusFilter')?.value || 'all';
+    const search = document.getElementById('sessionSearchPartner')?.value || '';
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        let url = `${API_BASE}/admin/partner/sessions?page=${partnerSessionsPage}&limit=20`;
+        if (status !== 'all') url += `&status=${status}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            partnerSessionsData = data.sessions || [];
+            partnerSessionsTotalPages = data.pagination?.pages || 1;
+            displayPartnerSessions();
+            updatePartnerSessionsPagination();
+            
+            const badge = document.getElementById('partnerSessionsCount');
+            if (badge) {
+                const liveCount = partnerSessionsData.filter(s => s.status === 'live').length;
+                badge.textContent = liveCount;
+                badge.style.display = liveCount > 0 ? 'inline' : 'none';
+            }
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No sessions found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Load partner sessions error:', error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${error.message}</td></tr>`;
+    }
+}
+
+function displayPartnerSessions() {
+    const tbody = document.getElementById('partnerSessionsTableBody');
+    if (!tbody) return;
+    
+    if (partnerSessionsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No sessions found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = partnerSessionsData.map(session => {
+        const partnerName = session.partner_name || 'Unknown Partner';
+        const date = session.date ? new Date(session.date) : null;
+        const dateStr = date ? date.toLocaleDateString() : 'TBD';
+        
+        let statusClass = 'status-draft';
+        switch(session.status) {
+            case 'live': statusClass = 'status-live'; break;
+            case 'scheduled': statusClass = 'status-upcoming'; break;
+            case 'ended': statusClass = 'status-ended'; break;
+            case 'cancelled': statusClass = 'status-rejected'; break;
+            default: statusClass = 'status-draft';
+        }
+        
+        let actionButtons = `
+            <button class="sheet-btn secondary" onclick="viewPartnerSessionDetails('${session._id}')" style="padding: 6px 12px;">
+                <i class="fas fa-eye"></i> View
+            </button>
+        `;
+        
+        if (session.status === 'scheduled') {
+            actionButtons += `
+                <button class="sheet-btn" onclick="startPartnerSession('${session._id}')" style="padding: 6px 12px; background: #10B981; color: white;">
+                    <i class="fas fa-play"></i> Start
+                </button>
+            `;
+        }
+        if (session.status === 'live') {
+            actionButtons += `
+                <button class="sheet-btn" onclick="endPartnerSession('${session._id}')" style="padding: 6px 12px; background: #EF4444; color: white;">
+                    <i class="fas fa-stop"></i> End
+                </button>
+            `;
+        }
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(session.title)}</strong></td>
+                <td>${escapeHtml(partnerName)}</td>
+                <td>${dateStr} at ${escapeHtml(session.time || 'TBD')}</td>
+                <td>${escapeHtml(session.platform || 'custom')}</td>
+                <td>${session.attendees || 0} / ${session.max_attendees || '∞'}</td>
+                <td><span class="status-badge ${statusClass}">${session.status}</span></td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        ${actionButtons}
+                        <button class="sheet-btn danger" onclick="deletePartnerSession('${session._id}')" style="padding: 6px 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updatePartnerSessionsPagination() {
+    const pagination = document.getElementById('partnerSessionsPagination');
+    if (!pagination) return;
+    
+    if (partnerSessionsTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${partnerSessionsPage === 1 ? 'disabled' : ''} onclick="changePartnerSessionsPage(${partnerSessionsPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= partnerSessionsTotalPages; i++) {
+        if (i === 1 || i === partnerSessionsTotalPages || (i >= partnerSessionsPage - 2 && i <= partnerSessionsPage + 2)) {
+            html += `<button class="page-btn ${i === partnerSessionsPage ? 'active' : ''}" onclick="changePartnerSessionsPage(${i})">${i}</button>`;
+        } else if (i === partnerSessionsPage - 3 || i === partnerSessionsPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${partnerSessionsPage === partnerSessionsTotalPages ? 'disabled' : ''} onclick="changePartnerSessionsPage(${partnerSessionsPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+function changePartnerSessionsPage(page) {
+    partnerSessionsPage = page;
+    loadPartnerSessions();
+}
+
+function filterPartnerSessions() {
+    displayPartnerSessions();
+}
+
+async function startPartnerSession(id) {
+    if (!confirm('Start this session? It will become live and accessible to attendees.')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/sessions/${id}/start`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Session started!', 'success');
+            await loadPartnerSessions();
+        } else {
+            showToast(data.message || 'Failed to start session', 'error');
+        }
+    } catch (error) {
+        showToast('Error starting session', 'error');
+    }
+}
+
+async function endPartnerSession(id) {
+    if (!confirm('End this session?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/sessions/${id}/end`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Session ended', 'success');
+            await loadPartnerSessions();
+        } else {
+            showToast(data.message || 'Failed to end session', 'error');
+        }
+    } catch (error) {
+        showToast('Error ending session', 'error');
+    }
+}
+
+function viewPartnerSessionDetails(id) {
+    const session = partnerSessionsData.find(s => s._id === id);
+    if (!session) {
+        showToast('Session not found', 'error');
+        return;
+    }
+    
+    const details = `
+        <h3>${escapeHtml(session.title)}</h3>
+        <p><strong>Partner:</strong> ${escapeHtml(session.partner_name)}</p>
+        <p><strong>Date:</strong> ${session.date ? new Date(session.date).toLocaleString() : 'TBD'} at ${escapeHtml(session.time || 'TBD')}</p>
+        <p><strong>Duration:</strong> ${session.duration || 60} minutes</p>
+        <p><strong>Platform:</strong> ${escapeHtml(session.platform || 'custom')}</p>
+        <p><strong>Attendees:</strong> ${session.attendees || 0} / ${session.max_attendees || '∞'}</p>
+        <p><strong>Status:</strong> ${session.status || 'scheduled'}</p>
+        <p><strong>Meeting Link:</strong> <a href="${session.meeting_link}" target="_blank">${session.meeting_link}</a></p>
+        ${session.is_embedded ? '<p><strong>Embedded:</strong> ✅ Enabled</p>' : ''}
+        <p><strong>Description:</strong> ${escapeHtml(session.description || 'No description')}</p>
+    `;
+    
+    alert('Session Details:\n\n' + details.replace(/<[^>]*>/g, ''));
+    showNotification('Session details displayed in console', 'info');
+    console.log('Session Details:', session);
+}
+
+async function deletePartnerSession(id) {
+    if (!confirm('Delete this session?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/sessions/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Session deleted', 'success');
+            await loadPartnerSessions();
+        }
+    } catch (error) {
+        showToast('Failed to delete session', 'error');
+    }
+}
+
+// ============================================
+// ADMIN PARTNER DOCUMENTS MANAGEMENT
+// ============================================
+
+let partnerDocumentsPage = 1;
+let partnerDocumentsTotalPages = 1;
+let partnerDocumentsData = [];
+
+async function showPartnerDocumentsModal() {
+    hideAllModals();
+    const modal = document.getElementById('partnerDocumentsModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        partnerDocumentsPage = 1;
+        await loadPartnerDocuments();
+    }
+}
+
+async function loadPartnerDocuments() {
+    const tbody = document.getElementById('partnerDocumentsTableBody');
+    if (!tbody) return;
+    
+    const status = document.getElementById('docStatusFilter')?.value || 'all';
+    const search = document.getElementById('docSearchPartner')?.value || '';
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        let url = `${API_BASE}/admin/partner/documents?page=${partnerDocumentsPage}&limit=20`;
+        if (status !== 'all') url += `&status=${status}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            partnerDocumentsData = data.documents || [];
+            partnerDocumentsTotalPages = data.pagination?.pages || 1;
+            displayPartnerDocuments();
+            updatePartnerDocumentsPagination();
+            
+            const badge = document.getElementById('partnerDocumentsCount');
+            if (badge) {
+                const pendingCount = partnerDocumentsData.filter(d => d.status === 'pending').length;
+                badge.textContent = pendingCount;
+                badge.style.display = pendingCount > 0 ? 'inline' : 'none';
+            }
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No documents found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Load partner documents error:', error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${error.message}</td></tr>`;
+    }
+}
+
+function displayPartnerDocuments() {
+    const tbody = document.getElementById('partnerDocumentsTableBody');
+    if (!tbody) return;
+    
+    if (partnerDocumentsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No documents found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = partnerDocumentsData.map(doc => {
+        const partnerName = doc.partner_name || doc.partner_id?.organization_name || 'Unknown Partner';
+        const date = doc.created_at ? new Date(doc.created_at) : null;
+        const dateStr = date ? date.toLocaleDateString() : 'Recent';
+        
+        let statusClass = 'status-pending';
+        switch(doc.status) {
+            case 'approved': statusClass = 'status-active'; break;
+            case 'rejected': statusClass = 'status-rejected'; break;
+            default: statusClass = 'status-pending';
+        }
+        
+        const fileIcon = doc.file_url ? getFileIcon(doc.file_url) : 'fa-file';
+        
+        return `
+            <tr>
+                <td><strong>${escapeHtml(doc.name)}</strong></td>
+                <td>${escapeHtml(partnerName)}</td>
+                <td>${escapeHtml(doc.type || 'other')}</td>
+                <td><i class="fas ${fileIcon}"></i> ${escapeHtml(doc.file_name || 'Document')}</td>
+                <td>${dateStr}</td>
+                <td><span class="status-badge ${statusClass}">${doc.status || 'pending'}</span></td>
+                <td>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        ${doc.status === 'pending' ? `
+                            <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approvePartnerDocument('${doc._id}')">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="rejectPartnerDocument('${doc._id}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                        <button class="sheet-btn secondary" onclick="viewPartnerDocument('${doc._id}')" style="padding: 6px 12px;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="sheet-btn" onclick="downloadPartnerDocument('${doc._id}')" style="padding: 6px 12px;">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="sheet-btn" onclick="uploadPartnerDocumentForPartner('${doc._id}')" style="padding: 6px 12px; background: #8B5CF6; color: white;">
+                            <i class="fas fa-upload"></i>
+                        </button>
+                        <button class="sheet-btn danger" onclick="deletePartnerDocument('${doc._id}')" style="padding: 6px 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updatePartnerDocumentsPagination() {
+    const pagination = document.getElementById('partnerDocumentsPagination');
+    if (!pagination) return;
+    
+    if (partnerDocumentsTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let html = `<button class="page-btn" ${partnerDocumentsPage === 1 ? 'disabled' : ''} onclick="changePartnerDocumentsPage(${partnerDocumentsPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    
+    for (let i = 1; i <= partnerDocumentsTotalPages; i++) {
+        if (i === 1 || i === partnerDocumentsTotalPages || (i >= partnerDocumentsPage - 2 && i <= partnerDocumentsPage + 2)) {
+            html += `<button class="page-btn ${i === partnerDocumentsPage ? 'active' : ''}" onclick="changePartnerDocumentsPage(${i})">${i}</button>`;
+        } else if (i === partnerDocumentsPage - 3 || i === partnerDocumentsPage + 3) {
+            html += `<span class="page-btn" disabled>...</span>`;
+        }
+    }
+    
+    html += `<button class="page-btn" ${partnerDocumentsPage === partnerDocumentsTotalPages ? 'disabled' : ''} onclick="changePartnerDocumentsPage(${partnerDocumentsPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    pagination.innerHTML = html;
+}
+
+function changePartnerDocumentsPage(page) {
+    partnerDocumentsPage = page;
+    loadPartnerDocuments();
+}
+
+function filterPartnerDocuments() {
+    displayPartnerDocuments();
+}
+
+async function approvePartnerDocument(id) {
+    if (!confirm('Approve this document?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/documents/${id}/approve`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Document approved!', 'success');
+            await loadPartnerDocuments();
+        } else {
+            showToast(data.message || 'Failed to approve document', 'error');
+        }
+    } catch (error) {
+        showToast('Error approving document', 'error');
+    }
+}
+
+async function rejectPartnerDocument(id) {
+    const reason = prompt('Enter rejection reason:');
+    if (reason === null) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/documents/${id}/reject`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason.trim() })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Document rejected', 'warning');
+            await loadPartnerDocuments();
+        } else {
+            showToast(data.message || 'Failed to reject document', 'error');
+        }
+    } catch (error) {
+        showToast('Error rejecting document', 'error');
+    }
+}
+
+function viewPartnerDocument(id) {
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        showToast('Authentication required', 'error');
+        return;
+    }
+    
+    window.open(`${API_BASE}/admin/partner/documents/${id}/view?token=${encodeURIComponent(token)}`, '_blank');
+}
+
+async function downloadPartnerDocument(id) {
+    const token = localStorage.getItem('lba_auth_token');
+    if (!token) {
+        showToast('Authentication required', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/admin/partner/documents/${id}/download?token=${encodeURIComponent(token)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Download failed');
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        let filename = 'document';
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        showToast('Download started', 'success');
+    } catch (error) {
+        showToast('Failed to download document', 'error');
+    }
+}
+
+function uploadPartnerDocumentForPartner(id) {
+    // Find the document to get partner info
+    const doc = partnerDocumentsData.find(d => d._id === id);
+    if (!doc) {
+        showToast('Document not found', 'error');
+        return;
+    }
+    
+    // Show upload modal pre-filled with partner info
+    showUploadPartnerDocumentModal(doc.partner_id, doc._id);
+}
+
+async function deletePartnerDocument(id) {
+    if (!confirm('Delete this document?')) return;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const response = await fetch(`${API_BASE}/admin/partner/documents/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('Document deleted', 'success');
+            await loadPartnerDocuments();
+        }
+    } catch (error) {
+        showToast('Failed to delete document', 'error');
+    }
+}
+
+function showUploadPartnerDocumentModal(partnerId, existingDocId) {
+    // Create a simple modal for admin to upload document for partner
+    const modalHtml = `
+        <div class="modal" id="uploadPartnerDocModal" style="display: flex;">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                    <h2><i class="fas fa-upload"></i> Upload Document for Partner</h2>
+                    <button class="modal-close" onclick="hideModal('uploadPartnerDocModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadPartnerDocForm">
+                        <input type="hidden" id="uploadPartnerId" value="${partnerId}">
+                        <input type="hidden" id="uploadExistingDocId" value="${existingDocId || ''}">
+                        
+                        <div class="form-group">
+                            <label>Document Name *</label>
+                            <input type="text" id="uploadDocName" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Document Type</label>
+                            <select id="uploadDocType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                                <option value="registration">Registration</option>
+                                <option value="certificate">Certificate</option>
+                                <option value="proposal">Proposal</option>
+                                <option value="agreement">Agreement</option>
+                                <option value="presentation">Presentation</option>
+                                <option value="financial">Financial</option>
+                                <option value="legal">Legal</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>File *</label>
+                            <input type="file" id="uploadDocFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                        </div>
+                        <div class="error-message" id="uploadDocError" style="display: none; color: #EF4444;"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="sheet-btn warning" onclick="hideModal('uploadPartnerDocModal')">Cancel</button>
+                    <button class="sheet-btn" onclick="submitPartnerDocumentUpload()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existing = document.getElementById('uploadPartnerDocModal');
+    if (existing) existing.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.body.style.overflow = 'hidden';
+}
+
+async function submitPartnerDocumentUpload() {
+    const partnerId = document.getElementById('uploadPartnerId').value;
+    const name = document.getElementById('uploadDocName').value.trim();
+    const type = document.getElementById('uploadDocType').value;
+    const file = document.getElementById('uploadDocFile').files[0];
+    const errorEl = document.getElementById('uploadDocError');
+    
+    if (!partnerId) {
+        showToast('Partner ID missing', 'error');
+        return;
+    }
+    
+    if (!name) {
+        errorEl.textContent = 'Document name is required';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    if (!file) {
+        errorEl.textContent = 'Please select a file';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    errorEl.style.display = 'none';
+    
+    const btn = document.querySelector('#uploadPartnerDocModal .sheet-btn:last-child');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    btn.disabled = true;
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const formData = new FormData();
+        formData.append('partner_id', partnerId);
+        formData.append('name', name);
+        formData.append('type', type);
+        formData.append('document', file);
+        
+        const response = await fetch(`${API_BASE}/admin/partner/documents`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Document uploaded successfully!', 'success');
+            hideModal('uploadPartnerDocModal');
+            await loadPartnerDocuments();
+        } else {
+            errorEl.textContent = data.message || 'Upload failed';
+            errorEl.style.display = 'block';
+        }
+    } catch (error) {
+        errorEl.textContent = error.message || 'Upload failed';
+        errorEl.style.display = 'block';
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+function getFileIcon(fileUrl) {
+    if (!fileUrl) return 'fa-file';
+    const ext = fileUrl.split('.').pop().toLowerCase();
+    if (ext === 'pdf') return 'fa-file-pdf';
+    if (ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif') return 'fa-file-image';
+    if (ext === 'doc' || ext === 'docx') return 'fa-file-word';
+    if (ext === 'xls' || ext === 'xlsx') return 'fa-file-excel';
+    return 'fa-file';
+}
+        
         
 </script>
     
@@ -17729,6 +19031,398 @@ console.log('🖱️ Hover near bottom of screen to show controls');
         </div>
     </div>
 </div>
+
+ <!-- ============ PARTNER MESSAGES MODAL ============ -->
+<div class="modal" id="partnerMessagesModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-envelope"></i> Partner Messages</h2>
+            <button class="modal-close" onclick="hideModal('partnerMessagesModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="filter-controls" style="margin-bottom: 20px;">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Filter by Status</label>
+                        <select id="msgStatusFilter" onchange="loadPartnerMessages()">
+                            <option value="active">Active</option>
+                            <option value="archived">Archived</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="msgSearch" placeholder="Search by subject..." onkeyup="filterPartnerMessages()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Unread Only</label>
+                        <input type="checkbox" id="msgUnreadOnly" onchange="filterPartnerMessages()">
+                    </div>
+                </div>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Partner</th>
+                            <th>Last Message</th>
+                            <th>Unread</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerMessagesTableBody">
+                        <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="partnerMessagesPagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PARTNER MESSAGE THREAD VIEW MODAL ============ -->
+<div class="modal" id="partnerThreadModal">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2 id="partnerThreadSubject">Conversation</h2>
+            <button class="modal-close" onclick="hideModal('partnerThreadModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 0; max-height: calc(90vh - 130px);">
+            <div id="partnerThreadMessages" style="padding: 20px; max-height: calc(90vh - 250px); overflow-y: auto; background: #f8fafc;">
+                <div style="text-align: center; padding: 30px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading messages...</p>
+                </div>
+            </div>
+            <div style="padding: 15px 20px; border-top: 1px solid #e2e8f0; background: white; display: flex; gap: 10px;">
+                <textarea id="partnerReplyInput" rows="2" style="flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; resize: none;" placeholder="Type your reply..."></textarea>
+                <button class="btn btn-primary" onclick="sendPartnerReply()" style="align-self: flex-end; background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PARTNER NOTIFICATIONS MODAL ============ -->
+<div class="modal" id="partnerNotificationsModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-bell"></i> Partner Notifications</h2>
+            <button class="modal-close" onclick="hideModal('partnerNotificationsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="sheet-btn" onclick="showCreatePartnerNotificationModal()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                        <i class="fas fa-plus"></i> New Notification
+                    </button>
+                    <button class="sheet-btn secondary" onclick="showBulkNotificationModal()">
+                        <i class="fas fa-users"></i> Send to All Partners
+                    </button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="notifStatusFilter" onchange="loadPartnerNotifications()" class="sheet-btn secondary" style="padding: 8px 15px;">
+                        <option value="all">All</option>
+                        <option value="unread">Unread</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                    <input type="text" id="notifSearch" placeholder="Search..." class="sheet-btn secondary" style="padding: 8px 15px; width: 200px;" onkeyup="filterPartnerNotifications()">
+                </div>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Partner</th>
+                            <th>Title</th>
+                            <th>Message</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Sent</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerNotificationsTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="partnerNotificationsPagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ CREATE NOTIFICATION MODAL ============ -->
+<div class="modal" id="createPartnerNotificationModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2 id="notifModalTitle">Create Notification</h2>
+            <button class="modal-close" onclick="hideModal('createPartnerNotificationModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="partnerNotificationForm">
+                <div class="form-group">
+                    <label>Recipient Partner *</label>
+                    <select id="notifPartnerId" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                        <option value="">-- Select Partner --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="notifTitle" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                </div>
+                <div class="form-group">
+                    <label>Message *</label>
+                    <textarea id="notifMessage" rows="4" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="notifType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="info">Information</option>
+                        <option value="success">Success</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="notifPriority" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Schedule (optional)</label>
+                    <input type="datetime-local" id="notifSchedule" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('createPartnerNotificationModal')" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="savePartnerNotification()" style="flex: 2; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                        Send Notification
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============ BULK NOTIFICATION MODAL ============ -->
+<div class="modal" id="bulkNotificationModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-users"></i> Send to All Partners</h2>
+            <button class="modal-close" onclick="hideModal('bulkNotificationModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="bulkNotificationForm">
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="bulkNotifTitle" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                </div>
+                <div class="form-group">
+                    <label>Message *</label>
+                    <textarea id="bulkNotifMessage" rows="4" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="bulkNotifType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="info">Information</option>
+                        <option value="success">Success</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="bulkNotifPriority" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div style="padding: 15px; background: #FEF3C7; border-radius: 10px; margin-bottom: 15px;">
+                    <p style="font-size: 14px; color: #92400E; margin: 0;">
+                        <i class="fas fa-info-circle"></i> This will send the notification to ALL active partners.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="sheet-btn warning" onclick="hideModal('bulkNotificationModal')" style="flex: 1;">Cancel</button>
+                    <button type="button" class="sheet-btn" onclick="sendBulkNotification()" style="flex: 2; background: #EF4444; color: white;">
+                        <i class="fas fa-paper-plane"></i> Send to All Partners
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PARTNER EVENTS MODAL ============ -->
+<div class="modal" id="partnerEventsModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-calendar-alt"></i> Partner Events</h2>
+            <button class="modal-close" onclick="hideModal('partnerEventsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="filter-controls" style="margin-bottom: 20px;">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Filter by Approval Status</label>
+                        <select id="eventApprovalFilter" onchange="loadPartnerEvents()">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="changes_requested">Changes Requested</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="eventSearchPartner" placeholder="Search events..." onkeyup="filterPartnerEvents()">
+                    </div>
+                </div>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Partner</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                            <th>Attendees</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerEventsTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="partnerEventsPagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PARTNER SESSIONS MODAL ============ -->
+<div class="modal" id="partnerSessionsModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-video"></i> Partner Live Sessions</h2>
+            <button class="modal-close" onclick="hideModal('partnerSessionsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="filter-controls" style="margin-bottom: 20px;">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>Filter by Status</label>
+                        <select id="sessionStatusFilter" onchange="loadPartnerSessions()">
+                            <option value="all">All</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="live">Live</option>
+                            <option value="ended">Ended</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="sessionSearchPartner" placeholder="Search sessions..." onkeyup="filterPartnerSessions()">
+                    </div>
+                </div>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Partner</th>
+                            <th>Date/Time</th>
+                            <th>Platform</th>
+                            <th>Attendees</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerSessionsTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="partnerSessionsPagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PARTNER DOCUMENTS MODAL ============ -->
+<div class="modal" id="partnerDocumentsModal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-file-alt"></i> Partner Documents</h2>
+            <button class="modal-close" onclick="hideModal('partnerDocumentsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="sheet-btn" onclick="showUploadPartnerDocumentModal()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                        <i class="fas fa-upload"></i> Upload Document
+                    </button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="docStatusFilter" onchange="loadPartnerDocuments()" class="sheet-btn secondary" style="padding: 8px 15px;">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <input type="text" id="docSearchPartner" placeholder="Search..." class="sheet-btn secondary" style="padding: 8px 15px; width: 200px;" onkeyup="filterPartnerDocuments()">
+                </div>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Partner</th>
+                            <th>Type</th>
+                            <th>File</th>
+                            <th>Uploaded</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerDocumentsTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="partnerDocumentsPagination"></div>
+        </div>
+    </div>
+</div>   
+    
                             
 </body>
 </html>
