@@ -633,20 +633,44 @@ const sessionSchema = new mongoose.Schema({
     created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' }
 }, { timestamps: true });
 
-// ============ MESSAGE SCHEMA ============
+// ============ MESSAGE THREAD SCHEMA ============
+const messageThreadSchema = new mongoose.Schema({
+    participants: [{
+        user_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+        user_type: { type: String, enum: ['partner', 'admin'], required: true },
+        name: { type: String, required: true }
+    }],
+    subject: { type: String, required: true },
+    last_message_at: { type: Date, default: Date.now },
+    last_message_preview: { type: String, default: '' },
+    status: { type: String, enum: ['active', 'archived'], default: 'active' },
+    unread_count: { 
+        partner: { type: Number, default: 0 },
+        admin: { type: Number, default: 0 }
+    }
+}, { timestamps: true });
+
+// ============ MESSAGE SCHEMA (ENHANCED) ============
 const messageSchema = new mongoose.Schema({
+    thread_id: { type: mongoose.Schema.Types.ObjectId, ref: 'MessageThread', required: true },
     sender_id: { type: mongoose.Schema.Types.ObjectId, required: true },
     sender_type: { type: String, enum: ['partner', 'admin'], required: true },
     sender_name: { type: String, required: true },
-    recipient_id: { type: mongoose.Schema.Types.ObjectId },
-    recipient_type: { type: String, enum: ['partner', 'admin'], required: true },
-    subject: { type: String, required: true },
     content: { type: String, required: true },
     priority: { type: String, enum: ['normal', 'high', 'urgent'], default: 'normal' },
-    read: { type: Boolean, default: false },
-    status: { type: String, enum: ['sent', 'read', 'replied'], default: 'sent' },
-    related_id: { type: mongoose.Schema.Types.ObjectId }
+    read_by: [{ 
+        user_id: { type: mongoose.Schema.Types.ObjectId },
+        user_type: { type: String, enum: ['partner', 'admin'] },
+        read_at: { type: Date, default: Date.now }
+    }],
+    attachments: [{
+        name: { type: String },
+        url: { type: String },
+        type: { type: String }
+    }],
+    status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' }
 }, { timestamps: true });
+
 // Create Models
 const Admin = mongoose.model('Admin', adminSchema);
 const BusinessUser = mongoose.model('BusinessUser', businessUserSchema); 
@@ -657,8 +681,8 @@ const Notification = mongoose.model('Notification', notificationSchema);
 const Ad = mongoose.model('Ad', adSchema);
 const Event = mongoose.model('Event', eventSchema);      
 const Session = mongoose.model('Session', sessionSchema); 
+const MessageThread = mongoose.model('MessageThread', messageThreadSchema);
 const Message = mongoose.model('Message', messageSchema); 
-
 
 
 // ============ AUTH ROUTES ============
@@ -6333,6 +6357,301 @@ app.post('/api/partner/notifications/read-all', authenticate, authorize('partner
 });
 
 console.log('✅ Partner Dashboard API Routes Ready');
+
+// ============ ENHANCED PARTNER MESSAGES ROUTES ============
+
+// Get all message threads for partner
+app.get('/api/partner/messages/threads', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const threads = await MessageThread.find({
+            'participants.user_id': req.user._id,
+            'participants.user_type': 'partner',
+            status: 'active'
+        }).sort({ last_message_at: -1 });
+        
+        res.json({
+            success: true,
+            threads: threads.map(t => ({
+                _id: t._id,
+                subject: t.subject,
+                last_message_at: t.last_message_at,
+                last_message_preview: t.last_message_preview,
+                unread_count: t.unread_count?.partner || 0,
+                participants: t.participants
+            }))
+        });
+    } catch (error) {
+        console.error('Get threads error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get messages in a thread
+app.get('/api/partner/messages/thread/:threadId', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { threadId } = req.params;
+        
+        // Verify partner is in the thread
+        const thread = await MessageThread.findOne({
+            _id: threadId,
+            'participants.user_id': req.user._id,
+            'participants.user_type': 'partner'
+        });
+        
+        if (!thread) {
+            return res.status(404).json({ success: false, message: 'Thread not found' });
+        }
+        
+        const messages = await Message.find({ thread_id: threadId })
+            .sort({ created_at: 1 });
+        
+        // Mark messages as read for partner
+        await Message.updateMany(
+            { 
+                thread_id: threadId,
+                'read_by.user_id': { $ne: req.user._id }
+            },
+            { 
+                $push: { 
+                    read_by: { 
+                        user_id: req.user._id, 
+                        user_type: 'partner',
+                        read_at: new Date()
+                    } 
+                }
+            }
+        );
+        
+        // Reset unread count for partner
+        thread.unread_count.partner = 0;
+        await thread.save();
+        
+        res.json({
+            success: true,
+            thread: {
+                _id: thread._id,
+                subject: thread.subject
+            },
+            messages: messages.map(m => ({
+                _id: m._id,
+                sender_id: m.sender_id,
+                sender_type: m.sender_type,
+                sender_name: m.sender_name,
+                content: m.content,
+                priority: m.priority,
+                created_at: m.created_at,
+                is_read: m.read_by.some(r => r.user_id.toString() === req.user._id.toString())
+            }))
+        });
+    } catch (error) {
+        console.error('Get thread messages error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Create new message thread
+app.post('/api/partner/messages/thread', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { subject, content, priority } = req.body;
+        
+        if (!subject || !content) {
+            return res.status(400).json({ success: false, message: 'Subject and content are required' });
+        }
+        
+        // Get admin users
+        const admins = await Admin.find().select('_id name email');
+        if (admins.length === 0) {
+            return res.status(404).json({ success: false, message: 'No admin users found' });
+        }
+        
+        // Create thread
+        const thread = new MessageThread({
+            participants: [
+                { 
+                    user_id: req.user._id, 
+                    user_type: 'partner',
+                    name: req.user.organization_name
+                },
+                ...admins.map(admin => ({
+                    user_id: admin._id,
+                    user_type: 'admin',
+                    name: admin.name
+                }))
+            ],
+            subject: subject,
+            last_message_preview: content.substring(0, 100)
+        });
+        
+        await thread.save();
+        
+        // Create first message
+        const message = new Message({
+            thread_id: thread._id,
+            sender_id: req.user._id,
+            sender_type: 'partner',
+            sender_name: req.user.organization_name,
+            content: content,
+            priority: priority || 'normal',
+            read_by: [{ user_id: req.user._id, user_type: 'partner', read_at: new Date() }]
+        });
+        
+        await message.save();
+        
+        // Set unread for admins
+        thread.unread_count.admin = 1;
+        await thread.save();
+        
+        // Create notifications for admins
+        for (const admin of admins) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: admin._id,
+                recipient_type: 'admin',
+                title: `New Message from Partner: ${req.user.organization_name}`,
+                message: `${subject}: ${content.substring(0, 100)}...`,
+                type: 'info',
+                read: false,
+                related_id: thread._id,
+                metadata: {
+                    message_id: message._id,
+                    thread_id: thread._id
+                }
+            });
+        }
+        
+        res.status(201).json({
+            success: true,
+            message: 'Message sent successfully',
+            thread: {
+                _id: thread._id,
+                subject: thread.subject
+            }
+        });
+    } catch (error) {
+        console.error('Create thread error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Send message in existing thread
+app.post('/api/partner/messages/thread/:threadId', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { threadId } = req.params;
+        const { content } = req.body;
+        
+        if (!content) {
+            return res.status(400).json({ success: false, message: 'Message content is required' });
+        }
+        
+        // Verify thread exists and partner is in it
+        const thread = await MessageThread.findOne({
+            _id: threadId,
+            'participants.user_id': req.user._id,
+            'participants.user_type': 'partner'
+        });
+        
+        if (!thread) {
+            return res.status(404).json({ success: false, message: 'Thread not found' });
+        }
+        
+        // Create message
+        const message = new Message({
+            thread_id: threadId,
+            sender_id: req.user._id,
+            sender_type: 'partner',
+            sender_name: req.user.organization_name,
+            content: content,
+            read_by: [{ user_id: req.user._id, user_type: 'partner', read_at: new Date() }]
+        });
+        
+        await message.save();
+        
+        // Update thread
+        thread.last_message_at = new Date();
+        thread.last_message_preview = content.substring(0, 100);
+        thread.unread_count.admin = (thread.unread_count.admin || 0) + 1;
+        await thread.save();
+        
+        // Notify admins
+        const admins = await Admin.find().select('_id');
+        for (const admin of admins) {
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: admin._id,
+                recipient_type: 'admin',
+                title: `New Message from Partner: ${req.user.organization_name}`,
+                message: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+                type: 'info',
+                read: false,
+                related_id: thread._id,
+                metadata: {
+                    message_id: message._id,
+                    thread_id: thread._id
+                }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Message sent',
+            data: {
+                _id: message._id,
+                sender_name: message.sender_name,
+                content: message.content,
+                created_at: message.created_at
+            }
+        });
+    } catch (error) {
+        console.error('Send message error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Mark message as read (legacy support)
+app.post('/api/partner/messages/:id/read', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Find the message and its thread
+        const message = await Message.findById(id);
+        if (!message) {
+            return res.status(404).json({ success: false, message: 'Message not found' });
+        }
+        
+        // Check if already read by partner
+        const alreadyRead = message.read_by.some(r => 
+            r.user_id.toString() === req.user._id.toString() && 
+            r.user_type === 'partner'
+        );
+        
+        if (!alreadyRead) {
+            message.read_by.push({
+                user_id: req.user._id,
+                user_type: 'partner',
+                read_at: new Date()
+            });
+            await message.save();
+        }
+        
+        // Update thread unread count
+        const thread = await MessageThread.findById(message.thread_id);
+        if (thread) {
+            const unreadMessages = await Message.countDocuments({
+                thread_id: thread._id,
+                'read_by.user_id': { $ne: req.user._id }
+            });
+            if (thread.unread_count) {
+                thread.unread_count.partner = unreadMessages;
+                await thread.save();
+            }
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark message read error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 
 console.log('✅ Judge Management System Ready');
 
