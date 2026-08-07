@@ -574,12 +574,19 @@ const businessDocumentSchema = new mongoose.Schema({
 
 // ============ NOTIFICATION SCHEMA ============
 const notificationSchema = new mongoose.Schema({
-    business_id: { type: mongoose.Schema.Types.ObjectId, ref: 'BusinessUser', required: true },
+    recipient_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+    recipient_type: { type: String, enum: ['business', 'partner', 'admin'], required: true },
     title: { type: String, required: true },
     message: { type: String, required: true },
     type: { type: String, enum: ['info', 'success', 'warning', 'error'], default: 'info' },
+    priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
     read: { type: Boolean, default: false },
-    related_id: { type: mongoose.Schema.Types.ObjectId }
+    read_at: { type: Date },
+    archived: { type: Boolean, default: false },
+    scheduled_for: { type: Date },
+    sent_at: { type: Date, default: Date.now },
+    related_id: { type: mongoose.Schema.Types.ObjectId },
+    metadata: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
 // ============ ADD AD SCHEMA HERE (BEFORE creating models) ============
@@ -6296,6 +6303,139 @@ app.post('/api/partner/messages/:id/read', authenticate, authorize('partner'), a
         res.json({ success: true });
     } catch (error) {
         console.error('Mark message read error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+
+// ============ ENHANCED PARTNER NOTIFICATION ROUTES ============
+
+// Get all notifications with filtering
+app.get('/api/partner/notifications', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { limit = 50, filter = 'all' } = req.query;
+        let query = { recipient_id: req.user._id, recipient_type: 'partner' };
+        
+        if (filter === 'unread') {
+            query.read = false;
+        } else if (filter === 'archived') {
+            query.archived = true;
+        } else {
+            query.archived = { $ne: true };
+        }
+        
+        const notifications = await Notification.find(query)
+            .sort({ created_at: -1 })
+            .limit(parseInt(limit));
+        
+        const unreadCount = await Notification.countDocuments({
+            recipient_id: req.user._id,
+            recipient_type: 'partner',
+            read: false,
+            archived: { $ne: true }
+        });
+        
+        res.json({
+            success: true,
+            notifications,
+            unreadCount,
+            total: notifications.length
+        });
+    } catch (error) {
+        console.error('Get partner notifications error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Mark notification as read
+app.post('/api/partner/notifications/:id/read', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const notification = await Notification.findOne({
+            _id: id,
+            recipient_id: req.user._id,
+            recipient_type: 'partner'
+        });
+        
+        if (!notification) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
+        
+        notification.read = true;
+        notification.read_at = new Date();
+        await notification.save();
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark notification read error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Mark all notifications as read
+app.post('/api/partner/notifications/read-all', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        await Notification.updateMany(
+            {
+                recipient_id: req.user._id,
+                recipient_type: 'partner',
+                read: false,
+                archived: { $ne: true }
+            },
+            {
+                read: true,
+                read_at: new Date()
+            }
+        );
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Mark all read error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete notification
+app.delete('/api/partner/notifications/:id', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await Notification.findOneAndDelete({
+            _id: id,
+            recipient_id: req.user._id,
+            recipient_type: 'partner'
+        });
+        
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete notification error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Archive notification
+app.post('/api/partner/notifications/:id/archive', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const notification = await Notification.findOne({
+            _id: id,
+            recipient_id: req.user._id,
+            recipient_type: 'partner'
+        });
+        
+        if (!notification) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
+        
+        notification.archived = true;
+        await notification.save();
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Archive notification error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
