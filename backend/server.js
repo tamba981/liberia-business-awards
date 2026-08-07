@@ -6601,6 +6601,229 @@ app.post('/api/partner/notifications/read-all', authenticate, authorize('partner
 
 console.log('✅ Partner Dashboard API Routes Ready');
 
+
+// ============================================
+// ADMIN PARTNER MESSAGES MANAGEMENT ROUTES
+// ============================================
+
+// Get all partner message threads (admin)
+app.get('/api/admin/partner/messages/threads', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { status = 'active', search = '', page = 1, limit = 20 } = req.query;
+        let query = { status: status };
+        
+        if (search) {
+            query.subject = { $regex: search, $options: 'i' };
+        }
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const threads = await MessageThread.find(query)
+            .sort({ last_message_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await MessageThread.countDocuments(query);
+        
+        // Get unread count for admin
+        const adminId = req.user._id;
+        const threadsWithUnread = await Promise.all(threads.map(async (thread) => {
+            const unreadCount = await Message.countDocuments({
+                thread_id: thread._id,
+                'read_by.user_id': { $ne: adminId }
+            });
+            return {
+                ...thread.toObject(),
+                unread_count: unreadCount
+            };
+        }));
+        
+        res.json({
+            success: true,
+            threads: threadsWithUnread,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get admin threads error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get messages in a thread (admin)
+app.get('/api/admin/partner/messages/thread/:threadId', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { threadId } = req.params;
+        
+        const thread = await MessageThread.findById(threadId);
+        if (!thread) {
+            return res.status(404).json({ success: false, message: 'Thread not found' });
+        }
+        
+        const messages = await Message.find({ thread_id: threadId })
+            .sort({ created_at: 1 });
+        
+        // Mark messages as read for admin
+        await Message.updateMany(
+            { 
+                thread_id: threadId,
+                'read_by.user_id': { $ne: req.user._id }
+            },
+            { 
+                $push: { 
+                    read_by: { 
+                        user_id: req.user._id, 
+                        user_type: 'admin',
+                        read_at: new Date()
+                    } 
+                } 
+            }
+        );
+        
+        // Reset unread count for admin
+        thread.unread_count.admin = 0;
+        await thread.save();
+        
+        res.json({
+            success: true,
+            thread: {
+                _id: thread._id,
+                subject: thread.subject,
+                participants: thread.participants
+            },
+            messages: messages.map(m => ({
+                _id: m._id,
+                sender_id: m.sender_id,
+                sender_type: m.sender_type,
+                sender_name: m.sender_name,
+                content: m.content,
+                priority: m.priority,
+                created_at: m.created_at,
+                is_read: m.read_by.some(r => r.user_id.toString() === req.user._id.toString())
+            }))
+        });
+    } catch (error) {
+        console.error('Get admin thread messages error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Reply to thread (admin)
+app.post('/api/admin/partner/messages/thread/:threadId/reply', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { threadId } = req.params;
+        const { content } = req.body;
+        
+        if (!content) {
+            return res.status(400).json({ success: false, message: 'Message content is required' });
+        }
+        
+        const thread = await MessageThread.findById(threadId);
+        if (!thread) {
+            return res.status(404).json({ success: false, message: 'Thread not found' });
+        }
+        
+        // Create message
+        const message = new Message({
+            thread_id: threadId,
+            sender_id: req.user._id,
+            sender_type: 'admin',
+            sender_name: req.user.name || 'Administrator',
+            content: content,
+            read_by: [{ user_id: req.user._id, user_type: 'admin', read_at: new Date() }]
+        });
+        
+        await message.save();
+        
+        // Update thread
+        thread.last_message_at = new Date();
+        thread.last_message_preview = content.substring(0, 100);
+        thread.unread_count.partner = (thread.unread_count.partner || 0) + 1;
+        await thread.save();
+        
+        // Find partner in thread
+        const partnerParticipant = thread.participants.find(p => p.user_type === 'partner');
+        if (partnerParticipant) {
+            // Create notification for partner
+            const Notification = mongoose.model('Notification');
+            await Notification.create({
+                recipient_id: partnerParticipant.user_id,
+                recipient_type: 'partner',
+                title: `New Reply from Admin: ${thread.subject}`,
+                message: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+                type: 'info',
+                read: false,
+                related_id: thread._id,
+                metadata: {
+                    message_id: message._id,
+                    thread_id: thread._id
+                }
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Reply sent',
+            data: {
+                _id: message._id,
+                sender_name: message.sender_name,
+                content: message.content,
+                created_at: message.created_at
+            }
+        });
+    } catch (error) {
+        console.error('Admin reply error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete thread (admin)
+app.delete('/api/admin/partner/messages/thread/:threadId', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { threadId } = req.params;
+        
+        const thread = await MessageThread.findById(threadId);
+        if (!thread) {
+            return res.status(404).json({ success: false, message: 'Thread not found' });
+        }
+        
+        // Delete all messages in thread
+        await Message.deleteMany({ thread_id: threadId });
+        
+        // Delete thread
+        await thread.deleteOne();
+        
+        res.json({ success: true, message: 'Thread deleted' });
+    } catch (error) {
+        console.error('Delete thread error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Archive thread (admin)
+app.put('/api/admin/partner/messages/thread/:threadId/archive', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { threadId } = req.params;
+        
+        const thread = await MessageThread.findById(threadId);
+        if (!thread) {
+            return res.status(404).json({ success: false, message: 'Thread not found' });
+        }
+        
+        thread.status = 'archived';
+        await thread.save();
+        
+        res.json({ success: true, message: 'Thread archived' });
+    } catch (error) {
+        console.error('Archive thread error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============ ENHANCED PARTNER MESSAGES ROUTES ============
 
 // Get all message threads for partner
