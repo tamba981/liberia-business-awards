@@ -636,13 +636,20 @@ const sessionSchema = new mongoose.Schema({
     description: { type: String, default: '' },
     date: { type: Date, required: true },
     time: { type: String, required: true },
+    duration: { type: Number, default: 60 }, // minutes
+    platform: { type: String, enum: ['zoom', 'google_meet', 'teams', 'custom'], default: 'custom' },
     meeting_link: { type: String, default: '' },
+    meeting_id: { type: String, default: '' },
+    embed_url: { type: String, default: '' },
+    featured_image: { type: String, default: '' },
     max_attendees: { type: Number, default: 100 },
     attendees: { type: Number, default: 0 },
     status: { type: String, enum: ['scheduled', 'live', 'ended', 'cancelled'], default: 'scheduled' },
+    is_embedded: { type: Boolean, default: false },
     partner_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
     partner_name: { type: String, default: '' },
-    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' }
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
+    visibility: { type: String, enum: ['public', 'partner_only'], default: 'public' }
 }, { timestamps: true });
 
 // ============ MESSAGE THREAD SCHEMA ============
