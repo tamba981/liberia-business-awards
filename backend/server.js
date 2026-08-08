@@ -6072,13 +6072,38 @@ app.get('/api/partner/events', authenticate, authorize('partner'), async (req, r
     }
 });
 
-// Create partner event
-app.post('/api/partner/events', authenticate, authorize('partner'), async (req, res) => {
+// Create partner event - WITH FILE UPLOAD SUPPORT
+app.post('/api/partner/events', authenticate, authorize('partner'), 
+    handleUpload(upload.single('featured_image')), // <-- ADD THIS
+    async (req, res) => {
     try {
-        const { title, description, start_date, end_date, location, type, image_url, registration_link, status } = req.body;
+        // Handle both JSON and FormData
+        let eventData;
+        if (req.body.eventData) {
+            try {
+                eventData = typeof req.body.eventData === 'string' 
+                    ? JSON.parse(req.body.eventData) 
+                    : req.body.eventData;
+            } catch (e) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid event data format: ' + e.message
+                });
+            }
+        } else {
+            eventData = req.body;
+        }
+        
+        const { title, description, start_date, end_date, location, type, registration_link, status } = eventData;
         
         if (!title || !description || !start_date || !end_date) {
             return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        // Build image URL if file was uploaded
+        let image_url = eventData.image_url || '';
+        if (req.file) {
+            image_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         }
         
         const Event = mongoose.model('Event');
@@ -6087,11 +6112,12 @@ app.post('/api/partner/events', authenticate, authorize('partner'), async (req, 
             description,
             start_date: new Date(start_date),
             end_date: new Date(end_date),
-            location,
+            location: location || '',
             type: type || 'other',
             image_url,
-            registration_link,
+            registration_link: registration_link || '',
             status: status || 'draft',
+            approval_status: 'pending',
             partner_id: req.user._id,
             partner_name: req.user.organization_name,
             created_by: req.user._id
@@ -6099,10 +6125,35 @@ app.post('/api/partner/events', authenticate, authorize('partner'), async (req, 
         
         await event.save();
         
+        // Notify admin about new event
+        try {
+            const admins = await Admin.find().select('_id');
+            const Notification = mongoose.model('Notification');
+            for (const admin of admins) {
+                await Notification.create({
+                    recipient_id: admin._id,
+                    recipient_type: 'admin',
+                    title: `📅 New Event Pending Approval: ${title}`,
+                    message: `${req.user.organization_name} has created a new event "${title}". Please review and approve.`,
+                    type: 'info',
+                    read: false,
+                    related_id: event._id,
+                    metadata: { event_id: event._id, partner_id: req.user._id }
+                });
+            }
+        } catch (notifyError) {
+            console.warn('Could not send admin notification:', notifyError.message);
+        }
+        
         res.status(201).json({
             success: true,
-            message: 'Event created successfully',
-            event
+            message: 'Event created successfully and submitted for approval',
+            event: {
+                _id: event._id,
+                title: event.title,
+                status: event.status,
+                approval_status: event.approval_status
+            }
         });
     } catch (error) {
         console.error('Create partner event error:', error);
@@ -6167,24 +6218,58 @@ app.get('/api/partner/sessions', authenticate, authorize('partner'), async (req,
     }
 });
 
-// Create partner session
-app.post('/api/partner/sessions', authenticate, authorize('partner'), async (req, res) => {
+// Create partner session - WITH FILE UPLOAD SUPPORT
+app.post('/api/partner/sessions', authenticate, authorize('partner'),
+    handleUpload(upload.single('featured_image')), // <-- ADD THIS
+    async (req, res) => {
     try {
-        const { title, description, date, time, meeting_link, max_attendees, status } = req.body;
+        // Handle both JSON and FormData
+        let sessionData;
+        if (req.body.sessionData) {
+            try {
+                sessionData = typeof req.body.sessionData === 'string' 
+                    ? JSON.parse(req.body.sessionData) 
+                    : req.body.sessionData;
+            } catch (e) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid session data format: ' + e.message
+                });
+            }
+        } else {
+            sessionData = req.body;
+        }
         
-        if (!title || !date || !time) {
-            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        const { 
+            title, description, date, time, duration, platform, 
+            meeting_link, max_attendees, visibility, is_embedded, status 
+        } = sessionData;
+        
+        if (!title || !date || !time || !meeting_link) {
+            return res.status(400).json({ success: false, message: 'Missing required fields: title, date, time, and meeting link are required' });
+        }
+        
+        // Build featured image URL if file was uploaded
+        let featured_image = sessionData.featured_image || '';
+        if (req.file) {
+            featured_image = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         }
         
         const Session = mongoose.model('Session');
         const session = new Session({
             title,
-            description,
+            description: description || '',
             date: new Date(date),
             time,
+            duration: duration || 60,
+            platform: platform || 'custom',
             meeting_link,
+            featured_image,
             max_attendees: max_attendees || 100,
+            attendees: 0,
             status: status || 'scheduled',
+            is_embedded: is_embedded || false,
+            visibility: visibility || 'public',
             partner_id: req.user._id,
             partner_name: req.user.organization_name,
             created_by: req.user._id
@@ -6195,7 +6280,12 @@ app.post('/api/partner/sessions', authenticate, authorize('partner'), async (req
         res.status(201).json({
             success: true,
             message: 'Session created successfully',
-            session
+            session: {
+                _id: session._id,
+                title: session.title,
+                status: session.status,
+                featured_image: session.featured_image
+            }
         });
     } catch (error) {
         console.error('Create partner session error:', error);
@@ -6474,21 +6564,21 @@ app.post('/api/partner/notifications/read-all', authenticate, authorize('partner
     }
 });
 
-// Delete notification
+// ============ PARTNER NOTIFICATION DELETE - ADD IF MISSING ============
 app.delete('/api/partner/notifications/:id', authenticate, authorize('partner'), async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await Notification.findOneAndDelete({
+        const notification = await Notification.findOneAndDelete({
             _id: id,
             recipient_id: req.user._id,
             recipient_type: 'partner'
         });
         
-        if (!result) {
+        if (!notification) {
             return res.status(404).json({ success: false, message: 'Notification not found' });
         }
         
-        res.json({ success: true });
+        res.json({ success: true, message: 'Notification deleted' });
     } catch (error) {
         console.error('Delete notification error:', error);
         res.status(500).json({ success: false, message: error.message });
