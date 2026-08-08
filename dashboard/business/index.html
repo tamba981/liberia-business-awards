@@ -1450,62 +1450,7 @@
     </div>
 </div>         
 
-<!-- ============ EVENTS PAGE ============ -->
-<div id="businessEventsPage" class="page" style="display: none;">
-    <div class="content-section">
-        <div class="section-header">
-            <h2><i class="fas fa-calendar-alt"></i> Events</h2>
-            <div style="display: flex; gap: 10px;">
-                <select id="eventFilter" onchange="loadBusinessEvents(1)" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
-                    <option value="all">All Events</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="past">Past</option>
-                </select>
-                <button class="btn btn-secondary btn-sm" onclick="loadBusinessEvents(1)">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div id="businessEventsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
-            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                <i class="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading events...</p>
-            </div>
-        </div>
-        
-        <div class="pagination" id="businessEventsPagination"></div>
-    </div>
-</div>
 
-<!-- ============ LIVE SESSIONS PAGE ============ -->
-<div id="businessSessionsPage" class="page" style="display: none;">
-    <div class="content-section">
-        <div class="section-header">
-            <h2><i class="fas fa-video"></i> Live Sessions</h2>
-            <div style="display: flex; gap: 10px;">
-                <select id="sessionFilter" onchange="loadBusinessSessions(1)" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 8px;">
-                    <option value="all">All Sessions</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="live">Live Now</option>
-                    <option value="ended">Ended</option>
-                </select>
-                <button class="btn btn-secondary btn-sm" onclick="loadBusinessSessions(1)">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div id="businessSessionsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
-            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                <i class="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading sessions...</p>
-            </div>
-        </div>
-        
-        <div class="pagination" id="businessSessionsPagination"></div>
-    </div>
-</div>
              
 <!-- AI Business Assistant Page -->
 <div id="aiAssistantPage" class="page" style="display: none;">
@@ -2253,12 +2198,29 @@
         // INITIALIZATION
         // ============================================
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🏢 Business Dashboard Initializing...');
-            const authenticated = await checkAuth();
-            if (!authenticated) { window.location.href = '../login.html'; return; }
-            loadSettings(); setupUI(); await loadAllData(); setupNavigation(); startSessionMonitoring(); setupFileUpload();
-            console.log('✅ Business Dashboard Ready');
-        });
+    console.log('🏢 Business Dashboard Initializing...');
+    const authenticated = await checkAuth();
+    if (!authenticated) { window.location.href = '../login.html'; return; }
+    loadSettings(); setupUI(); await loadAllData(); setupNavigation(); startSessionMonitoring(); setupFileUpload();
+    
+    // Ensure the dashboard page is visible by default
+    const dashboardPage = document.getElementById('dashboardPage');
+    if (dashboardPage) {
+        dashboardPage.style.display = 'block';
+    }
+    // Hide all other pages
+    document.querySelectorAll('.page').forEach(p => {
+        if (p.id !== 'dashboardPage') {
+            p.style.display = 'none';
+        }
+    });
+    // Make sure the active menu item is Dashboard
+    document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+    const dashboardMenuItem = document.querySelector('.menu-item[data-page="dashboard"]');
+    if (dashboardMenuItem) dashboardMenuItem.classList.add('active');
+    
+    console.log('✅ Business Dashboard Ready');
+});
 
 async function checkAuth() {
     const token = localStorage.getItem('lba_auth_token');
@@ -2351,21 +2313,42 @@ async function checkAuth() {
         }
 
         function switchPage(page) {
+    console.log('🔄 Switching to page:', page);
+    
     // Hide all pages
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     
-    // Handle special case for ai-assistant...
-    let pageId = page === 'ai-assistant' ? 'aiAssistantPage' : page + 'Page';
-    const targetPage = document.getElementById(pageId);
+    // Map page names to element IDs
+    const pageMap = {
+        'dashboard': 'dashboardPage',
+        'profile': 'profilePage',
+        'nominations': 'nominationsPage',
+        'spotlight': 'spotlightPage',
+        'documents': 'documentsPage',
+        'opportunities': 'opportunitiesPage',
+        'notifications': 'notificationsPage',
+        'settings': 'settingsPage',
+        'ai-assistant': 'aiAssistantPage',
+        'business-events': 'businessEventsPage',
+        'business-sessions': 'businessSessionsPage'
+    };
     
-    if (targetPage) {
-        targetPage.style.display = 'block';
-    } else {
-        console.error('Page not found:', pageId);
+    const pageId = pageMap[page];
+    if (!pageId) {
+        console.error('❌ Unknown page:', page);
         return;
     }
     
-    // Update active menu item...
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.style.display = 'block';
+        console.log('✅ Showing page:', pageId);
+    } else {
+        console.error('❌ Page not found:', pageId);
+        return;
+    }
+    
+    // Update active menu item
     document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
     const activeMenuItem = document.querySelector(`.menu-item[data-page="${page}"]`);
     if (activeMenuItem) activeMenuItem.classList.add('active');
@@ -2384,18 +2367,30 @@ async function checkAuth() {
         'business-events': 'Events',
         'business-sessions': 'Live Sessions'
     };
-    document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
+    const titleEl = document.getElementById('pageTitle');
+    if (titleEl) {
+        titleEl.textContent = titles[page] || 'Dashboard';
+    }
     appState.currentPage = page;
     
     // Load page-specific data
-    if (page === 'nominations' && appState.nominations.data.length === 0) loadNominations();
-    else if (page === 'documents' && appState.documents.data.length === 0) loadDocuments();
-    else if (page === 'notifications') loadNotifications();
-    else if (page === 'opportunities') loadOpportunities(1);
-    else if (page === 'spotlight') loadBusinessSpotlightStories(); 
-    else if (page === 'ai-assistant') initAIAssistant();
-    else if (page === 'business-events') loadBusinessEvents(1);
-    else if (page === 'business-sessions') loadBusinessSessions(1);
+    if (page === 'nominations' && appState.nominations.data.length === 0) {
+        loadNominations();
+    } else if (page === 'documents' && appState.documents.data.length === 0) {
+        loadDocuments();
+    } else if (page === 'notifications') {
+        loadNotifications();
+    } else if (page === 'opportunities') {
+        loadOpportunities(1);
+    } else if (page === 'spotlight') {
+        loadBusinessSpotlightStories(1);
+    } else if (page === 'ai-assistant') {
+        initAIAssistant();
+    } else if (page === 'business-events') {
+        loadBusinessEvents(1);
+    } else if (page === 'business-sessions') {
+        loadBusinessSessions(1);
+    }
 }
 
         async function apiRequest(endpoint, options = {}) {
@@ -3706,7 +3701,35 @@ async function submitApplication() {
     }
 }
 
+// Force refresh events when switching to events page
+function forceRefreshEvents() {
+    console.log('🔄 Force refreshing events...');
+    const container = document.getElementById('businessEventsList');
+    if (container) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading events...</p>
+            </div>
+        `;
+    }
+    loadBusinessEvents(1);
+}
 
+// Force refresh sessions when switching to sessions page
+function forceRefreshSessions() {
+    console.log('🔄 Force refreshing sessions...');
+    const container = document.getElementById('businessSessionsList');
+    if (container) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading sessions...</p>
+            </div>
+        `;
+    }
+    loadBusinessSessions(1);
+}
    // ============================================
 // BUSINESS EVENTS FUNCTIONS
 // ============================================
@@ -3718,7 +3741,13 @@ let currentEventId = null;
 
 async function loadBusinessEvents(page = 1) {
     const container = document.getElementById('businessEventsList');
-    const filter = document.getElementById('eventFilter')?.value || 'all';
+    if (!container) {
+        console.error('❌ businessEventsList container not found');
+        return;
+    }
+    
+    const filterEl = document.getElementById('eventFilter');
+    const filter = filterEl ? filterEl.value : 'all';
     
     businessEventsPage = page;
     
@@ -3730,16 +3759,40 @@ async function loadBusinessEvents(page = 1) {
     `;
     
     try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                    <p style="margin-top: 15px;">Please login again</p>
+                </div>
+            `;
+            return;
+        }
+        
         let url = `${BACKEND_URL}/business/events?page=${page}&limit=12`;
         if (filter !== 'all') {
             url += `&filter=${filter}`;
         }
         
-        const token = localStorage.getItem('lba_auth_token');
+        console.log('📡 Fetching events:', url);
+        
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (response.status === 401) {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                    <p style="margin-top: 15px;">Session expired. Please refresh the page.</p>
+                </div>
+            `;
+            return;
+        }
+        
         const data = await response.json();
+        console.log('📡 Events response:', data);
         
         if (data.success) {
             businessEventsData = data.events || [];
@@ -3747,17 +3800,15 @@ async function loadBusinessEvents(page = 1) {
             displayBusinessEvents();
             updateBusinessEventsPagination();
             
-            // Update badge count
             const badge = document.getElementById('businessEventsCount');
             if (badge) {
-                badge.textContent = data.events?.length || 0;
+                badge.textContent = businessEventsData.length;
             }
         } else {
             container.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
                     <i class="fas fa-calendar-times" style="font-size: 48px; color: #cbd5e0;"></i>
-                    <p style="margin-top: 15px;">No events available</p>
-                    <p style="font-size: 13px; color: #64748b;">Check back later for new events</p>
+                    <p style="margin-top: 15px;">${data.message || 'No events available'}</p>
                 </div>
             `;
         }
@@ -3766,7 +3817,10 @@ async function loadBusinessEvents(page = 1) {
         container.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
                 <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
-                <p style="margin-top: 15px;">Error loading events</p>
+                <p style="margin-top: 15px;">Error loading events: ${error.message}</p>
+                <button class="btn btn-primary btn-sm" onclick="loadBusinessEvents(${businessEventsPage})" style="margin-top: 10px;">
+                    <i class="fas fa-sync-alt"></i> Try Again
+                </button>
             </div>
         `;
     }
@@ -4001,7 +4055,13 @@ let embeddedSessionInterval = null;
 
 async function loadBusinessSessions(page = 1) {
     const container = document.getElementById('businessSessionsList');
-    const filter = document.getElementById('sessionFilter')?.value || 'all';
+    if (!container) {
+        console.error('❌ businessSessionsList container not found');
+        return;
+    }
+    
+    const filterEl = document.getElementById('sessionFilter');
+    const filter = filterEl ? filterEl.value : 'all';
     
     businessSessionsPage = page;
     
@@ -4013,16 +4073,40 @@ async function loadBusinessSessions(page = 1) {
     `;
     
     try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                    <p style="margin-top: 15px;">Please login again</p>
+                </div>
+            `;
+            return;
+        }
+        
         let url = `${BACKEND_URL}/business/sessions?page=${page}&limit=12`;
         if (filter !== 'all') {
             url += `&filter=${filter}`;
         }
         
-        const token = localStorage.getItem('lba_auth_token');
+        console.log('📡 Fetching sessions:', url);
+        
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (response.status === 401) {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                    <p style="margin-top: 15px;">Session expired. Please refresh the page.</p>
+                </div>
+            `;
+            return;
+        }
+        
         const data = await response.json();
+        console.log('📡 Sessions response:', data);
         
         if (data.success) {
             businessSessionsData = data.sessions || [];
@@ -4030,7 +4114,6 @@ async function loadBusinessSessions(page = 1) {
             displayBusinessSessions();
             updateBusinessSessionsPagination();
             
-            // Update badge count
             const badge = document.getElementById('businessSessionsCount');
             if (badge) {
                 const liveCount = businessSessionsData.filter(s => s.status === 'live').length;
@@ -4041,7 +4124,7 @@ async function loadBusinessSessions(page = 1) {
             container.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
                     <i class="fas fa-video-slash" style="font-size: 48px; color: #cbd5e0;"></i>
-                    <p style="margin-top: 15px;">No sessions available</p>
+                    <p style="margin-top: 15px;">${data.message || 'No sessions available'}</p>
                 </div>
             `;
         }
@@ -4050,7 +4133,10 @@ async function loadBusinessSessions(page = 1) {
         container.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
                 <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
-                <p style="margin-top: 15px;">Error loading sessions</p>
+                <p style="margin-top: 15px;">Error loading sessions: ${error.message}</p>
+                <button class="btn btn-primary btn-sm" onclick="loadBusinessSessions(${businessSessionsPage})" style="margin-top: 10px;">
+                    <i class="fas fa-sync-alt"></i> Try Again
+                </button>
             </div>
         `;
     }
@@ -5519,7 +5605,7 @@ document.getElementById('submitAdForm')?.addEventListener('submit', async functi
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE}/business/ads/upload`, {
+        const response = await fetch(`${BACKEND_URL}/business/ads/upload`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
