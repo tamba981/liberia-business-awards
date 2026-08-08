@@ -1312,49 +1312,7 @@
         </div>
     </div>
 
-   <!-- ============ DOCUMENTS PAGE ============ -->
-<div id="documentsPage" class="page">
-    <div class="content-section" style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 5px 30px rgba(0,0,0,0.08);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px;">
-            <h2><i class="fas fa-file-alt"></i> My Documents</h2>
-            <button class="btn btn-primary" onclick="showUploadDocumentModal()">
-                <i class="fas fa-upload"></i> Upload Document
-            </button>
-        </div>
-        
-        <!-- Document Filters -->
-        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-            <select id="documentTypeFilter" onchange="loadDocuments()" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; font-family: 'Poppins', sans-serif;">
-                <option value="all">All Types</option>
-                <option value="registration">Registration</option>
-                <option value="certificate">Certificate</option>
-                <option value="proposal">Proposal</option>
-                <option value="agreement">Agreement</option>
-                <option value="presentation">Presentation</option>
-                <option value="financial">Financial</option>
-                <option value="legal">Legal</option>
-                <option value="other">Other</option>
-            </select>
-            <select id="documentStatusFilter" onchange="loadDocuments()" style="padding: 8px 15px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; font-family: 'Poppins', sans-serif;">
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-            </select>
-            <button class="btn btn-secondary btn-sm" onclick="loadDocuments()">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-        </div>
-        
-        <div class="documents-grid" id="partnerDocumentsGrid">
-            <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                <i class="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading documents...</p>
-            </div>
-        </div>
-        <div class="pagination" id="documentsPagination"></div>
-    </div>
-</div>
+   
    
     <!-- ============ TOAST CONTAINER ============ -->
     <div class="toast-container" id="toastContainer"></div>
@@ -1650,7 +1608,64 @@
             </div>
         </div>
     </div>
-    
+
+   <!-- ============ UPLOAD DOCUMENT MODAL ============ -->
+<div class="modal" id="uploadDocumentModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-upload"></i> Upload Document</h2>
+            <button class="modal-close" onclick="hideModal('uploadDocumentModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="uploadDocumentForm">
+                <div class="form-group">
+                    <label>Document Name *</label>
+                    <input type="text" id="docName" required placeholder="e.g., Business License">
+                </div>
+                <div class="form-group">
+                    <label>Document Type</label>
+                    <select id="docType">
+                        <option value="registration">Registration</option>
+                        <option value="certificate">Certificate</option>
+                        <option value="proposal">Proposal</option>
+                        <option value="agreement">Agreement</option>
+                        <option value="presentation">Presentation</option>
+                        <option value="financial">Financial</option>
+                        <option value="legal">Legal</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>File *</label>
+                    <div class="file-upload-wrapper">
+                        <div class="file-upload-area" onclick="document.getElementById('docFileInput').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to upload or drag & drop</p>
+                            <p style="font-size: 12px; color: #94a3b8;">Supports PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
+                        </div>
+                        <input type="file" id="docFileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="previewDocument(event)">
+                    </div>
+                    <div id="docFileInfo" style="display: none; margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 8px;">
+                        <span id="docFileName"></span>
+                        <button class="btn btn-sm btn-danger" onclick="clearDocumentFile()" style="margin-left: 10px;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="error-message" id="docUploadError" style="display: none; color: #EF4444;"></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="hideModal('uploadDocumentModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="uploadDocument()">
+                <i class="fas fa-upload"></i> Upload Document
+            </button>
+        </div> 
+    </div>
+</div>
+   
     <!-- ============ CHANGE PASSWORD MODAL ============ -->
     <div class="modal" id="passwordModal">
         <div class="modal-content" style="max-width: 500px;">
@@ -1687,64 +1702,7 @@
         </div>
     </div>
     
-    <script>
 
-       <!-- ============ UPLOAD DOCUMENT MODAL ============ -->
-    <div class="modal" id="uploadDocumentModal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
-                <h2><i class="fas fa-upload"></i> Upload Document</h2>
-                <button class="modal-close" onclick="hideModal('uploadDocumentModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="uploadDocumentForm">
-                    <div class="form-group">
-                        <label>Document Name *</label>
-                        <input type="text" id="docName" required placeholder="e.g., Business License">
-                    </div>
-                    <div class="form-group">
-                        <label>Document Type</label>
-                        <select id="docType">
-                            <option value="registration">Registration</option>
-                            <option value="certificate">Certificate</option>
-                            <option value="proposal">Proposal</option>
-                            <option value="agreement">Agreement</option>
-                            <option value="presentation">Presentation</option>
-                            <option value="financial">Financial</option>
-                            <option value="legal">Legal</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>File *</label>
-                        <div class="file-upload-wrapper">
-                            <div class="file-upload-area" onclick="document.getElementById('docFileInput').click()">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Click to upload or drag & drop</p>
-                                <p style="font-size: 12px; color: #94a3b8;">Supports PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
-                            </div>
-                            <input type="file" id="docFileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="previewDocument(event)">
-                        </div>
-                        <div id="docFileInfo" style="display: none; margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 8px;">
-                            <span id="docFileName"></span>
-                            <button class="btn btn-sm btn-danger" onclick="clearDocumentFile()" style="margin-left: 10px;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="error-message" id="docUploadError" style="display: none; color: #EF4444;"></div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="hideModal('uploadDocumentModal')">Cancel</button>
-                <button class="btn btn-primary" onclick="uploadDocument()">
-                    <i class="fas fa-upload"></i> Upload Document
-                </button>
-            </div>
-        </div>
-    </div>
 
 // ============================================
 // CONFIGURATION - Environment Aware
