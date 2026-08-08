@@ -2050,40 +2050,93 @@
                 email: 'admin@liberiabusinessawardslr.com'
             }
         };
-
+         // ============================================
+// TOKEN VALIDATION
+// ============================================
+async function validateAdminToken() {
+    const token = localStorage.getItem('lba_auth_token');
+    const userRole = localStorage.getItem('lba_user_role');
+    
+    if (!token || userRole !== 'admin') {
+        console.warn('🔒 No valid admin token found');
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/auth/verify`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('lba_auth_token');
+                localStorage.removeItem('lba_user_data');
+                localStorage.removeItem('lba_user_role');
+                return false;
+            }
+            return false;
+        }
+        
+        const data = await response.json();
+        return data.success && data.user && data.user.role === 'admin';
+    } catch (error) {
+        console.error('Token validation error:', error);
+        return false;
+    }
+}
+        
         // ============================================
         // INITIALIZATION
         // ============================================
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Admin Dashboard Initializing...');
-            
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Admin Dashboard Initializing...');
+    
+    try {
+        // Validate token first
+        const isValid = await validateAdminToken();
+        if (!isValid) {
+            console.warn('🔒 Invalid admin token, redirecting to login');
+            window.location.href = '../login.html';
+            return;
+        }
+        
+        // Load user data from localStorage
+        const userData = localStorage.getItem('lba_user_data');
+        if (userData) {
             try {
-                // Check authentication
-                await checkAuthentication();
-                
-                // Setup UI components
-                setupUserInterface();
+                const user = JSON.parse(userData);
+                dashboardState.user = user;
+                updateUserDisplay();
+            } catch (e) {}
+        }
+        
+        // Setup UI components
+        setupUserInterface();
 
-                // Setup image preview for featured image
-                setupImagePreview();
-                
-                // Load initial data
-                await loadInitialData();
-                
-                // Setup periodic updates
-                setupPeriodicUpdates();
-                
-                // Update UI state
-                updateConnectionStatus(true);
-                
-                console.log('✅ Dashboard Ready');
-                
-            } catch (error) {
-                console.error('❌ Dashboard initialization failed:', error);
-                showNotification('Failed to initialize dashboard. Using limited functionality.', 'danger');
-                useFallbackData();
-            }
-        });
+        // Setup image preview for featured image
+        setupImagePreview();
+        
+        // Load initial data
+        await loadInitialData();
+        
+        // Setup periodic updates
+        setupPeriodicUpdates();
+        
+        // Update UI state
+        updateConnectionStatus(true);
+        
+        console.log('✅ Dashboard Ready');
+        
+    } catch (error) {
+        console.error('❌ Dashboard initialization failed:', error);
+        showNotification('Failed to initialize dashboard. Using limited functionality.', 'danger');
+        useFallbackData();
+    }
+});
 
         // ============================================
         // AUTHENTICATION
@@ -12049,26 +12102,51 @@ async function loadPartners(page = 1) {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            // Try to refresh token or redirect
+            console.warn('No token found, redirecting to login');
+            window.location.href = '../login.html';
+            return;
+        }
+        
         let url = `${API_BASE}/admin/partners?page=${page}&limit=20`;
         if (status !== 'all') {
             url += `&status=${status}`;
         }
         
+        console.log('📡 Fetching partners from:', url);
+        
         const response = await fetch(url, {
             method: 'GET',
             headers: { 
                 'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
         });
         
+        console.log('📡 Response status:', response.status);
+        
         if (response.status === 401) {
-            showNotification('Session expired. Please refresh the page and log in again.', 'error');
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Session expired. Please <a href="#" onclick="location.reload()">refresh the page</a> and log in again.</td></tr>';
+            // Token expired or invalid
+            localStorage.removeItem('lba_auth_token');
+            localStorage.removeItem('lba_user_data');
+            localStorage.removeItem('lba_user_role');
+            showNotification('Session expired. Please log in again.', 'error');
+            setTimeout(() => {
+                window.location.href = '../login.html';
+            }, 2000);
+            return;
+        }
+        
+        if (response.status === 403) {
+            showNotification('Access denied. Please contact the administrator.', 'error');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Access denied. Please contact the administrator.</td></tr>';
             return;
         }
         
         const data = await response.json();
+        console.log('📥 Partners data received:', data);
         
         if (data.success) {
             partnersData = data.partners || [];
@@ -12078,14 +12156,14 @@ async function loadPartners(page = 1) {
             updatePartnerStats(partnersData);
             document.getElementById('partnersCount').textContent = partnersData.length;
         } else {
-            tbody.innerHTML = `<td><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${data.message || 'Failed to load partners'}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${data.message || 'Failed to load partners'}</td></tr>`;
         }
     } catch (error) {
         console.error('Error loading partners:', error);
-        tbody.innerHTML = `<td><td colspan="7" style="text-align: center; color: #EF4444;">Error loading partners: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error loading partners: ${error.message}</td></tr>`;
     }
 }
-
+        
 function displayPartners(partners) {
     const tbody = document.getElementById('partnersTableBody');
     if (!tbody) return;
@@ -15326,8 +15404,25 @@ function displayPartnerNotifications() {
     }
     
     tbody.innerHTML = partnerNotificationsData.map(notif => {
-        const partner = notif.recipient_id || {};
-        const partnerName = partner.organization_name || 'Unknown Partner';
+        // Handle both populated and unpopulated recipient_id
+        let partnerName = 'Unknown Partner';
+        let partnerEmail = '';
+        
+        if (notif.recipient_id) {
+            if (typeof notif.recipient_id === 'object' && notif.recipient_id !== null) {
+                // Populated object
+                partnerName = notif.recipient_id.organization_name || 'Unknown Partner';
+                partnerEmail = notif.recipient_id.email || '';
+            } else if (typeof notif.recipient_id === 'string') {
+                // Just an ID - we need to look it up from the partners list
+                const partner = partnersData.find(p => p._id === notif.recipient_id);
+                if (partner) {
+                    partnerName = partner.organization_name || 'Unknown Partner';
+                    partnerEmail = partner.email || '';
+                }
+            }
+        }
+        
         const date = notif.created_at ? new Date(notif.created_at) : null;
         const dateStr = date ? date.toLocaleString() : 'Recent';
         
@@ -15357,7 +15452,7 @@ function displayPartnerNotifications() {
         
         return `
             <tr>
-                <td><strong>${escapeHtml(partnerName)}</strong></td>
+                <td><strong>${escapeHtml(partnerName)}</strong>${partnerEmail ? `<br><small style="color: #64748b;">${escapeHtml(partnerEmail)}</small>` : ''}</td>
                 <td><strong>${escapeHtml(notif.title)}</strong></td>
                 <td>${escapeHtml(notif.message?.substring(0, 80))}${notif.message?.length > 80 ? '...' : ''}</td>
                 <td><i class="fas fa-${typeIcon}" style="color: ${typeColor};"></i> ${notif.type}</td>
@@ -16437,13 +16532,23 @@ function showUploadPartnerDocumentModal(partnerId, existingDocId) {
                 </div>
                 <div class="modal-body">
                     <form id="uploadPartnerDocForm">
-                        <input type="hidden" id="uploadPartnerId" value="${partnerId}">
                         <input type="hidden" id="uploadExistingDocId" value="${existingDocId || ''}">
+                        
+                        <div class="form-group">
+                            <label>Select Partner *</label>
+                            <select id="uploadPartnerId" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
+                                <option value="">-- Select Partner --</option>
+                                ${partnersData.map(p => `
+                                    <option value="${p._id}" ${p._id === partnerId ? 'selected' : ''}>${escapeHtml(p.organization_name)} (${escapeHtml(p.email)})</option>
+                                `).join('')}
+                            </select>
+                        </div>
                         
                         <div class="form-group">
                             <label>Document Name *</label>
                             <input type="text" id="uploadDocName" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
                         </div>
+                        
                         <div class="form-group">
                             <label>Document Type</label>
                             <select id="uploadDocType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
@@ -16457,10 +16562,13 @@ function showUploadPartnerDocumentModal(partnerId, existingDocId) {
                                 <option value="other">Other</option>
                             </select>
                         </div>
+                        
                         <div class="form-group">
                             <label>File *</label>
                             <input type="file" id="uploadDocFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                            <small style="color: #64748b;">Max file size: 10MB</small>
                         </div>
+                        
                         <div class="error-message" id="uploadDocError" style="display: none; color: #EF4444;"></div>
                     </form>
                 </div>
