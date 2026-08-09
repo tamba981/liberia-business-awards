@@ -2136,6 +2136,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         showNotification('Failed to initialize dashboard. Using limited functionality.', 'danger');
         useFallbackData();
     }
+    
+    // Setup file preview for upload document modal (ADD THIS)
+    // Use event delegation since the modal is created dynamically
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'uploadDocFile') {
+            previewUploadDocument(e);
+        }
+    });
 });
 
         // ============================================
@@ -13031,108 +13039,312 @@ async function deleteUser(id) {
 }
         
 // ============================================
-// ANALYTICS
+// ANALYTICS (FIXED)
 // ============================================
 async function showAnalyticsModal() {
     hideAllModals();
-    document.getElementById('analyticsModal').classList.add('active');
+    
+    let modal = document.getElementById('analyticsModal');
+    if (!modal) {
+        createAnalyticsModal();
+        modal = document.getElementById('analyticsModal');
+    }
+    
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    const content = document.getElementById('analyticsContent');
+    if (content) {
+        content.innerHTML = `
+            <div style="text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading analytics...</p>
+            </div>
+        `;
+    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/analytics`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
+        if (!token) {
+            throw new Error('Authentication required');
+        }
         
-        if (data.success) {
+        // FIXED: Use API_BASE directly, not API_BASE.replace('/api', '')
+        const response = await fetch(`${API_BASE}/admin/analytics`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.status === 401) {
+            showNotification('Session expired. Please login again.', 'error');
+            setTimeout(() => {
+                window.location.href = '../login.html';
+            }, 1500);
+            return;
+        }
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('❌ Non-JSON response:', text.substring(0, 200));
+            throw new Error('Server returned an invalid response');
+        }
+        
+        const data = await response.json();
+        console.log('📊 Analytics data:', data);
+        
+        if (data.success && data.analytics) {
             displayAnalytics(data.analytics);
+        } else {
+            content.innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                    <p>${data.message || 'Failed to load analytics'}</p>
+                    <button class="sheet-btn" onclick="showAnalyticsModal()" style="margin-top: 15px;">
+                        <i class="fas fa-sync-alt"></i> Retry
+                    </button>
+                </div>
+            `;
         }
     } catch (error) {
-        console.error('Error loading analytics:', error);
+        console.error('❌ Error loading analytics:', error);
+        content.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p>Error loading analytics</p>
+                <p style="font-size: 14px; color: #64748b; margin-top: 10px;">${escapeHtml(error.message)}</p>
+                <button class="sheet-btn" onclick="showAnalyticsModal()" style="margin-top: 15px;">
+                    <i class="fas fa-sync-alt"></i> Retry
+                </button>
+            </div>
+        `;
     }
 }
 
+// Create analytics modal if not exists
+function createAnalyticsModal() {
+    const modalHTML = `
+    <div class="modal" id="analyticsModal">
+        <div class="modal-content" style="max-width: 1200px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
+                <h2><i class="fas fa-chart-bar"></i> Analytics Dashboard</h2>
+                <button class="modal-close" onclick="hideModal('analyticsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="analyticsContent">
+                    <div style="text-align: center; padding: 50px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Loading analytics...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Display analytics data
 function displayAnalytics(analytics) {
     const content = document.getElementById('analyticsContent');
-    const o = analytics.overview;
+    if (!content) return;
     
-    content.innerHTML = `
+    const o = analytics.overview || {};
+    
+    // Build stats HTML
+    const statsHTML = `
         <div class="stats-grid" style="margin-bottom: 30px;">
             <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalBusinesses}</h3>
+                <h3>${o.totalBusinesses || 0}</h3>
                 <p>Total Businesses</p>
+                <small style="color: #64748b;">${o.pendingBusinesses || 0} pending | ${o.approvedBusinesses || 0} approved</small>
             </div>
             <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalNominations}</h3>
+                <h3>${o.totalNominations || 0}</h3>
                 <p>Nominations</p>
+                <small style="color: #64748b;">${o.pendingNominations || 0} pending | ${o.approvedNominations || 0} approved</small>
             </div>
             <div class="stat-card" style="padding: 20px;">
-                <h3>${o.pendingBusinesses}</h3>
-                <p>Pending</p>
+                <h3>${o.totalPartners || 0}</h3>
+                <p>Partners</p>
+                <small style="color: #64748b;">${o.activePartners || 0} active | ${o.pendingPartners || 0} pending</small>
             </div>
             <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalUsers}</h3>
-                <p>System Users</p>
+                <h3>${o.totalVotes || 0}</h3>
+                <p>Votes</p>
+                <small style="color: #64748b;">${o.totalVoters || 0} unique voters</small>
             </div>
         </div>
         
-        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.featuredBusinesses}</h3>
-                <p>Featured</p>
-            </div>
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalAnnouncements}</h3>
-                <p>Announcements</p>
-            </div>
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalJudges}</h3>
+        <div class="stats-grid" style="margin-bottom: 30px; grid-template-columns: repeat(4, 1fr);">
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalJudges || 0}</h3>
                 <p>Judges</p>
+                <small style="color: #64748b;">${o.activeJudges || 0} active</small>
+            </div>
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalAnnouncements || 0}</h3>
+                <p>Announcements</p>
+                <small style="color: #64748b;">${o.publishedAnnouncements || 0} published</small>
+            </div>
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalPartnerEvents || 0}</h3>
+                <p>Events</p>
+                <small style="color: #64748b;">${o.pendingPartnerEvents || 0} pending</small>
+            </div>
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalPartnerSessions || 0}</h3>
+                <p>Sessions</p>
+                <small style="color: #64748b;">${o.livePartnerSessions || 0} live</small>
+            </div>
+        </div>
+        
+        <div class="stats-grid" style="margin-bottom: 30px; grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalPartnerDocuments || 0}</h3>
+                <p>Documents</p>
+                <small style="color: #64748b;">${o.pendingPartnerDocuments || 0} pending</small>
+            </div>
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalCategories || 0}</h3>
+                <p>Categories</p>
+                <small style="color: #64748b;">${o.activeCategories || 0} active</small>
             </div>
         </div>
     `;
-}
-
-// ============================================
-// REPORTS
-// ============================================
-function showReportsModal() {
-    hideAllModals();
-    document.getElementById('reportsModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-async function generateReport(type, format) {
-    try {
-        const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/reports/generate`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ type, format })
-        });
-        
-        if (format === 'csv') {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${type}-report.csv`;
-            a.click();
-        } else {
-            const data = await response.json();
-            console.log(data);
-        }
-        
-        showNotification(`${type} report generated`, 'success');
-    } catch (error) {
-        showNotification('Error generating report', 'error');
+    
+    // Build charts HTML
+    let chartsHTML = '';
+    
+    // Monthly registrations
+    if (analytics.charts && analytics.charts.monthlyRegistrations && analytics.charts.monthlyRegistrations.length > 0) {
+        const maxCount = Math.max(...analytics.charts.monthlyRegistrations.map(m => m.count));
+        chartsHTML += `
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h4>Monthly Registrations</h4>
+                <div style="margin-top: 15px;">
+                    ${analytics.charts.monthlyRegistrations.map(m => `
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                                <span>${escapeHtml(m.month)} ${m.year}</span>
+                                <span>${m.count}</span>
+                            </div>
+                            <div style="background: #f1f5f9; height: 20px; border-radius: 10px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #FF0000, #87CEEB); width: ${maxCount > 0 ? (m.count / maxCount * 100) : 0}%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
     }
+    
+    // Nominations by category
+    if (analytics.charts && analytics.charts.nominationsByCategory && analytics.charts.nominationsByCategory.length > 0) {
+        const maxCount = Math.max(...analytics.charts.nominationsByCategory.map(c => c.count));
+        chartsHTML += `
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h4>Nominations by Category</h4>
+                <div style="margin-top: 15px;">
+                    ${analytics.charts.nominationsByCategory.slice(0, 10).map(c => `
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                                <span>${escapeHtml(c.category)}</span>
+                                <span>${c.count}</span>
+                            </div>
+                            <div style="background: #f1f5f9; height: 16px; border-radius: 8px; overflow: hidden;">
+                                <div style="background: #FF0000; width: ${maxCount > 0 ? (c.count / maxCount * 100) : 0}%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Businesses by sector
+    if (analytics.charts && analytics.charts.businessesBySector && analytics.charts.businessesBySector.length > 0) {
+        const maxCount = Math.max(...analytics.charts.businessesBySector.map(c => c.count));
+        chartsHTML += `
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h4>Businesses by Sector</h4>
+                <div style="margin-top: 15px;">
+                    ${analytics.charts.businessesBySector.slice(0, 10).map(c => `
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                                <span>${escapeHtml(c.sector)}</span>
+                                <span>${c.count}</span>
+                            </div>
+                            <div style="background: #f1f5f9; height: 16px; border-radius: 8px; overflow: hidden;">
+                                <div style="background: #87CEEB; width: ${maxCount > 0 ? (c.count / maxCount * 100) : 0}%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Recent activity
+    let recentHTML = '';
+    if (analytics.recent && analytics.recent.length > 0) {
+        const iconMap = {
+            'business': 'building',
+            'partner': 'handshake',
+            'nomination': 'award',
+            'event': 'calendar',
+            'session': 'video',
+            'document': 'file'
+        };
+        recentHTML = `
+            <div style="background: white; padding: 20px; border-radius: 12px;">
+                <h4>Recent Activity</h4>
+                <div style="margin-top: 15px;">
+                    ${analytics.recent.slice(0, 10).map(activity => `
+                        <div style="border-bottom: 1px solid #f1f5f9; padding: 10px 0; display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 35px; height: 35px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-${iconMap[activity.type] || 'file-alt'}" style="color: #FF0000; font-size: 14px;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <p style="font-weight: 600; margin: 0; font-size: 14px;">${escapeHtml(activity.title)}</p>
+                                <p style="margin: 0; font-size: 12px; color: #64748b;">${escapeHtml(activity.description)}</p>
+                            </div>
+                            <span style="font-size: 11px; color: #94a3b8;">${formatTimeAgo(activity.time)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = `
+        ${statsHTML}
+        <div style="display: grid; grid-template-columns: ${chartsHTML.includes('Nominations') ? '1fr 1fr' : '1fr'}; gap: 20px;">
+            ${chartsHTML}
+        </div>
+        ${recentHTML}
+    `;
 }
 
+// Helper function for time ago
+function formatTimeAgo(date) {
+    if (!date) return 'Just now';
+    const now = new Date();
+    const d = new Date(date);
+    const diff = Math.floor((now - d) / 1000);
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+    return d.toLocaleDateString();
+}
+        
 // ============================================
 // SETTINGS
 // ============================================
@@ -14068,6 +14280,9 @@ async function deleteAnnouncement(id) {
 }
 
 // ============ UPDATE ENHANCED ANALYTICS MODAL ============
+// ============================================
+// ANALYTICS (FIXED)
+// ============================================
 async function showAnalyticsModal() {
     hideAllModals();
     
@@ -14080,15 +14295,82 @@ async function showAnalyticsModal() {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     
-    await loadEnhancedAnalytics();
+    const content = document.getElementById('analyticsContent');
+    if (content) {
+        content.innerHTML = `
+            <div style="text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Loading analytics...</p>
+            </div>
+        `;
+    }
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            throw new Error('Authentication required');
+        }
+        
+        const response = await fetch(`${API_BASE}/admin/analytics`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.status === 401) {
+            showNotification('Session expired. Please login again.', 'error');
+            setTimeout(() => {
+                window.location.href = '../login.html';
+            }, 1500);
+            return;
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('❌ Non-JSON response:', text.substring(0, 200));
+            throw new Error('Server returned an invalid response');
+        }
+        
+        const data = await response.json();
+        console.log('📊 Analytics data:', data);
+        
+        if (data.success && data.analytics) {
+            displayAnalytics(data.analytics);
+        } else {
+            content.innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                    <p>${data.message || 'Failed to load analytics'}</p>
+                    <button class="sheet-btn" onclick="showAnalyticsModal()" style="margin-top: 15px;">
+                        <i class="fas fa-sync-alt"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('❌ Error loading analytics:', error);
+        content.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                <p>Error loading analytics</p>
+                <p style="font-size: 14px; color: #64748b; margin-top: 10px;">${escapeHtml(error.message)}</p>
+                <button class="sheet-btn" onclick="showAnalyticsModal()" style="margin-top: 15px;">
+                    <i class="fas fa-sync-alt"></i> Retry
+                </button>
+            </div>
+        `;
+    }
 }
 
+// Create analytics modal if not exists
 function createAnalyticsModal() {
     const modalHTML = `
     <div class="modal" id="analyticsModal">
         <div class="modal-content" style="max-width: 1200px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
-                <h2><i class="fas fa-chart-bar"></i> Enhanced Analytics Dashboard</h2>
+                <h2><i class="fas fa-chart-bar"></i> Analytics Dashboard</h2>
                 <button class="modal-close" onclick="hideModal('analyticsModal')">
                     <i class="fas fa-times"></i>
                 </button>
@@ -14097,131 +14379,204 @@ function createAnalyticsModal() {
                 <div id="analyticsContent">
                     <div style="text-align: center; padding: 50px;">
                         <i class="fas fa-spinner fa-spin fa-2x"></i>
-                        <p>Loading enhanced analytics...</p>
+                        <p>Loading analytics...</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     `;
-    
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-async function loadEnhancedAnalytics() {
+// Display analytics data
+function displayAnalytics(analytics) {
     const content = document.getElementById('analyticsContent');
     if (!content) return;
     
-    try {
-        const result = await fetchEnhancedAnalytics();
-        
-        if (result.success && result.analytics) {
-            displayEnhancedAnalytics(result.analytics);
-        } else {
-            content.innerHTML = '<div style="text-align: center; padding: 50px; color: #EF4444;">Failed to load analytics</div>';
-        }
-    } catch (error) {
-        console.error('Error loading analytics:', error);
-        content.innerHTML = '<div style="text-align: center; padding: 50px; color: #EF4444;">Error loading analytics</div>';
-    }
-}
-
-function displayEnhancedAnalytics(analytics) {
-    const content = document.getElementById('analyticsContent');
-    const o = analytics.overview;
+    const o = analytics.overview || {};
     
-    // Simple bar chart using divs (you could add Chart.js later)
-    const nominationsByCategoryHTML = analytics.charts.nominationsByCategory.map(item => `
-        <div style="margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between;">
-                <span>${escapeHtml(item.category)}</span>
-                <span>${item.count}</span>
-            </div>
-            <div style="background: #f1f5f9; height: 20px; border-radius: 10px; overflow: hidden;">
-                <div style="background: #FF0000; width: ${(item.count / Math.max(...analytics.charts.nominationsByCategory.map(i => i.count)) * 100)}%; height: 100%;"></div>
-            </div>
-        </div>
-    `).join('');
-    
-    const businessesBySectorHTML = analytics.charts.businessesBySector.map(item => `
-        <div style="margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between;">
-                <span>${escapeHtml(item.sector)}</span>
-                <span>${item.count}</span>
-            </div>
-            <div style="background: #f1f5f9; height: 20px; border-radius: 10px; overflow: hidden;">
-                <div style="background: #87CEEB; width: ${(item.count / Math.max(...analytics.charts.businessesBySector.map(i => i.count)) * 100)}%; height: 100%;"></div>
-            </div>
-        </div>
-    `).join('');
-    
-    const monthlyHTML = analytics.charts.monthlyRegistrations.map(item => `
-        <div style="margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between;">
-                <span>${escapeHtml(item.month)}</span>
-                <span>${item.count}</span>
-            </div>
-            <div style="background: #f1f5f9; height: 20px; border-radius: 10px; overflow: hidden;">
-                <div style="background: #10B981; width: ${(item.count / Math.max(...analytics.charts.monthlyRegistrations.map(i => i.count)) * 100)}%; height: 100%;"></div>
-            </div>
-        </div>
-    `).join('');
-    
-    content.innerHTML = `
+    const statsHTML = `
         <div class="stats-grid" style="margin-bottom: 30px;">
             <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalBusinesses}</h3>
+                <h3>${o.totalBusinesses || 0}</h3>
                 <p>Total Businesses</p>
-                <small>Pending: ${o.pendingBusinesses} | Approved: ${o.approvedBusinesses}</small>
+                <small style="color: #64748b;">${o.pendingBusinesses || 0} pending | ${o.approvedBusinesses || 0} approved</small>
             </div>
             <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalNominations}</h3>
+                <h3>${o.totalNominations || 0}</h3>
                 <p>Nominations</p>
-                <small>Pending: ${o.pendingNominations} | Approved: ${o.approvedNominations}</small>
+                <small style="color: #64748b;">${o.pendingNominations || 0} pending | ${o.approvedNominations || 0} approved</small>
             </div>
             <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalJudges}</h3>
+                <h3>${o.totalPartners || 0}</h3>
+                <p>Partners</p>
+                <small style="color: #64748b;">${o.activePartners || 0} active | ${o.pendingPartners || 0} pending</small>
+            </div>
+            <div class="stat-card" style="padding: 20px;">
+                <h3>${o.totalVotes || 0}</h3>
+                <p>Votes</p>
+                <small style="color: #64748b;">${o.totalVoters || 0} unique voters</small>
+            </div>
+        </div>
+        
+        <div class="stats-grid" style="margin-bottom: 30px; grid-template-columns: repeat(4, 1fr);">
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalJudges || 0}</h3>
                 <p>Judges</p>
-                <small>Active: ${o.activeJudges}</small>
+                <small style="color: #64748b;">${o.activeJudges || 0} active</small>
             </div>
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalAnnouncements}</h3>
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalAnnouncements || 0}</h3>
                 <p>Announcements</p>
-                <small>Published: ${o.publishedAnnouncements}</small>
+                <small style="color: #64748b;">${o.publishedAnnouncements || 0} published</small>
+            </div>
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalPartnerEvents || 0}</h3>
+                <p>Events</p>
+                <small style="color: #64748b;">${o.pendingPartnerEvents || 0} pending</small>
+            </div>
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalPartnerSessions || 0}</h3>
+                <p>Sessions</p>
+                <small style="color: #64748b;">${o.livePartnerSessions || 0} live</small>
             </div>
         </div>
         
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 12px;">
-                <h4>Categories</h4>
-                <p>Total: ${o.totalCategories} | Active: ${o.activeCategories}</p>
+        <div class="stats-grid" style="margin-bottom: 30px; grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalPartnerDocuments || 0}</h3>
+                <p>Documents</p>
+                <small style="color: #64748b;">${o.pendingPartnerDocuments || 0} pending</small>
             </div>
-            <div style="background: white; padding: 20px; border-radius: 12px;">
-                <h4>Spotlight</h4>
-                <p>Total: ${o.totalSpotlight} | Featured: ${o.featuredSpotlight}</p>
+            <div class="stat-card" style="padding: 15px;">
+                <h3 style="font-size: 24px;">${o.totalCategories || 0}</h3>
+                <p>Categories</p>
+                <small style="color: #64748b;">${o.activeCategories || 0} active</small>
             </div>
-            <div style="background: white; padding: 20px; border-radius: 12px;">
-                <h4>System Users</h4>
-                <p>Total: ${o.totalUsers}</p>
-            </div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-            <div style="background: white; padding: 20px; border-radius: 12px;">
-                <h4>Nominations by Category</h4>
-                ${nominationsByCategoryHTML || '<p>No data</p>'}
-            </div>
-            <div style="background: white; padding: 20px; border-radius: 12px;">
-                <h4>Businesses by Sector</h4>
-                ${businessesBySectorHTML || '<p>No data</p>'}
-            </div>
-        </div>
-        
-        <div style="background: white; padding: 20px; border-radius: 12px; margin-top: 20px;">
-            <h4>Monthly Registrations</h4>
-            ${monthlyHTML || '<p>No data</p>'}
         </div>
     `;
+    
+    let chartsHTML = '';
+    
+    if (analytics.charts && analytics.charts.monthlyRegistrations && analytics.charts.monthlyRegistrations.length > 0) {
+        const maxCount = Math.max(...analytics.charts.monthlyRegistrations.map(m => m.count));
+        chartsHTML += `
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h4>Monthly Registrations</h4>
+                <div style="margin-top: 15px;">
+                    ${analytics.charts.monthlyRegistrations.map(m => `
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                                <span>${escapeHtml(m.month)} ${m.year}</span>
+                                <span>${m.count}</span>
+                            </div>
+                            <div style="background: #f1f5f9; height: 20px; border-radius: 10px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #FF0000, #87CEEB); width: ${maxCount > 0 ? (m.count / maxCount * 100) : 0}%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (analytics.charts && analytics.charts.nominationsByCategory && analytics.charts.nominationsByCategory.length > 0) {
+        const maxCount = Math.max(...analytics.charts.nominationsByCategory.map(c => c.count));
+        chartsHTML += `
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h4>Nominations by Category</h4>
+                <div style="margin-top: 15px;">
+                    ${analytics.charts.nominationsByCategory.slice(0, 10).map(c => `
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                                <span>${escapeHtml(c.category)}</span>
+                                <span>${c.count}</span>
+                            </div>
+                            <div style="background: #f1f5f9; height: 16px; border-radius: 8px; overflow: hidden;">
+                                <div style="background: #FF0000; width: ${maxCount > 0 ? (c.count / maxCount * 100) : 0}%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (analytics.charts && analytics.charts.businessesBySector && analytics.charts.businessesBySector.length > 0) {
+        const maxCount = Math.max(...analytics.charts.businessesBySector.map(c => c.count));
+        chartsHTML += `
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h4>Businesses by Sector</h4>
+                <div style="margin-top: 15px;">
+                    ${analytics.charts.businessesBySector.slice(0, 10).map(c => `
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                                <span>${escapeHtml(c.sector)}</span>
+                                <span>${c.count}</span>
+                            </div>
+                            <div style="background: #f1f5f9; height: 16px; border-radius: 8px; overflow: hidden;">
+                                <div style="background: #87CEEB; width: ${maxCount > 0 ? (c.count / maxCount * 100) : 0}%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    let recentHTML = '';
+    if (analytics.recent && analytics.recent.length > 0) {
+        const iconMap = {
+            'business': 'building',
+            'partner': 'handshake',
+            'nomination': 'award',
+            'event': 'calendar',
+            'session': 'video',
+            'document': 'file'
+        };
+        recentHTML = `
+            <div style="background: white; padding: 20px; border-radius: 12px;">
+                <h4>Recent Activity</h4>
+                <div style="margin-top: 15px;">
+                    ${analytics.recent.slice(0, 10).map(activity => `
+                        <div style="border-bottom: 1px solid #f1f5f9; padding: 10px 0; display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 35px; height: 35px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-${iconMap[activity.type] || 'file-alt'}" style="color: #FF0000; font-size: 14px;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <p style="font-weight: 600; margin: 0; font-size: 14px;">${escapeHtml(activity.title)}</p>
+                                <p style="margin: 0; font-size: 12px; color: #64748b;">${escapeHtml(activity.description)}</p>
+                            </div>
+                            <span style="font-size: 11px; color: #94a3b8;">${formatTimeAgo(activity.time)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = `
+        ${statsHTML}
+        <div style="display: grid; grid-template-columns: ${chartsHTML.includes('Nominations') ? '1fr 1fr' : '1fr'}; gap: 20px;">
+            ${chartsHTML}
+        </div>
+        ${recentHTML}
+    `;
+}
+
+// Helper function for time ago
+function formatTimeAgo(date) {
+    if (!date) return 'Just now';
+    const now = new Date();
+    const d = new Date(date);
+    const diff = Math.floor((now - d) / 1000);
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+    return d.toLocaleDateString();
 }
 
 // ============ UPDATE REPORTS MODAL ============
@@ -16519,77 +16874,191 @@ async function deletePartnerDocument(id) {
     }
 }
 
+// ============================================
+// PARTNER DOCUMENT UPLOAD FUNCTIONS (FIXED)
+// ============================================
+
+// ============================================
+// PARTNER DOCUMENT UPLOAD FUNCTIONS (FIXED)
+// ============================================
+
+// Show upload document modal with partner list
 function showUploadPartnerDocumentModal(partnerId, existingDocId) {
-    // Create a simple modal for admin to upload document for partner
+    console.log('📤 Opening upload document modal');
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('uploadPartnerDocModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
     const modalHtml = `
-        <div class="modal" id="uploadPartnerDocModal" style="display: flex;">
-            <div class="modal-content" style="max-width: 600px;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
-                    <h2><i class="fas fa-upload"></i> Upload Document for Partner</h2>
-                    <button class="modal-close" onclick="hideModal('uploadPartnerDocModal')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="uploadPartnerDocForm">
-                        <input type="hidden" id="uploadExistingDocId" value="${existingDocId || ''}">
-                        
-                        <div class="form-group">
-                            <label>Select Partner *</label>
-                            <select id="uploadPartnerId" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
-                                <option value="">-- Select Partner --</option>
-                                ${partnersData.map(p => `
-                                    <option value="${p._id}" ${p._id === partnerId ? 'selected' : ''}>${escapeHtml(p.organization_name)} (${escapeHtml(p.email)})</option>
-                                `).join('')}
-                            </select>
+    <div class="modal" id="uploadPartnerDocModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                <h2><i class="fas fa-upload"></i> Upload Document for Partner</h2>
+                <button class="modal-close" onclick="closeUploadDocumentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadPartnerDocForm" onsubmit="event.preventDefault();">
+                    <input type="hidden" id="uploadExistingDocId" value="${existingDocId || ''}">
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Select Partner *</label>
+                        <select id="uploadPartnerId" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required>
+                            <option value="">-- Select Partner --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Document Name *</label>
+                        <input type="text" id="uploadDocName" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;" required placeholder="e.g., Partnership Agreement">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Document Type</label>
+                        <select id="uploadDocType" class="sheet-btn secondary" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                            <option value="registration">Registration</option>
+                            <option value="certificate">Certificate</option>
+                            <option value="proposal">Proposal</option>
+                            <option value="agreement">Agreement</option>
+                            <option value="presentation">Presentation</option>
+                            <option value="financial">Financial</option>
+                            <option value="legal">Legal</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>File *</label>
+                        <input type="file" id="uploadDocFile" class="sheet-btn secondary" style="width: 100%; padding: 8px; border: 2px solid #e2e8f0; border-radius: 8px;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
+                        <small style="color: #64748b;">Max file size: 10MB (PDF, DOC, DOCX, JPG, PNG)</small>
+                        <div id="uploadDocFileInfo" style="display: none; margin-top: 8px; padding: 8px 12px; background: #f8fafc; border-radius: 6px;">
+                            <span id="uploadDocFileName"></span>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="clearUploadDocumentFile()" style="margin-left: 10px; padding: 2px 8px;">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Document Name *</label>
-                            <input type="text" id="uploadDocName" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Document Type</label>
-                            <select id="uploadDocType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
-                                <option value="registration">Registration</option>
-                                <option value="certificate">Certificate</option>
-                                <option value="proposal">Proposal</option>
-                                <option value="agreement">Agreement</option>
-                                <option value="presentation">Presentation</option>
-                                <option value="financial">Financial</option>
-                                <option value="legal">Legal</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>File *</label>
-                            <input type="file" id="uploadDocFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                            <small style="color: #64748b;">Max file size: 10MB</small>
-                        </div>
-                        
-                        <div class="error-message" id="uploadDocError" style="display: none; color: #EF4444;"></div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="sheet-btn warning" onclick="hideModal('uploadPartnerDocModal')">Cancel</button>
-                    <button class="sheet-btn" onclick="submitPartnerDocumentUpload()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
-                        <i class="fas fa-upload"></i> Upload
-                    </button>
-                </div>
+                    </div>
+                    
+                    <div class="error-message" id="uploadDocError" style="display: none; color: #EF4444; padding: 10px; background: #FEF2F2; border-radius: 8px; margin-bottom: 10px;"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 15px;">
+                <button type="button" class="sheet-btn warning" onclick="closeUploadDocumentModal()" style="padding: 10px 25px;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="sheet-btn" onclick="submitPartnerDocumentUpload()" style="padding: 10px 25px; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                    <i class="fas fa-upload"></i> Upload Document
+                </button>
             </div>
         </div>
+    </div>
     `;
-    
-    // Remove existing modal if any
-    const existing = document.getElementById('uploadPartnerDocModal');
-    if (existing) existing.remove();
     
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     document.body.style.overflow = 'hidden';
+    
+    // If partnerId is provided, preselect it
+    if (partnerId) {
+        const select = document.getElementById('uploadPartnerId');
+        if (select) {
+            // Wait for partners to load then set value
+            setTimeout(() => {
+                select.value = partnerId;
+            }, 500);
+        }
+    }
+    
+    // Load partners into dropdown
+    loadPartnersForUpload();
 }
 
+// Load partners for upload dropdown
+async function loadPartnersForUpload() {
+    const select = document.getElementById('uploadPartnerId');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Loading partners...</option>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            select.innerHTML = '<option value="">Authentication required</option>';
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE}/admin/partners?status=all&limit=100`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        console.log('📥 Partners loaded for upload:', data);
+        
+        if (data.success && data.partners && data.partners.length > 0) {
+            select.innerHTML = '<option value="">-- Select Partner --</option>' + 
+                data.partners.map(p => `<option value="${p._id}">${escapeHtml(p.organization_name)} (${escapeHtml(p.email)})</option>`).join('');
+            console.log(`✅ Loaded ${data.partners.length} partners`);
+        } else {
+            select.innerHTML = '<option value="">No partners found</option>';
+            showNotification('No partners found. Please create a partner first.', 'warning');
+        }
+    } catch (error) {
+        console.error('❌ Error loading partners:', error);
+        select.innerHTML = '<option value="">Error loading partners</option>';
+        showNotification('Failed to load partners: ' + error.message, 'error');
+    }
+}
+
+// Close upload document modal
+function closeUploadDocumentModal() {
+    const modal = document.getElementById('uploadPartnerDocModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        // Remove modal after animation
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.remove();
+            }
+        }, 300);
+    }
+    document.getElementById('uploadPartnerDocForm')?.reset();
+    document.getElementById('uploadDocError')?.style.display = 'none';
+    document.getElementById('uploadDocFileInfo')?.style.display = 'none';
+}
+
+// Clear uploaded file
+function clearUploadDocumentFile() {
+    document.getElementById('uploadDocFile').value = '';
+    document.getElementById('uploadDocFileInfo').style.display = 'none';
+}
+
+// Preview uploaded file
+function previewUploadDocument(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('File type not allowed. Please upload PDF, DOC, DOCX, JPG, or PNG.', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+        showNotification('File too large. Maximum size is 10MB.', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    document.getElementById('uploadDocFileName').textContent = file.name;
+    document.getElementById('uploadDocFileInfo').style.display = 'block';
+}
+
+// Submit partner document upload
 async function submitPartnerDocumentUpload() {
     const partnerId = document.getElementById('uploadPartnerId').value;
     const name = document.getElementById('uploadDocName').value.trim();
@@ -16597,8 +17066,11 @@ async function submitPartnerDocumentUpload() {
     const file = document.getElementById('uploadDocFile').files[0];
     const errorEl = document.getElementById('uploadDocError');
     
+    errorEl.style.display = 'none';
+    
     if (!partnerId) {
-        showToast('Partner ID missing', 'error');
+        errorEl.textContent = 'Please select a partner';
+        errorEl.style.display = 'block';
         return;
     }
     
@@ -16614,57 +17086,87 @@ async function submitPartnerDocumentUpload() {
         return;
     }
     
-    errorEl.style.display = 'none';
-    
-    const btn = document.querySelector('#uploadPartnerDocModal .sheet-btn:last-child');
+    const btn = document.querySelector('#uploadPartnerDocModal .modal-footer .sheet-btn:last-child');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
     btn.disabled = true;
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            throw new Error('Authentication required. Please login again.');
+        }
+        
         const formData = new FormData();
         formData.append('partner_id', partnerId);
         formData.append('name', name);
         formData.append('type', type);
         formData.append('document', file);
         
+        console.log('📤 Uploading document for partner:', partnerId);
+        
+        // FIXED: Use API_BASE directly (not API_BASE.replace)
         const response = await fetch(`${API_BASE}/admin/partner/documents`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             body: formData
         });
         
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('❌ Non-JSON response:', text.substring(0, 200));
+            throw new Error('Server returned an invalid response. Please try again.');
+        }
+        
         const data = await response.json();
+        console.log('📥 Upload response:', data);
         
         if (data.success) {
-            showToast('Document uploaded successfully!', 'success');
-            hideModal('uploadPartnerDocModal');
+            showNotification('✅ Document uploaded successfully!', 'success');
+            closeUploadDocumentModal();
             await loadPartnerDocuments();
         } else {
             errorEl.textContent = data.message || 'Upload failed';
             errorEl.style.display = 'block';
         }
     } catch (error) {
-        errorEl.textContent = error.message || 'Upload failed';
-        errorEl.style.display = 'block';
+        console.error('❌ Upload error:', error);
+        if (error.status === 401) {
+            showNotification('Session expired. Please login again.', 'error');
+            setTimeout(() => {
+                window.location.href = '../login.html';
+            }, 1500);
+        } else {
+            errorEl.textContent = error.message || 'Upload failed';
+            errorEl.style.display = 'block';
+        }
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
 }
 
-function getFileIcon(fileUrl) {
-    if (!fileUrl) return 'fa-file';
-    const ext = fileUrl.split('.').pop().toLowerCase();
-    if (ext === 'pdf') return 'fa-file-pdf';
-    if (ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif') return 'fa-file-image';
-    if (ext === 'doc' || ext === 'docx') return 'fa-file-word';
-    if (ext === 'xls' || ext === 'xlsx') return 'fa-file-excel';
-    return 'fa-file';
+// Update the uploadPartnerDocumentForPartner function
+function uploadPartnerDocumentForPartner(id) {
+    const doc = partnerDocumentsData.find(d => d._id === id);
+    if (!doc) {
+        showNotification('Document not found', 'error');
+        return;
+    }
+    
+    const partnerId = doc.partner_id?._id || doc.partner_id;
+    if (!partnerId) {
+        showNotification('Partner ID not found for this document', 'error');
+        return;
+    }
+    
+    showUploadPartnerDocumentModal(partnerId, doc._id);
 }
-        
-        
+  
 </script>
     
    <!-- ============ SPOTLIGHT MANAGEMENT MODAL ============ -->
