@@ -6691,6 +6691,250 @@ app.post('/api/partner/notifications/read-all', authenticate, authorize('partner
 
 console.log('✅ Partner Dashboard API Routes Ready');
 
+// ============================================
+// PARTNER DOCUMENTS ROUTES (FIXED - PRODUCTION)
+// ============================================
+
+// Get partner documents
+app.get('/api/partner/documents', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { page = 1, limit = 12, type, status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        let query = { partner_id: req.user._id };
+        if (type && type !== 'all') query.type = type;
+        if (status && status !== 'all') query.status = status;
+        
+        // Use the PartnerDocument model (already defined in server.js)
+        const documents = await PartnerDocument.find(query)
+            .sort({ created_at: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+        
+        const total = await PartnerDocument.countDocuments(query);
+        
+        res.json({
+            success: true,
+            documents: documents.map(d => ({
+                _id: d._id,
+                name: d.name,
+                type: d.type,
+                file_url: d.file_url,
+                file_name: d.file_name,
+                file_size: d.file_size,
+                mime_type: d.mime_type,
+                status: d.status,
+                admin_notes: d.admin_notes,
+                uploaded_by: d.uploaded_by,
+                created_at: d.created_at
+            })),
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Get partner documents error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Upload partner document
+app.post('/api/partner/documents', authenticate, authorize('partner'), 
+    handleUpload(upload.single('document')), 
+    async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+        
+        const { name, type } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ success: false, message: 'Document name is required' });
+        }
+        
+        const fileUrl = `/uploads/${req.file.filename}`;
+        
+        const document = new PartnerDocument({
+            partner_id: req.user._id,
+            partner_name: req.user.organization_name,
+            name: name,
+            type: type || 'other',
+            file_url: fileUrl,
+            file_name: req.file.originalname,
+            file_size: req.file.size,
+            mime_type: req.file.mimetype,
+            status: 'pending',
+            uploaded_by: 'partner',
+            uploaded_by_id: req.user._id
+        });
+        
+        await document.save();
+        
+        // Notify admins
+        try {
+            const admins = await Admin.find().select('_id');
+            for (const admin of admins) {
+                await Notification.create({
+                    recipient_id: admin._id,
+                    recipient_type: 'admin',
+                    title: `📄 New Document Uploaded: ${name}`,
+                    message: `${req.user.organization_name} uploaded "${name}". Please review for approval.`,
+                    type: 'info',
+                    read: false,
+                    related_id: document._id,
+                    metadata: { document_id: document._id, partner_id: req.user._id }
+                });
+            }
+        } catch (notifyError) {
+            console.warn('Could not send admin notification:', notifyError.message);
+        }
+        
+        res.status(201).json({
+            success: true,
+            message: 'Document uploaded successfully! Pending admin approval.',
+            document: {
+                _id: document._id,
+                name: document.name,
+                type: document.type,
+                file_url: document.file_url,
+                status: document.status
+            }
+        });
+    } catch (error) {
+        console.error('Partner upload document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// View partner document
+app.get('/api/partner/documents/:id/view', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const document = await PartnerDocument.findOne({
+            _id: id,
+            partner_id: req.user._id
+        });
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        const fileName = path.basename(document.file_url);
+        const filePath = path.join(uploadDir, fileName);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: 'File not found' });
+        }
+        
+        const ext = path.extname(document.file_name || fileName).toLowerCase();
+        let contentType = 'application/octet-stream';
+        
+        switch(ext) {
+            case '.pdf': contentType = 'application/pdf'; break;
+            case '.jpg': case '.jpeg': contentType = 'image/jpeg'; break;
+            case '.png': contentType = 'image/png'; break;
+            case '.gif': contentType = 'image/gif'; break;
+            case '.webp': contentType = 'image/webp'; break;
+            case '.doc': contentType = 'application/msword'; break;
+            case '.docx': contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; break;
+        }
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `inline; filename="${document.name}${ext}"`);
+        res.sendFile(filePath);
+        
+    } catch (error) {
+        console.error('View document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Download partner document
+app.get('/api/partner/documents/:id/download', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const document = await PartnerDocument.findOne({
+            _id: id,
+            partner_id: req.user._id
+        });
+        
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found' });
+        }
+        
+        const fileName = path.basename(document.file_url);
+        const filePath = path.join(uploadDir, fileName);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: 'File not found' });
+        }
+        
+        const ext = path.extname(document.file_name || fileName).toLowerCase();
+        let contentType = 'application/octet-stream';
+        
+        switch(ext) {
+            case '.pdf': contentType = 'application/pdf'; break;
+            case '.jpg': case '.jpeg': contentType = 'image/jpeg'; break;
+            case '.png': contentType = 'image/png'; break;
+            case '.gif': contentType = 'image/gif'; break;
+            case '.webp': contentType = 'image/webp'; break;
+            case '.doc': contentType = 'application/msword'; break;
+            case '.docx': contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; break;
+        }
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${document.name}${ext}"`);
+        res.sendFile(filePath);
+        
+    } catch (error) {
+        console.error('Download document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Delete partner document (only partner-uploaded documents)
+app.delete('/api/partner/documents/:id', authenticate, authorize('partner'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const document = await PartnerDocument.findOneAndDelete({
+            _id: id,
+            partner_id: req.user._id,
+            uploaded_by: 'partner'
+        });
+        
+        if (!document) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Document not found or not eligible for deletion' 
+            });
+        }
+        
+        // Delete file from filesystem
+        const fileName = path.basename(document.file_url);
+        const filePath = path.join(uploadDir, fileName);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        
+        res.json({
+            success: true,
+            message: 'Document deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete document error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+console.log('✅ Partner Document Routes Ready');
+
 
 // ============================================
 // ADMIN PARTNER EVENTS MANAGEMENT ROUTES
