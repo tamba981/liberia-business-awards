@@ -1455,6 +1455,57 @@
     border-top: 1px solid #e2e8f0;
     background: #f8fafc;
 }
+
+ /* Fix for dropdown selects in modals */
+.modal select.sheet-btn {
+    appearance: auto;
+    -webkit-appearance: auto;
+    color: #1a202c !important;
+    background-color: white !important;
+}
+
+.modal select.sheet-btn option {
+    color: #1a202c;
+    background-color: white;
+}
+
+.modal select.sheet-btn optgroup {
+    color: #1a202c;
+    background-color: white;
+    font-weight: bold;
+}
+
+/* Fix for modal footer buttons */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 0 0 20px 20px;
+}
+
+/* Error and success message styling */
+.error-message {
+    padding: 10px;
+    background: #FEF2F2;
+    border: 1px solid #FEE2E2;
+    border-radius: 8px;
+    color: #EF4444;
+    margin-top: 10px;
+    display: none;
+}
+
+.success-message {
+    padding: 10px;
+    background: #D1FAE5;
+    border: 1px solid #A7F3D0;
+    border-radius: 8px;
+    color: #10B981;
+    margin-top: 10px;
+    display: none;
+}       
         
     </style>
 </head>
@@ -13031,108 +13082,399 @@ async function deleteUser(id) {
 }
         
 // ============================================
-// ANALYTICS
+// FIXED: SHOW ANALYTICS MODAL
 // ============================================
 async function showAnalyticsModal() {
     hideAllModals();
-    document.getElementById('analyticsModal').classList.add('active');
+    const modal = document.getElementById('analyticsModal');
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    const content = document.getElementById('analyticsContent');
+    content.innerHTML = `
+        <div style="text-align: center; padding: 50px;">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading analytics...</p>
+        </div>
+    `;
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/analytics`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
         
-        if (data.success) {
-            displayAnalytics(data.analytics);
-        }
+        // Fetch data from multiple endpoints to build analytics
+        const [businessesRes, partnersRes, nominationsRes, judgesRes, eventsRes] = await Promise.all([
+            fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?limit=1`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${API_BASE.replace('/api', '')}/api/admin/partners?limit=1`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?status=all&limit=1`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${API_BASE.replace('/api', '')}/api/admin/judges?limit=1`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${API_BASE.replace('/api', '')}/api/admin/events?limit=1`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+        ]);
+        
+        // Try to parse each response
+        let businessData = { total: 0 };
+        let partnerData = { total: 0 };
+        let nominationData = { total: 0 };
+        let judgeData = { total: 0 };
+        let eventData = { total: 0 };
+        
+        try {
+            const b = await businessesRes.json();
+            if (b.success) businessData = { total: b.pagination?.total || 0 };
+        } catch(e) {}
+        
+        try {
+            const p = await partnersRes.json();
+            if (p.success) partnerData = { total: p.pagination?.total || 0 };
+        } catch(e) {}
+        
+        try {
+            const n = await nominationsRes.json();
+            if (n.success) nominationData = { total: n.pagination?.total || 0 };
+        } catch(e) {}
+        
+        try {
+            const j = await judgesRes.json();
+            if (j.success) judgeData = { total: j.judges?.length || 0 };
+        } catch(e) {}
+        
+        try {
+            const e = await eventsRes.json();
+            if (e.success) eventData = { total: e.events?.length || 0 };
+        } catch(e) {}
+        
+        // Calculate some stats
+        const totalBusinesses = businessData.total || 0;
+        const totalPartners = partnerData.total || 0;
+        const totalNominations = nominationData.total || 0;
+        const totalJudges = judgeData.total || 0;
+        const totalEvents = eventData.total || 0;
+        
+        // Build analytics display
+        content.innerHTML = `
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card" style="padding: 20px; border-left: 4px solid #FF0000;">
+                    <h3 style="color: #FF0000;">${totalBusinesses}</h3>
+                    <p>Total Businesses</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; border-left: 4px solid #8B5CF6;">
+                    <h3 style="color: #8B5CF6;">${totalPartners}</h3>
+                    <p>Total Partners</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; border-left: 4px solid #F59E0B;">
+                    <h3 style="color: #F59E0B;">${totalNominations}</h3>
+                    <p>Total Nominations</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; border-left: 4px solid #10B981;">
+                    <h3 style="color: #10B981;">${totalJudges}</h3>
+                    <p>Total Judges</p>
+                </div>
+            </div>
+            
+            <div class="stats-grid" style="margin-bottom: 30px; grid-template-columns: repeat(3, 1fr);">
+                <div class="stat-card" style="padding: 20px; border-left: 4px solid #3B82F6;">
+                    <h3 style="color: #3B82F6;">${totalEvents}</h3>
+                    <p>Past Events</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; border-left: 4px solid #EF4444;">
+                    <h3 style="color: #EF4444;">${totalEvents > 0 ? 'Active' : 'Inactive'}</h3>
+                    <p>Event Status</p>
+                </div>
+                <div class="stat-card" style="padding: 20px; border-left: 4px solid #8B5CF6;">
+                    <h3 style="color: #8B5CF6;">${totalPartners > 0 ? '✅' : '❌'}</h3>
+                    <p>Partners Active</p>
+                </div>
+            </div>
+            
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-top: 20px;">
+                <h4 style="margin-bottom: 15px; color: #1a202c;">
+                    <i class="fas fa-info-circle" style="color: #FF0000;"></i> System Summary
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                    <div><strong>Total Businesses:</strong> ${totalBusinesses}</div>
+                    <div><strong>Total Partners:</strong> ${totalPartners}</div>
+                    <div><strong>Total Nominations:</strong> ${totalNominations}</div>
+                    <div><strong>Total Judges:</strong> ${totalJudges}</div>
+                    <div><strong>Past Events:</strong> ${totalEvents}</div>
+                    <div><strong>Last Updated:</strong> ${new Date().toLocaleString()}</div>
+                </div>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;">
+                    <small style="color: #94a3b8;">Data fetched from live database</small>
+                </div>
+            </div>
+        `;
+        
     } catch (error) {
-        console.error('Error loading analytics:', error);
+        console.error('Analytics error:', error);
+        content.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 20px;"></i>
+                <p>Failed to load analytics</p>
+                <p style="font-size: 14px; color: #64748b;">${error.message || 'Please try refreshing'}</p>
+                <button class="sheet-btn" onclick="showAnalyticsModal()" style="margin-top: 20px;">
+                    <i class="fas fa-sync-alt"></i> Retry
+                </button>
+            </div>
+        `;
     }
 }
 
-function displayAnalytics(analytics) {
-    const content = document.getElementById('analyticsContent');
-    const o = analytics.overview;
-    
-    content.innerHTML = `
-        <div class="stats-grid" style="margin-bottom: 30px;">
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalBusinesses}</h3>
-                <p>Total Businesses</p>
-            </div>
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalNominations}</h3>
-                <p>Nominations</p>
-            </div>
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.pendingBusinesses}</h3>
-                <p>Pending</p>
-            </div>
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalUsers}</h3>
-                <p>System Users</p>
-            </div>
-        </div>
-        
-        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.featuredBusinesses}</h3>
-                <p>Featured</p>
-            </div>
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalAnnouncements}</h3>
-                <p>Announcements</p>
-            </div>
-            <div class="stat-card" style="padding: 20px;">
-                <h3>${o.totalJudges}</h3>
-                <p>Judges</p>
-            </div>
-        </div>
-    `;
-}
 
 // ============================================
-// REPORTS
+// FIXED: SHOW REPORTS MODAL
 // ============================================
 function showReportsModal() {
     hideAllModals();
-    document.getElementById('reportsModal').classList.add('active');
+    const modal = document.getElementById('reportsModal');
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    // Hide preview
+    document.getElementById('reportPreview').style.display = 'none';
 }
 
+// ============================================
+// FIXED: GENERATE REPORT
+// ============================================
 async function generateReport(type, format) {
+    console.log(`📊 Generating report: ${type} (${format})`);
+    
+    // Show loading state
+    const preview = document.getElementById('reportPreview');
+    const content = document.getElementById('reportPreviewContent');
+    preview.style.display = 'block';
+    content.innerHTML = '<div style="text-align: center; padding: 30px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Generating report...</p></div>';
+    
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/reports/generate`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ type, format })
-        });
         
-        if (format === 'csv') {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${type}-report.csv`;
-            a.click();
-        } else {
-            const data = await response.json();
-            console.log(data);
+        let data = [];
+        let filename = '';
+        let headers = [];
+        
+        // Fetch data based on type
+        switch(type) {
+            case 'businesses':
+                const bRes = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?limit=500`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const bData = await bRes.json();
+                if (bData.success) {
+                    data = bData.businesses.map(b => ({
+                        'Business Name': b.business_name || 'N/A',
+                        'Email': b.email || 'N/A',
+                        'Contact': b.contact_name || 'N/A',
+                        'Phone': b.phone || 'N/A',
+                        'Type': b.business_type || 'N/A',
+                        'Status': b.status || 'N/A',
+                        'Registered': b.created_at ? new Date(b.created_at).toLocaleDateString() : 'N/A'
+                    }));
+                    headers = ['Business Name', 'Email', 'Contact', 'Phone', 'Type', 'Status', 'Registered'];
+                    filename = 'businesses_report';
+                }
+                break;
+                
+            case 'nominations':
+                // Fetch nominations from Google Sheets or API
+                const nRes = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
+                const nData = await nRes.json();
+                if (nData.success && nData.nominations) {
+                    data = nData.nominations.map(n => ({
+                        'Business': n.business_name || 'N/A',
+                        'Category': n.category || 'N/A',
+                        'Status': n.status || 'pending',
+                        'Submitted': n.timestamp ? new Date(n.timestamp).toLocaleDateString() : 'N/A'
+                    }));
+                    headers = ['Business', 'Category', 'Status', 'Submitted'];
+                    filename = 'nominations_report';
+                }
+                break;
+                
+            case 'partners':
+                const pRes = await fetch(`${API_BASE.replace('/api', '')}/api/admin/partners?limit=200`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const pData = await pRes.json();
+                if (pData.success) {
+                    data = pData.partners.map(p => ({
+                        'Organization': p.organization_name || 'N/A',
+                        'Email': p.email || 'N/A',
+                        'Contact': p.contact_name || 'N/A',
+                        'Phone': p.phone || 'N/A',
+                        'Type': p.type || 'N/A',
+                        'Status': p.status || 'N/A',
+                        'Created': p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A'
+                    }));
+                    headers = ['Organization', 'Email', 'Contact', 'Phone', 'Type', 'Status', 'Created'];
+                    filename = 'partners_report';
+                }
+                break;
+                
+            case 'winners':
+                // Fetch past events to get winners
+                const wRes = await fetch(`${API_BASE.replace('/api', '')}/api/admin/events?limit=50`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const wData = await wRes.json();
+                if (wData.success) {
+                    const allWinners = [];
+                    wData.events.forEach(event => {
+                        if (event.winners && event.winners.length > 0) {
+                            event.winners.forEach(w => {
+                                allWinners.push({
+                                    'Event': event.title || 'N/A',
+                                    'Edition': event.edition || 'N/A',
+                                    'Winner': w.name || 'N/A',
+                                    'Category': w.category || 'N/A',
+                                    'Founder': w.founder || 'N/A'
+                                });
+                            });
+                        }
+                    });
+                    data = allWinners;
+                    headers = ['Event', 'Edition', 'Winner', 'Category', 'Founder'];
+                    filename = 'winners_report';
+                }
+                break;
+                
+            case 'votes':
+                // Fetch votes from Google Sheets
+                const vRes = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllVotes`);
+                const vData = await vRes.json();
+                if (vData.success && vData.votes) {
+                    data = vData.votes.map(v => ({
+                        'Business': v.business_name || 'N/A',
+                        'Score': v.vote_value || 0,
+                        'Voter': v.voter_email || 'N/A',
+                        'Type': v.is_jury ? 'Jury' : 'Public',
+                        'Date': v.timestamp ? new Date(v.timestamp).toLocaleDateString() : 'N/A'
+                    }));
+                    headers = ['Business', 'Score', 'Voter', 'Type', 'Date'];
+                    filename = 'votes_report';
+                }
+                break;
+                
+            default:
+                // Generic report - show summary of all data
+                const summary = {
+                    'Total Businesses': await getCount(`${API_BASE.replace('/api', '')}/api/admin/businesses`),
+                    'Total Partners': await getCount(`${API_BASE.replace('/api', '')}/api/admin/partners`),
+                    'Total Judges': await getCount(`${API_BASE.replace('/api', '')}/api/admin/judges`),
+                    'Total Events': await getCount(`${API_BASE.replace('/api', '')}/api/admin/events`),
+                };
+                data = [summary];
+                headers = Object.keys(summary);
+                filename = 'system_summary';
+                format = 'json';
         }
         
-        showNotification(`${type} report generated`, 'success');
+        // Display preview
+        if (data.length > 0) {
+            let previewHtml = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                ${headers.map(h => `<th style="padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;">${h}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.slice(0, 20).map(row => `
+                                <tr>
+                                    ${headers.map(h => `<td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9;">${row[h] || 'N/A'}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    ${data.length > 20 ? `<p style="margin-top: 10px; color: #64748b; font-size: 13px;">Showing 20 of ${data.length} records</p>` : ''}
+                </div>
+            `;
+            content.innerHTML = previewHtml;
+            
+            // Enable download button if CSV
+            if (format === 'csv') {
+                const csvContent = generateCSV(data, headers);
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'sheet-btn';
+                downloadBtn.style.cssText = 'margin-top: 15px; background: #10B981; color: white;';
+                downloadBtn.innerHTML = `<i class="fas fa-download"></i> Download ${filename}.csv`;
+                downloadBtn.onclick = () => downloadCSV(csvContent, `${filename}.csv`);
+                
+                // Add to preview
+                const container = document.querySelector('#reportPreviewContent');
+                container.appendChild(downloadBtn);
+            }
+        } else {
+            content.innerHTML = '<div style="text-align: center; padding: 30px; color: #64748b;"><p>No data available for this report</p></div>';
+        }
+        
     } catch (error) {
-        showNotification('Error generating report', 'error');
+        console.error('Report generation error:', error);
+        const content = document.getElementById('reportPreviewContent');
+        content.innerHTML = `
+            <div style="text-align: center; padding: 30px; color: #EF4444;">
+                <i class="fas fa-exclamation-circle" style="font-size: 36px;"></i>
+                <p>Error generating report: ${error.message}</p>
+                <button class="sheet-btn" onclick="showReportsModal()" style="margin-top: 10px;">
+                    <i class="fas fa-sync-alt"></i> Retry
+                </button>
+            </div>
+        `;
     }
 }
 
+// Helper: Get count from API
+async function getCount(url) {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        return data.pagination?.total || data.count || data.length || 0;
+    } catch {
+        return 0;
+    }
+}
+
+// Helper: Generate CSV
+function generateCSV(data, headers) {
+    let csv = headers.join(',') + '\n';
+    data.forEach(row => {
+        const values = headers.map(h => {
+            let val = row[h] || '';
+            if (typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))) {
+                val = '"' + val.replace(/"/g, '""') + '"';
+            }
+            return val;
+        });
+        csv += values.join(',') + '\n';
+    });
+    return csv;
+}
+
+// Helper: Download CSV
+function downloadCSV(csvContent, filename) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showNotification('Report downloaded successfully!', 'success');
+}
 // ============================================
 // SETTINGS
 // ============================================
@@ -16590,15 +16932,27 @@ function showUploadPartnerDocumentModal(partnerId, existingDocId) {
     document.body.style.overflow = 'hidden';
 }
 
+// ============================================
+// FIXED: SUBMIT PARTNER DOCUMENT UPLOAD
+// ============================================
 async function submitPartnerDocumentUpload() {
     const partnerId = document.getElementById('uploadPartnerId').value;
     const name = document.getElementById('uploadDocName').value.trim();
     const type = document.getElementById('uploadDocType').value;
     const file = document.getElementById('uploadDocFile').files[0];
     const errorEl = document.getElementById('uploadDocError');
+    const successEl = document.getElementById('uploadDocSuccess');
     
+    // Reset messages
+    errorEl.style.display = 'none';
+    successEl.style.display = 'none';
+    errorEl.textContent = '';
+    successEl.textContent = '';
+    
+    // Validate
     if (!partnerId) {
-        showToast('Partner ID missing', 'error');
+        errorEl.textContent = 'Please select a partner';
+        errorEl.style.display = 'block';
         return;
     }
     
@@ -16609,17 +16963,34 @@ async function submitPartnerDocumentUpload() {
     }
     
     if (!file) {
-        errorEl.textContent = 'Please select a file';
+        errorEl.textContent = 'Please select a file to upload';
         errorEl.style.display = 'block';
         return;
     }
     
-    errorEl.style.display = 'none';
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+        errorEl.textContent = 'File is too large. Maximum size is 10MB.';
+        errorEl.style.display = 'block';
+        return;
+    }
     
-    const btn = document.querySelector('#uploadPartnerDocModal .sheet-btn:last-child');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-    btn.disabled = true;
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 
+                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                         'image/jpeg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+        errorEl.textContent = 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    // Show uploading state
+    const uploadBtn = document.querySelector('#uploadPartnerDocModal .sheet-btn:last-child');
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    uploadBtn.disabled = true;
     
     try {
         const token = localStorage.getItem('lba_auth_token');
@@ -16629,31 +17000,38 @@ async function submitPartnerDocumentUpload() {
         formData.append('type', type);
         formData.append('document', file);
         
-        const response = await fetch(`${API_BASE}/admin/partner/documents`, {
+        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/partner/documents`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
         
         const data = await response.json();
+        console.log('📥 Upload response:', data);
         
         if (data.success) {
-            showToast('Document uploaded successfully!', 'success');
-            hideModal('uploadPartnerDocModal');
-            await loadPartnerDocuments();
+            successEl.textContent = '✅ Document uploaded successfully!';
+            successEl.style.display = 'block';
+            
+            // Close modal after delay and refresh
+            setTimeout(() => {
+                hideModal('uploadPartnerDocModal');
+                loadPartnerDocuments();
+                showNotification('Document uploaded successfully!', 'success');
+            }, 1500);
         } else {
-            errorEl.textContent = data.message || 'Upload failed';
+            errorEl.textContent = data.message || 'Upload failed. Please try again.';
             errorEl.style.display = 'block';
         }
     } catch (error) {
-        errorEl.textContent = error.message || 'Upload failed';
+        console.error('Upload error:', error);
+        errorEl.textContent = 'Error uploading document: ' + (error.message || 'Please try again');
         errorEl.style.display = 'block';
     } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
     }
 }
-
 function getFileIcon(fileUrl) {
     if (!fileUrl) return 'fa-file';
     const ext = fileUrl.split('.').pop().toLowerCase();
@@ -17775,7 +18153,7 @@ function getFileIcon(fileUrl) {
     </div>
 </div>
 
-<!-- ============ ANALYTICS MODAL ============ -->
+<!-- ============ ANALYTICS MODAL - FIXED ============ -->
 <div class="modal" id="analyticsModal">
     <div class="modal-content" style="max-width: 1200px;">
         <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
@@ -17795,9 +18173,9 @@ function getFileIcon(fileUrl) {
     </div>
 </div>
 
-<!-- ============ REPORTS MODAL ============ -->
+<!-- ============ REPORTS MODAL - FIXED ============ -->
 <div class="modal" id="reportsModal">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content" style="max-width: 900px;">
         <div class="modal-header" style="background: linear-gradient(135deg, #FF0000, #87CEEB);">
             <h2><i class="fas fa-file-alt"></i> Reports</h2>
             <button class="modal-close" onclick="hideModal('reportsModal')">
@@ -17805,33 +18183,72 @@ function getFileIcon(fileUrl) {
             </button>
         </div>
         <div class="modal-body">
-            <div class="stats-grid" style="margin-bottom: 30px;">
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('businesses', 'csv')">
-                    <h3>Businesses Report</h3>
-                    <p>Export all businesses to CSV</p>
-                </div>
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('nominations', 'csv')">
-                    <h3>Nominations Report</h3>
-                    <p>Export all nominations to CSV</p>
-                </div>
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('judges', 'csv')">
-                    <h3>Judges Report</h3>
-                    <p>Export all judges to CSV</p>
+            <div style="margin-bottom: 25px;">
+                <h3>Business Reports</h3>
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('businesses', 'csv')">
+                        <h3>Businesses</h3>
+                        <p>Export all businesses</p>
+                        <small style="color: #64748b;">CSV format</small>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('nominations', 'csv')">
+                        <h3>Nominations</h3>
+                        <p>Export all nominations</p>
+                        <small style="color: #64748b;">CSV format</small>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('winners', 'csv')">
+                        <h3>Winners</h3>
+                        <p>Export all winners</p>
+                        <small style="color: #64748b;">CSV format</small>
+                    </div>
                 </div>
             </div>
-            <div class="stats-grid" style="margin-bottom: 30px;">
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('categories', 'csv')">
-                    <h3>Categories Report</h3>
-                    <p>Export all categories to CSV</p>
+            
+            <div style="margin-bottom: 25px;">
+                <h3>Partner Reports</h3>
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('partners', 'csv')">
+                        <h3>Partners</h3>
+                        <p>Export all partners</p>
+                        <small style="color: #64748b;">CSV format</small>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('partner_events', 'csv')">
+                        <h3>Partner Events</h3>
+                        <p>Export partner events</p>
+                        <small style="color: #64748b;">CSV format</small>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('partner_sessions', 'csv')">
+                        <h3>Partner Sessions</h3>
+                        <p>Export partner sessions</p>
+                        <small style="color: #64748b;">CSV format</small>
+                    </div>
                 </div>
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('announcements', 'csv')">
-                    <h3>Announcements Report</h3>
-                    <p>Export all announcements to CSV</p>
+            </div>
+            
+            <div>
+                <h3>System Reports</h3>
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('analytics', 'json')">
+                        <h3>Analytics Summary</h3>
+                        <p>Full analytics dashboard</p>
+                        <small style="color: #64748b;">JSON format</small>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('system', 'json')">
+                        <h3>System Status</h3>
+                        <p>System health report</p>
+                        <small style="color: #64748b;">JSON format</small>
+                    </div>
+                    <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateReport('votes', 'csv')">
+                        <h3>Votes</h3>
+                        <p>Export all votes</p>
+                        <small style="color: #64748b;">CSV format</small>
+                    </div>
                 </div>
-                <div class="stat-card" style="padding: 20px; cursor: pointer;" onclick="generateSheetReport('spotlight', 'csv')">
-                    <h3>Spotlight Report</h3>
-                    <p>Export all spotlights to CSV</p>
-                </div>
+            </div>
+            
+            <div id="reportPreview" style="margin-top: 30px; display: none; background: #f8fafc; padding: 20px; border-radius: 12px;">
+                <h4>Report Preview</h4>
+                <div id="reportPreviewContent" style="max-height: 400px; overflow-y: auto; background: white; padding: 15px; border-radius: 8px;"></div>
             </div>
         </div>
     </div>
@@ -19559,8 +19976,68 @@ console.log('🖱️ Hover near bottom of screen to show controls');
             <div class="pagination" id="partnerDocumentsPagination"></div>
         </div>
     </div>
-</div>   
+</div>  
     
+  <!-- ============ UPLOAD PARTNER DOCUMENT MODAL ============ -->
+<div class="modal" id="uploadPartnerDocModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <h2><i class="fas fa-upload"></i> Upload Document for Partner</h2>
+            <button class="modal-close" onclick="hideModal('uploadPartnerDocModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="uploadPartnerDocForm">
+                <input type="hidden" id="uploadExistingDocId">
+                
+                <div class="form-group">
+                    <label>Select Partner *</label>
+                    <select id="uploadPartnerId" class="sheet-btn secondary" style="width: 100%; padding: 12px; color: #1a202c; background-color: white;" required>
+                        <option value="">-- Select Partner --</option>
+                    </select>
+                    <small style="color: #64748b;">Select a partner to upload a document for</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Document Name *</label>
+                    <input type="text" id="uploadDocName" class="sheet-btn secondary" style="width: 100%; padding: 12px;" placeholder="e.g., Partnership Agreement" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Document Type</label>
+                    <select id="uploadDocType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
+                        <option value="registration">Registration</option>
+                        <option value="certificate">Certificate</option>
+                        <option value="proposal">Proposal</option>
+                        <option value="agreement">Agreement</option>
+                        <option value="presentation">Presentation</option>
+                        <option value="financial">Financial</option>
+                        <option value="legal">Legal</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>File *</label>
+                    <input type="file" id="uploadDocFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    <small style="color: #64748b;">Max file size: 10MB. Allowed: PDF, DOC, DOCX, JPG, PNG</small>
+                </div>
+                
+                <div class="error-message" id="uploadDocError" style="display: none; color: #EF4444; padding: 10px; background: #FEF2F2; border-radius: 8px; margin-top: 10px;"></div>
+                <div class="success-message" id="uploadDocSuccess" style="display: none; color: #10B981; padding: 10px; background: #D1FAE5; border-radius: 8px; margin-top: 10px;"></div>
+            </form>
+        </div>
+        <div class="modal-footer" style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 15px;">
+            <button class="sheet-btn warning" onclick="hideModal('uploadPartnerDocModal')" style="padding: 12px 25px;">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="sheet-btn" onclick="submitPartnerDocumentUpload()" style="padding: 12px 25px; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                <i class="fas fa-upload"></i> Upload
+            </button>
+        </div>
+    </div>
+</div>
                             
 </body>
 </html>
