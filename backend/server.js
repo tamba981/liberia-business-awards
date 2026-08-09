@@ -6937,6 +6937,410 @@ console.log('✅ Partner Document Routes Ready');
 
 
 // ============================================
+// ADMIN ANALYTICS ROUTES (FIXED - PRODUCTION)
+// ============================================
+
+// Get admin analytics overview
+app.get('/api/admin/analytics', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        console.log('📊 Fetching analytics...');
+        
+        // Get counts from all collections
+        const [
+            totalBusinesses,
+            pendingBusinesses,
+            approvedBusinesses,
+            rejectedBusinesses,
+            totalNominations,
+            pendingNominations,
+            approvedNominations,
+            totalJudges,
+            activeJudges,
+            totalAnnouncements,
+            publishedAnnouncements,
+            totalPartners,
+            activePartners,
+            pendingPartners,
+            totalPartnerEvents,
+            pendingPartnerEvents,
+            approvedPartnerEvents,
+            totalPartnerSessions,
+            livePartnerSessions,
+            totalPartnerDocuments,
+            pendingPartnerDocuments,
+            totalCategories,
+            activeCategories,
+            totalVotes,
+            totalVoters
+        ] = await Promise.all([
+            // Businesses
+            BusinessUser.countDocuments(),
+            BusinessUser.countDocuments({ status: 'pending' }),
+            BusinessUser.countDocuments({ status: 'approved' }),
+            BusinessUser.countDocuments({ status: 'rejected' }),
+            // Nominations
+            Nomination.countDocuments(),
+            Nomination.countDocuments({ status: 'pending' }),
+            Nomination.countDocuments({ status: 'approved' }),
+            // Judges
+            Judge.countDocuments(),
+            Judge.countDocuments({ status: 'active' }),
+            // Announcements
+            Announcement.countDocuments(),
+            Announcement.countDocuments({ status: 'published' }),
+            // Partners
+            Partner.countDocuments(),
+            Partner.countDocuments({ status: 'active' }),
+            Partner.countDocuments({ status: 'pending' }),
+            // Partner Events
+            Event.countDocuments({ partner_id: { $exists: true } }),
+            Event.countDocuments({ partner_id: { $exists: true }, approval_status: 'pending' }),
+            Event.countDocuments({ partner_id: { $exists: true }, approval_status: 'approved' }),
+            // Partner Sessions
+            Session.countDocuments({ partner_id: { $exists: true } }),
+            Session.countDocuments({ partner_id: { $exists: true }, status: 'live' }),
+            // Partner Documents
+            PartnerDocument.countDocuments(),
+            PartnerDocument.countDocuments({ status: 'pending' }),
+            // Categories (Spotlight)
+            SpotlightCategory.countDocuments(),
+            SpotlightCategory.countDocuments({ status: 'active' }),
+            // Votes
+            Vote.countDocuments(),
+            Vote.distinct('voter_email').then(emails => emails.length)
+        ]);
+        
+        // Get recent activity (last 10 actions across all collections)
+        const recentActivities = [];
+        
+        // Get recent businesses
+        const recentBusinesses = await BusinessUser.find()
+            .select('business_name email status created_at')
+            .sort({ created_at: -1 })
+            .limit(3);
+        recentBusinesses.forEach(b => {
+            recentActivities.push({
+                type: 'business',
+                title: `New Business: ${b.business_name}`,
+                description: `Status: ${b.status}`,
+                time: b.created_at,
+                icon: 'building'
+            });
+        });
+        
+        // Get recent partners
+        const recentPartners = await Partner.find()
+            .select('organization_name email status created_at')
+            .sort({ created_at: -1 })
+            .limit(3);
+        recentPartners.forEach(p => {
+            recentActivities.push({
+                type: 'partner',
+                title: `New Partner: ${p.organization_name}`,
+                description: `Status: ${p.status}`,
+                time: p.created_at,
+                icon: 'handshake'
+            });
+        });
+        
+        // Get recent nominations
+        const recentNominations = await Nomination.find()
+            .populate('business_id', 'business_name')
+            .sort({ created_at: -1 })
+            .limit(3);
+        recentNominations.forEach(n => {
+            const bizName = n.business_id?.business_name || 'Unknown Business';
+            recentActivities.push({
+                type: 'nomination',
+                title: `New Nomination: ${n.title || 'Untitled'}`,
+                description: `Business: ${bizName} | Category: ${n.category}`,
+                time: n.created_at,
+                icon: 'award'
+            });
+        });
+        
+        // Sort activities by time (newest first)
+        recentActivities.sort((a, b) => new Date(b.time) - new Date(a.time));
+        
+        // Get monthly registrations (last 6 months)
+        const monthlyRegistrations = [];
+        const months = 6;
+        for (let i = months - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+            const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+            
+            const count = await BusinessUser.countDocuments({
+                created_at: { $gte: startOfMonth, $lt: endOfMonth }
+            });
+            
+            monthlyRegistrations.push({
+                month: date.toLocaleString('default', { month: 'short' }),
+                year: date.getFullYear(),
+                count: count
+            });
+        }
+        
+        // Get nominations by category
+        const nominationsByCategory = await Nomination.aggregate([
+            { $group: { _id: '$category', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+        
+        // Get businesses by sector
+        const businessesBySector = await BusinessUser.aggregate([
+            { $group: { _id: '$industry', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]);
+        
+        // Build response
+        const analytics = {
+            overview: {
+                totalBusinesses,
+                pendingBusinesses,
+                approvedBusinesses,
+                rejectedBusinesses,
+                totalNominations,
+                pendingNominations,
+                approvedNominations,
+                totalJudges,
+                activeJudges,
+                totalAnnouncements,
+                publishedAnnouncements,
+                totalPartners,
+                activePartners,
+                pendingPartners,
+                totalPartnerEvents,
+                pendingPartnerEvents,
+                approvedPartnerEvents,
+                totalPartnerSessions,
+                livePartnerSessions,
+                totalPartnerDocuments,
+                pendingPartnerDocuments,
+                totalCategories,
+                activeCategories,
+                totalVotes,
+                totalVoters
+            },
+            charts: {
+                monthlyRegistrations,
+                nominationsByCategory: nominationsByCategory.map(c => ({ category: c._id || 'Uncategorized', count: c.count })),
+                businessesBySector: businessesBySector.map(c => ({ sector: c._id || 'Unspecified', count: c.count }))
+            },
+            recent: recentActivities.slice(0, 10)
+        };
+        
+        res.json({
+            success: true,
+            analytics
+        });
+    } catch (error) {
+        console.error('❌ Analytics error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to load analytics'
+        });
+    }
+});
+
+// Get analytics overview (summary)
+app.get('/api/admin/analytics/overview', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const [totalBusinesses, pendingBusinesses, totalNominations, totalPartners, totalVotes] = await Promise.all([
+            BusinessUser.countDocuments(),
+            BusinessUser.countDocuments({ status: 'pending' }),
+            Nomination.countDocuments(),
+            Partner.countDocuments(),
+            Vote.countDocuments()
+        ]);
+        
+        res.json({
+            success: true,
+            overview: {
+                totalBusinesses,
+                pendingBusinesses,
+                totalNominations,
+                totalPartners,
+                totalVotes
+            }
+        });
+    } catch (error) {
+        console.error('❌ Overview error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to load overview'
+        });
+    }
+});
+
+console.log('✅ Admin Analytics Routes Ready');
+
+// ============================================
+// ADMIN REPORT GENERATION ROUTES
+// ============================================
+
+// Generate report (admin)
+app.post('/api/admin/reports/generate', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { type, format = 'csv' } = req.body;
+        
+        if (!type) {
+            return res.status(400).json({
+                success: false,
+                message: 'Report type is required'
+            });
+        }
+        
+        let data = [];
+        let filename = `report-${type}-${new Date().toISOString().split('T')[0]}`;
+        
+        switch(type) {
+            case 'businesses':
+                data = await BusinessUser.find()
+                    .select('business_name email contact_name phone business_type status created_at approved_at')
+                    .sort({ created_at: -1 });
+                filename = `businesses-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            case 'partners':
+                data = await Partner.find()
+                    .select('organization_name email contact_name phone type status created_at approved_at')
+                    .sort({ created_at: -1 });
+                filename = `partners-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            case 'nominations':
+                data = await Nomination.find()
+                    .populate('business_id', 'business_name email')
+                    .sort({ created_at: -1 });
+                filename = `nominations-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            case 'events':
+                data = await Event.find()
+                    .populate('partner_id', 'organization_name')
+                    .sort({ created_at: -1 });
+                filename = `events-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            case 'sessions':
+                data = await Session.find()
+                    .populate('partner_id', 'organization_name')
+                    .sort({ created_at: -1 });
+                filename = `sessions-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            case 'documents':
+                data = await PartnerDocument.find()
+                    .populate('partner_id', 'organization_name')
+                    .sort({ created_at: -1 });
+                filename = `documents-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            case 'judges':
+                data = await Judge.find()
+                    .select('name email profession organization status votes_cast created_at')
+                    .sort({ created_at: -1 });
+                filename = `judges-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            case 'announcements':
+                data = await Announcement.find()
+                    .sort({ created_at: -1 });
+                filename = `announcements-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            case 'votes':
+                data = await Vote.find()
+                    .populate('nomination_id', 'title')
+                    .sort({ created_at: -1 });
+                filename = `votes-report-${new Date().toISOString().split('T')[0]}`;
+                break;
+                
+            default:
+                return res.status(400).json({
+                    success: false,
+                    message: `Unknown report type: ${type}`
+                });
+        }
+        
+        if (format === 'csv') {
+            // Generate CSV
+            let csv = '';
+            if (data.length > 0) {
+                // Get headers from first item
+                const headers = Object.keys(data[0].toObject ? data[0].toObject() : data[0]);
+                csv = headers.join(',') + '\n';
+                
+                // Add rows
+                data.forEach(item => {
+                    const row = headers.map(header => {
+                        let value = item[header];
+                        if (value && typeof value === 'object') {
+                            // Handle populated fields
+                            if (value.organization_name) value = value.organization_name;
+                            else if (value.business_name) value = value.business_name;
+                            else if (value.name) value = value.name;
+                            else if (value._id) value = value._id.toString();
+                            else value = JSON.stringify(value);
+                        }
+                        if (value && typeof value === 'string' && value.includes(',')) {
+                            value = `"${value}"`;
+                        }
+                        return value || '';
+                    });
+                    csv += row.join(',') + '\n';
+                });
+            }
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
+            return res.send(csv);
+        }
+        
+        // Default to JSON
+        res.json({
+            success: true,
+            data,
+            count: data.length,
+            type,
+            format,
+            generated_at: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Report generation error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to generate report'
+        });
+    }
+});
+
+// Get report types
+app.get('/api/admin/reports/types', authenticate, authorize('admin'), async (req, res) => {
+    res.json({
+        success: true,
+        types: [
+            { id: 'businesses', label: 'Businesses Report', description: 'All registered businesses' },
+            { id: 'partners', label: 'Partners Report', description: 'All partners' },
+            { id: 'nominations', label: 'Nominations Report', description: 'All nominations' },
+            { id: 'events', label: 'Events Report', description: 'All partner events' },
+            { id: 'sessions', label: 'Sessions Report', description: 'All partner sessions' },
+            { id: 'documents', label: 'Documents Report', description: 'All partner documents' },
+            { id: 'judges', label: 'Judges Report', description: 'All judges' },
+            { id: 'announcements', label: 'Announcements Report', description: 'All announcements' },
+            { id: 'votes', label: 'Votes Report', description: 'All votes' }
+        ]
+    });
+});
+
+console.log('✅ Admin Report Routes Ready');
+
+// ============================================
 // ADMIN PARTNER EVENTS MANAGEMENT ROUTES
 // ============================================
 
