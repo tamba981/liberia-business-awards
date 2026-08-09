@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <!-- ============ AUTHENTICATION CHECK ============ -->
-   <script>
+    <!-- ============ AUTHENTICATION CHECK ============ -->
+    <script>
     (function() {
         const token = localStorage.getItem('lba_auth_token');
         const userRole = localStorage.getItem('lba_user_role');
@@ -48,9 +48,9 @@
             window.location.replace('../login.html');
         });
     })();
-</script>
+    </script>
     
-    <!-- ============ SECURITY LAYER ============ -->
+    <!-- ============ SECURITY LAYER (FIXED) ============ -->
     <script>
     (function() {
         'use strict';
@@ -86,38 +86,8 @@
             window.addEventListener('keydown', blockDevToolsShortcuts);
         } catch (err) {}
         
-        const originalCreateElement = document.createElement;
-        document.createElement = function(tagName) {
-            const element = originalCreateElement.call(document, tagName);
-            if (tagName && tagName.toLowerCase() === 'script') {
-                const originalSetAttribute = element.setAttribute;
-                element.setAttribute = function(name, value) {
-                    if (name && name.toLowerCase() === 'src') {
-                        const srcValue = value;
-                        const allowed = [
-                            window.location.origin,
-                            'https://cdnjs.cloudflare.com',
-                            'https://unpkg.com',
-                            'https://fonts.googleapis.com',
-                            'https://code.jquery.com',
-                            'https://cdn.jsdelivr.net'
-                        ];
-                        let isAllowed = false;
-                        for (let i = 0; i < allowed.length; i++) {
-                            if (srcValue.indexOf(allowed[i]) === 0) {
-                                isAllowed = true;
-                                break;
-                            }
-                        }
-                        if (!isAllowed) {
-                            return;
-                        }
-                    }
-                    originalSetAttribute.call(this, name, value);
-                };
-            }
-            return element;
-        };
+        // REMOVED: document.createElement override that was breaking fetch responses
+        // This was causing "Unexpected token '<'" errors when parsing JSON responses
     })();
     </script>
     
@@ -1755,7 +1725,7 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- JAVASCRIPT - MOVED TO BODY FOR PROPER LOADING -->
+    <!-- JAVASCRIPT - COMPLETE PRODUCTION VERSION -->
     <!-- ============================================ -->
     <script>
     // ============================================
@@ -2291,6 +2261,14 @@
         document.getElementById('eventStartDate').value = startDefault.toISOString().slice(0, 16);
         document.getElementById('eventEndDate').value = endDefault.toISOString().slice(0, 16);
         showModal('createEventModal');
+        
+        // Reset the button to Create Event mode
+        const submitBtn = document.querySelector('#createEventModal .btn-primary');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Create Event';
+            submitBtn.onclick = createEvent;
+        }
+        document.getElementById('eventId').value = '';
     }
     
     async function createEvent() {
@@ -2371,14 +2349,15 @@
                 throw { status: 401, message: 'Unauthorized' };
             }
             
-            let data;
-            try {
-                data = await response.json();
-            } catch (parseError) {
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
                 const text = await response.text();
                 console.error('❌ Non-JSON response:', text.substring(0, 200));
-                throw new Error('Server returned an invalid response');
+                throw new Error('Server returned an invalid response. Please try again.');
             }
+            
+            let data = await response.json();
             
             if (data.success) {
                 showToast('✅ Event submitted for admin approval!', 'success');
@@ -2387,6 +2366,7 @@
                 removeEventImage();
                 await loadEvents();
                 
+                // Send notification to admin
                 try {
                     await apiRequest('/partner/messages/thread', {
                         method: 'POST',
@@ -2434,7 +2414,151 @@
     }
     
     function editEvent(id) {
-        showToast('Edit event feature coming soon', 'info');
+        const event = appState.events.find(e => e._id === id);
+        if (!event) {
+            showToast('Event not found', 'error');
+            return;
+        }
+        
+        // Populate the modal with event data
+        document.getElementById('eventTitle').value = event.title || '';
+        document.getElementById('eventDescription').value = event.description || '';
+        if (event.start_date) {
+            const start = new Date(event.start_date);
+            document.getElementById('eventStartDate').value = start.toISOString().slice(0, 16);
+        }
+        if (event.end_date) {
+            const end = new Date(event.end_date);
+            document.getElementById('eventEndDate').value = end.toISOString().slice(0, 16);
+        }
+        document.getElementById('eventLocation').value = event.location || '';
+        document.getElementById('eventType').value = event.type || 'other';
+        document.getElementById('eventRegistrationLink').value = event.registration_link || '';
+        
+        // Show image preview if exists
+        if (event.image_url) {
+            const preview = document.getElementById('eventImagePreview');
+            const img = document.getElementById('eventImagePreviewImg');
+            if (preview && img) {
+                img.src = event.image_url;
+                preview.style.display = 'block';
+            }
+            document.getElementById('eventImage').value = event.image_url;
+        }
+        
+        showModal('createEventModal');
+        
+        // Change button to Update
+        const submitBtn = document.querySelector('#createEventModal .btn-primary');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Event';
+            submitBtn.onclick = function() {
+                updateEvent(id);
+            };
+        }
+        
+        showToast('Edit the event details and click Update Event', 'info');
+    }
+    
+    async function updateEvent(id) {
+        const submitBtn = document.querySelector('#createEventModal .btn-primary');
+        if (submitBtn.disabled) {
+            return;
+        }
+        
+        const formData = new FormData();
+        
+        const title = document.getElementById('eventTitle').value.trim();
+        const description = document.getElementById('eventDescription').value.trim();
+        const start_date = document.getElementById('eventStartDate').value;
+        const end_date = document.getElementById('eventEndDate').value;
+        const location = document.getElementById('eventLocation').value.trim();
+        const type = document.getElementById('eventType').value;
+        const registration_link = document.getElementById('eventRegistrationLink').value.trim();
+        const imageFile = document.getElementById('eventImageFile').files[0];
+        
+        if (!title || !description || !start_date || !end_date) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        const start = new Date(start_date);
+        const end = new Date(end_date);
+        if (end <= start) {
+            showToast('End date must be after start date', 'error');
+            return;
+        }
+        
+        const eventData = {
+            title: title,
+            description: description,
+            start_date: start_date,
+            end_date: end_date,
+            location: location || '',
+            type: type || 'other',
+            registration_link: registration_link || '',
+            status: 'draft',
+            approval_status: 'pending'
+        };
+        
+        formData.append('eventData', JSON.stringify(eventData));
+        
+        if (imageFile) {
+            formData.append('featured_image', imageFile);
+        }
+        
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        submitBtn.disabled = true;
+        
+        try {
+            const token = localStorage.getItem('lba_auth_token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+            
+            const response = await fetch(`${API_BASE}/partner/events/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            
+            if (response.status === 401) {
+                throw { status: 401, message: 'Unauthorized' };
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('❌ Non-JSON response:', text.substring(0, 200));
+                throw new Error('Server returned an invalid response');
+            }
+            
+            let data = await response.json();
+            
+            if (data.success) {
+                showToast('✅ Event updated successfully!', 'success');
+                hideModal('createEventModal');
+                document.getElementById('createEventForm').reset();
+                removeEventImage();
+                await loadEvents();
+            } else {
+                showToast(data.message || 'Failed to update event', 'error');
+            }
+        } catch (error) {
+            console.error('❌ Update event error:', error);
+            if (error.status === 401) {
+                showToast('Session expired. Please login again.', 'error');
+                setTimeout(logout, 1500);
+            } else {
+                showToast(error.message || 'Failed to update event', 'error');
+            }
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
     }
     
     // ============================================
@@ -2597,6 +2721,14 @@
         document.getElementById('sessionDate').value = defaultDate.toISOString().slice(0, 10);
         document.getElementById('sessionTime').value = '14:00';
         showModal('createSessionModal');
+        
+        // Reset button to Create mode
+        const submitBtn = document.querySelector('#createSessionModal .btn-primary');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-play"></i> Start Session';
+            submitBtn.onclick = createSession;
+        }
+        document.getElementById('sessionId').value = '';
     }
     
     async function createSession() {
@@ -2660,6 +2792,13 @@
             
             if (response.status === 401) {
                 throw { status: 401, message: 'Unauthorized' };
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('❌ Non-JSON response:', text.substring(0, 200));
+                throw new Error('Server returned an invalid response');
             }
             
             const data = await response.json();
@@ -2755,6 +2894,17 @@
         document.getElementById('sessionVisibility').value = session.visibility || 'public';
         document.getElementById('sessionEmbedEnabled').checked = session.is_embedded || false;
         
+        // Show image preview if exists
+        if (session.featured_image) {
+            const preview = document.getElementById('sessionImagePreview');
+            const img = document.getElementById('sessionImagePreviewImg');
+            if (preview && img) {
+                img.src = session.featured_image;
+                preview.style.display = 'block';
+            }
+            document.getElementById('sessionImage').value = session.featured_image;
+        }
+        
         showModal('createSessionModal');
         
         const submitBtn = document.querySelector('#createSessionModal .btn-primary');
@@ -2766,17 +2916,6 @@
         }
         
         document.getElementById('sessionId').value = id;
-        
-        if (session.featured_image) {
-            const preview = document.getElementById('sessionImagePreview');
-            const img = document.getElementById('sessionImagePreviewImg');
-            if (preview && img) {
-                img.src = session.featured_image;
-                preview.style.display = 'block';
-            }
-            document.getElementById('sessionImage').value = session.featured_image;
-        }
-        
         showToast('Edit the session details and click Update Session', 'info');
     }
     
@@ -2851,14 +2990,14 @@
                 throw { status: 401, message: 'Unauthorized' };
             }
             
-            let data;
-            try {
-                data = await response.json();
-            } catch (parseError) {
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
                 const text = await response.text();
                 console.error('❌ Non-JSON response:', text.substring(0, 200));
                 throw new Error('Server returned an invalid response');
             }
+            
+            let data = await response.json();
             
             if (data.success) {
                 showToast('✅ Session updated successfully!', 'success');
@@ -3574,7 +3713,7 @@
     }
     
     // ============================================
-    // PARTNER DOCUMENTS FUNCTIONS
+    // PARTNER DOCUMENTS FUNCTIONS (FIXED)
     // ============================================
     let partnerDocumentsData = [];
     let partnerDocumentsPage = 1;
@@ -3607,6 +3746,14 @@
             
             if (response.status === 401) {
                 throw { status: 401, message: 'Unauthorized' };
+            }
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('❌ Non-JSON response:', text.substring(0, 200));
+                throw new Error('Server returned an invalid response. Please try again.');
             }
             
             const data = await response.json();
@@ -3642,6 +3789,10 @@
                     <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #EF4444;">
                         <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
                         <p>Error loading documents</p>
+                        <p style="font-size: 13px; margin-top: 8px; color: #64748b;">${error.message || 'Please try again'}</p>
+                        <button class="btn btn-primary btn-sm" onclick="loadDocuments()" style="margin-top: 10px;">
+                            <i class="fas fa-sync"></i> Retry
+                        </button>
                     </div>
                 `;
             }
@@ -3810,6 +3961,14 @@
                 throw { status: 401, message: 'Unauthorized' };
             }
             
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('❌ Non-JSON response:', text.substring(0, 200));
+                throw new Error('Server returned an invalid response. Please try again.');
+            }
+            
             const data = await response.json();
             
             if (data.success) {
@@ -3877,7 +4036,10 @@
                     fetch(downloadUrl, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     })
-                    .then(res => res.blob())
+                    .then(res => {
+                        if (!res.ok) throw new Error('Failed to fetch image');
+                        return res.blob();
+                    })
                     .then(blob => {
                         const blobUrl = URL.createObjectURL(blob);
                         newWindow.document.body.innerHTML = `<img src="${blobUrl}" alt="${escapeHtml(doc.name)}">`;
@@ -3982,10 +4144,12 @@
     window.createEvent = createEvent;
     window.deleteEvent = deleteEvent;
     window.editEvent = editEvent;
+    window.updateEvent = updateEvent;
     window.showCreateSessionModal = showCreateSessionModal;
     window.createSession = createSession;
     window.deleteSession = deleteSession;
     window.editSession = editSession;
+    window.updateSession = updateSession;
     window.startSessionNow = startSessionNow;
     window.endSession = endSession;
     window.openEmbeddedSession = openEmbeddedSession;
@@ -4025,6 +4189,8 @@
     window.deleteDocument = deleteDocument;
     
     console.log('✅ Partner Dashboard fully functional');
+    console.log('📡 API_BASE:', API_BASE);
+    console.log('👤 User:', appState.user?.name || 'Not loaded');
     </script>
 </body>
 </html>
