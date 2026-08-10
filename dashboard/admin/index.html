@@ -3656,6 +3656,70 @@ function closeModal(modalId) {
             notification.addEventListener('click', () => notification.remove());
         }
 
+
+        // ============================================
+// SHOW TOAST NOTIFICATION (Lighter than showNotification)
+// ============================================
+function showToast(message, type = 'info') {
+    const colors = {
+        success: '#10B981',
+        warning: '#F59E0B',
+        error: '#EF4444',
+        info: '#3B82F6'
+    };
+    
+    const icons = {
+        success: 'check-circle',
+        warning: 'exclamation-triangle',
+        error: 'exclamation-circle',
+        info: 'info-circle'
+    };
+    
+    // Remove existing toasts
+    document.querySelectorAll('.toast-notification').forEach(t => t.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: white;
+        color: ${colors[type]};
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        z-index: 99999;
+        animation: slideUp 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-left: 4px solid ${colors[type]};
+        max-width: 350px;
+        font-weight: 600;
+        font-size: 14px;
+    `;
+    
+    toast.innerHTML = `
+        <i class="fas fa-${icons[type]}" style="font-size: 18px;"></i>
+        <span>${escapeHtml(message)}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideUp 0.3s reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+    
+    // Click to dismiss
+    toast.addEventListener('click', () => {
+        toast.style.animation = 'slideUp 0.3s reverse';
+        setTimeout(() => toast.remove(), 300);
+    });
+}
+
         // ============================================
         // ACTION FUNCTIONS (Stubs for now)
         // ============================================
@@ -10535,16 +10599,7 @@ function displayBusinessDocuments(documents) {
     `;
 }
 
-// Get file icon based on extension
-function getFileIcon(fileUrl) {
-    if (!fileUrl) return 'fa-file';
-    const ext = fileUrl.split('.').pop().toLowerCase();
-    if (ext === 'pdf') return 'fa-file-pdf';
-    if (ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif') return 'fa-file-image';
-    if (ext === 'doc' || ext === 'docx') return 'fa-file-word';
-    if (ext === 'xls' || ext === 'xlsx') return 'fa-file-excel';
-    return 'fa-file';
-}
+
 
 // View business document (admin version)
 function viewBusinessDocument(documentId) {
@@ -15740,6 +15795,9 @@ async function showPartnerNotificationsModal() {
     }
 }
 
+// ============================================
+// FIXED: LOAD PARTNER NOTIFICATIONS
+// ============================================
 async function loadPartnerNotifications() {
     const tbody = document.getElementById('partnerNotificationsTableBody');
     if (!tbody) return;
@@ -15751,13 +15809,28 @@ async function loadPartnerNotifications() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const url = `${API_BASE}/admin/partner/notifications?page=${partnerNotificationsPage}&limit=20&status=${status}&search=${encodeURIComponent(search)}`;
+        if (!token) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Please login again</td></tr>';
+            return;
+        }
+        
+        let url = `${API_BASE}/admin/partner/notifications?page=${partnerNotificationsPage}&limit=20`;
+        if (status !== 'all') url += `&status=${status}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        console.log('📡 Fetching partner notifications:', url);
         
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        if (response.status === 401) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Session expired. Please refresh and login again.</td></tr>';
+            return;
+        }
+        
         const data = await response.json();
+        console.log('📥 Partner notifications response:', data);
         
         if (data.success) {
             partnerNotificationsData = data.notifications || [];
@@ -15773,13 +15846,22 @@ async function loadPartnerNotifications() {
                 badge.style.display = unreadCount > 0 ? 'inline' : 'none';
             }
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No notifications found</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">${data.message || 'Error loading notifications'}</td></tr>`;
         }
     } catch (error) {
         console.error('Load partner notifications error:', error);
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">Error: ${error.message}</td></tr>`;
     }
 }
+
+
+// ============================================
+// FILTER PARTNER NOTIFICATIONS
+// ============================================
+function filterPartnerNotifications() {
+    displayPartnerNotifications();
+}        
+        
 
 function displayPartnerNotifications() {
     const tbody = document.getElementById('partnerNotificationsTableBody');
@@ -16633,6 +16715,7 @@ let partnerDocumentsPage = 1;
 let partnerDocumentsTotalPages = 1;
 let partnerDocumentsData = [];
 
+
 // ============================================
 // FIXED: SHOW PARTNER DOCUMENTS MODAL
 // ============================================
@@ -16642,7 +16725,7 @@ async function showPartnerDocumentsModal() {
     // Check if modal exists
     let modal = document.getElementById('partnerDocumentsModal');
     if (!modal) {
-        console.error('Partner Documents Modal not found!');
+        console.log('Partner Documents Modal not found, creating...');
         createPartnerDocumentsModal();
         modal = document.getElementById('partnerDocumentsModal');
         if (!modal) {
@@ -17271,7 +17354,7 @@ function getFileIcon(fileUrl) {
 }
     
 
-        
+
         
 </script>
     
