@@ -13087,10 +13087,16 @@ async function deleteUser(id) {
 async function showAnalyticsModal() {
     hideAllModals();
     const modal = document.getElementById('analyticsModal');
+    if (!modal) {
+        showNotification('Analytics modal not found. Please refresh.', 'error');
+        return;
+    }
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     
     const content = document.getElementById('analyticsContent');
+    if (!content) return;
+    
     content.innerHTML = `
         <div style="text-align: center; padding: 50px;">
             <i class="fas fa-spinner fa-spin fa-2x"></i>
@@ -13100,22 +13106,31 @@ async function showAnalyticsModal() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            content.innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 20px;"></i>
+                    <p>Authentication required</p>
+                    <button class="sheet-btn" onclick="showAnalyticsModal()" style="margin-top: 20px;">
+                        <i class="fas fa-sync-alt"></i> Retry
+                    </button>
+                </div>
+            `;
+            return;
+        }
         
         // Fetch data from multiple endpoints to build analytics
-        const [businessesRes, partnersRes, nominationsRes, judgesRes, eventsRes] = await Promise.all([
-            fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?limit=1`, {
+        const [businessesRes, partnersRes, judgesRes, eventsRes] = await Promise.all([
+            fetch(`${API_BASE}/admin/businesses?limit=1`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
-            fetch(`${API_BASE.replace('/api', '')}/api/admin/partners?limit=1`, {
+            fetch(`${API_BASE}/admin/partners?limit=1`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
-            fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?status=all&limit=1`, {
+            fetch(`${API_BASE}/admin/judges?limit=1`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }),
-            fetch(`${API_BASE.replace('/api', '')}/api/admin/judges?limit=1`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            }),
-            fetch(`${API_BASE.replace('/api', '')}/api/admin/events?limit=1`, {
+            fetch(`${API_BASE}/admin/events?limit=1`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
         ]);
@@ -13123,39 +13138,32 @@ async function showAnalyticsModal() {
         // Try to parse each response
         let businessData = { total: 0 };
         let partnerData = { total: 0 };
-        let nominationData = { total: 0 };
         let judgeData = { total: 0 };
         let eventData = { total: 0 };
         
         try {
             const b = await businessesRes.json();
-            if (b.success) businessData = { total: b.pagination?.total || 0 };
-        } catch(e) {}
+            if (b.success) businessData = { total: b.pagination?.total || b.businesses?.length || 0 };
+        } catch(e) { console.log('Business parse error:', e); }
         
         try {
             const p = await partnersRes.json();
-            if (p.success) partnerData = { total: p.pagination?.total || 0 };
-        } catch(e) {}
-        
-        try {
-            const n = await nominationsRes.json();
-            if (n.success) nominationData = { total: n.pagination?.total || 0 };
-        } catch(e) {}
+            if (p.success) partnerData = { total: p.pagination?.total || p.partners?.length || 0 };
+        } catch(e) { console.log('Partner parse error:', e); }
         
         try {
             const j = await judgesRes.json();
             if (j.success) judgeData = { total: j.judges?.length || 0 };
-        } catch(e) {}
+        } catch(e) { console.log('Judge parse error:', e); }
         
         try {
             const e = await eventsRes.json();
             if (e.success) eventData = { total: e.events?.length || 0 };
-        } catch(e) {}
+        } catch(e) { console.log('Event parse error:', e); }
         
         // Calculate some stats
         const totalBusinesses = businessData.total || 0;
         const totalPartners = partnerData.total || 0;
-        const totalNominations = nominationData.total || 0;
         const totalJudges = judgeData.total || 0;
         const totalEvents = eventData.total || 0;
         
@@ -13170,28 +13178,13 @@ async function showAnalyticsModal() {
                     <h3 style="color: #8B5CF6;">${totalPartners}</h3>
                     <p>Total Partners</p>
                 </div>
-                <div class="stat-card" style="padding: 20px; border-left: 4px solid #F59E0B;">
-                    <h3 style="color: #F59E0B;">${totalNominations}</h3>
-                    <p>Total Nominations</p>
-                </div>
                 <div class="stat-card" style="padding: 20px; border-left: 4px solid #10B981;">
                     <h3 style="color: #10B981;">${totalJudges}</h3>
                     <p>Total Judges</p>
                 </div>
-            </div>
-            
-            <div class="stats-grid" style="margin-bottom: 30px; grid-template-columns: repeat(3, 1fr);">
-                <div class="stat-card" style="padding: 20px; border-left: 4px solid #3B82F6;">
-                    <h3 style="color: #3B82F6;">${totalEvents}</h3>
+                <div class="stat-card" style="padding: 20px; border-left: 4px solid #F59E0B;">
+                    <h3 style="color: #F59E0B;">${totalEvents}</h3>
                     <p>Past Events</p>
-                </div>
-                <div class="stat-card" style="padding: 20px; border-left: 4px solid #EF4444;">
-                    <h3 style="color: #EF4444;">${totalEvents > 0 ? 'Active' : 'Inactive'}</h3>
-                    <p>Event Status</p>
-                </div>
-                <div class="stat-card" style="padding: 20px; border-left: 4px solid #8B5CF6;">
-                    <h3 style="color: #8B5CF6;">${totalPartners > 0 ? '✅' : '❌'}</h3>
-                    <p>Partners Active</p>
                 </div>
             </div>
             
@@ -13202,7 +13195,6 @@ async function showAnalyticsModal() {
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                     <div><strong>Total Businesses:</strong> ${totalBusinesses}</div>
                     <div><strong>Total Partners:</strong> ${totalPartners}</div>
-                    <div><strong>Total Nominations:</strong> ${totalNominations}</div>
                     <div><strong>Total Judges:</strong> ${totalJudges}</div>
                     <div><strong>Past Events:</strong> ${totalEvents}</div>
                     <div><strong>Last Updated:</strong> ${new Date().toLocaleString()}</div>
@@ -13235,11 +13227,16 @@ async function showAnalyticsModal() {
 function showReportsModal() {
     hideAllModals();
     const modal = document.getElementById('reportsModal');
+    if (!modal) {
+        showNotification('Reports modal not found. Please refresh.', 'error');
+        return;
+    }
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     
     // Hide preview
-    document.getElementById('reportPreview').style.display = 'none';
+    const preview = document.getElementById('reportPreview');
+    if (preview) preview.style.display = 'none';
 }
 
 // ============================================
@@ -13251,11 +13248,24 @@ async function generateReport(type, format) {
     // Show loading state
     const preview = document.getElementById('reportPreview');
     const content = document.getElementById('reportPreviewContent');
-    preview.style.display = 'block';
-    content.innerHTML = '<div style="text-align: center; padding: 30px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Generating report...</p></div>';
+    if (preview) preview.style.display = 'block';
+    if (content) {
+        content.innerHTML = '<div style="text-align: center; padding: 30px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Generating report...</p></div>';
+    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            if (content) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #EF4444;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 36px;"></i>
+                        <p>Authentication required</p>
+                    </div>
+                `;
+            }
+            return;
+        }
         
         let data = [];
         let filename = '';
@@ -13264,12 +13274,12 @@ async function generateReport(type, format) {
         // Fetch data based on type
         switch(type) {
             case 'businesses':
-                const bRes = await fetch(`${API_BASE.replace('/api', '')}/api/admin/businesses?limit=500`, {
+                const bRes = await fetch(`${API_BASE}/admin/businesses?limit=500`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const bData = await bRes.json();
                 if (bData.success) {
-                    data = bData.businesses.map(b => ({
+                    data = (bData.businesses || []).map(b => ({
                         'Business Name': b.business_name || 'N/A',
                         'Email': b.email || 'N/A',
                         'Contact': b.contact_name || 'N/A',
@@ -13284,7 +13294,6 @@ async function generateReport(type, format) {
                 break;
                 
             case 'nominations':
-                // Fetch nominations from Google Sheets or API
                 const nRes = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getNominations`);
                 const nData = await nRes.json();
                 if (nData.success && nData.nominations) {
@@ -13300,13 +13309,13 @@ async function generateReport(type, format) {
                 break;
                 
             case 'partners':
-                const pRes = await fetch(`${API_BASE.replace('/api', '')}/api/admin/partners?limit=200`, {
+                const pRes = await fetch(`${API_BASE}/admin/partners?limit=200`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const pData = await pRes.json();
                 if (pData.success) {
-                    data = pData.partners.map(p => ({
-                        'Organization': p.organization_name || 'N/A',
+                    data = (pData.partners || []).map(p => ({
+                        'Organization': p.organization_name || p.name || 'N/A',
                         'Email': p.email || 'N/A',
                         'Contact': p.contact_name || 'N/A',
                         'Phone': p.phone || 'N/A',
@@ -13320,14 +13329,13 @@ async function generateReport(type, format) {
                 break;
                 
             case 'winners':
-                // Fetch past events to get winners
-                const wRes = await fetch(`${API_BASE.replace('/api', '')}/api/admin/events?limit=50`, {
+                const wRes = await fetch(`${API_BASE}/admin/events?limit=50`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const wData = await wRes.json();
                 if (wData.success) {
                     const allWinners = [];
-                    wData.events.forEach(event => {
+                    (wData.events || []).forEach(event => {
                         if (event.winners && event.winners.length > 0) {
                             event.winners.forEach(w => {
                                 allWinners.push({
@@ -13346,30 +13354,13 @@ async function generateReport(type, format) {
                 }
                 break;
                 
-            case 'votes':
-                // Fetch votes from Google Sheets
-                const vRes = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getAllVotes`);
-                const vData = await vRes.json();
-                if (vData.success && vData.votes) {
-                    data = vData.votes.map(v => ({
-                        'Business': v.business_name || 'N/A',
-                        'Score': v.vote_value || 0,
-                        'Voter': v.voter_email || 'N/A',
-                        'Type': v.is_jury ? 'Jury' : 'Public',
-                        'Date': v.timestamp ? new Date(v.timestamp).toLocaleDateString() : 'N/A'
-                    }));
-                    headers = ['Business', 'Score', 'Voter', 'Type', 'Date'];
-                    filename = 'votes_report';
-                }
-                break;
-                
             default:
                 // Generic report - show summary of all data
                 const summary = {
-                    'Total Businesses': await getCount(`${API_BASE.replace('/api', '')}/api/admin/businesses`),
-                    'Total Partners': await getCount(`${API_BASE.replace('/api', '')}/api/admin/partners`),
-                    'Total Judges': await getCount(`${API_BASE.replace('/api', '')}/api/admin/judges`),
-                    'Total Events': await getCount(`${API_BASE.replace('/api', '')}/api/admin/events`),
+                    'Total Businesses': await getCount(`${API_BASE}/admin/businesses`),
+                    'Total Partners': await getCount(`${API_BASE}/admin/partners`),
+                    'Total Judges': await getCount(`${API_BASE}/admin/judges`),
+                    'Total Events': await getCount(`${API_BASE}/admin/events`),
                 };
                 data = [summary];
                 headers = Object.keys(summary);
@@ -13378,7 +13369,7 @@ async function generateReport(type, format) {
         }
         
         // Display preview
-        if (data.length > 0) {
+        if (data && data.length > 0 && content) {
             let previewHtml = `
                 <div style="overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -13408,27 +13399,26 @@ async function generateReport(type, format) {
                 downloadBtn.style.cssText = 'margin-top: 15px; background: #10B981; color: white;';
                 downloadBtn.innerHTML = `<i class="fas fa-download"></i> Download ${filename}.csv`;
                 downloadBtn.onclick = () => downloadCSV(csvContent, `${filename}.csv`);
-                
-                // Add to preview
-                const container = document.querySelector('#reportPreviewContent');
-                container.appendChild(downloadBtn);
+                content.appendChild(downloadBtn);
             }
-        } else {
+        } else if (content) {
             content.innerHTML = '<div style="text-align: center; padding: 30px; color: #64748b;"><p>No data available for this report</p></div>';
         }
         
     } catch (error) {
         console.error('Report generation error:', error);
         const content = document.getElementById('reportPreviewContent');
-        content.innerHTML = `
-            <div style="text-align: center; padding: 30px; color: #EF4444;">
-                <i class="fas fa-exclamation-circle" style="font-size: 36px;"></i>
-                <p>Error generating report: ${error.message}</p>
-                <button class="sheet-btn" onclick="showReportsModal()" style="margin-top: 10px;">
-                    <i class="fas fa-sync-alt"></i> Retry
-                </button>
-            </div>
-        `;
+        if (content) {
+            content.innerHTML = `
+                <div style="text-align: center; padding: 30px; color: #EF4444;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 36px;"></i>
+                    <p>Error generating report: ${error.message}</p>
+                    <button class="sheet-btn" onclick="showReportsModal()" style="margin-top: 10px;">
+                        <i class="fas fa-sync-alt"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -13475,30 +13465,60 @@ function downloadCSV(csvContent, filename) {
     URL.revokeObjectURL(url);
     showNotification('Report downloaded successfully!', 'success');
 }
+
+
+        
 // ============================================
-// SETTINGS
+// FIXED: SETTINGS MODAL
 // ============================================
 async function showSettingsModal() {
     hideAllModals();
-    document.getElementById('settingsModal').classList.add('active');
+    const modal = document.getElementById('settingsModal');
+    if (!modal) {
+        showNotification('Settings modal not found. Please refresh.', 'error');
+        return;
+    }
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/settings`, {
+        if (!token) {
+            showNotification('Authentication required', 'error');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE}/admin/settings`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('📋 Settings loaded:', data);
         
         if (data.success) {
-            const s = data.settings;
-            document.getElementById('settingsPlatformName').value = s.platformName;
-            document.getElementById('settingsAdminEmail').value = s.adminEmail;
+            const s = data.settings || {};
+            document.getElementById('settingsPlatformName').value = s.platformName || 'Liberia Business Awards';
+            document.getElementById('settingsAdminEmail').value = s.adminEmail || 'admin@liberiabusinessawardslr.com';
             document.getElementById('settingsLogo').value = s.logo || '';
-            document.getElementById('settingsSystemStatus').value = s.systemStatus;
+            document.getElementById('settingsSystemStatus').value = s.systemStatus || 'online';
+            
+            // Also load event settings if available
+            if (s.eventName) document.getElementById('settingsEventName').value = s.eventName;
+            if (s.eventDate) document.getElementById('settingsEventDate').value = s.eventDate;
+            if (s.eventTime) document.getElementById('settingsEventTime').value = s.eventTime;
+            if (s.venue) document.getElementById('settingsVenue').value = s.venue;
+            if (s.supportPhone) document.getElementById('settingsSupportPhone').value = s.supportPhone;
+            if (s.eventInfo) document.getElementById('settingsEventInfo').value = s.eventInfo;
+        } else {
+            showNotification(data.message || 'Failed to load settings', 'warning');
         }
     } catch (error) {
         console.error('Error loading settings:', error);
+        showNotification('Error loading settings: ' + error.message, 'error');
     }
 }
 
@@ -13507,12 +13527,29 @@ async function saveSettings() {
         platformName: document.getElementById('settingsPlatformName').value,
         adminEmail: document.getElementById('settingsAdminEmail').value,
         logo: document.getElementById('settingsLogo').value,
-        systemStatus: document.getElementById('settingsSystemStatus').value
+        systemStatus: document.getElementById('settingsSystemStatus').value,
+        eventName: document.getElementById('settingsEventName').value,
+        eventDate: document.getElementById('settingsEventDate').value,
+        eventTime: document.getElementById('settingsEventTime').value,
+        venue: document.getElementById('settingsVenue').value,
+        supportPhone: document.getElementById('settingsSupportPhone').value,
+        eventInfo: document.getElementById('settingsEventInfo').value
     };
+    
+    const saveBtn = event?.target;
+    const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
+    if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/settings`, {
+        if (!token) {
+            throw new Error('Authentication required');
+        }
+        
+        const response = await fetch(`${API_BASE}/admin/settings`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -13524,9 +13561,17 @@ async function saveSettings() {
         if (response.ok) {
             showNotification('Settings saved!', 'success');
             hideModal('settingsModal');
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.message || 'Error saving settings', 'error');
         }
     } catch (error) {
-        showNotification('Error saving settings', 'error');
+        showNotification('Error saving settings: ' + error.message, 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
     }
 }
 
@@ -16578,6 +16623,8 @@ async function deletePartnerSession(id) {
     }
 }
 
+
+        
 // ============================================
 // ADMIN PARTNER DOCUMENTS MANAGEMENT
 // ============================================
@@ -16586,17 +16633,128 @@ let partnerDocumentsPage = 1;
 let partnerDocumentsTotalPages = 1;
 let partnerDocumentsData = [];
 
+// ============================================
+// FIXED: SHOW PARTNER DOCUMENTS MODAL
+// ============================================
 async function showPartnerDocumentsModal() {
     hideAllModals();
-    const modal = document.getElementById('partnerDocumentsModal');
-    if (modal) {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        partnerDocumentsPage = 1;
-        await loadPartnerDocuments();
+    
+    // Check if modal exists
+    let modal = document.getElementById('partnerDocumentsModal');
+    if (!modal) {
+        console.error('Partner Documents Modal not found!');
+        createPartnerDocumentsModal();
+        modal = document.getElementById('partnerDocumentsModal');
+        if (!modal) {
+            showNotification('Error: Modal could not be loaded. Please refresh.', 'error');
+            return;
+        }
+    }
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    partnerDocumentsPage = 1;
+    
+    // Load partners data first
+    await loadPartnersForDocuments();
+    await loadPartnerDocuments();
+}
+
+// ============================================
+// LOAD PARTNERS FOR DOCUMENTS DROPDOWN
+// ============================================
+async function loadPartnersForDocuments() {
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            console.warn('No token found');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE}/admin/partners?limit=200`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        console.log('📋 Partners loaded for documents:', data);
+        
+        if (data.success && data.partners) {
+            window.partnersData = data.partners;
+            // Save to localStorage as backup
+            localStorage.setItem('lba_partners_data', JSON.stringify(data.partners));
+        }
+    } catch (error) {
+        console.error('Error loading partners:', error);
+        // Try to load from localStorage
+        try {
+            const saved = localStorage.getItem('lba_partners_data');
+            if (saved) {
+                window.partnersData = JSON.parse(saved);
+                console.log('📋 Partners loaded from cache');
+            }
+        } catch(e) {}
     }
 }
 
+// ============================================
+// CREATE PARTNER DOCUMENTS MODAL (if missing)
+// ============================================
+function createPartnerDocumentsModal() {
+    const modalHTML = `
+    <div class="modal" id="partnerDocumentsModal">
+        <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                <h2><i class="fas fa-file-alt"></i> Partner Documents</h2>
+                <button class="modal-close" onclick="hideModal('partnerDocumentsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between;">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="sheet-btn" onclick="showUploadPartnerDocumentModal()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                            <i class="fas fa-upload"></i> Upload Document
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="docStatusFilter" onchange="loadPartnerDocuments()" class="sheet-btn secondary" style="padding: 8px 15px;">
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <input type="text" id="docSearchPartner" placeholder="Search..." class="sheet-btn secondary" style="padding: 8px 15px; width: 200px;" onkeyup="filterPartnerDocuments()">
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Partner</th>
+                                <th>Type</th>
+                                <th>File</th>
+                                <th>Uploaded</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnerDocumentsTableBody">
+                            <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="partnerDocumentsPagination"></div>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// ============================================
+// FIXED: LOAD PARTNER DOCUMENTS
+// ============================================
 async function loadPartnerDocuments() {
     const tbody = document.getElementById('partnerDocumentsTableBody');
     if (!tbody) return;
@@ -16608,15 +16766,28 @@ async function loadPartnerDocuments() {
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Please login again</td></tr>';
+            return;
+        }
+        
         let url = `${API_BASE}/admin/partner/documents?page=${partnerDocumentsPage}&limit=20`;
         if (status !== 'all') url += `&status=${status}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
+        
+        console.log('📡 Fetching partner documents:', url);
         
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        if (response.status === 401) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #EF4444;">Session expired. Please refresh and login again.</td></tr>';
+            return;
+        }
+        
         const data = await response.json();
+        console.log('📥 Partner documents response:', data);
         
         if (data.success) {
             partnerDocumentsData = data.documents || [];
@@ -16631,7 +16802,7 @@ async function loadPartnerDocuments() {
                 badge.style.display = pendingCount > 0 ? 'inline' : 'none';
             }
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No documents found</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #EF4444;">${data.message || 'Error loading documents'}</td></tr>`;
         }
     } catch (error) {
         console.error('Load partner documents error:', error);
@@ -16649,7 +16820,17 @@ function displayPartnerDocuments() {
     }
     
     tbody.innerHTML = partnerDocumentsData.map(doc => {
-        const partnerName = doc.partner_name || doc.partner_id?.organization_name || 'Unknown Partner';
+        // Get partner name from the document or from partnersData
+        let partnerName = 'Unknown Partner';
+        if (doc.partner_name) {
+            partnerName = doc.partner_name;
+        } else if (doc.partner_id && window.partnersData) {
+            const partner = window.partnersData.find(p => p._id === doc.partner_id);
+            if (partner) {
+                partnerName = partner.organization_name || partner.name || 'Unknown';
+            }
+        }
+        
         const date = doc.created_at ? new Date(doc.created_at) : null;
         const dateStr = date ? date.toLocaleDateString() : 'Recent';
         
@@ -16661,6 +16842,7 @@ function displayPartnerDocuments() {
         }
         
         const fileIcon = doc.file_url ? getFileIcon(doc.file_url) : 'fa-file';
+        const docId = doc._id || doc.id;
         
         return `
             <tr>
@@ -16673,23 +16855,23 @@ function displayPartnerDocuments() {
                 <td>
                     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                         ${doc.status === 'pending' ? `
-                            <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approvePartnerDocument('${doc._id}')">
+                            <button class="sheet-btn" style="background: #10B981; padding: 6px 12px;" onclick="approvePartnerDocument('${docId}')">
                                 <i class="fas fa-check"></i>
                             </button>
-                            <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="rejectPartnerDocument('${doc._id}')">
+                            <button class="sheet-btn danger" style="padding: 6px 12px;" onclick="rejectPartnerDocument('${docId}')">
                                 <i class="fas fa-times"></i>
                             </button>
                         ` : ''}
-                        <button class="sheet-btn secondary" onclick="viewPartnerDocument('${doc._id}')" style="padding: 6px 12px;">
+                        <button class="sheet-btn secondary" onclick="viewPartnerDocument('${docId}')" style="padding: 6px 12px;">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="sheet-btn" onclick="downloadPartnerDocument('${doc._id}')" style="padding: 6px 12px;">
+                        <button class="sheet-btn" onclick="downloadPartnerDocument('${docId}')" style="padding: 6px 12px;">
                             <i class="fas fa-download"></i>
                         </button>
-                        <button class="sheet-btn" onclick="uploadPartnerDocumentForPartner('${doc._id}')" style="padding: 6px 12px; background: #8B5CF6; color: white;">
+                        <button class="sheet-btn" onclick="uploadPartnerDocumentForPartner('${docId}')" style="padding: 6px 12px; background: #8B5CF6; color: white;">
                             <i class="fas fa-upload"></i>
                         </button>
-                        <button class="sheet-btn danger" onclick="deletePartnerDocument('${doc._id}')" style="padding: 6px 12px;">
+                        <button class="sheet-btn danger" onclick="deletePartnerDocument('${docId}')" style="padding: 6px 12px;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -16743,13 +16925,13 @@ async function approvePartnerDocument(id) {
         
         const data = await response.json();
         if (data.success) {
-            showToast('Document approved!', 'success');
+            showNotification('Document approved!', 'success');
             await loadPartnerDocuments();
         } else {
-            showToast(data.message || 'Failed to approve document', 'error');
+            showNotification(data.message || 'Failed to approve document', 'error');
         }
     } catch (error) {
-        showToast('Error approving document', 'error');
+        showNotification('Error approving document', 'error');
     }
 }
 
@@ -16770,20 +16952,20 @@ async function rejectPartnerDocument(id) {
         
         const data = await response.json();
         if (data.success) {
-            showToast('Document rejected', 'warning');
+            showNotification('Document rejected', 'warning');
             await loadPartnerDocuments();
         } else {
-            showToast(data.message || 'Failed to reject document', 'error');
+            showNotification(data.message || 'Failed to reject document', 'error');
         }
     } catch (error) {
-        showToast('Error rejecting document', 'error');
+        showNotification('Error rejecting document', 'error');
     }
 }
 
 function viewPartnerDocument(id) {
     const token = localStorage.getItem('lba_auth_token');
     if (!token) {
-        showToast('Authentication required', 'error');
+        showNotification('Authentication required', 'error');
         return;
     }
     
@@ -16793,7 +16975,7 @@ function viewPartnerDocument(id) {
 async function downloadPartnerDocument(id) {
     const token = localStorage.getItem('lba_auth_token');
     if (!token) {
-        showToast('Authentication required', 'error');
+        showNotification('Authentication required', 'error');
         return;
     }
     
@@ -16823,22 +17005,22 @@ async function downloadPartnerDocument(id) {
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        showToast('Download started', 'success');
+        showNotification('Download started', 'success');
     } catch (error) {
-        showToast('Failed to download document', 'error');
+        showNotification('Failed to download document', 'error');
     }
 }
 
 function uploadPartnerDocumentForPartner(id) {
     // Find the document to get partner info
-    const doc = partnerDocumentsData.find(d => d._id === id);
+    const doc = partnerDocumentsData.find(d => d._id === id || d.id === id);
     if (!doc) {
-        showToast('Document not found', 'error');
+        showNotification('Document not found', 'error');
         return;
     }
     
     // Show upload modal pre-filled with partner info
-    showUploadPartnerDocumentModal(doc.partner_id, doc._id);
+    showUploadPartnerDocumentModal(doc.partner_id, doc._id || doc.id);
 }
 
 async function deletePartnerDocument(id) {
@@ -16853,82 +17035,95 @@ async function deletePartnerDocument(id) {
         
         const data = await response.json();
         if (data.success) {
-            showToast('Document deleted', 'success');
+            showNotification('Document deleted', 'success');
             await loadPartnerDocuments();
         }
     } catch (error) {
-        showToast('Failed to delete document', 'error');
+        showNotification('Failed to delete document', 'error');
     }
 }
 
-function showUploadPartnerDocumentModal(partnerId, existingDocId) {
-    // Create a simple modal for admin to upload document for partner
-    const modalHtml = `
-        <div class="modal" id="uploadPartnerDocModal" style="display: flex;">
-            <div class="modal-content" style="max-width: 600px;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
-                    <h2><i class="fas fa-upload"></i> Upload Document for Partner</h2>
-                    <button class="modal-close" onclick="hideModal('uploadPartnerDocModal')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="uploadPartnerDocForm">
-                        <input type="hidden" id="uploadExistingDocId" value="${existingDocId || ''}">
-                        
-                        <div class="form-group">
-                            <label>Select Partner *</label>
-                            <select id="uploadPartnerId" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
-                                <option value="">-- Select Partner --</option>
-                                ${partnersData.map(p => `
-                                    <option value="${p._id}" ${p._id === partnerId ? 'selected' : ''}>${escapeHtml(p.organization_name)} (${escapeHtml(p.email)})</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Document Name *</label>
-                            <input type="text" id="uploadDocName" class="sheet-btn secondary" style="width: 100%; padding: 12px;" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Document Type</label>
-                            <select id="uploadDocType" class="sheet-btn secondary" style="width: 100%; padding: 12px;">
-                                <option value="registration">Registration</option>
-                                <option value="certificate">Certificate</option>
-                                <option value="proposal">Proposal</option>
-                                <option value="agreement">Agreement</option>
-                                <option value="presentation">Presentation</option>
-                                <option value="financial">Financial</option>
-                                <option value="legal">Legal</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>File *</label>
-                            <input type="file" id="uploadDocFile" class="sheet-btn secondary" style="width: 100%; padding: 8px;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                            <small style="color: #64748b;">Max file size: 10MB</small>
-                        </div>
-                        
-                        <div class="error-message" id="uploadDocError" style="display: none; color: #EF4444;"></div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="sheet-btn warning" onclick="hideModal('uploadPartnerDocModal')">Cancel</button>
-                    <button class="sheet-btn" onclick="submitPartnerDocumentUpload()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
-                        <i class="fas fa-upload"></i> Upload
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
+// ============================================
+// FIXED: SHOW UPLOAD PARTNER DOCUMENT MODAL
+// ============================================
+async function showUploadPartnerDocumentModal(partnerId, existingDocId) {
+    const modal = document.getElementById('uploadPartnerDocModal');
+    if (!modal) {
+        showNotification('Upload modal not found. Please refresh the page.', 'error');
+        return;
+    }
     
-    // Remove existing modal if any
-    const existing = document.getElementById('uploadPartnerDocModal');
-    if (existing) existing.remove();
+    // Reset form
+    const form = document.getElementById('uploadPartnerDocForm');
+    if (form) form.reset();
+    document.getElementById('uploadExistingDocId').value = existingDocId || '';
+    document.getElementById('uploadDocError').style.display = 'none';
+    document.getElementById('uploadDocSuccess').style.display = 'none';
     
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    // Load partners into dropdown
+    const select = document.getElementById('uploadPartnerId');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">-- Loading partners... --</option>';
+    
+    try {
+        const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            select.innerHTML = '<option value="">-- Please login --</option>';
+            showNotification('Please login to access partners', 'error');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE}/admin/partners?limit=200`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        console.log('📋 Partners loaded:', data);
+        
+        if (data.success && data.partners && data.partners.length > 0) {
+            // Store partners globally for later use
+            window.partnersData = data.partners;
+            localStorage.setItem('lba_partners_data', JSON.stringify(data.partners));
+            
+            select.innerHTML = '<option value="">-- Select Partner --</option>';
+            data.partners.forEach(p => {
+                const selected = (p._id === partnerId) ? 'selected' : '';
+                const orgName = p.organization_name || p.name || 'Unknown Organization';
+                select.innerHTML += `<option value="${p._id}" ${selected}>${escapeHtml(orgName)} (${escapeHtml(p.email)})</option>`;
+            });
+            
+            // If partnerId was provided, select it
+            if (partnerId) {
+                select.value = partnerId;
+            }
+        } else {
+            select.innerHTML = '<option value="">-- No partners found --</option>';
+            // Try to load from localStorage fallback
+            const savedPartners = localStorage.getItem('lba_partners_data');
+            if (savedPartners) {
+                try {
+                    const saved = JSON.parse(savedPartners);
+                    if (saved.length > 0) {
+                        select.innerHTML = '<option value="">-- Select Partner --</option>';
+                        saved.forEach(p => {
+                            const selected = (p._id === partnerId) ? 'selected' : '';
+                            const orgName = p.organization_name || p.name || 'Unknown Organization';
+                            select.innerHTML += `<option value="${p._id}" ${selected}>${escapeHtml(orgName)} (${escapeHtml(p.email)})</option>`;
+                        });
+                        showNotification('Loaded partners from cache', 'info');
+                    }
+                } catch(e) {}
+            }
+        }
+    } catch (error) {
+        console.error('Error loading partners for upload:', error);
+        select.innerHTML = '<option value="">-- Error loading partners --</option>';
+        showNotification('Error loading partners: ' + error.message, 'error');
+    }
+    
+    // Show modal
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
@@ -16944,35 +17139,33 @@ async function submitPartnerDocumentUpload() {
     const successEl = document.getElementById('uploadDocSuccess');
     
     // Reset messages
-    errorEl.style.display = 'none';
-    successEl.style.display = 'none';
-    errorEl.textContent = '';
-    successEl.textContent = '';
+    if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+    if (successEl) { successEl.style.display = 'none'; successEl.textContent = ''; }
     
     // Validate
     if (!partnerId) {
-        errorEl.textContent = 'Please select a partner';
-        errorEl.style.display = 'block';
+        if (errorEl) { errorEl.textContent = 'Please select a partner'; errorEl.style.display = 'block'; }
+        else { showNotification('Please select a partner', 'warning'); }
         return;
     }
     
     if (!name) {
-        errorEl.textContent = 'Document name is required';
-        errorEl.style.display = 'block';
+        if (errorEl) { errorEl.textContent = 'Document name is required'; errorEl.style.display = 'block'; }
+        else { showNotification('Document name is required', 'warning'); }
         return;
     }
     
     if (!file) {
-        errorEl.textContent = 'Please select a file to upload';
-        errorEl.style.display = 'block';
+        if (errorEl) { errorEl.textContent = 'Please select a file to upload'; errorEl.style.display = 'block'; }
+        else { showNotification('Please select a file to upload', 'warning'); }
         return;
     }
     
     // Validate file size (10MB max)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-        errorEl.textContent = 'File is too large. Maximum size is 10MB.';
-        errorEl.style.display = 'block';
+        if (errorEl) { errorEl.textContent = 'File is too large. Maximum size is 10MB.'; errorEl.style.display = 'block'; }
+        else { showNotification('File is too large. Maximum size is 10MB.', 'warning'); }
         return;
     }
     
@@ -16981,26 +17174,43 @@ async function submitPartnerDocumentUpload() {
                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                          'image/jpeg', 'image/png', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
-        errorEl.textContent = 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF';
-        errorEl.style.display = 'block';
+        if (errorEl) { errorEl.textContent = 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF'; errorEl.style.display = 'block'; }
+        else { showNotification('Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF', 'warning'); }
         return;
     }
     
     // Show uploading state
     const uploadBtn = document.querySelector('#uploadPartnerDocModal .sheet-btn:last-child');
-    const originalText = uploadBtn.innerHTML;
-    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-    uploadBtn.disabled = true;
+    const originalText = uploadBtn ? uploadBtn.innerHTML : 'Upload';
+    if (uploadBtn) {
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        uploadBtn.disabled = true;
+    }
     
     try {
         const token = localStorage.getItem('lba_auth_token');
+        if (!token) {
+            throw new Error('Authentication required. Please login again.');
+        }
+        
+        // Validate that partner exists
+        const partnerCheck = await fetch(`${API_BASE}/admin/partners/${partnerId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!partnerCheck.ok) {
+            throw new Error('Partner not found. Please select a valid partner.');
+        }
+        
         const formData = new FormData();
         formData.append('partner_id', partnerId);
         formData.append('name', name);
         formData.append('type', type);
         formData.append('document', file);
         
-        const response = await fetch(`${API_BASE.replace('/api', '')}/api/admin/partner/documents`, {
+        console.log('📤 Uploading document for partner:', partnerId);
+        
+        const response = await fetch(`${API_BASE}/admin/partner/documents`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
@@ -17010,28 +17220,46 @@ async function submitPartnerDocumentUpload() {
         console.log('📥 Upload response:', data);
         
         if (data.success) {
-            successEl.textContent = '✅ Document uploaded successfully!';
-            successEl.style.display = 'block';
+            if (successEl) {
+                successEl.textContent = '✅ Document uploaded successfully!';
+                successEl.style.display = 'block';
+            }
+            showNotification('Document uploaded successfully!', 'success');
             
             // Close modal after delay and refresh
             setTimeout(() => {
                 hideModal('uploadPartnerDocModal');
-                loadPartnerDocuments();
-                showNotification('Document uploaded successfully!', 'success');
+                // Refresh the documents list if it's open
+                if (document.getElementById('partnerDocumentsModal')?.classList.contains('active')) {
+                    loadPartnerDocuments();
+                }
             }, 1500);
         } else {
-            errorEl.textContent = data.message || 'Upload failed. Please try again.';
-            errorEl.style.display = 'block';
+            const errorMsg = data.message || 'Upload failed. Please try again.';
+            if (errorEl) {
+                errorEl.textContent = errorMsg;
+                errorEl.style.display = 'block';
+            } else {
+                showNotification(errorMsg, 'error');
+            }
         }
     } catch (error) {
         console.error('Upload error:', error);
-        errorEl.textContent = 'Error uploading document: ' + (error.message || 'Please try again');
-        errorEl.style.display = 'block';
+        const errorMsg = error.message || 'Error uploading document. Please try again.';
+        if (errorEl) {
+            errorEl.textContent = errorMsg;
+            errorEl.style.display = 'block';
+        } else {
+            showNotification(errorMsg, 'error');
+        }
     } finally {
-        uploadBtn.innerHTML = originalText;
-        uploadBtn.disabled = false;
+        if (uploadBtn) {
+            uploadBtn.innerHTML = originalText;
+            uploadBtn.disabled = false;
+        }
     }
 }
+
 function getFileIcon(fileUrl) {
     if (!fileUrl) return 'fa-file';
     const ext = fileUrl.split('.').pop().toLowerCase();
@@ -17041,6 +17269,8 @@ function getFileIcon(fileUrl) {
     if (ext === 'xls' || ext === 'xlsx') return 'fa-file-excel';
     return 'fa-file';
 }
+    
+
         
         
 </script>
