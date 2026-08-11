@@ -958,6 +958,254 @@
             background: #f1f5f9;
             color: var(--lba-primary);
         }
+
+                /* ============================================
+           OUR STORY / AUDIO PLAYER STYLES
+           ============================================ */
+        .story-section {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .story-section h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--lba-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .story-section h2 i {
+            background: var(--lba-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .story-intro {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .audio-player-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        
+        .audio-player-card:hover {
+            border-color: var(--lba-primary);
+            box-shadow: 0 8px 30px rgba(139,92,246,0.08);
+        }
+        
+        .audio-player-card .player-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--lba-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .audio-player-card .player-title i {
+            color: var(--lba-primary);
+        }
+        
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: var(--lba-gradient);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(139,92,246,0.3);
+            flex-shrink: 0;
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 12px 35px rgba(139,92,246,0.4);
+        }
+        
+        .play-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .play-btn.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .play-btn.error {
+            background: var(--danger-color);
+            box-shadow: 0 8px 25px rgba(239,68,68,0.3);
+        }
+        
+        .player-progress-container {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .player-time {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+        
+        .player-progress {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            transition: height 0.2s;
+        }
+        
+        .player-progress:hover {
+            height: 8px;
+        }
+        
+        .player-progress .progress-fill {
+            height: 100%;
+            background: var(--lba-gradient);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .player-progress .progress-buffered {
+            height: 100%;
+            background: rgba(139,92,246,0.2);
+            border-radius: 3px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            pointer-events: none;
+        }
+        
+        .player-volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .player-volume-container i {
+            color: #64748b;
+            font-size: 16px;
+            width: 20px;
+        }
+        
+        .player-volume {
+            width: 80px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            transition: height 0.2s;
+        }
+        
+        .player-volume:hover {
+            height: 6px;
+        }
+        
+        .player-volume .volume-fill {
+            height: 100%;
+            background: var(--lba-gradient);
+            border-radius: 2px;
+            width: 100%;
+        }
+        
+        .player-status {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .player-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .player-status .status-dot.ready { background: var(--success-color); }
+        .player-status .status-dot.loading { background: var(--warning-color); animation: pulse 1s infinite; }
+        .player-status .status-dot.error { background: var(--danger-color); }
+        .player-status .status-dot.paused { background: #94a3b8; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .player-error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .player-error i {
+            font-size: 18px;
+        }
+        
+        /* Responsive audio player */
+        @media (max-width: 768px) {
+            .story-section { padding: 20px; }
+            .story-section h2 { font-size: 22px; }
+            .audio-player-card { padding: 20px; }
+            .player-controls { flex-direction: column; align-items: stretch; gap: 15px; }
+            .play-btn { width: 56px; height: 56px; font-size: 20px; align-self: center; }
+            .player-volume-container { align-self: center; }
+            .player-volume { width: 120px; }
+        }
+        
+        @media (max-width: 480px) {
+            .story-section { padding: 15px; }
+            .story-section h2 { font-size: 18px; }
+            .story-intro { font-size: 14px; }
+            .audio-player-card { padding: 15px; }
+            .play-btn { width: 50px; height: 50px; font-size: 18px; }
+        }
         
         /* Responsive */
         @media (max-width: 992px) {
@@ -1005,24 +1253,29 @@
                 <p>Liberia Business Awards</p>
             </div>
             
-            <div class="sidebar-menu">
-                <div class="menu-section">
-                    <h4>Main Navigation</h4>
-                    <div class="menu-item active" data-page="dashboard">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </div>
-                    <div class="menu-item" data-page="events">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Events</span>
-                        <span class="badge" id="eventsCount">0</span>
-                    </div>
-                    <div class="menu-item" data-page="sessions">
-                        <i class="fas fa-video"></i>
-                        <span>Live Sessions</span>
-                        <span class="badge" id="sessionsCount">0</span>
-                    </div>
-                </div>
+     <div class="sidebar-menu">
+     <div class="menu-section">
+    <h4>Main Navigation</h4>
+    <div class="menu-item active" data-page="dashboard">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+    </div>
+    <!-- ============ NEW NAVIGATION ITEM ============ -->
+    <div class="menu-item" data-page="story">
+        <i class="fas fa-headphones"></i>
+        <span>Our Story</span>
+    </div>
+    <div class="menu-item" data-page="events">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Events</span>
+        <span class="badge" id="eventsCount">0</span>
+    </div>
+    <div class="menu-item" data-page="sessions">
+        <i class="fas fa-video"></i>
+        <span>Live Sessions</span>
+        <span class="badge" id="sessionsCount">0</span>
+    </div>
+</div>
                 
                 <div class="menu-section">
                     <h4>Communication</h4>
@@ -1094,90 +1347,91 @@
                 </div>
             </div>
             
-            <!-- ============ DASHBOARD PAGE ============ -->
-            <div id="dashboardPage" class="page active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
-                        <div class="stat-content">
-                            <h3 id="totalEvents">0</h3>
-                            <p>Total Events</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-video"></i></div>
-                        <div class="stat-content">
-                            <h3 id="totalSessions">0</h3>
-                            <p>Live Sessions</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-users"></i></div>
-                        <div class="stat-content">
-                            <h3 id="totalAttendees">0</h3>
-                            <p>Total Attendees</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-envelope"></i></div>
-                        <div class="stat-content">
-                            <h3 id="unreadMessages">0</h3>
-                            <p>Unread Messages</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="quick-actions">
-                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
-                    <div class="action-grid">
-                        <div class="action-card" onclick="showCreateEventModal()">
-                            <div class="action-icon"><i class="fas fa-plus-circle"></i></div>
-                            <h3>Create Event</h3>
-                            <p>Host a new event or workshop</p>
-                        </div>
-                        <div class="action-card" onclick="showCreateSessionModal()">
-                            <div class="action-icon"><i class="fas fa-video"></i></div>
-                            <h3>Start Live Session</h3>
-                            <p>Host an online session</p>
-                        </div>
-                        <div class="action-card" onclick="showSendMessageModal()">
-                            <div class="action-icon"><i class="fas fa-paper-plane"></i></div>
-                            <h3>Send Message</h3>
-                            <p>Contact admin team</p>
-                        </div>
-                        <div class="action-card" onclick="switchPage('events')">
-                            <div class="action-icon"><i class="fas fa-list"></i></div>
-                            <h3>View All Events</h3>
-                            <p>Manage your events</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Recent Activity -->
-                <div style="margin-top: 40px;">
-                    <h2 style="color: var(--lba-dark); margin-bottom: 20px; font-size: 24px;">
-                        <i class="fas fa-history"></i> Recent Activity
-                    </h2>
-                    <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Activity</th>
-                                    <th>Type</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentActivities">
-                                <tr><td colspan="4" style="text-align: center; padding: 40px;">
-                                    <i class="fas fa-spinner fa-spin fa-2x"></i>
-                                    <p>Loading activities...</p>
-                                </td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                        <!-- ============ DASHBOARD PAGE ============ -->
+<div id="dashboardPage" class="page active">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+            <div class="stat-content">
+                <h3 id="totalEvents">0</h3>
+                <p>Total Events</p>
             </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-video"></i></div>
+            <div class="stat-content">
+                <h3 id="totalSessions">0</h3>
+                <p>Live Sessions</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-content">
+                <h3 id="totalAttendees">0</h3>
+                <p>Total Attendees</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-envelope"></i></div>
+            <div class="stat-content">
+                <h3 id="unreadMessages">0</h3>
+                <p>Unread Messages</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="quick-actions">
+        <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+        <div class="action-grid">
+            <div class="action-card" onclick="showCreateEventModal()">
+                <div class="action-icon"><i class="fas fa-plus-circle"></i></div>
+                <h3>Create Event</h3>
+                <p>Host a new event or workshop</p>
+            </div>
+            <div class="action-card" onclick="showCreateSessionModal()">
+                <div class="action-icon"><i class="fas fa-video"></i></div>
+                <h3>Start Live Session</h3>
+                <p>Host an online session</p>
+            </div>
+            <div class="action-card" onclick="showSendMessageModal()">
+                <div class="action-icon"><i class="fas fa-paper-plane"></i></div>
+                <h3>Send Message</h3>
+                <p>Contact admin team</p>
+            </div>
+            <div class="action-card" onclick="switchPage('events')">
+                <div class="action-icon"><i class="fas fa-list"></i></div>
+                <h3>View All Events</h3>
+                <p>Manage your events</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div style="margin-top: 40px;">
+        <h2 style="color: var(--lba-dark); margin-bottom: 20px; font-size: 24px;">
+            <i class="fas fa-history"></i> Recent Activity
+        </h2>
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Activity</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="recentActivities">
+                    <tr><td colspan="4" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Loading activities...</p>
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
             
             <!-- ============ EVENTS PAGE ============ -->
             <div id="eventsPage" class="page">
@@ -1737,6 +1991,16 @@
         }
         return 'https://liberia-business-awards-production.up.railway.app/api';
     })();
+
+      // ============================================
+// AUDIO CONFIGURATION
+// ============================================
+const AUDIO_URL = (() => {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:8080/resources/Liberia%20Business%20Awards%20pitch%20audio.mp3';
+    }
+    return 'https://liberia-business-awards-production.up.railway.app/resources/Liberia%20Business%20Awards%20pitch%20audio.mp3';
+})();  
     
     // ============================================
     // STATE
@@ -1753,6 +2017,16 @@
         currentThreadId: null,
         documents: []
     };
+
+
+     // ============================================
+// AUDIO PLAYER STATE
+// ============================================
+let audioPlayer = null;
+let isPlayerInitialized = false;
+let isPlaying = false;
+let isDragging = false;
+let isDraggingVolume = false;   
     
     // ============================================
     // INITIALIZATION
@@ -1774,6 +2048,7 @@
             setupNavigation();
             setupSidebarToggle();
             setupLogout();
+            setupAudioPlayer();
             
             await loadEvents();
             await loadSessions();
@@ -1915,27 +2190,39 @@
         });
         
         const titles = {
-            dashboard: 'Dashboard',
-            events: 'Events',
-            sessions: 'Live Sessions',
-            messages: 'Messages',
-            notifications: 'Notifications',
-            settings: 'Settings',
-            documents: 'Documents'
-        };
+    dashboard: 'Dashboard',
+    story: 'Our Story',
+    events: 'Events',
+    sessions: 'Live Sessions',
+    messages: 'Messages',
+    notifications: 'Notifications',
+    settings: 'Settings',
+    documents: 'Documents'
+};
         document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
         
         appState.currentPage = page;
-        
+
         if (page === 'events') loadEvents();
-        if (page === 'sessions') loadSessions();
-        if (page === 'messages') loadMessages();
-        if (page === 'notifications') loadNotifications();
-        if (page === 'documents') loadDocuments();
+if (page === 'sessions') loadSessions();
+if (page === 'messages') loadMessages();
+if (page === 'notifications') loadNotifications();
+if (page === 'documents') loadDocuments();
+
+// Handle audio when leaving Our Story page
+if (page !== 'story' && audioPlayer && isPlaying) {
+    pauseAudio();
+}
+
+// Re-initialize audio player when entering Our Story page
+if (page === 'story' && !isPlayerInitialized) {
+    initAudioPlayer();
+}
+
+if (window.innerWidth <= 992) {
+    document.getElementById('sidebar').classList.remove('active');
+}
         
-        if (window.innerWidth <= 992) {
-            document.getElementById('sidebar').classList.remove('active');
-        }
     }
     
     // ============================================
@@ -4121,7 +4408,396 @@
             showToast(error.message || 'Failed to delete document', 'error');
         }
     }
+
+    // ============================================
+// AUDIO PLAYER - COMPLETE IMPLEMENTATION
+// ============================================
+
+function setupAudioPlayer() {
+    // Only set up event listeners, don't create audio element yet
+    const playBtn = document.getElementById('playBtn');
+    const progressBar = document.getElementById('progressBar');
+    const volumeBar = document.getElementById('volumeBar');
     
+    if (playBtn) {
+        playBtn.addEventListener('click', togglePlay);
+    }
+    
+    if (progressBar) {
+        progressBar.addEventListener('click', handleProgressClick);
+        progressBar.addEventListener('mousedown', () => { isDragging = true; });
+        document.addEventListener('mousemove', handleProgressDrag);
+        document.addEventListener('mouseup', () => { isDragging = false; });
+        
+        // Touch support for mobile
+        progressBar.addEventListener('touchstart', handleProgressTouch);
+        progressBar.addEventListener('touchmove', handleProgressTouchMove);
+        progressBar.addEventListener('touchend', handleProgressTouchEnd);
+    }
+    
+    if (volumeBar) {
+        volumeBar.addEventListener('click', handleVolumeClick);
+        volumeBar.addEventListener('mousedown', () => { isDraggingVolume = true; });
+        document.addEventListener('mousemove', handleVolumeDrag);
+        document.addEventListener('mouseup', () => { isDraggingVolume = false; });
+        
+        // Touch support for mobile volume
+        volumeBar.addEventListener('touchstart', handleVolumeTouch);
+        volumeBar.addEventListener('touchmove', handleVolumeTouchMove);
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+            return;
+        }
+        if (e.key === ' ' || e.key === 'Space') {
+            e.preventDefault();
+            if (appState.currentPage === 'story') {
+                togglePlay();
+            }
+        }
+    });
+}
+
+function initAudioPlayer() {
+    if (isPlayerInitialized && audioPlayer) {
+        return;
+    }
+    
+    try {
+        audioPlayer = new Audio(AUDIO_URL);
+        audioPlayer.preload = 'metadata';
+        
+        // Set up audio event listeners
+        audioPlayer.addEventListener('loadedmetadata', onAudioLoaded);
+        audioPlayer.addEventListener('timeupdate', onTimeUpdate);
+        audioPlayer.addEventListener('progress', onProgress);
+        audioPlayer.addEventListener('ended', onAudioEnded);
+        audioPlayer.addEventListener('play', onAudioPlay);
+        audioPlayer.addEventListener('pause', onAudioPause);
+        audioPlayer.addEventListener('error', onAudioError);
+        audioPlayer.addEventListener('waiting', onAudioWaiting);
+        audioPlayer.addEventListener('canplay', onAudioCanPlay);
+        
+        isPlayerInitialized = true;
+        console.log('🎵 Audio player initialized');
+        updateStatus('Ready to play', 'ready');
+        updateTimeDisplay(0, 0);
+        
+    } catch (error) {
+        console.error('❌ Failed to initialize audio player:', error);
+        showAudioError('Unable to load the Our Story audio. Please try again.');
+    }
+}
+
+function togglePlay() {
+    if (!audioPlayer) {
+        initAudioPlayer();
+        if (!audioPlayer) return;
+    }
+    
+    if (audioPlayer.paused) {
+        playAudio();
+    } else {
+        pauseAudio();
+    }
+}
+
+function playAudio() {
+    if (!audioPlayer) return;
+    
+    const playBtn = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    
+    if (!playBtn || !playIcon) return;
+    
+    playBtn.disabled = true;
+    playBtn.classList.add('loading');
+    playIcon.className = 'fas fa-spinner fa-spin';
+    updateStatus('Loading...', 'loading');
+    
+    audioPlayer.play().catch((error) => {
+        console.error('Playback error:', error);
+        playIcon.className = 'fas fa-play';
+        playBtn.disabled = false;
+        playBtn.classList.remove('loading');
+        showAudioError('Unable to play the audio. Please try again.');
+        updateStatus('Error', 'error');
+    });
+}
+
+function pauseAudio() {
+    if (!audioPlayer) return;
+    
+    audioPlayer.pause();
+    const playBtn = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    
+    if (playBtn) playBtn.disabled = false;
+    if (playIcon) playIcon.className = 'fas fa-play';
+    if (playBtn) playBtn.classList.remove('loading');
+    
+    isPlaying = false;
+    updateStatus('Paused', 'paused');
+}
+
+function onAudioPlay() {
+    const playBtn = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    
+    if (playBtn) playBtn.disabled = false;
+    if (playIcon) playIcon.className = 'fas fa-pause';
+    if (playBtn) playBtn.classList.remove('loading');
+    
+    isPlaying = true;
+    updateStatus('Playing', 'ready');
+    hideAudioError();
+}
+
+function onAudioPause() {
+    const playIcon = document.getElementById('playIcon');
+    if (playIcon) playIcon.className = 'fas fa-play';
+    isPlaying = false;
+    updateStatus('Paused', 'paused');
+}
+
+function onAudioEnded() {
+    const playIcon = document.getElementById('playIcon');
+    if (playIcon) playIcon.className = 'fas fa-play';
+    isPlaying = false;
+    updateStatus('Finished', 'ready');
+    // Reset progress to start
+    updateProgress(0);
+    document.getElementById('currentTime').textContent = '0:00';
+}
+
+function onAudioLoaded() {
+    const totalTime = formatTime(audioPlayer.duration);
+    document.getElementById('totalTime').textContent = totalTime;
+    updateStatus('Ready to play', 'ready');
+    hideAudioError();
+    console.log('🎵 Audio loaded, duration:', audioPlayer.duration);
+}
+
+function onTimeUpdate() {
+    if (isDragging) return;
+    
+    const currentTime = audioPlayer.currentTime || 0;
+    const duration = audioPlayer.duration || 0;
+    
+    document.getElementById('currentTime').textContent = formatTime(currentTime);
+    updateProgress((currentTime / duration) * 100);
+}
+
+function onProgress() {
+    if (!audioPlayer) return;
+    
+    try {
+        const buffered = audioPlayer.buffered;
+        if (buffered.length > 0) {
+            const duration = audioPlayer.duration;
+            const bufferedEnd = buffered.end(buffered.length - 1);
+            const bufferedPercent = Math.min((bufferedEnd / duration) * 100, 100);
+            document.getElementById('bufferedBar').style.width = bufferedPercent + '%';
+        }
+    } catch (e) {
+        // Ignore buffering errors
+    }
+}
+
+function onAudioError(e) {
+    console.error('Audio error:', e);
+    const playBtn = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    
+    if (playBtn) {
+        playBtn.disabled = false;
+        playBtn.classList.remove('loading');
+    }
+    if (playIcon) playIcon.className = 'fas fa-play';
+    
+    isPlaying = false;
+    updateStatus('Error', 'error');
+    showAudioError('Unable to load the Our Story audio. Please try again.');
+}
+
+function onAudioWaiting() {
+    updateStatus('Buffering...', 'loading');
+}
+
+function onAudioCanPlay() {
+    updateStatus('Ready', 'ready');
+    hideAudioError();
+    const playBtn = document.getElementById('playBtn');
+    if (playBtn) playBtn.disabled = false;
+}
+
+function updateProgress(percent) {
+    const fill = document.getElementById('progressFill');
+    if (fill) {
+        fill.style.width = Math.min(Math.max(percent, 0), 100) + '%';
+    }
+}
+
+function updateTimeDisplay(current, total) {
+    document.getElementById('currentTime').textContent = formatTime(current);
+    document.getElementById('totalTime').textContent = formatTime(total);
+}
+
+function updateStatus(text, type) {
+    const statusText = document.getElementById('statusText');
+    const statusDot = document.getElementById('statusDot');
+    
+    if (statusText) statusText.textContent = text;
+    
+    if (statusDot) {
+        statusDot.className = 'status-dot';
+        if (type === 'ready') statusDot.classList.add('ready');
+        else if (type === 'loading') statusDot.classList.add('loading');
+        else if (type === 'error') statusDot.classList.add('error');
+        else if (type === 'paused') statusDot.classList.add('paused');
+        else statusDot.classList.add('ready');
+    }
+}
+
+function formatTime(seconds) {
+    if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return mins + ':' + (secs < 10 ? '0' : '') + secs;
+}
+
+function handleProgressClick(e) {
+    if (!audioPlayer) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const percent = Math.min(Math.max(x, 0), 1);
+    const seekTime = percent * audioPlayer.duration;
+    audioPlayer.currentTime = seekTime;
+    updateProgress(percent * 100);
+    document.getElementById('currentTime').textContent = formatTime(seekTime);
+}
+
+function handleProgressDrag(e) {
+    if (!isDragging || !audioPlayer) return;
+    const progressBar = document.getElementById('progressBar');
+    const rect = progressBar.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const percent = Math.min(Math.max(x, 0), 1);
+    const seekTime = percent * audioPlayer.duration;
+    updateProgress(percent * 100);
+    document.getElementById('currentTime').textContent = formatTime(seekTime);
+}
+
+function handleProgressTouch(e) {
+    e.preventDefault();
+    isDragging = true;
+    handleProgressTouchMove(e);
+}
+
+function handleProgressTouchMove(e) {
+    if (!isDragging || !audioPlayer) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const progressBar = document.getElementById('progressBar');
+    const rect = progressBar.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / rect.width;
+    const percent = Math.min(Math.max(x, 0), 1);
+    const seekTime = percent * audioPlayer.duration;
+    updateProgress(percent * 100);
+    document.getElementById('currentTime').textContent = formatTime(seekTime);
+}
+
+function handleProgressTouchEnd(e) {
+    if (!isDragging || !audioPlayer) return;
+    isDragging = false;
+    const touch = e.changedTouches[0];
+    const progressBar = document.getElementById('progressBar');
+    const rect = progressBar.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / rect.width;
+    const percent = Math.min(Math.max(x, 0), 1);
+    const seekTime = percent * audioPlayer.duration;
+    audioPlayer.currentTime = seekTime;
+    updateProgress(percent * 100);
+    document.getElementById('currentTime').textContent = formatTime(seekTime);
+}
+
+function handleVolumeClick(e) {
+    if (!audioPlayer) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const volume = Math.min(Math.max(x, 0), 1);
+    audioPlayer.volume = volume;
+    document.getElementById('volumeFill').style.width = (volume * 100) + '%';
+    updateVolumeIcon(volume);
+}
+
+function handleVolumeDrag(e) {
+    if (!isDraggingVolume || !audioPlayer) return;
+    const volumeBar = document.getElementById('volumeBar');
+    const rect = volumeBar.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const volume = Math.min(Math.max(x, 0), 1);
+    audioPlayer.volume = volume;
+    document.getElementById('volumeFill').style.width = (volume * 100) + '%';
+    updateVolumeIcon(volume);
+}
+
+function handleVolumeTouch(e) {
+    e.preventDefault();
+    isDraggingVolume = true;
+    const touch = e.touches[0];
+    const volumeBar = document.getElementById('volumeBar');
+    const rect = volumeBar.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / rect.width;
+    const volume = Math.min(Math.max(x, 0), 1);
+    audioPlayer.volume = volume;
+    document.getElementById('volumeFill').style.width = (volume * 100) + '%';
+    updateVolumeIcon(volume);
+}
+
+function handleVolumeTouchMove(e) {
+    if (!isDraggingVolume || !audioPlayer) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const volumeBar = document.getElementById('volumeBar');
+    const rect = volumeBar.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / rect.width;
+    const volume = Math.min(Math.max(x, 0), 1);
+    audioPlayer.volume = volume;
+    document.getElementById('volumeFill').style.width = (volume * 100) + '%';
+    updateVolumeIcon(volume);
+}
+
+function updateVolumeIcon(volume) {
+    const icon = document.getElementById('volumeIcon');
+    if (!icon) return;
+    if (volume === 0) {
+        icon.className = 'fas fa-volume-mute';
+    } else if (volume < 0.5) {
+        icon.className = 'fas fa-volume-down';
+    } else {
+        icon.className = 'fas fa-volume-up';
+    }
+}
+
+function showAudioError(message) {
+    const errorEl = document.getElementById('playerError');
+    const errorMsg = document.getElementById('errorMessage');
+    if (errorEl && errorMsg) {
+        errorMsg.textContent = message || 'Unable to load the Our Story audio. Please try again.';
+        errorEl.style.display = 'flex';
+    }
+}
+
+function hideAudioError() {
+    const errorEl = document.getElementById('playerError');
+    if (errorEl) {
+        errorEl.style.display = 'none';
+    }
+}
+        
     // ============================================
     // UTILITY FUNCTIONS
     // ============================================
@@ -4140,6 +4816,7 @@
     window.hideModal = hideModal;
     window.showToast = showToast;
     window.logout = logout;
+    window.togglePlay = togglePlay;    
     window.showCreateEventModal = showCreateEventModal;
     window.createEvent = createEvent;
     window.deleteEvent = deleteEvent;
