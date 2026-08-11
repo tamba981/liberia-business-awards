@@ -190,6 +190,39 @@ app.use('/uploads', (req, res, next) => {
     }
 }));
 
+// ============ RESOURCES STATIC ROUTE FOR AUDIO FILES ============
+const resourcesDir = path.join(__dirname, 'resources');
+if (fs.existsSync(resourcesDir)) {
+    console.log('📁 Resources directory found at:', resourcesDir);
+    // Serve resources directory for audio files
+    app.use('/resources', express.static(resourcesDir, {
+        setHeaders: (res, filePath) => {
+            const ext = path.extname(filePath).toLowerCase();
+            const contentType = {
+                '.mp3': 'audio/mpeg',
+                '.wav': 'audio/wav',
+                '.ogg': 'audio/ogg',
+                '.m4a': 'audio/mp4',
+                '.aac': 'audio/aac'
+            }[ext] || 'application/octet-stream';
+            
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+            res.setHeader('Cache-Control', 'public, max-age=86400');
+            res.setHeader('Accept-Ranges', 'bytes');
+        }
+    }));
+    console.log('✅ Resources directory served at /resources');
+} else {
+    console.log('⚠️ Resources directory not found at:', resourcesDir);
+    // Create it if it doesn't exist
+    fs.mkdirSync(resourcesDir, { recursive: true });
+    console.log('📁 Created resources directory at:', resourcesDir);
+}
+
 // Handle OPTIONS for static files
 app.options('/uploads/*', (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -197,6 +230,7 @@ app.options('/uploads/*', (req, res) => {
     res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
     res.sendStatus(200);
 });
+
 
 // ============================================
 // ADD A FALLBACK ROUTE FOR IMAGES
